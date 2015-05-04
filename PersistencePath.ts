@@ -2,7 +2,6 @@
  * Created by bert on 04.05.15.
  */
 
-import MeteorPersistence = require("./MeteorPersistence")
 
 class PersistencePathEntry
 {
@@ -22,11 +21,11 @@ class PersistencePathEntry
 
 class PersistencePath
 {
-    private collection:MeteorPersistence.BaseCollection<any>;
+    private collection:any;
     private id:string;
     private callPath:Array<PersistencePathEntry>;
 
-    constructor( collection:MeteorPersistence.BaseCollection<any>, id:string )
+    constructor( collection:any, id:string )
     {
         this.collection = collection;
         this.id = id;

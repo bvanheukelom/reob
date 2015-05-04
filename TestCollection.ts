@@ -3,38 +3,41 @@
  */
 
 
-import Test = require("./TestClass");
+import TestPerson = require("./TestPerson");
+import TestTree = require("./TestTree");
+import TestAddress = require("./TestAddress");
 import MeteorPersistence = require("./MeteorPersistence");
+import BaseCollection = require("./BaseCollection");
 import Serializer = require("./Serializer");
 
 MeteorPersistence.init();
 
-export class TestPersonCollection extends MeteorPersistence.BaseCollection<Test.TestPerson>
+export class TestPersonCollection extends BaseCollection<TestPerson>
 {
     constructor()
     {
-        super(Test.TestPerson);
+        super(TestPerson);
     }
 }
 
-export class TestTreeCollection extends MeteorPersistence.BaseCollection<Test.TestTree>
+export class TestTreeCollection extends BaseCollection<TestTree>
 {
     constructor()
     {
-        super(Test.TestTree);
+        super(TestTree);
     }
 }
 
 
 var bc = new TestPersonCollection();
 
-var tp:Test.TestPerson = new Test.TestPerson("tp1","bert");
-var value: string = Reflect.getMetadata("SubDocument", Test.TestPerson.prototype, "phoneNumbers" );
-tp.addAddress( new Test.TestAddress("1","süd") );
-tp.tree = new Test.TestTree("tree1");
+var tp:TestPerson = new TestPerson("tp1","bert");
+var value: string = Reflect.getMetadata("SubDocument", TestPerson.prototype, "phoneNumbers" );
+tp.addAddress( new TestAddress("1","süd") );
+tp.tree = new TestTree("tree1");
 
 
 var s = Serializer.toDocument(tp);
-var tp:Test.TestPerson = <Test.TestPerson>Serializer.toObject( s, Test.TestPerson );
+var tp:TestPerson = <TestPerson>Serializer.toObject( s, TestPerson );
 console.log( tp.tree.getId() );
 

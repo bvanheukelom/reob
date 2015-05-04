@@ -66,7 +66,7 @@ module.exports = function (grunt) {
 			var returnContent = "";
 			var splitArray = content.split("\n");
 			for (var i = 0; i < splitArray.length; i++) {
-				if (splitArray[i].indexOf("require(") == -1 && splitArray[i].indexOf("//# sourceMappingURL") == -1 && splitArray[i].indexOf("module.exports") == -1) {
+				if (splitArray[i].indexOf("require(") == -1 && splitArray[i].indexOf("//# sourceMappingURL") == -1 && splitArray[i].indexOf("module.exports") == -1&& splitArray[i].indexOf("exports.") == -1) {
 					// take care of local var's
 					if (splitArray[i].indexOf("var ") == 0) {
 						returnContent += splitArray[i].substr(4);
@@ -78,8 +78,8 @@ module.exports = function (grunt) {
 			return returnContent;
 		};
 
-		var sharedCodeDirectory = "meteor";
-		var loadingIndicator = 0;
+		var sharedCodeDirectory = "meteor/js/";
+		var loadingIndicator = 1;
 		var getNextLoadingNumber = function () {
 			return ("00" + loadingIndicator++).slice(-3);
 		};
@@ -95,18 +95,20 @@ module.exports = function (grunt) {
 		    });
 		};
 		grunt.file.delete(sharedCodeDirectory);
-
-		cp("node_modules/reflect-metadata/Reflect.js");
+		cp("o.js");
+		grunt.file.copy("node_modules/reflect-metadata/Reflect.js", sharedCodeDirectory+"000_Reflect.js");
 		cp("Persistable.js");
 		cp("Document.js");
 		cp("PersistencePath.js");
-		cp("PersistenceAnnotations.js");
+		cp("PersistenceAnnotation.js");
 		cp("Serializer.js");
+		cp("BaseCollection.js");
 		cp("MeteorPersistence.js");
-		cp("TestClass.js");
-		cp("TestCollections.js");
-
-
+		cp("TestTree.js");
+		cp("TestAddress.js");
+		cp("TestPhoneNumber.js");
+		cp("TestPerson.js");
+		cp("TestCollection.js");
 	});
 
 };
