@@ -58,6 +58,10 @@ var TestPerson = (function () {
         PersistenceAnnotation.Type("TestTree"),
         PersistenceAnnotation.AsForeignKeys
     ], TestPerson.prototype, "tree");
+    __decorate([
+        PersistenceAnnotation.Type("TestLeaf"),
+        PersistenceAnnotation.AsForeignKeys
+    ], TestPerson.prototype, "leaf");
     Object.defineProperty(TestPerson.prototype, "addAddress",
         __decorate([
             PersistenceAnnotation.Wrap

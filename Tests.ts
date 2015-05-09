@@ -146,8 +146,20 @@ describe("The persistence thing", function(){
     });
 
 
+    it("lazy loads objects", function(){
+        var t1:TestTree = new TestTree("tree1");
+        var tp:TestPerson = new TestPerson("tp");
+        tp.tree = t1;
+        personCollection.insert(tp);
+        var tp2 = personCollection.getById("tp");
+        expect( MeteorPersistence.needsLazyLoading(tp2, "tree") ).toBeTruthy();
+        tp2.tree;
+        expect( MeteorPersistence.needsLazyLoading(tp2, "tree") ).toBeFalsy();
+    });
+
     it("can save objects that have foreign key properties", function(){
         var t1:TestTree = new TestTree("tree1");
+        treeCollection.insert(t1);
         var tp:TestPerson = new TestPerson("tp");
         tp.tree = t1;
         personCollection.insert(tp);
@@ -155,6 +167,31 @@ describe("The persistence thing", function(){
         expect(personCollection.getById("tp").tree).toBeDefined();
     });
 
-    // test that a freshly loaded object with a forein key has a lazy loading property
+    it("can save objects that have subobjects which are subobjects of other root objects", function(){
+        var t1:TestTree = new TestTree("tree1");
+        treeCollection.insert(t1);
+        t1.grow();
+        var tp:TestPerson = new TestPerson("tp");
+        tp.tree = t1;
+        personCollection.insert(tp);
+        tp.collectLeaf();
+        expect(personCollection.getById("tp").leaf).toBeDefined();
+        expect(personCollection.getById("tp").leaf.getId()).toBe(t1.getLeaves()[0].getId());
+    });
+
+    //it("can save objects that have subobjects which are subobjects of other root objects", function(){
+    //    var t1:TestTree = new TestTree("tree1");
+    //    treeCollection.insert(t1);
+    //    t1.grow();
+    //    var tp:TestPerson = new TestPerson("tp");
+    //    tp.tree = t1;
+    //    personCollection.insert(tp);
+    //    tp.collectLeaf();
+    //    expect(personCollection.getById("tp").leaf).toBeDefined();
+    //    expect(personCollection.getById("tp").leaf.getId()).toBe(t1.getLeaves()[0].getId());
+    //});
+
+
+
 
 });
