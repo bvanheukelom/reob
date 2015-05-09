@@ -34,8 +34,8 @@ class PersistenceAnnotation
         if( typeof p1=="string")
         {
             return function (target:Function) {
-                console.log("collection entity ", target, "collection name:", p1);
                 var typeClass:TypeClass<Persistable> = <TypeClass<Persistable>>target;
+                console.log("Entity(<class>) "+PersistenceAnnotation.className(typeClass)+" with collection name:"+p1);
                 Reflect.defineMetadata("persistence:collectionName", p1, typeClass);
                 Reflect.defineMetadata("persistence:entity", true, typeClass);
                 PersistencePrivate.entityClasses[PersistenceAnnotation.className(typeClass)]=typeClass;
@@ -44,9 +44,10 @@ class PersistenceAnnotation
         if( typeof p1=="boolean" )
         {
             return function (target:Function) {
-                console.log("collection entity ", target, "collection name:", p1);
                 var typeClass:TypeClass<Persistable> = <TypeClass<Persistable>>target;
-                Reflect.defineMetadata("persistence:collectionName", p1, PersistenceAnnotation.className(typeClass));
+                console.log("Entity(true) "+PersistenceAnnotation.className(typeClass)+" with collection name:", PersistenceAnnotation.className(typeClass));
+                if( p1 )
+                    Reflect.defineMetadata("persistence:collectionName", PersistenceAnnotation.className(typeClass), typeClass);
                 Reflect.defineMetadata("persistence:entity", true, typeClass);
                 PersistencePrivate.entityClasses[PersistenceAnnotation.className(typeClass)]=typeClass;
             }
@@ -58,7 +59,7 @@ class PersistenceAnnotation
             //PersistencePrivate.collectionRootClasses.push(tc);
             var typeClass:TypeClass<Persistable> = <TypeClass<Persistable>>p1;
 
-            console.log("entity ",typeClass);
+            console.log("Entity() "+PersistenceAnnotation.className(typeClass));
             //Reflect.defineMetadata("persistence:collectionName", PersistenceAnnotation.className(typeClass), typeClass);
             Reflect.defineMetadata("persistence:entity", true, typeClass);
             PersistencePrivate.entityClasses[PersistenceAnnotation.className(typeClass)]=typeClass;
@@ -92,7 +93,7 @@ class PersistenceAnnotation
         return result;
     }
 
-    static getCollectionName(f:TypeClass<any>) {
+    static getCollectionName(f:TypeClass<any>):string {
         return Reflect.getMetadata("persistence:collectionName", f);
     }
     static isRootEntity(f:TypeClass<any>):boolean {
@@ -101,10 +102,9 @@ class PersistenceAnnotation
 
 // ---- typed properties ----
 
-    public static Type(typeClassName:string)
-    {
+    public static Type(typeClassName:string) {
         return function (targetPrototypeObject: Function, propertyName:string) {
-            console.log("type ",targetPrototypeObject, propertyName);
+            console.log("  "+propertyName+" as "+typeClassName);
             var arr:any = Reflect.getMetadata("persistence:typedproperties", targetPrototypeObject);
             if( !arr ) {
                 arr = {};
@@ -113,7 +113,6 @@ class PersistenceAnnotation
             arr[propertyName] = typeClassName;
         };
     }
-
 
     static getPropertyClass(f:Function, propertyName:string):TypeClass<Persistable> {
         var props = Reflect.getMetadata("persistence:typedproperties", f.prototype);
@@ -128,7 +127,6 @@ class PersistenceAnnotation
         {
             result.push(i);
         }
-        console.log("all keys:",  Reflect.getMetadata("persistence:typedproperties",f.prototype), result );
         return result;
         //return Reflect.getMetadata("persistence:subdocument",  f, propertyName );
     }
@@ -138,12 +136,14 @@ class PersistenceAnnotation
 
     static isStoredAsForeignKeys( typeClass:Function, propertyName:string ):boolean
     {
+
         var arr:any = Reflect.getMetadata("persistence:askeys", typeClass.prototype );
         return arr && arr.indexOf(propertyName)!=-1;
     }
 
     static AsForeignKeys( targetPrototypeObject:Function, propertyName:string  )
     {
+        console.log("  "+propertyName+" as foreign key" );
         var arr:any = Reflect.getMetadata("persistence:askeys", targetPrototypeObject);
         if( !arr )
         {

@@ -10,27 +10,14 @@ declare class TestPerson {}
 class TestPhoneNumber
 {
     number:string;
-    person:TestPerson;
-    timesCalled:number=0;
 
-    constructor(n:string, p:TestPerson)
+    constructor(n:string)
     {
         this.number = n;
-        this.person = p;
     }
-
-    called():void
-    {
-        this.timesCalled++;
-    }
-
     getNumber():string
     {
         return this.number;
-    }
-    getTimesCalled():number
-    {
-        return this.timesCalled;
     }
 }
 

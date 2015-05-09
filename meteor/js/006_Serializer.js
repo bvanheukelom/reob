@@ -29,7 +29,7 @@ Serializer = (function () {
             else if (typeof value == 'object') {
                 var propertyClass = PersistenceAnnotation.getPropertyClass(f, propertyName);
                 if (propertyClass)
-                    o[propertyName] = Serializer.toObject(value, entryClass);
+                    o[propertyName] = Serializer.toObject(value, propertyClass);
                 else
                     o[propertyName] = value;
             }

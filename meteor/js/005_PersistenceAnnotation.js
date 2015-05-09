@@ -22,8 +22,8 @@ PersistenceAnnotation = (function () {
     PersistenceAnnotation.Entity = function (p1) {
         if (typeof p1 == "string") {
             return function (target) {
-                console.log("collection entity ", target, "collection name:", p1);
                 var typeClass = target;
+                console.log("Entity(<class>) " + PersistenceAnnotation.className(typeClass) + " with collection name:" + p1);
                 Reflect.defineMetadata("persistence:collectionName", p1, typeClass);
                 Reflect.defineMetadata("persistence:entity", true, typeClass);
                 PersistencePrivate.entityClasses[PersistenceAnnotation.className(typeClass)] = typeClass;
@@ -31,9 +31,10 @@ PersistenceAnnotation = (function () {
         }
         if (typeof p1 == "boolean") {
             return function (target) {
-                console.log("collection entity ", target, "collection name:", p1);
                 var typeClass = target;
-                Reflect.defineMetadata("persistence:collectionName", p1, PersistenceAnnotation.className(typeClass));
+                console.log("Entity(true) " + PersistenceAnnotation.className(typeClass) + " with collection name:", PersistenceAnnotation.className(typeClass));
+                if (p1)
+                    Reflect.defineMetadata("persistence:collectionName", PersistenceAnnotation.className(typeClass), typeClass);
                 Reflect.defineMetadata("persistence:entity", true, typeClass);
                 PersistencePrivate.entityClasses[PersistenceAnnotation.className(typeClass)] = typeClass;
             };
@@ -43,7 +44,7 @@ PersistenceAnnotation = (function () {
             //var className = PersistenceAnnotation.className(tc);
             //PersistencePrivate.collectionRootClasses.push(tc);
             var typeClass = p1;
-            console.log("entity ", typeClass);
+            console.log("Entity() " + PersistenceAnnotation.className(typeClass));
             //Reflect.defineMetadata("persistence:collectionName", PersistenceAnnotation.className(typeClass), typeClass);
             Reflect.defineMetadata("persistence:entity", true, typeClass);
             PersistencePrivate.entityClasses[PersistenceAnnotation.className(typeClass)] = typeClass;
@@ -78,7 +79,7 @@ PersistenceAnnotation = (function () {
     // ---- typed properties ----
     PersistenceAnnotation.Type = function (typeClassName) {
         return function (targetPrototypeObject, propertyName) {
-            console.log("type ", targetPrototypeObject, propertyName);
+            console.log("  " + propertyName + " as " + typeClassName);
             var arr = Reflect.getMetadata("persistence:typedproperties", targetPrototypeObject);
             if (!arr) {
                 arr = {};
@@ -98,7 +99,6 @@ PersistenceAnnotation = (function () {
         for (var i in props) {
             result.push(i);
         }
-        console.log("all keys:", Reflect.getMetadata("persistence:typedproperties", f.prototype), result);
         return result;
         //return Reflect.getMetadata("persistence:subdocument",  f, propertyName );
     };
@@ -108,6 +108,7 @@ PersistenceAnnotation = (function () {
         return arr && arr.indexOf(propertyName) != -1;
     };
     PersistenceAnnotation.AsForeignKeys = function (targetPrototypeObject, propertyName) {
+        console.log("  " + propertyName + " as foreign key");
         var arr = Reflect.getMetadata("persistence:askeys", targetPrototypeObject);
         if (!arr) {
             arr = [];

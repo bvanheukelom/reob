@@ -9,7 +9,7 @@ import PersistencePath = require("./PersistencePath");
 
 class Serializer
 {
-    static toObject<T extends Persistable>( doc:any, f?:TypeClass<T> ):T
+    static toObject<T extends Persistable>( doc:any, f:TypeClass<T> ):T
     {
         var o:any;
         if( f )
@@ -41,7 +41,7 @@ class Serializer
             {
                 var propertyClass = PersistenceAnnotation.getPropertyClass(f, propertyName);
                 if( propertyClass )
-                    o[propertyName] = Serializer.toObject( value, entryClass );
+                    o[propertyName] = Serializer.toObject( value, propertyClass );
                 else
                     o[propertyName] = value;
             }

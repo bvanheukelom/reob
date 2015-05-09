@@ -2,15 +2,12 @@
  * Created by bert on 04.05.15.
  */
 ///<reference path="references.d.ts"/>
-var PersistenceAnnotation = require("./PersistenceAnnotation");
-var Serializer = require("./Serializer");
-var PersistencePath = require("./PersistencePath");
-var PersistenceInfo = (function () {
+PersistenceInfo = (function () {
     function PersistenceInfo() {
     }
     return PersistenceInfo;
 })();
-var MeteorPersistence = (function () {
+MeteorPersistence = (function () {
     function MeteorPersistence() {
     }
     MeteorPersistence.init = function () {
@@ -245,5 +242,3 @@ Meteor.methods({
         }
     }
 });
-module.exports = MeteorPersistence;
-//# sourceMappingURL=MeteorPersistence.js.map

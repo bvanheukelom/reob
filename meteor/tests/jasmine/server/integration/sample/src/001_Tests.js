@@ -1,13 +1,4 @@
 ///<reference path="references.d.ts"/>
-var TestPersonCollection = require("./TestPersonCollection");
-var BaseCollection = require("./BaseCollection");
-var TestTree = require("./TestTree");
-var TestPerson = require("./TestPerson");
-var TestLeaf = require("./TestLeaf");
-var TestPhoneNumber = require("./TestPhoneNumber");
-var MeteorPersistence = require("./MeteorPersistence");
-var PersistenceAnnotation = require("./PersistenceAnnotation");
-var Serializer = require("./Serializer");
 describe("The persistence thing", function () {
     var personCollection;
     var treeCollection;
@@ -137,4 +128,3 @@ describe("The persistence thing", function () {
     });
     // test that a freshly loaded object with a forein key has a lazy loading property
 });
-//# sourceMappingURL=Tests.js.map

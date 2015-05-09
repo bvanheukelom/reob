@@ -59,13 +59,13 @@ class MeteorPersistence
 
     static wrapClass<T extends Persistable>( c:TypeClass<T>  )
     {
-        var className = PersistenceAnnotation.className(c)
-        console.log("wrapping class "+className);
+        var className = PersistenceAnnotation.className(c);
+        console.log("Wrapping transactional functions for class "+className);
         // iterate over all properties of the prototype. this is where the functions are.
         PersistenceAnnotation.getWrappedFunctionNames(c).forEach(function(functionName){
             var originalFunction:Function = <Function>c.prototype[functionName];
             // replace the function with a wrapper function that either does a meteor call or call to the original
-            console.log("Meteor wrapping function call: " + functionName + " on " + className);
+            console.log("Wrapping transactional functions for class "+className+" function: "+functionName);
             var f:any = function meteorCallWrapper() {
 
                 // If this is object is part of persistence and no wrapped call is in progress ...
@@ -92,62 +92,70 @@ class MeteorPersistence
         });
 
         PersistenceAnnotation.getTypedPropertyNames(c).forEach(function(propertyName:string){
-            console.log("lazy loader for "+propertyName, propertyDescriptor);
-            var propertyDescriptor = Object.getOwnPropertyDescriptor(c.prototype,propertyName);
+            if( PersistenceAnnotation.isStoredAsForeignKeys(c, propertyName) ) {
+                console.log("On Class "+className+ ": creating lazy loader for " + propertyName);
+                var propertyDescriptor = Object.getOwnPropertyDescriptor(c.prototype, propertyName);
 
-            Object.defineProperty(c.prototype, propertyName,{
-                get:function():any {
-                    // TODO this doesnt work for subdocuments
-                    //console.log("Monkey patched getter "+propertyName);
-                    var v:any;
-                    if( propertyDescriptor && propertyDescriptor.get )
-                        v = propertyDescriptor.get.apply(this);
-                    else
-                        v = this["_"+propertyName];
-                    var propertyClass = PersistenceAnnotation.getPropertyClass(c,propertyName);
-                    var propertyClassName = propertyClass ?  PersistenceAnnotation.className(propertyClass): undefined;
-                    var collection:BaseCollection<Persistable> = propertyClassName ? MeteorPersistence.collections[propertyClassName]:undefined;
-                    if( typeof v == "string" )
-                    {
-                        console.log("lazy loading "+v+" collection:",collection);
-                        v = collection ? collection.getById(v) : undefined;
-                        this[propertyName] = v;
-                    }
-                    else if( Array.isArray(v)  ) // TODO this could be improved so that it loads them when they are accessed rather than to load them all at once
-                    {
-                        var arr:Array<any> = (<Array<any>>v);
-                        if( arr.length>0 && typeof arr[0] == "string" ) {
-                            arr.forEach(function (ele:string, index:number) {
-                                if( typeof ele!="string" )
-                                    throw new Error("There should be only ids in the array.");
-                                arr[index] = collection.getById(ele);
-                            });
+                Object.defineProperty(c.prototype, propertyName, {
+                    get: function ():any {
+                        // TODO this doesnt work for subdocuments
+                        //console.log("Monkey patched getter "+propertyName);
+                        var v:any;
+                        if (propertyDescriptor && propertyDescriptor.get)
+                            v = propertyDescriptor.get.apply(this);
+                        else
+                            v = this["_" + propertyName];
+                        if (typeof v == "string") {
+                                var persistencePath = new PersistencePath(v);
+                                var propertyClassName = persistencePath.getClassName();
+                                var collection:BaseCollection<Persistable> = propertyClassName ? MeteorPersistence.collections[propertyClassName] : undefined;
+                                if( collection )
+                                {
+                                    var rootValue = collection.getById(persistencePath.getId());
+                                    var newValue = rootValue ? persistencePath.getSubObject(rootValue):undefined;
+                                    console.log("Lazy loading "+className+"."+propertyName+" foreign key:"+ v +". Loaded: "+newValue);
+                                    v = newValue;
+                                }
+                                else
+                                    throw new Error("No collection found for lazy loading "+className+"."+propertyName+" foreign key:"+ v +". Loaded: "+newValue);
+                            this[propertyName] = v;
                         }
-                    }
-                    //console.log("Monkey patched getter "+propertyName+" returns ",v);
-                    return v;
-                },
-                set:function(v:any) {
-                    //console.log("Monkey patched setter "+propertyName, arguments );
-
-                    if( propertyDescriptor && propertyDescriptor.set )
-                        propertyDescriptor.set.apply(this, arguments);
-                    else
-                    {
-                        if( !Object.getOwnPropertyDescriptor(this,"_"+propertyName) )
+                        else if (Array.isArray(v)) // TODO this could be improved so that it loads them when they are accessed rather than to load them all at once
                         {
-                            Object.defineProperty(this, "_"+propertyName,{
-                                configurable:false,
-                                enumerable:false,
-                                writable:true
-                            });
+                            var arr:Array<any> = (<Array<any>>v);
+                            if (arr.length > 0 && typeof arr[0] == "string") {
+                                arr.forEach(function (ele:string, index:number) {
+                                    if (typeof ele != "string")
+                                        throw new Error("There should be only ids in the array.");
+                                    arr[index] = collection.getById(ele);
+                                });
+                            }
                         }
-                        this["_"+propertyName]=v;
-                    }
-                },
-                configurable:propertyDescriptor?propertyDescriptor.configurable:true,
-                enumerable:propertyDescriptor?propertyDescriptor.enumerable:true
-            });
+                        //console.log("Monkey patched getter "+propertyName+" returns ",v);
+                        return v;
+                    },
+                    set: function (v:any) {
+                        console.log("Monkey patched setter "+propertyName+" v:"+v);
+
+                        if (propertyDescriptor && propertyDescriptor.set)
+                            propertyDescriptor.set.apply(this, arguments);
+                        else {
+                            if (!Object.getOwnPropertyDescriptor(this, "_" + propertyName)) {
+                                Object.defineProperty(this, "_" + propertyName, {
+                                    configurable: false,
+                                    enumerable: false,
+                                    writable: true
+                                });
+                            }
+                            this["_" + propertyName] = v;
+                        }
+                    },
+                    configurable: propertyDescriptor ? propertyDescriptor.configurable : true,
+                    enumerable: propertyDescriptor ? propertyDescriptor.enumerable : true
+                });
+            }
+            else
+                console.log("On Class "+className+ ": no lazy loader for " + propertyName);
 
         });
     }
@@ -155,19 +163,32 @@ class MeteorPersistence
     static needsLazyLoading( object:Persistable, propertyName:string )
     {
         // TODO inheritance
-        var propertyDescriptor = Object.getOwnPropertyDescriptor(object,propertyName);
+        var oc = PersistenceAnnotation.getClass(object);
         var shadowpropertyDescriptor = Object.getOwnPropertyDescriptor(object, "_"+propertyName);
-        return propertyDescriptor && shadowpropertyDescriptor && (typeof object["_"+propertyName]=="string" );
+        return PersistenceAnnotation.isStoredAsForeignKeys(oc, propertyName)  && !!shadowpropertyDescriptor && (typeof object["_"+propertyName]=="string" );
     }
 
-    static updatePersistencePaths(object:Persistable):void {
+    static updatePersistencePaths(object:Persistable, visited?:Array<Persistable>):void {
+        if(!visited)
+            visited = [];
+        if( visited.indexOf(object)!=-1 )
+            return;
+        if( !Object.getOwnPropertyDescriptor(object,"persistencePath") )
+        {
+            Object.defineProperty(object,"persistencePath", {
+                configurable: false,
+                enumerable: false,
+                writable: true
+            });
+        }
+        visited.push(object);
         var objectClass = PersistenceAnnotation.getClass(object);
         if( PersistenceAnnotation.isRootEntity(objectClass) ) {
             if( !object.persistencePath ) {
                 if( object.getId && object.getId() )
                     object.persistencePath = new PersistencePath(PersistenceAnnotation.className(objectClass), object.getId() )
                 else
-                    throw new Error( "Can not set the persistence path of root collection object without id.");
+                    throw new Error( "Can not set the persistence path of root collection object without id. Class:"+PersistenceAnnotation.className(objectClass) );
             }
         }
         else
@@ -178,30 +199,44 @@ class MeteorPersistence
         PersistenceAnnotation.getTypedPropertyNames(objectClass).forEach(function(typedPropertyName:string){
             if( !PersistenceAnnotation.isStoredAsForeignKeys(objectClass,typedPropertyName) ) {
                 var v:Persistable = object[typedPropertyName];
-                if( Array.isArray(v) )
-                {
-                    (<Array<Persistable>>v).forEach(function(e:Persistable){
-                        if( e.getId && e.getId() ) {
-                            e.persistencePath = object.persistencePath.clone();
-                            e.persistencePath.appendPropertyLookup(typedPropertyName)
-                            e.persistencePath.appendArrayLookup(e.getId());
-                            MeteorPersistence.updatePersistencePaths(e);
+                if( v ) {
+                    if (Array.isArray(v)) {
+                        (<Array<Persistable>>v).forEach(function (e:Persistable) {
+
+                            if (e.getId && e.getId()) {
+                                e.persistencePath = object.persistencePath.clone();
+                                e.persistencePath.appendPropertyLookup(typedPropertyName)
+                                e.persistencePath.appendArrayLookup(e.getId());
+                                MeteorPersistence.updatePersistencePaths(e, visited);
+                            }
+                            else
+                                throw new Error("An element of the array '" + typedPropertyName + "' stored on the classe " + PersistenceAnnotation.className(objectClass) + " does not have an id. Total persistence path so far:" + object.persistencePath.toString());
+                        });
+                    }
+                    else {
+                        v.persistencePath = object.persistencePath.clone();
+                        v.persistencePath.appendPropertyLookup(typedPropertyName);
+                        MeteorPersistence.updatePersistencePaths(v, visited);
+                    }
+                }
+            }
+            else {
+                if( !MeteorPersistence.needsLazyLoading(object, typedPropertyName) ) {
+                    var v:Persistable = object[typedPropertyName];
+                    if( v ) {
+                        if (Array.isArray(v)) {
+                            (<Array<Persistable>>v).forEach(function (e:Persistable) {
+                                if (!e.persistencePath)
+                                    MeteorPersistence.updatePersistencePaths(e, visited);
+                            });
                         }
-                        else
-                            throw new Error( "An element of the array '"+typedPropertyName+"' stored on the classe "+PersistenceAnnotation.className(objectClass)+" does not have an id. Total persistence path so far:"+object.persistencePath.toString());
-                    });
+                        else if (!v.persistencePath)
+                            MeteorPersistence.updatePersistencePaths(v, visited);
+                    }
                 }
-                else
-                {
-                    v.persistencePath = object.persistencePath.clone();
-                    v.persistencePath.appendPropertyLookup(typedPropertyName);
-                    MeteorPersistence.updatePersistencePaths(v);
-                }
-                //TODO Map
             }
         });
     }
-
 }
 
 

@@ -29,6 +29,9 @@ var TestLeaf = (function () {
         PersistenceAnnotation.Type("TestTree"),
         PersistenceAnnotation.AsForeignKey
     ], TestLeaf.prototype, "parent");
+    TestLeaf = __decorate([
+        PersistenceAnnotation.Entity
+    ], TestLeaf);
     return TestLeaf;
 })();
 module.exports = TestLeaf;

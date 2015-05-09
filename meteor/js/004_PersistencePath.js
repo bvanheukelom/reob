@@ -3,7 +3,6 @@
  */
 PersistencePath = (function () {
     function PersistencePath(className, id) {
-        console.log("class!! " + className, id);
         this.path = className;
         if (id)
             this.path += "[" + id + "]";

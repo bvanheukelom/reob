@@ -1,5 +1,5 @@
 /**
- * Created by bert on 07.05.15.
+ * Created by bert on 04.05.15.
  */
 if (typeof __decorate !== "function") __decorate = function (decorators, target, key, desc) {
     if (typeof Reflect === "object" && typeof Reflect.decorate === "function") return Reflect.decorate(decorators, target, key, desc);
@@ -9,24 +9,15 @@ if (typeof __decorate !== "function") __decorate = function (decorators, target,
         case 4: return decorators.reduceRight(function(o, d) { return (d && d(target, key, o)) || o; }, desc);
     }
 };
-TestLeaf = (function () {
-    function TestLeaf(id, parent) {
-        this._id = id;
-        this.greenNess = 1;
-        this.parent = parent;
+TestPhoneNumber = (function () {
+    function TestPhoneNumber(n) {
+        this.number = n;
     }
-    TestLeaf.prototype.getId = function () {
-        return this._id;
+    TestPhoneNumber.prototype.getNumber = function () {
+        return this.number;
     };
-    TestLeaf.prototype.grow = function () {
-        this.greenNess++;
-    };
-    TestLeaf.prototype.getTree = function () {
-        return this.parent;
-    };
-    __decorate([
-        PersistenceAnnotation.Type("TestTree"),
-        PersistenceAnnotation.AsForeignKey
-    ], TestLeaf.prototype, "parent");
-    return TestLeaf;
+    TestPhoneNumber = __decorate([
+        PersistenceAnnotation.Entity
+    ], TestPhoneNumber);
+    return TestPhoneNumber;
 })();

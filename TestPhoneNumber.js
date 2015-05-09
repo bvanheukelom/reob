@@ -11,19 +11,11 @@ if (typeof __decorate !== "function") __decorate = function (decorators, target,
 };
 var PersistenceAnnotation = require("./PersistenceAnnotation");
 var TestPhoneNumber = (function () {
-    function TestPhoneNumber(n, p) {
-        this.timesCalled = 0;
+    function TestPhoneNumber(n) {
         this.number = n;
-        this.person = p;
     }
-    TestPhoneNumber.prototype.called = function () {
-        this.timesCalled++;
-    };
     TestPhoneNumber.prototype.getNumber = function () {
         return this.number;
-    };
-    TestPhoneNumber.prototype.getTimesCalled = function () {
-        return this.timesCalled;
     };
     TestPhoneNumber = __decorate([
         PersistenceAnnotation.Entity

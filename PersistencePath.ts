@@ -10,7 +10,6 @@ class PersistencePath
 
     constructor( className:string, id?:string )
     {
-        console.log("class!! "+className, id);
         this.path = className;
         if( id ) this.path+="["+id+"]";
         if( !this.getId() )

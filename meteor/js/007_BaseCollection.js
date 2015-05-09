@@ -4,10 +4,10 @@
 ///<reference path="references.d.ts"/>
 BaseCollection = (function () {
     function BaseCollection(persistableClass) {
+        MeteorPersistence.init();
         var collectionName = PersistenceAnnotation.getCollectionName(persistableClass);
         if (!MeteorPersistence.collections[collectionName]) {
             // as it doesnt really matter which base collection is used in meteor-calls, we're just using the first that is created
-            MeteorPersistence.wrapClass(persistableClass);
             MeteorPersistence.collections[collectionName] = this;
         }
         this.meteorCollection = BaseCollection.getMeteorCollection(collectionName);
@@ -15,7 +15,7 @@ BaseCollection = (function () {
     }
     BaseCollection.getMeteorCollection = function (name) {
         if (!BaseCollection.meteorCollections[name]) {
-            BaseCollection.meteorCollections[name] = new Mongo.Collection(name);
+            BaseCollection.meteorCollections[name] = new Meteor.Collection(name);
         }
         return BaseCollection.meteorCollections[name];
     };
@@ -89,8 +89,8 @@ BaseCollection = (function () {
         var doc = Serializer.toDocument(p);
         doc._id = p.getId();
         doc.serial = 0;
-        MeteorPersistence.updatePersistencePaths(p);
         this.meteorCollection.insert(doc);
+        MeteorPersistence.updatePersistencePaths(p);
     };
     BaseCollection.meteorCollections = {};
     return BaseCollection;

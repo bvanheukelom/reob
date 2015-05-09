@@ -6,7 +6,7 @@ import PersistenceAnnotation = require( "./PersistenceAnnotation" );
 import TestTree = require( "./TestTree" );
 
 
-
+@PersistenceAnnotation.Entity
 class TestLeaf
 {
     _id:string;
@@ -16,7 +16,7 @@ class TestLeaf
     @PersistenceAnnotation.AsForeignKey
     parent:TestTree;
 
-    constructor(id:string, parent:TestTree)
+    constructor(id?:string, parent?:TestTree)
     {
         this._id = id;
         this.greenNess = 1;

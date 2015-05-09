@@ -19,11 +19,10 @@ class BaseCollection<T extends Persistable>
 
     constructor( persistableClass:TypeClass<T> )
     {
+        MeteorPersistence.init();
         var collectionName = PersistenceAnnotation.getCollectionName(persistableClass);
-        if( !MeteorPersistence.collections[collectionName] )
-        {
+        if( !MeteorPersistence.collections[collectionName] ) {
             // as it doesnt really matter which base collection is used in meteor-calls, we're just using the first that is created
-            MeteorPersistence.wrapClass( persistableClass );
             MeteorPersistence.collections[collectionName] = this;
         }
         this.meteorCollection = BaseCollection.getMeteorCollection(collectionName);
@@ -34,7 +33,7 @@ class BaseCollection<T extends Persistable>
     {
         if( !BaseCollection.meteorCollections[name] )
         {
-            BaseCollection.meteorCollections[name] = new Mongo.Collection( name );
+            BaseCollection.meteorCollections[name] = new (<any>Meteor).Collection( name );
         }
         return BaseCollection.meteorCollections[name];
     }
@@ -132,8 +131,8 @@ class BaseCollection<T extends Persistable>
         var doc : Document = Serializer.toDocument( p );
         doc._id = p.getId();
         doc.serial = 0;
-        MeteorPersistence.updatePersistencePaths(p);
         this.meteorCollection.insert(doc);
+        MeteorPersistence.updatePersistencePaths(p);
     }
 
 }

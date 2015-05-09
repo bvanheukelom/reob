@@ -79,17 +79,17 @@ module.exports = function (grunt) {
 			return returnContent;
 		};
 
-		var sharedCodeDirectory = "meteor/";
+		var sharedCodeDirectory = "meteor/js/";
 		var loadingIndicator = 1;
 		var getNextLoadingNumber = function () {
 			return ("00" + loadingIndicator++).slice(-3);
 		};
 
-		var cp = function (src, dest) {
-			if (!dest)
-				dest = sharedCodeDirectory;
+		var cp = function (src, destDir) {
+			if (!destDir)
+				destDir = sharedCodeDirectory;
 		    grunt.util.recurse(grunt.file.expand(src), function(file){
-			    var dest = dest + getNextLoadingNumber() + "_" + file.substr((file.lastIndexOf('/') + 1));
+			    var dest = destDir + getNextLoadingNumber() + "_" + file.substr((file.lastIndexOf('/') + 1));
 			    console.log(file + " --> " + dest);
 				grunt.file.copy(file, dest, {
 					process: processFunction
@@ -97,7 +97,6 @@ module.exports = function (grunt) {
 		    });
 		};
 		grunt.file.delete(sharedCodeDirectory);
-		cp("o.js");
 		grunt.file.copy("node_modules/reflect-metadata/Reflect.js", sharedCodeDirectory+"000_Reflect.js");
 		cp("Tests.js", "meteor/tests/jasmine/server/integration/sample/src/");
 		cp("Persistable.js");
@@ -112,7 +111,7 @@ module.exports = function (grunt) {
 		cp("TestAddress.js");
 		cp("TestPhoneNumber.js");
 		cp("TestPerson.js");
-		cp("TestCollection.js");
+		cp("TestPersonCollection.js");
 	});
 
 };

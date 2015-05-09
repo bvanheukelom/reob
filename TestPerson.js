@@ -10,15 +10,12 @@ if (typeof __decorate !== "function") __decorate = function (decorators, target,
  * Created by bert on 04.05.15.
  */
 var PersistenceAnnotation = require("./PersistenceAnnotation");
-var TestPhoneNumber = require("./TestPhoneNumber");
 var TestAddress = require("./TestAddress");
 var TestPerson = (function () {
     function TestPerson(id, name) {
-        this.phoneNumbers = [];
         this.addresses = [];
         this._id = id;
         this.name = name;
-        console.log("");
     }
     TestPerson.prototype.getId = function () {
         return this._id;
@@ -30,14 +27,8 @@ var TestPerson = (function () {
     TestPerson.prototype.rename = function (n) {
         this.name = n;
     };
-    TestPerson.prototype.getTrees = function () {
-        return this.trees;
-    };
     TestPerson.prototype.getName = function () {
         return this.name;
-    };
-    TestPerson.prototype.addPhoneNumber = function (n) {
-        this.phoneNumbers.push(new TestPhoneNumber(n, this));
     };
     //getAddressById(id:String):TestAddress
     //{
@@ -54,18 +45,12 @@ var TestPerson = (function () {
     TestPerson.prototype.getTree = function () {
         return this.tree;
     };
-    TestPerson.prototype.callPhoneNumber = function (number) {
-        this.phoneNumbers.forEach(function (pn) {
-            if (pn.getNumber() == number)
-                pn.called();
-        });
-    };
     TestPerson.prototype.collectLeaf = function () {
         this.leaf = this.tree.getLeaves()[0];
     };
     __decorate([
         PersistenceAnnotation.Type("TestPhoneNumber")
-    ], TestPerson.prototype, "phoneNumbers");
+    ], TestPerson.prototype, "phoneNumber");
     __decorate([
         PersistenceAnnotation.Type("TestAddress")
     ], TestPerson.prototype, "addresses");
@@ -82,7 +67,7 @@ var TestPerson = (function () {
             PersistenceAnnotation.Wrap
         ], TestPerson.prototype, "collectLeaf", Object.getOwnPropertyDescriptor(TestPerson.prototype, "collectLeaf")));
     TestPerson = __decorate([
-        PersistenceAnnotation.Entity
+        PersistenceAnnotation.Entity(true)
     ], TestPerson);
     return TestPerson;
 })();

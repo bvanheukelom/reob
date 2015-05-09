@@ -7,17 +7,17 @@ import TestTree = require("./TestTree");
 import TestLeaf = require("./TestLeaf");
 import TestAddress = require("./TestAddress");
 
-@PersistenceAnnotation.Entity
+@PersistenceAnnotation.Entity(true)
 class TestPerson
 {
     name:string;
     _id:string;
 
     @PersistenceAnnotation.Type("TestPhoneNumber")
-    private phoneNumbers:Array<TestPhoneNumber> = [];
+    phoneNumber:TestPhoneNumber;
+
     @PersistenceAnnotation.Type("TestAddress")
     private addresses:Array<TestAddress> = [];
-    private trees:Array<TestTree>;
 
     @PersistenceAnnotation.Type("TestTree")
     @PersistenceAnnotation.AsForeignKeys
@@ -29,7 +29,6 @@ class TestPerson
     {
         this._id = id;
         this.name = name;
-        console.log("");
     }
 
     getId():string
@@ -49,20 +48,11 @@ class TestPerson
         this.name = n;
     }
 
-    getTrees():Array<TestTree>
-    {
-        return this.trees;
-    }
-
     getName():string
     {
         return this.name;
     }
 
-    addPhoneNumber( n:string )
-    {
-        this.phoneNumbers.push( new TestPhoneNumber(n, this) );
-    }
 
     //getAddressById(id:String):TestAddress
     //{
@@ -84,13 +74,6 @@ class TestPerson
         return this.tree;
     }
 
-    callPhoneNumber( number:string )
-    {
-        this.phoneNumbers.forEach(function(pn:TestPhoneNumber){
-            if( pn.getNumber()==number )
-                pn.called();
-        })
-    }
 
     @PersistenceAnnotation.Wrap
     collectLeaf()
