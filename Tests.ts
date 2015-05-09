@@ -179,6 +179,29 @@ describe("The persistence thing", function(){
         expect(personCollection.getById("tp").leaf.getId()).toBe(t1.getLeaves()[0].getId());
     });
 
+    it("can save objects that have subobjects which are one of many elements in a subobject-array of another root object", function(){
+        var t1:TestTree = new TestTree("tree1");
+        treeCollection.insert(t1);
+
+        for( var i=0;i<10;i++)
+            t1.grow();
+
+        var tp:TestPerson = new TestPerson("tp");
+        tp.leaf = t1.getLeaves()[5];
+        personCollection.insert(tp);
+        expect(personCollection.getById("tp").leaf).toBeDefined();
+        expect(personCollection.getById("tp").leaf.getId()).toBe(t1.getLeaves()[5].getId());
+        expect(personCollection.getById("tp").leaf.greenNess).toBe(t1.getLeaves()[5].greenNess);
+    });
+
+    // arrays with undefined entries !
+
+    // Maps
+
+    // callbacks
+
+    // wrapped function results
+
     //it("can save objects that have subobjects which are subobjects of other root objects", function(){
     //    var t1:TestTree = new TestTree("tree1");
     //    treeCollection.insert(t1);

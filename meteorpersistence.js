@@ -53,8 +53,10 @@ var MeteorPersistence = (function () {
                     }
                     Meteor.call("wrappedCall", this.persistencePath.toString(), arguments.callee.functionName, arguments, typeNames);
                 }
+                var result = arguments.callee.originalFunction.apply(this, arguments);
+                MeteorPersistence.updatePersistencePaths(this);
                 // also call the method on the current object so that it reflects the update
-                return arguments.callee.originalFunction.apply(this, arguments);
+                return result;
             };
             // this stores the old function on the wrapping one
             f.originalFunction = originalFunction;
