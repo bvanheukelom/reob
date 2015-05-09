@@ -5,10 +5,11 @@
 import Persistable = require("./Persistable");
 import Document = require("./Document");
 import PersistenceAnnotation = require("./PersistenceAnnotation");
+import PersistencePath = require("./PersistencePath");
 
 class Serializer
 {
-    static toObject<T extends Persistable>( doc:any, f?:Function ):T
+    static toObject<T extends Persistable>( doc:any, f?:TypeClass<T> ):T
     {
         var o:any;
         if( f )
@@ -30,14 +31,19 @@ class Serializer
                 var entryClass = PersistenceAnnotation.getPropertyClass(f, propertyName);
                 for( var i=0; i<arr.length;i++ )
                 {
-                    var arrayEntry = Serializer.toObject( arr[i], entryClass );
-
+                    var arrayEntry = arr[i];
+                    if( entryClass )
+                        arrayEntry = Serializer.toObject( arr[i], entryClass );
+                    o[propertyName][i] = arrayEntry;
                 }
             }
             else if( typeof value == 'object' )
             {
                 var propertyClass = PersistenceAnnotation.getPropertyClass(f, propertyName);
-                o[propertyName] = Serializer.toObject( value, entryClass );
+                if( propertyClass )
+                    o[propertyName] = Serializer.toObject( value, entryClass );
+                else
+                    o[propertyName] = value;
             }
             else
             {
@@ -47,62 +53,73 @@ class Serializer
         return o;
     }
 
-    static toDocument( object:Persistable, depth?:number ):Document
+    static toDocument( object:Persistable, rootClass?:TypeClass<Persistable>, parentObject?:Persistable, propertyNameOnParentObject?:string ):Document
     {
-        debugger;
         var result:Document;
-        if( PersistenceAnnotation.getCollectionName( object.constructor ) && depth )
+        var parentClass = PersistenceAnnotation.getClass(parentObject);
+        if (parentObject && propertyNameOnParentObject && PersistenceAnnotation.isStoredAsForeignKeys(parentClass, propertyNameOnParentObject)) {
+            if( object.persistencePath )
+                return object.persistencePath.toString();
+            else {
+                var objectClass = PersistenceAnnotation.getClass( object );
+                if( PersistenceAnnotation.isRootEntity(objectClass) && object.getId() ) {
+                    return new PersistencePath( PersistenceAnnotation.className( objectClass ), object.getId() ).toString();
+                }
+                else {
+                    throw new Error("Can not serialize '"+propertyNameOnParentObject+"' on class "+PersistenceAnnotation.className( parentClass )+". Objects that should be stored as foreign keys need to be persisted beforehand or be the root entity of a collection and have an id. Value of '"+propertyNameOnParentObject+"':"+object);
+                }
+            }
             return object.getId();
+        }
         else if( typeof object.toDocument == "function" )
             result = object.toDocument();
         else
-            result = Serializer.createDocument(object, depth);
+            result = Serializer.createDocument(object, rootClass?rootClass:PersistenceAnnotation.getClass(object), parentObject , propertyNameOnParentObject );
         return result;
     }
 
-    static createDocument( object: any, depth?:number ): Document
+    static createDocument( object: any, rootClass?:TypeClass<Persistable>, parentObject?:Persistable, propertyNameOnParentObject?:string ): Document
     {
-        if( !depth )
-            depth = 0;
         var doc:any = {};
         for (var property in object)
         {
-            //if (excludedProperties && excludedProperties.indexOf(property)!=-1 )
-            //{
-            //    //console.log("Skipping excluded property : " + property);
-            //    continue;
-            //}
-            if (object[property] !== undefined && property != "persistencePath")
+            var value = object[property];
+            if( property=="id" )
+            {
+                doc._id = object.id;
+            }
+            else if (object[property] !== undefined && property != "persistencePath")
             {
                 // primitives
-                if (typeof object[property] == "string" || typeof object[property] == "number" || typeof object[property] == "date" || typeof object[property] == "boolean")
-                    doc[property] = object[property];
+
+                if (typeof value == "string" || typeof value == "number" || typeof value == "date" || typeof value == "boolean")
+                    doc[property] = value;
 
                 // array
-                else if (object[property] instanceof Array)
+                else if (value instanceof Array)
                 {
                     doc[property] = [];
-                    var arr:Array<any> = object[property];
+                    var arr:Array<any> = value;
                     for( var i=0; i<arr.length; i++ )
                     {
                         var subObject = arr[i];
-                        doc[property].push( Serializer.toDocument(subObject, depth+1) );
+                        doc[property].push( Serializer.toDocument(subObject, rootClass, object, property) );
                     }
                 }
 
                 // object
                 else if (typeof object[property] == 'object')
                 {
-                    doc[property] = Serializer.toDocument( object[property], depth+1 );
+                    doc[property] = Serializer.toDocument( value, rootClass, object, property );
                 }
 
-                else if (typeof object[property] == 'function')
+                else if (typeof value == 'function')
                 {
                     // not doing eeeeenithing with functions
                 }
                 else
                 {
-                    console.error("Unsupported type : ", typeof object[property]);
+                    console.error("Unsupported type : ", typeof value);
                 }
             }
         }

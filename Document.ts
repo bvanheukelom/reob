@@ -3,7 +3,7 @@
  */
 interface Document
 {
-    id?:string;
+    _id?:string;
     serial?:number;
 }
 export = Document;

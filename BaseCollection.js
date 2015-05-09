@@ -1,15 +1,27 @@
 /**
  * Created by bert on 04.05.15.
  */
-///<reference path="node_modules\reflect-metadata\reflect-metadata.d.ts"/>
+///<reference path="references.d.ts"/>
+var MeteorPersistence = require("./MeteorPersistence");
 var Serializer = require("./Serializer");
+var PersistenceAnnotation = require("./PersistenceAnnotation");
 var BaseCollection = (function () {
     function BaseCollection(persistableClass) {
-        this.toDocumentModifiers = [];
-        var collectionName = Reflect.getMetadata("persist:collection", persistableClass);
-        this.meteorCollection = new Meteor.Collection(collectionName);
+        var collectionName = PersistenceAnnotation.getCollectionName(persistableClass);
+        if (!MeteorPersistence.collections[collectionName]) {
+            // as it doesnt really matter which base collection is used in meteor-calls, we're just using the first that is created
+            MeteorPersistence.wrapClass(persistableClass);
+            MeteorPersistence.collections[collectionName] = this;
+        }
+        this.meteorCollection = BaseCollection.getMeteorCollection(collectionName);
         this.theClass = persistableClass;
     }
+    BaseCollection.getMeteorCollection = function (name) {
+        if (!BaseCollection.meteorCollections[name]) {
+            BaseCollection.meteorCollections[name] = new Mongo.Collection(name);
+        }
+        return BaseCollection.meteorCollections[name];
+    };
     BaseCollection.prototype.getById = function (id) {
         var o = this.find({
             "_id": id
@@ -25,10 +37,21 @@ var BaseCollection = (function () {
         }
         return objects;
     };
+    BaseCollection.prototype.getAll = function () {
+        return this.find({});
+    };
+    BaseCollection.prototype.remove = function (t) {
+        if (t) {
+            if (t.getId && t.getId()) {
+                this.meteorCollection.remove(t.getId());
+            }
+            else
+                throw new Error("Trying to remove an object that does not have an id.");
+        }
+    };
     BaseCollection.prototype.documentToObject = function (doc) {
         var p = Serializer.toObject(doc, this.theClass);
-        //(<ModifiableObject><any>p).persistenceInfo = new PersistenceInfo();
-        //(<ModifiableObject><any>p).persistenceInfo.path = new PersistencePath( this, p.getId() );
+        MeteorPersistence.updatePersistencePaths(p);
         return p;
     };
     BaseCollection.prototype.update = function (id, updateFunction) {
@@ -42,19 +65,21 @@ var BaseCollection = (function () {
             // call the update function
             var object = this.documentToObject(document);
             updateFunction(object);
+            MeteorPersistence.updatePersistencePaths(object);
             var documentToSave = Serializer.toDocument(object);
             documentToSave.serial = currentSerial + 1;
             // update the collection
-            console.log("writing document ", document);
+            console.log("writing document ", documentToSave);
             var updatedDocumentCount = this.meteorCollection.update({
                 _id: id,
                 serial: currentSerial
-            }, document);
+            }, documentToSave);
             // verify that that went well
-            if (updatedDocumentCount == 1)
+            if (updatedDocumentCount == 1) {
                 return object; // we're done
+            }
             else if (updatedDocumentCount > 1)
-                throw new Meteor.Error(500, "verifiedUpdate should only update one document");
+                throw new Meteor.Error("verifiedUpdate should only update one document");
             else {
                 console.log("rerunning verified update ");
             }
@@ -62,13 +87,15 @@ var BaseCollection = (function () {
         return undefined;
     };
     BaseCollection.prototype.insert = function (p) {
-        if (!p.getId())
+        if (!p.getId || !p.getId())
             throw new Error("Object has no Id");
         var doc = Serializer.toDocument(p);
+        doc._id = p.getId();
         doc.serial = 0;
+        MeteorPersistence.updatePersistencePaths(p);
         this.meteorCollection.insert(doc);
     };
-    BaseCollection.isSaving = false;
+    BaseCollection.meteorCollections = {};
     return BaseCollection;
 })();
 module.exports = BaseCollection;

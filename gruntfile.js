@@ -3,8 +3,8 @@ module.exports = function (grunt) {
 	// GRUNT CONFIGURATION
 	grunt.initConfig({
 		watch: {
-			files: ["**/*.ts"],
-			tasks: ["typescript:compile", "copySharedCode"]
+			files: ["*.js"],
+			tasks: ["copyCode"]
 		},
 		typescript: {
 			options: {
@@ -66,7 +66,8 @@ module.exports = function (grunt) {
 			var returnContent = "";
 			var splitArray = content.split("\n");
 			for (var i = 0; i < splitArray.length; i++) {
-				if (splitArray[i].indexOf("require(") == -1 && splitArray[i].indexOf("//# sourceMappingURL") == -1 && splitArray[i].indexOf("module.exports") == -1&& splitArray[i].indexOf("exports.") == -1) {
+				if (splitArray[i].indexOf("require(") == -1 && splitArray[i].indexOf("//# sourceMappingURL") == -1 && splitArray[i].indexOf("module.exports") == -1&& splitArray[i].indexOf("exports.") == -1 /* && splitArray[i].indexOf("__metadata('design:")==-1*/ )
+				{
 					// take care of local var's
 					if (splitArray[i].indexOf("var ") == 0) {
 						returnContent += splitArray[i].substr(4);
@@ -78,7 +79,8 @@ module.exports = function (grunt) {
 			return returnContent;
 		};
 
-		var sharedCodeDirectory = "meteor/js/";
+		var sharedCodeDirectory = "meteor/tests/jasmine/server/integration/sample/src/";
+		var sharedCodeDirectory = "meteor/";
 		var loadingIndicator = 1;
 		var getNextLoadingNumber = function () {
 			return ("00" + loadingIndicator++).slice(-3);
@@ -104,6 +106,7 @@ module.exports = function (grunt) {
 		cp("Serializer.js");
 		cp("BaseCollection.js");
 		cp("MeteorPersistence.js");
+		cp("TestLeaf.js");
 		cp("TestTree.js");
 		cp("TestAddress.js");
 		cp("TestPhoneNumber.js");

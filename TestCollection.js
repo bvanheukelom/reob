@@ -8,34 +8,34 @@ var __extends = this.__extends || function (d, b) {
     d.prototype = new __();
 };
 var TestPerson = require("./TestPerson");
-var TestTree = require("./TestTree");
-var TestAddress = require("./TestAddress");
-var MeteorPersistence = require("./MeteorPersistence");
 var BaseCollection = require("./BaseCollection");
-var Serializer = require("./Serializer");
-MeteorPersistence.init();
-var TestPersonCollection = (function (_super) {
-    __extends(TestPersonCollection, _super);
-    function TestPersonCollection() {
+var PersonCollection = (function (_super) {
+    __extends(PersonCollection, _super);
+    function PersonCollection() {
         _super.call(this, TestPerson);
     }
-    return TestPersonCollection;
+    PersonCollection.prototype.findByName = function (n) {
+        var arr = this.find({
+            name: n
+        });
+        return arr.length > 0 ? arr[0] : undefined;
+    };
+    return PersonCollection;
 })(BaseCollection);
-exports.TestPersonCollection = TestPersonCollection;
-var TestTreeCollection = (function (_super) {
-    __extends(TestTreeCollection, _super);
-    function TestTreeCollection() {
-        _super.call(this, TestTree);
-    }
-    return TestTreeCollection;
-})(BaseCollection);
-exports.TestTreeCollection = TestTreeCollection;
-var bc = new TestPersonCollection();
-var tp = new TestPerson("tp1", "bert");
-var value = Reflect.getMetadata("SubDocument", TestPerson.prototype, "phoneNumbers");
-tp.addAddress(new TestAddress("1", "süd"));
-tp.tree = new TestTree("tree1");
-var s = Serializer.toDocument(tp);
-var tp = Serializer.toObject(s, TestPerson);
-console.log(tp.tree.getId());
+//var treeCollection = new BaseCollection(TestTree);
+//var personCollection = new PersonCollection();
+//treeCollection.getAll().forEach(function(tree){
+//    treeCollection.remove(tree);
+//});
+//personCollection.getAll().forEach(function(p){
+//    personCollection.remove(p);
+//});
+//
+//var tree1:TestTree = new TestTree("tree__");
+//treeCollection.insert(tree1);
+//
+//var tp = new TestPerson("tp1","bert");
+//tp.tree = tree1;
+//personCollection.insert(tp); // tree is stored as id
+//console.error(personCollection.getById("tp1").tree instanceof TestTree);
 //# sourceMappingURL=TestCollection.js.map

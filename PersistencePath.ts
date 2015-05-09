@@ -2,101 +2,70 @@
  * Created by bert on 04.05.15.
  */
 
-
-class PersistencePathEntry
-{
-    fkt:string;
-    arguments:Array<any>;
-    index:number;
-
-    clone():PersistencePathEntry
-    {
-        var pe = new PersistencePathEntry();
-        pe.fkt = this.fkt;
-        pe.arguments = this.arguments;
-        pe.index = this.index;
-        return pe;
-    }
-}
+import Persistable = require("./Persistable");
 
 class PersistencePath
 {
-    private collection:any;
-    private id:string;
-    private callPath:Array<PersistencePathEntry>;
+    private path:string;
 
-    constructor( collection:any, id:string )
+    constructor( className:string, id?:string )
     {
-        this.collection = collection;
-        this.id = id;
+        console.log("class!! "+className, id);
+        this.path = className;
+        if( id ) this.path+="["+id+"]";
+        if( !this.getId() )
+            throw new Error("id is undefined");
     }
 
     clone():PersistencePath
     {
-        var r:PersistencePath = new PersistencePath(this.collection, this.id);
-        if( this.callPath )
-        {
-            r.callPath = [];
-            for( var i in this.callPath )
-            {
-                var entry = this.callPath[i];
-                r.callPath.push( entry.clone() );
-            }
-        }
-        return r;
+        return new PersistencePath(this.path);
     }
-    private static apply( o:any, fktName:string, args:Array<any> )
+
+    getClassName():string
     {
-        if(o.isWrapped)
-        {
-            if(o[fktName].originalFunction)
-            {
-                return o[fktName].originalFunction.apply(o, args);
-            }
-        }
-        else
-            return o[fktName].apply(o,args);
+        return this.path.split("[")[0];
+    }
+
+    getId():string
+    {
+        return this.path.split("[")[1].split("]")[0];
     }
 
 
-    followCallPath( o:any )
+    getSubObject( rootObject:Persistable ):Persistable
     {
-        if( this.callPath )
-        {
-            for( var i=0;i< this.callPath.length;i++ )
-            {
-                var pathEntry:PersistencePathEntry = this.callPath[i];
-                if(typeof pathEntry.index==="number")
-                    o = o[pathEntry.index];
-                else if(pathEntry.fkt)
-                {
-                    o = PersistencePath.apply(o, pathEntry.fkt, pathEntry.arguments);
+        var o:any = rootObject;
+        if( this.path.indexOf(".")!=-1 ) {
+            this.path.split("].")[1].split(".").forEach(function (entry:string) {
+                if (o instanceof Array) {
+                    for (var j in o) {
+                        var arrayEntry:Persistable = o[j];
+                        if (arrayEntry.getId() == entry) {
+                            o = arrayEntry;
+                            break;
+                        }
+                    }
                 }
-            }
+                else if (o)
+                    o = o[entry];
+            });
         }
         return o;
     }
 
-    appendIndex(i:number)
+    appendArrayLookup(id:string):void
     {
-        var pe = new PersistencePathEntry();
-        pe.index = i;
-        this.addEntry(pe);
+        this.path+="."+id;
     }
 
-    appendFunctionCall( name:string, args:Array<any> )
+    appendPropertyLookup( name:string ):void
     {
-        var pe = new PersistencePathEntry();
-        pe.fkt = name;
-        pe.arguments = args;
-        this.addEntry(pe);
+        this.path+="."+name;
+    }
+    toString(){
+        return this.path;
     }
 
-    private addEntry(pe:PersistencePathEntry)
-    {
-        if( !this.callPath )
-            this.callPath = [];
-        this.callPath.push( pe );
-    }
 }
 export = PersistencePath

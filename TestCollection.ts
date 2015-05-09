@@ -10,34 +10,35 @@ import MeteorPersistence = require("./MeteorPersistence");
 import BaseCollection = require("./BaseCollection");
 import Serializer = require("./Serializer");
 
-MeteorPersistence.init();
 
-export class TestPersonCollection extends BaseCollection<TestPerson>
-{
+class PersonCollection extends BaseCollection<TestPerson> {
     constructor()
     {
         super(TestPerson);
     }
-}
-
-export class TestTreeCollection extends BaseCollection<TestTree>
-{
-    constructor()
-    {
-        super(TestTree);
+    findByName(n:string):TestPerson {
+        var arr:Array<TestPerson> = this.find({
+            name: n
+        });
+        return arr.length > 0 ? arr[0] : undefined;
     }
 }
 
+//var treeCollection = new BaseCollection(TestTree);
+//var personCollection = new PersonCollection();
+//treeCollection.getAll().forEach(function(tree){
+//    treeCollection.remove(tree);
+//});
+//personCollection.getAll().forEach(function(p){
+//    personCollection.remove(p);
+//});
+//
+//var tree1:TestTree = new TestTree("tree__");
+//treeCollection.insert(tree1);
+//
+//var tp = new TestPerson("tp1","bert");
+//tp.tree = tree1;
+//personCollection.insert(tp); // tree is stored as id
+//console.error(personCollection.getById("tp1").tree instanceof TestTree);
 
-var bc = new TestPersonCollection();
-
-var tp:TestPerson = new TestPerson("tp1","bert");
-var value: string = Reflect.getMetadata("SubDocument", TestPerson.prototype, "phoneNumbers" );
-tp.addAddress( new TestAddress("1","süd") );
-tp.tree = new TestTree("tree1");
-
-
-var s = Serializer.toDocument(tp);
-var tp:TestPerson = <TestPerson>Serializer.toObject( s, TestPerson );
-console.log( tp.tree.getId() );
 

@@ -1,26 +1,42 @@
 /**
  * Created by bert on 04.05.15.
  */
-///<reference path="node_modules\reflect-metadata\reflect-metadata.d.ts"/>
+///<reference path="references.d.ts"/>
 
 import Persistable = require("./Persistable");
+import MeteorPersistence = require("./MeteorPersistence");
+import PersistencePath = require("./PersistencePath");
 import Document = require("./Document");
 import Serializer = require("./Serializer");
-declare var Meteor:any;
+import PersistenceAnnotation = require("./PersistenceAnnotation");
+
+
 class BaseCollection<T extends Persistable>
 {
-    private static isSaving:boolean = false;
-
-    private toDocumentModifiers:Array<Document> = [];
     private meteorCollection:any;
-    private documentToObjectFunction:(document:Document)=>T;
-    private theClass:Function;
+    private theClass:TypeClass<T>;
+    private static meteorCollections:{[index:string]:any} = { };
 
-    constructor( persistableClass:Function )
+    constructor( persistableClass:TypeClass<T> )
     {
-        var collectionName = Reflect.getMetadata("persist:collection", persistableClass );
-        this.meteorCollection = new Meteor.Collection( collectionName );
+        var collectionName = PersistenceAnnotation.getCollectionName(persistableClass);
+        if( !MeteorPersistence.collections[collectionName] )
+        {
+            // as it doesnt really matter which base collection is used in meteor-calls, we're just using the first that is created
+            MeteorPersistence.wrapClass( persistableClass );
+            MeteorPersistence.collections[collectionName] = this;
+        }
+        this.meteorCollection = BaseCollection.getMeteorCollection(collectionName);
         this.theClass = persistableClass;
+    }
+
+    static getMeteorCollection( name?:string )
+    {
+        if( !BaseCollection.meteorCollections[name] )
+        {
+            BaseCollection.meteorCollections[name] = new Mongo.Collection( name );
+        }
+        return BaseCollection.meteorCollections[name];
     }
 
     getById(id:string):T
@@ -35,24 +51,37 @@ class BaseCollection<T extends Persistable>
     {
         var documents:Array<Document> = this.meteorCollection.find(findCriteria).fetch();
         var objects:Array<T> = [];
-        for( var i=0;i<documents.length;i++ )
-        {
+        for (var i = 0; i < documents.length; i++) {
             var document:Document = documents[i];
             objects[i] = this.documentToObject(document);
-            // this looks weird but it describes that we're attaching stuff to an object that's not part of it.
         }
         return objects;
+    }
+
+    getAll():Array<T>
+    {
+        return this.find({});
+    }
+
+    remove( t:T )
+    {
+        if( t ) {
+            if( t.getId && t.getId() ) {
+                this.meteorCollection.remove(t.getId());
+            }
+            else
+                throw new Error("Trying to remove an object that does not have an id.");
+        }
     }
 
     protected documentToObject( doc:Document ):T
     {
         var p:T = Serializer.toObject<T>(doc, this.theClass);
-        //(<ModifiableObject><any>p).persistenceInfo = new PersistenceInfo();
-        //(<ModifiableObject><any>p).persistenceInfo.path = new PersistencePath( this, p.getId() );
+        MeteorPersistence.updatePersistencePaths(p);
         return p;
     }
 
-    protected update(id:string, updateFunction:(o:T)=>void)
+    update(id:string, updateFunction:(o:T)=>void)
     {
         for (var i = 0; i < 10; i++)
         {
@@ -69,21 +98,24 @@ class BaseCollection<T extends Persistable>
             var object:T = this.documentToObject(document);
             updateFunction(object);
 
+            MeteorPersistence.updatePersistencePaths(object);
+
             var documentToSave:Document = Serializer.toDocument(object);
             documentToSave.serial = currentSerial+1;
 
             // update the collection
-            console.log("writing document ", document);
+            console.log("writing document ", documentToSave);
             var updatedDocumentCount = this.meteorCollection.update({
                 _id:id,
                 serial:currentSerial
-            }, document);
+            }, documentToSave);
 
             // verify that that went well
-            if (updatedDocumentCount == 1)
+            if (updatedDocumentCount == 1){
                 return object; // we're done
+            }
             else if (updatedDocumentCount > 1)
-                throw new Meteor.Error(500, "verifiedUpdate should only update one document");
+                throw new Meteor.Error( "verifiedUpdate should only update one document");
             else
             {
                 console.log("rerunning verified update ");
@@ -95,10 +127,12 @@ class BaseCollection<T extends Persistable>
 
     insert( p:T ):void
     {
-        if( !p.getId() )
+        if( !p.getId || !p.getId() )
             throw new Error("Object has no Id");
         var doc : Document = Serializer.toDocument( p );
+        doc._id = p.getId();
         doc.serial = 0;
+        MeteorPersistence.updatePersistencePaths(p);
         this.meteorCollection.insert(doc);
     }
 
