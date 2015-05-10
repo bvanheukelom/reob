@@ -23,6 +23,11 @@ class TestPerson
     @PersistenceAnnotation.AsForeignKeys
     tree:TestTree;
 
+
+    @PersistenceAnnotation.Type("TestTree")
+    @PersistenceAnnotation.AsForeignKeys
+    trees:Array<TestTree> = [];
+
     @PersistenceAnnotation.Type("TestLeaf")
     @PersistenceAnnotation.AsForeignKeys
     leaf:TestLeaf;

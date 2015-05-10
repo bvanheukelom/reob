@@ -12,6 +12,7 @@ if (typeof __decorate !== "function") __decorate = function (decorators, target,
 TestPerson = (function () {
     function TestPerson(id, name) {
         this.addresses = [];
+        this.trees = [];
         this._id = id;
         this.name = name;
     }
@@ -56,6 +57,10 @@ TestPerson = (function () {
         PersistenceAnnotation.Type("TestTree"),
         PersistenceAnnotation.AsForeignKeys
     ], TestPerson.prototype, "tree");
+    __decorate([
+        PersistenceAnnotation.Type("TestTree"),
+        PersistenceAnnotation.AsForeignKeys
+    ], TestPerson.prototype, "trees");
     __decorate([
         PersistenceAnnotation.Type("TestLeaf"),
         PersistenceAnnotation.AsForeignKeys

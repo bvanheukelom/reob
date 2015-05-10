@@ -1,6 +1,3 @@
-/**
- * Created by bert on 04.05.15.
- */
 ///<reference path="references.d.ts"/>
 
 import Persistable = require("./Persistable");
@@ -9,7 +6,6 @@ import PersistencePath = require("./PersistencePath");
 import Document = require("./Document");
 import Serializer = require("./Serializer");
 import PersistenceAnnotation = require("./PersistenceAnnotation");
-
 
 class BaseCollection<T extends Persistable>
 {

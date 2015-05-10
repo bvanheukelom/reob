@@ -1,8 +1,4 @@
-/**
- * Created by bert on 03.05.15.
- */
-///<reference path="node_modules\reflect-metadata\reflect-metadata.d.ts"/>
-///<reference path="./TypeClass.ts"/>
+///<reference path="references.d.ts"/>
 PersistenceAnnotation = (function () {
     function PersistenceAnnotation() {
     }

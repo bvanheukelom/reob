@@ -15,7 +15,7 @@ module.exports = function (grunt) {
 				removeComments: false
 			},
 			compile: {
-				src: ["shared/**/*.ts", "rts/*.ts", "rts/shared/**/*.ts", "rts/tests/**/*.ts", "rts/web/**/*.ts", "rts/server/**/*.ts", "!rts/shared/dao/**"]
+				src: ["*.ts"]
 			}
 		},
 		jasmine_node: {
@@ -52,10 +52,9 @@ module.exports = function (grunt) {
 	grunt.loadNpmTasks('grunt-contrib-watch');
 	grunt.loadNpmTasks('grunt-jasmine-node-coverage');
 
-
 	// TASK MAPPING
 	//grunt.registerTask("watch", ["typescript:compile", "watch"]);
-	grunt.registerTask("compile", ["typescript:compile", "copySharedCode"]);
+	grunt.registerTask("compile", ["typescript:compile", "copyCode"]);
 	grunt.registerTask("test", ["jasmine_node"]);
 
 	// CUSTOM TASKS

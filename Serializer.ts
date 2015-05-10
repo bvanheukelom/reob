@@ -27,15 +27,17 @@ class Serializer
             if( value instanceof Array )
             {
                 var arr:Array<any> = <Array<any>>value;
-                o[propertyName] = [];
+                var result = [];
                 var entryClass = PersistenceAnnotation.getPropertyClass(f, propertyName);
                 for( var i=0; i<arr.length;i++ )
                 {
                     var arrayEntry = arr[i];
-                    if( entryClass )
+                    if( entryClass && !PersistenceAnnotation.isStoredAsForeignKeys(f,propertyName) )
                         arrayEntry = Serializer.toObject( arr[i], entryClass );
-                    o[propertyName][i] = arrayEntry;
+                    result[i] = arrayEntry;
                 }
+                // this can only happen once because if the property is accessed the "lazy load" already kicks in
+                o[propertyName] = result;
             }
             else if( typeof value == 'object' )
             {

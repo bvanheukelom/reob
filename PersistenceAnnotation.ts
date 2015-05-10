@@ -1,10 +1,6 @@
-/**
- * Created by bert on 03.05.15.
- */
-///<reference path="node_modules\reflect-metadata\reflect-metadata.d.ts"/>
-///<reference path="./TypeClass.ts"/>
-import "reflect-metadata";
+///<reference path="references.d.ts"/>
 
+import metadata = require('reflect-metadata');
 import Persistable = require("./Persistable");
 
 class PersistenceAnnotation
@@ -24,8 +20,6 @@ class PersistenceAnnotation
         else
             return undefined;
     }
-
-
 
 // ---- Entity ----
 

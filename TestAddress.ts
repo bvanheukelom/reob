@@ -1,8 +1,7 @@
 /**
  * Created by bert on 04.05.15.
  */
-import PersistenceAnnotation = require( "./PersistenceAnnotation" );
-
+import PersistenceAnnotation = require( "./PersistenceAnnotation" )
 
 @PersistenceAnnotation.Entity
 class TestAddress

@@ -17,14 +17,16 @@ Serializer = (function () {
             var value = doc[propertyName];
             if (value instanceof Array) {
                 var arr = value;
-                o[propertyName] = [];
+                var result = [];
                 var entryClass = PersistenceAnnotation.getPropertyClass(f, propertyName);
                 for (var i = 0; i < arr.length; i++) {
                     var arrayEntry = arr[i];
-                    if (entryClass)
+                    if (entryClass && !PersistenceAnnotation.isStoredAsForeignKeys(f, propertyName))
                         arrayEntry = Serializer.toObject(arr[i], entryClass);
-                    o[propertyName][i] = arrayEntry;
+                    result[i] = arrayEntry;
                 }
+                // this can only happen once because if the property is accessed the "lazy load" already kicks in
+                o[propertyName] = result;
             }
             else if (typeof value == 'object') {
                 var propertyClass = PersistenceAnnotation.getPropertyClass(f, propertyName);

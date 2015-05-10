@@ -1,6 +1,4 @@
-/**
- * Created by bert on 04.05.15.
- */
+///<reference path="references.d.ts"/>
 PersistencePath = (function () {
     function PersistencePath(className, id) {
         this.path = className;

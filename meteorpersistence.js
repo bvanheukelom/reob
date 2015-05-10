@@ -34,6 +34,21 @@ var MeteorPersistence = (function () {
     MeteorPersistence.objectsClassName = function (o) {
         return PersistenceAnnotation.className(o.constructor);
     };
+    MeteorPersistence.loadPath = function (s) {
+        if (typeof s != "string")
+            throw new Error("Path needs to be a string");
+        var persistencePath = new PersistencePath(s);
+        var propertyClassName = persistencePath.getClassName();
+        var collection = propertyClassName ? MeteorPersistence.collections[propertyClassName] : undefined;
+        if (collection) {
+            var rootValue = collection.getById(persistencePath.getId());
+            var newValue = rootValue ? persistencePath.getSubObject(rootValue) : undefined;
+            console.log("Lazy loading foreign key:" + s + ". Loaded: " + newValue);
+            return newValue;
+        }
+        else
+            throw new Error("No collection found for lazy loading foreign key:" + s);
+    };
     MeteorPersistence.wrapClass = function (c) {
         var className = PersistenceAnnotation.className(c);
         console.log("Wrapping transactional functions for class " + className);
@@ -78,28 +93,19 @@ var MeteorPersistence = (function () {
                             v = propertyDescriptor.get.apply(this);
                         else
                             v = this["_" + propertyName];
-                        if (typeof v == "string") {
-                            var persistencePath = new PersistencePath(v);
-                            var propertyClassName = persistencePath.getClassName();
-                            var collection = propertyClassName ? MeteorPersistence.collections[propertyClassName] : undefined;
-                            if (collection) {
-                                var rootValue = collection.getById(persistencePath.getId());
-                                var newValue = rootValue ? persistencePath.getSubObject(rootValue) : undefined;
-                                console.log("Lazy loading " + className + "." + propertyName + " foreign key:" + v + ". Loaded: " + newValue);
-                                v = newValue;
+                        if (MeteorPersistence.needsLazyLoading(this, propertyName)) {
+                            if (typeof v == "string") {
+                                v = MeteorPersistence.loadPath(v);
+                                this[propertyName] = v;
                             }
-                            else
-                                throw new Error("No collection found for lazy loading " + className + "." + propertyName + " foreign key:" + v + ". Loaded: " + newValue);
-                            this[propertyName] = v;
-                        }
-                        else if (Array.isArray(v)) {
-                            var arr = v;
-                            if (arr.length > 0 && typeof arr[0] == "string") {
-                                arr.forEach(function (ele, index) {
-                                    if (typeof ele != "string")
-                                        throw new Error("There should be only ids in the array.");
-                                    arr[index] = collection.getById(ele);
-                                });
+                            else if (Array.isArray(v)) {
+                                console.log("Lazy loading array " + className + "." + propertyName);
+                                var arr = v;
+                                if (arr.length > 0 && typeof arr[0] == "string") {
+                                    arr.forEach(function (ele, index) {
+                                        arr[index] = MeteorPersistence.loadPath(ele);
+                                    });
+                                }
                             }
                         }
                         //console.log("Monkey patched getter "+propertyName+" returns ",v);
@@ -132,7 +138,16 @@ var MeteorPersistence = (function () {
         // TODO inheritance
         var oc = PersistenceAnnotation.getClass(object);
         var shadowpropertyDescriptor = Object.getOwnPropertyDescriptor(object, "_" + propertyName);
-        return PersistenceAnnotation.isStoredAsForeignKeys(oc, propertyName) && !!shadowpropertyDescriptor && (typeof object["_" + propertyName] == "string");
+        var shadowPropertyIsKeys = false;
+        if (shadowpropertyDescriptor)
+            if (typeof object["_" + propertyName] == "string")
+                shadowPropertyIsKeys = true;
+            else if (Array.isArray(object["_" + propertyName])) {
+                var arr = object["_" + propertyName];
+                if (arr.length > 0 && typeof arr[0] == "string")
+                    shadowPropertyIsKeys = true;
+            }
+        return PersistenceAnnotation.isStoredAsForeignKeys(oc, propertyName) && shadowPropertyIsKeys;
     };
     MeteorPersistence.updatePersistencePaths = function (object, visited) {
         if (!visited)

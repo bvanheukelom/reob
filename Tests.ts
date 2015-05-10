@@ -176,6 +176,26 @@ describe("The persistence thing", function(){
         expect(personCollection.getById("tp").tree).toBeDefined();
     });
 
+    it("XXXXXX can save an array of foreign ids", function(){
+        var p1:TestPerson = new TestPerson("p1");
+
+        var t1:TestTree = new TestTree("t1");
+        treeCollection.insert(t1);
+        var t2:TestTree = new TestTree("t2");
+        treeCollection.insert(t2);
+        var t3:TestTree = new TestTree("t3");
+        treeCollection.insert(t3);
+
+        p1.trees.push(t1);
+        p1.trees.push(t2);
+        p1.trees.push(t3);
+        personCollection.insert(p1);
+
+        expect(personCollection.getById("p1").trees).toBeDefined();
+        expect(Array.isArray( personCollection.getById("p1").trees )).toBeTruthy();
+        expect( personCollection.getById("p1").trees[1].getId()).toBe("t2");
+    });
+
     it("can save objects that have subobjects which are subobjects of other root objects", function(){
         var t1:TestTree = new TestTree("tree1");
         treeCollection.insert(t1);

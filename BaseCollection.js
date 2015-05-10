@@ -1,6 +1,3 @@
-/**
- * Created by bert on 04.05.15.
- */
 ///<reference path="references.d.ts"/>
 var MeteorPersistence = require("./MeteorPersistence");
 var Serializer = require("./Serializer");
