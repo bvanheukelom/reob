@@ -19,6 +19,10 @@ describe("The persistence thing", function () {
         expect(PersistenceAnnotation.isRootEntity(TestTree)).toBeTruthy();
         expect(PersistenceAnnotation.isRootEntity(TestLeaf)).toBeFalsy();
     });
+    it("knows types ", function () {
+        expect(PersistenceAnnotation.getPropertyClass(TestPerson, "tree")).toBe(TestTree);
+        expect(PersistenceAnnotation.getPropertyClass(TestPerson, "leaf")).toBe(TestLeaf);
+    });
     it("can do basic inserts", function () {
         var t1 = new TestTree("tree1");
         treeCollection.insert(t1);
@@ -120,12 +124,14 @@ describe("The persistence thing", function () {
     });
     it("lazy loads objects", function () {
         var t1 = new TestTree("tree1");
+        treeCollection.insert(t1);
         var tp = new TestPerson("tp");
         tp.tree = t1;
         personCollection.insert(tp);
         var tp2 = personCollection.getById("tp");
         expect(MeteorPersistence.needsLazyLoading(tp2, "tree")).toBeTruthy();
-        tp2.tree;
+        var trt = tp2.tree;
+        expect(trt).toBeDefined();
         expect(MeteorPersistence.needsLazyLoading(tp2, "tree")).toBeFalsy();
     });
     it("can save objects that have foreign key properties", function () {
@@ -148,7 +154,7 @@ describe("The persistence thing", function () {
         expect(personCollection.getById("tp").leaf).toBeDefined();
         expect(personCollection.getById("tp").leaf.getId()).toBe(t1.getLeaves()[0].getId());
     });
-    it("can save objects that have subobjects which are subobjects of other root objects", function () {
+    it("can save objects that have subobjects which are one of many elements in a subobject-array of another root object", function () {
         var t1 = new TestTree("tree1");
         treeCollection.insert(t1);
         for (var i = 0; i < 10; i++)
@@ -160,20 +166,12 @@ describe("The persistence thing", function () {
         expect(personCollection.getById("tp").leaf.getId()).toBe(t1.getLeaves()[5].getId());
         expect(personCollection.getById("tp").leaf.greenNess).toBe(t1.getLeaves()[5].greenNess);
     });
-    // arrays with undefined entries !
-    // Maps
+    // Maps (merge with array, use .Collection("<Entry-ClassName>") annotation for both
     // callbacks
+    // tests
+    // store smart objects in dumb objects ?
+    // foreign key arrays with undefined entries
+    // subdocument arrays with undefined entries
     // wrapped function results
-    // get
-    //it("can save objects that have subobjects which are subobjects of other root objects", function(){
-    //    var t1:TestTree = new TestTree("tree1");
-    //    treeCollection.insert(t1);
-    //    t1.grow();
-    //    var tp:TestPerson = new TestPerson("tp");
-    //    tp.tree = t1;
-    //    personCollection.insert(tp);
-    //    tp.collectLeaf();
-    //    expect(personCollection.getById("tp").leaf).toBeDefined();
-    //    expect(personCollection.getById("tp").leaf.getId()).toBe(t1.getLeaves()[0].getId());
-    //});
+    // test that something stored as a foreign key (both sub and root) turns undefined after the foreign root is deleted
 });

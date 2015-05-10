@@ -105,18 +105,12 @@ class PersistenceAnnotation
     public static Type(typeClassName:string) {
         return function (targetPrototypeObject: Function, propertyName:string) {
             console.log("  "+propertyName+" as "+typeClassName);
-            var arr:any = Reflect.getMetadata("persistence:typedproperties", targetPrototypeObject);
-            if( !arr ) {
-                arr = {};
-                Reflect.defineMetadata("persistence:typedproperties", arr, targetPrototypeObject );
-            }
-            arr[propertyName] = typeClassName;
+            PersistenceAnnotation.setPropertyProperty( targetPrototypeObject, propertyName, "type", typeClassName);
         };
     }
 
     static getPropertyClass(f:Function, propertyName:string):TypeClass<Persistable> {
-        var props = Reflect.getMetadata("persistence:typedproperties", f.prototype);
-        var className =  props ? props[propertyName]: undefined;
+        var className = PersistenceAnnotation.getPropertyProperty( f.prototype, propertyName, "type")
         return PersistenceAnnotation.getEntityClassByName(className);
     }
 
@@ -125,10 +119,52 @@ class PersistenceAnnotation
         var props = Reflect.getMetadata("persistence:typedproperties",f.prototype);
         for( var i in props )
         {
-            result.push(i);
+            if( PersistenceAnnotation.getPropertyClass(f, i) )
+                result.push(i);
         }
         return result;
-        //return Reflect.getMetadata("persistence:subdocument",  f, propertyName );
+    }
+
+    private static setPropertyProperty( targetPrototypeObject:Function, propertyName:string, property:string, value:any  ):void {
+        var arr:any = Reflect.getMetadata("persistence:typedproperties", targetPrototypeObject);
+        if( !arr ) {
+            arr = {};
+            Reflect.defineMetadata("persistence:typedproperties", arr, targetPrototypeObject );
+        }
+        var propProps = arr[propertyName];
+
+        if( !propProps )
+        {
+            propProps = {};
+            arr[propertyName] = propProps;
+        }
+        propProps[property] = value;
+    }
+
+    private static getPropertyProperty( targetPrototypeObject:Function, propertyName:string, propertyProperty:string ):any
+    {
+        var arr:any = Reflect.getMetadata("persistence:typedproperties", targetPrototypeObject);
+        if( arr && arr[propertyName] )
+        {
+            return arr[propertyName][propertyProperty];
+        }
+        return undefined;
+    }
+
+    // ---- Collection ----
+
+    static CollectionType( typeClassName:string )
+    {
+        return function (targetPrototypeObject: Function, propertyName:string) {
+            console.log("  "+propertyName+" as collection of "+typeClassName);
+            PersistenceAnnotation.setPropertyProperty( targetPrototypeObject, propertyName, "type", typeClassName);
+            PersistenceAnnotation.setPropertyProperty( targetPrototypeObject, propertyName, "collection", true);
+        };
+    }
+
+    static isCollection( typeClass:Function, propertyName:string ):boolean
+    {
+        return PersistenceAnnotation.getPropertyProperty( typeClass.prototype, propertyName, "collection")==true;
     }
 
     // ---- AsForeignKeys ----
@@ -159,9 +195,22 @@ class PersistenceAnnotation
         return PersistenceAnnotation.AsForeignKeys(targetPrototypeObject, propertyName );
     }
 
-    // ----  ----
+    // ---- ValueType ----
 
+    static Collection( typeClassName:string )
+    {
+        return function (targetPrototypeObject: Function, propertyName:string) {
+            console.log("  "+propertyName+" as "+typeClassName);
+            var arr:any = Reflect.getMetadata("persistence:typedproperties", targetPrototypeObject);
+            if( !arr ) {
+                arr = {};
+                Reflect.defineMetadata("persistence:typedproperties", arr, targetPrototypeObject );
+            }
+            arr[propertyName] = typeClassName;
+        };
+    }
 
+    // ---- Wrap ----
 
     public static getWrappedFunctionNames<T extends Persistable>(f:TypeClass<T>):Array<string>
     {
@@ -181,15 +230,10 @@ class PersistenceAnnotation
         return result;
     }
 
-
-
     static Wrap( t:Function, functionName:string, objectDescriptor:any )
     {
         Reflect.defineMetadata("persistence:wrap", true, (<any>t)[functionName] );
     }
-
-
-
 
 }
 class PersistencePrivate

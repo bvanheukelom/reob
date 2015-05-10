@@ -11,8 +11,10 @@ import PersistenceAnnotation = require("./PersistenceAnnotation");
 import Serializer = require("./Serializer");
 
 describe("The persistence thing", function(){
+
     var personCollection:TestPersonCollection;
     var treeCollection:BaseCollection<TestTree>;
+
     beforeAll(function(){
         personCollection = new TestPersonCollection();
         treeCollection = new BaseCollection<TestTree>(TestTree);
@@ -31,6 +33,11 @@ describe("The persistence thing", function(){
         expect( PersistenceAnnotation.isRootEntity(TestPerson) ).toBeTruthy();
         expect( PersistenceAnnotation.isRootEntity(TestTree) ).toBeTruthy();
         expect( PersistenceAnnotation.isRootEntity(TestLeaf) ).toBeFalsy();
+    });
+
+    it( "knows types ", function(){
+        expect( PersistenceAnnotation.getPropertyClass(TestPerson, "tree") ).toBe(TestTree);
+        expect( PersistenceAnnotation.getPropertyClass(TestPerson, "leaf") ).toBe(TestLeaf);
     });
 
     it("can do basic inserts", function(){
@@ -100,7 +107,7 @@ describe("The persistence thing", function(){
 
     it("can load objects that have subobjects", function(){
         var t1:TestPerson = new TestPerson("t");
-        t1.phoneNumber = new TestPhoneNumber("1212")
+        t1.phoneNumber = new TestPhoneNumber("1212");
         personCollection.insert(t1);
         expect(personCollection.getById("t")).toBeDefined();
         expect(personCollection.getById("t").phoneNumber instanceof TestPhoneNumber).toBeTruthy();
@@ -148,12 +155,14 @@ describe("The persistence thing", function(){
 
     it("lazy loads objects", function(){
         var t1:TestTree = new TestTree("tree1");
+        treeCollection.insert(t1);
         var tp:TestPerson = new TestPerson("tp");
         tp.tree = t1;
         personCollection.insert(tp);
         var tp2 = personCollection.getById("tp");
         expect( MeteorPersistence.needsLazyLoading(tp2, "tree") ).toBeTruthy();
-        tp2.tree;
+        var trt = tp2.tree;
+        expect( trt ).toBeDefined();
         expect( MeteorPersistence.needsLazyLoading(tp2, "tree") ).toBeFalsy();
     });
 
@@ -194,27 +203,18 @@ describe("The persistence thing", function(){
         expect(personCollection.getById("tp").leaf.greenNess).toBe(t1.getLeaves()[5].greenNess);
     });
 
-    // arrays with undefined entries !
 
-    // Maps
+    // Maps (merge with array, use .Collection("<Entry-ClassName>") annotation for both
 
     // callbacks
 
+    // tests
+
+    // store smart objects in dumb objects ?
+
+    // foreign key arrays with undefined entries
+    // subdocument arrays with undefined entries
     // wrapped function results
-
-    //it("can save objects that have subobjects which are subobjects of other root objects", function(){
-    //    var t1:TestTree = new TestTree("tree1");
-    //    treeCollection.insert(t1);
-    //    t1.grow();
-    //    var tp:TestPerson = new TestPerson("tp");
-    //    tp.tree = t1;
-    //    personCollection.insert(tp);
-    //    tp.collectLeaf();
-    //    expect(personCollection.getById("tp").leaf).toBeDefined();
-    //    expect(personCollection.getById("tp").leaf.getId()).toBe(t1.getLeaves()[0].getId());
-    //});
-
-
-
+    // test that something stored as a foreign key (both sub and root) turns undefined after the foreign root is deleted
 
 });

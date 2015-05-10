@@ -81,27 +81,52 @@ var PersistenceAnnotation = (function () {
     PersistenceAnnotation.Type = function (typeClassName) {
         return function (targetPrototypeObject, propertyName) {
             console.log("  " + propertyName + " as " + typeClassName);
-            var arr = Reflect.getMetadata("persistence:typedproperties", targetPrototypeObject);
-            if (!arr) {
-                arr = {};
-                Reflect.defineMetadata("persistence:typedproperties", arr, targetPrototypeObject);
-            }
-            arr[propertyName] = typeClassName;
+            PersistenceAnnotation.setPropertyProperty(targetPrototypeObject, propertyName, "type", typeClassName);
         };
     };
     PersistenceAnnotation.getPropertyClass = function (f, propertyName) {
-        var props = Reflect.getMetadata("persistence:typedproperties", f.prototype);
-        var className = props ? props[propertyName] : undefined;
+        var className = PersistenceAnnotation.getPropertyProperty(f.prototype, propertyName, "type");
         return PersistenceAnnotation.getEntityClassByName(className);
     };
     PersistenceAnnotation.getTypedPropertyNames = function (f) {
         var result = [];
         var props = Reflect.getMetadata("persistence:typedproperties", f.prototype);
         for (var i in props) {
-            result.push(i);
+            if (PersistenceAnnotation.getPropertyClass(f, i))
+                result.push(i);
         }
         return result;
-        //return Reflect.getMetadata("persistence:subdocument",  f, propertyName );
+    };
+    PersistenceAnnotation.setPropertyProperty = function (targetPrototypeObject, propertyName, property, value) {
+        var arr = Reflect.getMetadata("persistence:typedproperties", targetPrototypeObject);
+        if (!arr) {
+            arr = {};
+            Reflect.defineMetadata("persistence:typedproperties", arr, targetPrototypeObject);
+        }
+        var propProps = arr[propertyName];
+        if (!propProps) {
+            propProps = {};
+            arr[propertyName] = propProps;
+        }
+        propProps[property] = value;
+    };
+    PersistenceAnnotation.getPropertyProperty = function (targetPrototypeObject, propertyName, propertyProperty) {
+        var arr = Reflect.getMetadata("persistence:typedproperties", targetPrototypeObject);
+        if (arr && arr[propertyName]) {
+            return arr[propertyName][propertyProperty];
+        }
+        return undefined;
+    };
+    // ---- Collection ----
+    PersistenceAnnotation.CollectionType = function (typeClassName) {
+        return function (targetPrototypeObject, propertyName) {
+            console.log("  " + propertyName + " as collection of " + typeClassName);
+            PersistenceAnnotation.setPropertyProperty(targetPrototypeObject, propertyName, "type", typeClassName);
+            PersistenceAnnotation.setPropertyProperty(targetPrototypeObject, propertyName, "collection", true);
+        };
+    };
+    PersistenceAnnotation.isCollection = function (typeClass, propertyName) {
+        return PersistenceAnnotation.getPropertyProperty(typeClass.prototype, propertyName, "collection") == true;
     };
     // ---- AsForeignKeys ----
     PersistenceAnnotation.isStoredAsForeignKeys = function (typeClass, propertyName) {
@@ -121,7 +146,19 @@ var PersistenceAnnotation = (function () {
     PersistenceAnnotation.AsForeignKey = function (targetPrototypeObject, propertyName) {
         return PersistenceAnnotation.AsForeignKeys(targetPrototypeObject, propertyName);
     };
-    // ----  ----
+    // ---- ValueType ----
+    PersistenceAnnotation.Collection = function (typeClassName) {
+        return function (targetPrototypeObject, propertyName) {
+            console.log("  " + propertyName + " as " + typeClassName);
+            var arr = Reflect.getMetadata("persistence:typedproperties", targetPrototypeObject);
+            if (!arr) {
+                arr = {};
+                Reflect.defineMetadata("persistence:typedproperties", arr, targetPrototypeObject);
+            }
+            arr[propertyName] = typeClassName;
+        };
+    };
+    // ---- Wrap ----
     PersistenceAnnotation.getWrappedFunctionNames = function (f) {
         return PersistenceAnnotation.getPropertyNamesByMetaData(f.prototype, "persistence:wrap");
     };
