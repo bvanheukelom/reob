@@ -15,6 +15,7 @@ var TestPerson = (function () {
     function TestPerson(id, name) {
         this.addresses = [];
         this.trees = [];
+        this.phoneBook = {};
         this._id = id;
         this.name = name;
     }
@@ -60,13 +61,16 @@ var TestPerson = (function () {
         PersistenceAnnotation.AsForeignKeys
     ], TestPerson.prototype, "tree");
     __decorate([
-        PersistenceAnnotation.Type("TestTree"),
-        PersistenceAnnotation.AsForeignKeys
-    ], TestPerson.prototype, "trees");
-    __decorate([
         PersistenceAnnotation.Type("TestLeaf"),
         PersistenceAnnotation.AsForeignKeys
     ], TestPerson.prototype, "leaf");
+    __decorate([
+        PersistenceAnnotation.Collection("TestLeaf"),
+        PersistenceAnnotation.AsForeignKeys
+    ], TestPerson.prototype, "trees");
+    __decorate([
+        PersistenceAnnotation.Collection("TestPhoneNumber")
+    ], TestPerson.prototype, "phoneBook");
     Object.defineProperty(TestPerson.prototype, "addAddress",
         __decorate([
             PersistenceAnnotation.Wrap

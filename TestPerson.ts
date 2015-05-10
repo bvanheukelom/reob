@@ -23,14 +23,16 @@ class TestPerson
     @PersistenceAnnotation.AsForeignKeys
     tree:TestTree;
 
-
-    @PersistenceAnnotation.Type("TestTree")
-    @PersistenceAnnotation.AsForeignKeys
-    trees:Array<TestTree> = [];
-
     @PersistenceAnnotation.Type("TestLeaf")
     @PersistenceAnnotation.AsForeignKeys
     leaf:TestLeaf;
+
+    @PersistenceAnnotation.Collection("TestLeaf")
+    @PersistenceAnnotation.AsForeignKeys
+    trees:Array<TestTree> = [];
+
+    @PersistenceAnnotation.Collection("TestPhoneNumber")
+    phoneBook:{ [index:string]: TestPhoneNumber } = {};
 
 
     constructor(id?:string, name?:string)

@@ -94,6 +94,22 @@ class PersistenceAnnotation
         return !!Reflect.getMetadata("persistence:collectionName", f);
     }
 
+    // ---- Collection ----
+
+    static Collection( typeClassName:string )
+    {
+        return function (targetPrototypeObject: Function, propertyName:string) {
+            console.log("  "+propertyName+" as collection of "+typeClassName);
+            PersistenceAnnotation.setPropertyProperty( targetPrototypeObject, propertyName, "type", typeClassName);
+            PersistenceAnnotation.setPropertyProperty( targetPrototypeObject, propertyName, "collection", true);
+        };
+    }
+
+    static isCollection( typeClass:Function, propertyName:string ):boolean
+    {
+        return PersistenceAnnotation.getPropertyProperty( typeClass.prototype, propertyName, "collection")==true;
+    }
+
 // ---- typed properties ----
 
     public static Type(typeClassName:string) {
@@ -145,21 +161,6 @@ class PersistenceAnnotation
         return undefined;
     }
 
-    // ---- Collection ----
-
-    static CollectionType( typeClassName:string )
-    {
-        return function (targetPrototypeObject: Function, propertyName:string) {
-            console.log("  "+propertyName+" as collection of "+typeClassName);
-            PersistenceAnnotation.setPropertyProperty( targetPrototypeObject, propertyName, "type", typeClassName);
-            PersistenceAnnotation.setPropertyProperty( targetPrototypeObject, propertyName, "collection", true);
-        };
-    }
-
-    static isCollection( typeClass:Function, propertyName:string ):boolean
-    {
-        return PersistenceAnnotation.getPropertyProperty( typeClass.prototype, propertyName, "collection")==true;
-    }
 
     // ---- AsForeignKeys ----
 
@@ -189,20 +190,6 @@ class PersistenceAnnotation
         return PersistenceAnnotation.AsForeignKeys(targetPrototypeObject, propertyName );
     }
 
-    // ---- ValueType ----
-
-    static Collection( typeClassName:string )
-    {
-        return function (targetPrototypeObject: Function, propertyName:string) {
-            console.log("  "+propertyName+" as "+typeClassName);
-            var arr:any = Reflect.getMetadata("persistence:typedproperties", targetPrototypeObject);
-            if( !arr ) {
-                arr = {};
-                Reflect.defineMetadata("persistence:typedproperties", arr, targetPrototypeObject );
-            }
-            arr[propertyName] = typeClassName;
-        };
-    }
 
     // ---- Wrap ----
 

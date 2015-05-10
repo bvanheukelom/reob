@@ -1,0 +1,1140 @@
+0 info it worked if it ends with ok
+1 verbose cli [ 'node', '/usr/local/bin/npm', 'install', 'grunt-ts-1.5' ]
+2 info using npm@1.4.9
+3 info using node@v0.10.28
+4 verbose cache add [ 'grunt-ts-1.5', null ]
+5 verbose cache add name=undefined spec="grunt-ts-1.5" args=["grunt-ts-1.5",null]
+6 verbose parsed url { protocol: null,
+6 verbose parsed url   slashes: null,
+6 verbose parsed url   auth: null,
+6 verbose parsed url   host: null,
+6 verbose parsed url   port: null,
+6 verbose parsed url   hostname: null,
+6 verbose parsed url   hash: null,
+6 verbose parsed url   search: null,
+6 verbose parsed url   query: null,
+6 verbose parsed url   pathname: 'grunt-ts-1.5',
+6 verbose parsed url   path: 'grunt-ts-1.5',
+6 verbose parsed url   href: 'grunt-ts-1.5' }
+7 silly lockFile 53bae0e1-grunt-ts-1-5 grunt-ts-1.5
+8 verbose lock grunt-ts-1.5 /Users/bert/.npm/53bae0e1-grunt-ts-1-5.lock
+9 silly lockFile 53bae0e1-grunt-ts-1-5 grunt-ts-1.5
+10 silly lockFile 53bae0e1-grunt-ts-1-5 grunt-ts-1.5
+11 verbose addNamed [ 'grunt-ts-1.5', '' ]
+12 verbose addNamed [ null, '*' ]
+13 silly lockFile 6843eaac-grunt-ts-1-5 grunt-ts-1.5@
+14 verbose lock grunt-ts-1.5@ /Users/bert/.npm/6843eaac-grunt-ts-1-5.lock
+15 silly addNameRange { name: 'grunt-ts-1.5', range: '*', hasData: false }
+16 verbose url raw grunt-ts-1.5
+17 verbose url resolving [ 'https://registry.npmjs.org/', './grunt-ts-1.5' ]
+18 verbose url resolved https://registry.npmjs.org/grunt-ts-1.5
+19 info trying registry request attempt 1 at 16:22:01
+20 http GET https://registry.npmjs.org/grunt-ts-1.5
+21 http 200 https://registry.npmjs.org/grunt-ts-1.5
+22 silly registry.get cb [ 200,
+22 silly registry.get   { server: 'CouchDB/1.5.0 (Erlang OTP/R16B03)',
+22 silly registry.get     etag: '"25R17PUTP8QO8Z4Z3GX7ZK2U6"',
+22 silly registry.get     'content-type': 'application/json',
+22 silly registry.get     'cache-control': 'max-age=60',
+22 silly registry.get     'content-length': '43537',
+22 silly registry.get     'accept-ranges': 'bytes',
+22 silly registry.get     date: 'Sun, 10 May 2015 14:21:07 GMT',
+22 silly registry.get     via: '1.1 varnish',
+22 silly registry.get     age: '0',
+22 silly registry.get     connection: 'keep-alive',
+22 silly registry.get     'x-served-by': 'cache-fra1248-FRA',
+22 silly registry.get     'x-cache': 'MISS',
+22 silly registry.get     'x-cache-hits': '0',
+22 silly registry.get     'x-timer': 'S1431267666.404608,VS0,VE1084',
+22 silly registry.get     vary: 'Accept' } ]
+23 silly addNameRange number 2 { name: 'grunt-ts-1.5', range: '*', hasData: true }
+24 silly addNameRange versions [ 'grunt-ts-1.5', [ '4.0.1' ] ]
+25 verbose addNamed [ 'grunt-ts-1.5', '4.0.1' ]
+26 verbose addNamed [ '4.0.1', '4.0.1' ]
+27 silly lockFile bdbabbb0-grunt-ts-1-5-4-0-1 grunt-ts-1.5@4.0.1
+28 verbose lock grunt-ts-1.5@4.0.1 /Users/bert/.npm/bdbabbb0-grunt-ts-1-5-4-0-1.lock
+29 silly lockFile 85ed67c9-nt-ts-1-5-grunt-ts-1-5-4-0-1-tgz https://registry.npmjs.org/grunt-ts-1.5/-/grunt-ts-1.5-4.0.1.tgz
+30 verbose lock https://registry.npmjs.org/grunt-ts-1.5/-/grunt-ts-1.5-4.0.1.tgz /Users/bert/.npm/85ed67c9-nt-ts-1-5-grunt-ts-1-5-4-0-1-tgz.lock
+31 verbose addRemoteTarball [ 'https://registry.npmjs.org/grunt-ts-1.5/-/grunt-ts-1.5-4.0.1.tgz',
+31 verbose addRemoteTarball   'fd9fefebf1c34c497e9b413763ce8f049028bf7b' ]
+32 info retry fetch attempt 1 at 16:22:02
+33 verbose fetch to= /var/folders/68/wk42fgnj0bz8vn11sm4g0gtr0000gn/T/npm-17385-NKwZR639/1431267722494-0.43972819042392075/tmp.tgz
+34 http GET https://registry.npmjs.org/grunt-ts-1.5/-/grunt-ts-1.5-4.0.1.tgz
+35 http 200 https://registry.npmjs.org/grunt-ts-1.5/-/grunt-ts-1.5-4.0.1.tgz
+36 verbose tar unpack /var/folders/68/wk42fgnj0bz8vn11sm4g0gtr0000gn/T/npm-17385-NKwZR639/1431267722494-0.43972819042392075/tmp.tgz
+37 silly lockFile 9940518f-t-npm-grunt-ts-1-5-4-0-1-package tar:///Users/bert/.npm/grunt-ts-1.5/4.0.1/package
+38 verbose lock tar:///Users/bert/.npm/grunt-ts-1.5/4.0.1/package /Users/bert/.npm/9940518f-t-npm-grunt-ts-1-5-4-0-1-package.lock
+39 silly lockFile 911bfc7d-2494-0-43972819042392075-tmp-tgz tar:///var/folders/68/wk42fgnj0bz8vn11sm4g0gtr0000gn/T/npm-17385-NKwZR639/1431267722494-0.43972819042392075/tmp.tgz
+40 verbose lock tar:///var/folders/68/wk42fgnj0bz8vn11sm4g0gtr0000gn/T/npm-17385-NKwZR639/1431267722494-0.43972819042392075/tmp.tgz /Users/bert/.npm/911bfc7d-2494-0-43972819042392075-tmp-tgz.lock
+41 silly gunzTarPerm modes [ '755', '644' ]
+42 silly gunzTarPerm extractEntry package.json
+43 silly gunzTarPerm modified mode [ 'package.json', 438, 420 ]
+44 silly gunzTarPerm extractEntry README.md
+45 silly gunzTarPerm modified mode [ 'README.md', 438, 420 ]
+46 silly gunzTarPerm extractEntry LICENSE
+47 silly gunzTarPerm modified mode [ 'LICENSE', 438, 420 ]
+48 silly gunzTarPerm extractEntry AUTHORS
+49 silly gunzTarPerm modified mode [ 'AUTHORS', 438, 420 ]
+50 silly gunzTarPerm extractEntry CHANGELOG.md
+51 silly gunzTarPerm modified mode [ 'CHANGELOG.md', 438, 420 ]
+52 silly gunzTarPerm extractEntry custom.TypeScript.targets
+53 silly gunzTarPerm modified mode [ 'custom.TypeScript.targets', 438, 420 ]
+54 silly gunzTarPerm extractEntry docs/DetailedGettingStartedInstructions.md
+55 silly gunzTarPerm modified mode [ 'docs/DetailedGettingStartedInstructions.md', 438, 420 ]
+56 silly gunzTarPerm extractEntry docs/DisableVisualStudioBuild.md
+57 silly gunzTarPerm modified mode [ 'docs/DisableVisualStudioBuild.md', 438, 420 ]
+58 silly gunzTarPerm extractEntry docs/amdLoader.md
+59 silly gunzTarPerm modified mode [ 'docs/amdLoader.md', 438, 420 ]
+60 silly gunzTarPerm extractEntry docs/fast.md
+61 silly gunzTarPerm modified mode [ 'docs/fast.md', 438, 420 ]
+62 silly gunzTarPerm extractEntry docs/html2ts.md
+63 silly gunzTarPerm modified mode [ 'docs/html2ts.md', 438, 420 ]
+64 silly gunzTarPerm extractEntry tasks/ts.js
+65 silly gunzTarPerm modified mode [ 'tasks/ts.js', 438, 420 ]
+66 silly gunzTarPerm extractEntry tasks/modules/amdLoader.js
+67 silly gunzTarPerm modified mode [ 'tasks/modules/amdLoader.js', 438, 420 ]
+68 silly gunzTarPerm extractEntry tasks/modules/cacheUtils.js
+69 silly gunzTarPerm modified mode [ 'tasks/modules/cacheUtils.js', 438, 420 ]
+70 silly gunzTarPerm extractEntry tasks/modules/compile.js
+71 silly gunzTarPerm modified mode [ 'tasks/modules/compile.js', 438, 420 ]
+72 silly gunzTarPerm extractEntry tasks/modules/html2ts.js
+73 silly gunzTarPerm modified mode [ 'tasks/modules/html2ts.js', 438, 420 ]
+74 silly gunzTarPerm extractEntry tasks/modules/reference.js
+75 silly gunzTarPerm modified mode [ 'tasks/modules/reference.js', 438, 420 ]
+76 silly gunzTarPerm extractEntry tasks/modules/templateCache.js
+77 silly gunzTarPerm modified mode [ 'tasks/modules/templateCache.js', 438, 420 ]
+78 silly gunzTarPerm extractEntry tasks/modules/transformers.js
+79 silly gunzTarPerm modified mode [ 'tasks/modules/transformers.js', 438, 420 ]
+80 silly gunzTarPerm extractEntry tasks/modules/utils.js
+81 silly gunzTarPerm modified mode [ 'tasks/modules/utils.js', 438, 420 ]
+82 silly gunzTarPerm extractEntry tasks/modules/compile.ts
+83 silly gunzTarPerm modified mode [ 'tasks/modules/compile.ts', 438, 420 ]
+84 silly gunzTarPerm extractEntry tasks/modules/utils.ts
+85 silly gunzTarPerm modified mode [ 'tasks/modules/utils.ts', 438, 420 ]
+86 silly gunzTarPerm extractEntry tasks/modules/html2ts.js.map
+87 silly gunzTarPerm modified mode [ 'tasks/modules/html2ts.js.map', 438, 420 ]
+88 silly gunzTarPerm extractEntry tasks/modules/html2ts.ts
+89 silly gunzTarPerm modified mode [ 'tasks/modules/html2ts.ts', 438, 420 ]
+90 silly gunzTarPerm extractEntry tasks/modules/amdLoader.js.map
+91 silly gunzTarPerm modified mode [ 'tasks/modules/amdLoader.js.map', 438, 420 ]
+92 silly gunzTarPerm extractEntry tasks/modules/cacheUtils.js.map
+93 silly gunzTarPerm modified mode [ 'tasks/modules/cacheUtils.js.map', 438, 420 ]
+94 silly gunzTarPerm extractEntry tasks/modules/reference.js.map
+95 silly gunzTarPerm modified mode [ 'tasks/modules/reference.js.map', 438, 420 ]
+96 silly gunzTarPerm extractEntry tasks/modules/reference.ts
+97 silly gunzTarPerm modified mode [ 'tasks/modules/reference.ts', 438, 420 ]
+98 silly gunzTarPerm extractEntry tasks/modules/cacheUtils.ts
+99 silly gunzTarPerm modified mode [ 'tasks/modules/cacheUtils.ts', 438, 420 ]
+100 silly gunzTarPerm extractEntry tasks/modules/templateCache.js.map
+101 silly gunzTarPerm modified mode [ 'tasks/modules/templateCache.js.map', 438, 420 ]
+102 silly gunzTarPerm extractEntry tasks/modules/templateCache.ts
+103 silly gunzTarPerm modified mode [ 'tasks/modules/templateCache.ts', 438, 420 ]
+104 silly gunzTarPerm extractEntry tasks/modules/amdLoader.ts
+105 silly gunzTarPerm modified mode [ 'tasks/modules/amdLoader.ts', 438, 420 ]
+106 silly gunzTarPerm extractEntry tasks/modules/transformers.js.map
+107 silly gunzTarPerm modified mode [ 'tasks/modules/transformers.js.map', 438, 420 ]
+108 silly gunzTarPerm extractEntry tasks/modules/transformers.ts
+109 silly gunzTarPerm modified mode [ 'tasks/modules/transformers.ts', 438, 420 ]
+110 silly gunzTarPerm extractEntry tasks/modules/compile.js.map
+111 silly gunzTarPerm modified mode [ 'tasks/modules/compile.js.map', 438, 420 ]
+112 silly gunzTarPerm extractEntry tasks/modules/utils.js.map
+113 silly gunzTarPerm modified mode [ 'tasks/modules/utils.js.map', 438, 420 ]
+114 silly gunzTarPerm extractEntry tasks/modules/interfaces.d.ts
+115 silly gunzTarPerm modified mode [ 'tasks/modules/interfaces.d.ts', 438, 420 ]
+116 silly gunzTarPerm extractEntry tasks/ts.js.map
+117 silly gunzTarPerm modified mode [ 'tasks/ts.js.map', 438, 420 ]
+118 silly gunzTarPerm extractEntry tasks/ts.ts
+119 silly gunzTarPerm modified mode [ 'tasks/ts.ts', 438, 420 ]
+120 silly lockFile 9940518f-t-npm-grunt-ts-1-5-4-0-1-package tar:///Users/bert/.npm/grunt-ts-1.5/4.0.1/package
+121 silly lockFile 9940518f-t-npm-grunt-ts-1-5-4-0-1-package tar:///Users/bert/.npm/grunt-ts-1.5/4.0.1/package
+122 silly lockFile 911bfc7d-2494-0-43972819042392075-tmp-tgz tar:///var/folders/68/wk42fgnj0bz8vn11sm4g0gtr0000gn/T/npm-17385-NKwZR639/1431267722494-0.43972819042392075/tmp.tgz
+123 silly lockFile 911bfc7d-2494-0-43972819042392075-tmp-tgz tar:///var/folders/68/wk42fgnj0bz8vn11sm4g0gtr0000gn/T/npm-17385-NKwZR639/1431267722494-0.43972819042392075/tmp.tgz
+124 silly lockFile 85ed67c9-nt-ts-1-5-grunt-ts-1-5-4-0-1-tgz https://registry.npmjs.org/grunt-ts-1.5/-/grunt-ts-1.5-4.0.1.tgz
+125 silly lockFile 85ed67c9-nt-ts-1-5-grunt-ts-1-5-4-0-1-tgz https://registry.npmjs.org/grunt-ts-1.5/-/grunt-ts-1.5-4.0.1.tgz
+126 silly lockFile bdbabbb0-grunt-ts-1-5-4-0-1 grunt-ts-1.5@4.0.1
+127 silly lockFile bdbabbb0-grunt-ts-1-5-4-0-1 grunt-ts-1.5@4.0.1
+128 silly lockFile 6843eaac-grunt-ts-1-5 grunt-ts-1.5@
+129 silly lockFile 6843eaac-grunt-ts-1-5 grunt-ts-1.5@
+130 silly resolved [ { author: { name: 'fleurent' },
+130 silly resolved     name: 'grunt-ts-1.5',
+130 silly resolved     description: 'Compile and manage your TypeScript project',
+130 silly resolved     version: '4.0.1',
+130 silly resolved     homepage: 'https://github.com/grunt-ts/grunt-ts',
+130 silly resolved     repository: { type: 'git', url: 'git@github.com:grunt-ts/grunt-ts.git' },
+130 silly resolved     bugs: { url: 'https://github.com/grunt-ts/grunt-ts/issues' },
+130 silly resolved     licenses: [ [Object] ],
+130 silly resolved     main: 'grunt.js',
+130 silly resolved     maintainers: [ [Object], [Object], [Object], [Object], [Object] ],
+130 silly resolved     engines: { node: '>= 0.8.0' },
+130 silly resolved     scripts: { test: 'grunt test' },
+130 silly resolved     dependencies:
+130 silly resolved      { chokidar: '0.12.5',
+130 silly resolved        csproj2ts: '0.0.2',
+130 silly resolved        'es6-promise': '~0.1.1',
+130 silly resolved        lodash: '2.4.1',
+130 silly resolved        ncp: '0.5.1',
+130 silly resolved        rimraf: '2.2.6',
+130 silly resolved        typescript: '^1.5.0-alpha',
+130 silly resolved        underscore: '1.5.1',
+130 silly resolved        'underscore.string': '2.3.3' },
+130 silly resolved     peerDependencies: { grunt: '~0.4.0' },
+130 silly resolved     devDependencies:
+130 silly resolved      { grunt: '~0.4.0',
+130 silly resolved        'grunt-continue': '0.0.1',
+130 silly resolved        'grunt-contrib-clean': '~0.4.0',
+130 silly resolved        'grunt-contrib-jshint': '~0.8.0',
+130 silly resolved        'grunt-contrib-nodeunit': '~0.2.2',
+130 silly resolved        'grunt-contrib-watch': '~0.6.1',
+130 silly resolved        'grunt-debug-task': '^0.1.4',
+130 silly resolved        'grunt-tslint': '~2.0.0',
+130 silly resolved        'jshint-path-reporter': '~0.1.3',
+130 silly resolved        'source-map-support': '~0.2.5' },
+130 silly resolved     optionalDependencies: {},
+130 silly resolved     keywords:
+130 silly resolved      [ 'gruntplugin',
+130 silly resolved        'typescript',
+130 silly resolved        'compiler',
+130 silly resolved        'visualstudio',
+130 silly resolved        'build' ],
+130 silly resolved     contributors: [ [Object], [Object], [Object] ],
+130 silly resolved     gitHead: '9e14c3d8025c76abe148725ffd614a00292f7422',
+130 silly resolved     _id: 'grunt-ts-1.5@4.0.1',
+130 silly resolved     _shasum: 'e40a88cc1df636a83ad0944b4b2ba897bfda54c5',
+130 silly resolved     _from: 'grunt-ts-1.5@',
+130 silly resolved     _npmVersion: '1.4.28',
+130 silly resolved     _npmUser: { name: 'nycdotnet', email: 'steve.ognibene@outlook.com' },
+130 silly resolved     dist:
+130 silly resolved      { shasum: 'e40a88cc1df636a83ad0944b4b2ba897bfda54c5',
+130 silly resolved        tarball: 'http://registry.npmjs.org/grunt-ts/-/grunt-ts-4.0.1.tgz' },
+130 silly resolved     directories: {},
+130 silly resolved     _resolved: 'https://registry.npmjs.org/grunt-ts-1.5/-/grunt-ts-1.5-4.0.1.tgz',
+130 silly resolved     readme: '# grunt-ts\r\n\r\n[![Build Status](https://secure.travis-ci.org/TypeStrong/grunt-ts.svg?branch=master)](http://travis-ci.org/TypeStrong/grunt-ts) [![NPM version](https://badge.fury.io/js/grunt-ts.svg)](http://badge.fury.io/js/grunt-ts)\r\n\r\n## TypeScript Compilation Task for GruntJS\r\n\r\nGrunt-ts is an npm package that handles TypeScript compilation work in GruntJS build scripts.  It provides a [Grunt-compatible wrapper](#support-for-tsc-switches) for the `tsc` command-line compiler, and provides some [additional functionality](#grunt-ts-gruntfilejs-options) that improves the TypeScript development workflow. Grunt-ts even supports compiling against a [Visual Studio project](#vs) directly.  Grunt-ts is itself written in [TypeScript](./tasks/ts.ts).\r\n\r\n## Getting Started\r\n\r\nIf you\'ve never used GruntJS on your computer, you should [follow the detailed instructions here](/docs/DetailedGettingStartedInstructions.md) to get Node.js and the grunt-cli working.  If you\'re a Grunt expert, simply follow these steps:\r\n\r\n * Run `npm install grunt-ts` in your project directory; this will install `grunt-ts`, TypeScript, and GruntJS.\r\n * Add the `ts` task in your `Gruntfile.js` (see below for a minimalist one).\r\n * Run `grunt` at the command line in your project folder to compile your TypeScript code.\r\n\r\nThis minimalist `Gruntfile.js` will compile `*.ts` files in all subdirectories of the project folder, excluding anything under `node_modules`:\r\n\r\n````javascript\r\nmodule.exports = function(grunt) {\r\n  grunt.initConfig({\r\n    ts: {\r\n      default : {\r\n        src: ["**/*.ts", "!node_modules/**/*.ts"]\r\n      }\r\n    }\r\n  });\r\n  grunt.loadNpmTasks("grunt-ts");\r\n  grunt.registerTask("default", ["ts"]);\r\n};\r\n````\r\n\r\nA more extensive sample `Gruntfile.js` is available [here](https://github.com/TypeStrong/grunt-ts/blob/master/sample/Gruntfile.js).\r\n\r\n## Grunt-ts Features\r\n\r\n * Allows use of all standard GruntJS functionality such as use of customizable task targets, globbing, use of the `files` object (for instantiating multiple independent `tsc` runs in a single target), etc.\r\n * Allows the developer to [select a custom TypeScript compiler version](#compiler) for their project, or even use a custom (in-house) version.\r\n * Supports [most switches](#support-for-tsc-switches) of the `tsc` TypeScript Compiler via options in the gruntfile `ts` task, and also supports switch overrides per-target.\r\n * Supports [Visual Studio Projects](#vs) as a compile target for identifying TypeScript files, setting up compile configuration, or both.\r\n * Provides a [transforms](#transforms) feature that eases code refactoring by taking the burden of relative path maintenance off the developer. If the paths to a set of files changes, grunt-ts will regenerate the relevant sections.  This feature supports:\r\n   * External module [import transforms](#import-transform) by file name, aliasing, directories, indexed directories, and re-exported imports.\r\n   * Internal module [reference maintenance](#references)\r\n   * Common [reference file](#reference) management\r\n * Allows [concatenation](#out) where supported by the TypeScript compiler\'s `--out` switch\r\n * [Encodes HTML](#html) files as TypeScript variables (for HTML templating engines)\r\n * Performs live file [watching](#watch) (compile on save)\r\n * Enables ["Fast" compile](#fast) when using external modules\r\n\r\n## Support for tsc Switches\r\n\r\nGrunt-ts supports most `tsc` switches.  Click the link to cross-reference to the grunt-ts option.\r\n\r\n|`tsc` switch|grunt-ts analogue|description|\r\n|:----:|:----:|:-----|\r\n| --declaration|[declaration](#declaration)|Generates a `.d.ts` definitions file for compiled TypeScript files|\r\n|--mapRoot LOCATION|[mapRoot](#maproot)|Specifies the location where debugger should locate map files instead of generated locations.|\r\n|--module KIND|[module](#module)|Specify module style for code generation|\r\n|--noImplicitAny|[noImplicitAny](#noimplicitany)|Warn on expressions and declarations with an implied `any` type.|\r\n|--noResolve|[noResolve](#noresolve)|Skip resolution and preprocessing (deprecated)|\r\n|--out FILE|[out](#out)|Concatenate and emit output to a single file.|\r\n|--outDir DIRECTORY|[outDir](#outdir)|Redirect output structure to the directory.|\r\n|--preserveConstEnums|[preserveConstEnums](#preserveconstenums)|Const enums will be kept as enums in the emitted JS.|\r\n|--removeComments|[removeComments](#removecomments)|Configures if comments should be included in the output|\r\n|--sourceMap|[sourceMap](#sourcemap)|Generates corresponding `.map` file|\r\n|--sourceRoot LOCATION|[sourceRoot](#sourceroot)|Specifies the location where debugger should locate TypeScript files instead of source locations.|\r\n|--suppressImplicitAnyIndexErrors|[suppressImplicitAnyIndexErrors](#suppressimplicitanyindexerrors)|Specifies the location where debugger should locate TypeScript files instead of source locations.|\r\n|--target VERSION|[target](#target)|Specify ECMAScript target version: `\'es3\'`, `\'es5\'`, or `\'es6\'`|\r\n\r\n\r\nFor file ordering, look at [JavaScript Generation](#javascript-generation).\r\n\r\n## grunt-ts gruntfile.js options\r\n\r\n|property|where to define|description|\r\n|:----|:----|:-----|\r\n|[comments](#comments)|option|`true`, `false` (default) - include comments in emitted JS.|\r\n|[compile](#compile)|option|`true` (default), `false` - compile TypeScript code.|\r\n|[compiler](#compiler)|option|`string` - path to custom compiler|\r\n|[declaration](#declaration)|option|`true`, `false` (default) - indicates that definition files should be emitted.|\r\n|[failOnTypeErrors](#failontypeerrors)|option|`true` (default), `false` - fail Grunt pipeline if there is a type error|\r\n|[fast](#fast)|option|`\'watch\'` (default), `\'always\'`, `\'never\'` - how to decide on a "fast" grunt-ts compile.|\r\n|[files](#files)|target|Sets of files to compile and optional output destination|\r\n|[html](#html)|target|`string` or `string[]` - glob to HTML templates|\r\n|[htmlModuleTemplate](#htmlmoduletemplate)|option|`string` - HTML template namespace|\r\n|[htmlVarTemplate](#htmlvartemplate)|option|`string` - HTML property name|\r\n|[mapRoot](#maproot)|option|`string` - root for referencing `.js.map` files in JS|\r\n|[module](#module)|option|default to be nothing, If you want to set it you set it to either `\'amd\'` or `\'commonjs\'`|\r\n|[noImplicitAny](#noimplicitany)|option|`true`, `false` (default) - enable for stricter type checking|\r\n|[noResolve](#noresolve)|option|`true`, `false` (default) - for deprecated version of TypeScript|\r\n|[options](#grunt-ts-target-options)|target||\r\n|[out](#out)|target|`string` - instruct `tsc` to concatenate output to this file.|\r\n|[outDir](#outdir)|target|`string` - instruct `tsc` to emit JS to this directory.|\r\n|[preserveConstEnums](#preserveconstenums)|option|`true`, `false` (default) - If true, const enums will be kept as enums in the emitted JS.|\r\n|[reference](#reference)|target|`string` - tells grunt-ts which file to use for maintaining references|\r\n|[removeComments](#removecomments)|option|`true` (default), `false` - removes comments in emitted JS|\r\n|[sourceRoot](#sourceroot)|option|`string` - root for referencing TS files in `.js.map`|\r\n|[sourceMap](#sourcemap)|option|`true` (default), `false` - indicates if source maps should be generated (`.js.map`)|\r\n|[suppressImplicitAnyIndexErrors](#suppressimplicitanyindexerrors)|option|`false` (default), `true` - indicates if TypeScript should allow access to properties of an object by string indexer when `--noImplicitAny` is active, even if TypeScript doesn\'t know about them.|\r\n|[src](#src)|target|`string` or `string[]` - glob of TypeScript files to compile.|\r\n|[target](#target)|option|`\'es5\'` (default), `\'es3\'`, or `\'es6\'` - targeted ECMAScript version|\r\n|[verbose](#verbose)|option|`true`, `false` (default) - logs `tsc` command-line options to console|\r\n|[vs](#vs)|target|`string` referencing a `.csproj` or `.vbproj` file or, `{}` (object) (see [Visual Studio Projects](#vs) for details)|\r\n|[watch](#watch)|target|`string` - will watch for changes in the specified directory or below|\r\n\r\nNote: In the above chart, if "where to define" is "target", the property must be defined on a target or on the `ts` object directly.  If "where to define" is "options", then the property must be defined on an `options` object on `ts` or on a target under `ts`.\r\n\r\n\r\n### grunt-ts target properties\r\n\r\n#### dest\r\n\r\nGrunt-ts does not support the GruntJS standard `dest` target property.  Instead, you should use [files](#files), [out](#out), or [outDir](#outdir).\r\n\r\n#### files\r\nGrunt-ts supports use of the GruntJS-centric `files` property on a target as an alternative to the `tsc`-centric use of `src` and `out`/`outDir`.\r\n\r\nNotes:\r\n* The `fast` grunt-ts option is not supported in this configuration. You should specify `fast: \'never\'` to avoid warnings when `files` is used.\r\n* It is not supported to specify an array of values for `dest` with grunt-ts.  A warning will be issued to the console.  If a non-empty array is passed, the first element will be used and the rest will be truncated.\r\n* If the `dest` parameter ends with ".js", the value will be passed to the `--out` parameter of the TypeScript compiler.  Otherwise, if there is a non-blank value, it will be passed to the `--outDir` parameter.\r\n* If you intend to pass the specific value "src" to the TypeScript `--outDir` parameter, specify it as "src/" in the dest parameter to avoid grunt-ts warnings.\r\n\r\nHere are some examples of using the target `files` property with grunt-ts:\r\n\r\n````js\r\ngrunt.initConfig({\r\n  ts: {\r\n    compileTwoSetsOfFilesUsingArrayStyle: {\r\n      // This will run tsc twice.  The first time, the result of the \'files1/**/*.ts\' glob will be\r\n      // passed to tsc with the --out switch as \'out/ArrayStyle/1.js\'.\r\n      // see https://github.com/gruntjs/grunt-docs/blob/master/Configuring-tasks.md#files-array-format\r\n      files: [{ src: [\'files1/**/*.ts\'], dest: \'out/ArrayStyle/1.js\' },\r\n              { src: [\'files2/**/*.ts\'], dest: \'out/ArrayStyle/2.js\' }],\r\n      options: {\r\n        fast: \'never\'\r\n      }\r\n    },\r\n    compileTwoSetsOfFilesToDirUsingArrayStyle: {\r\n      // This will run tsc twice.  The first time, the result of the \'files1/**/*.ts\' glob will be\r\n      // passed to tsc with the --outDir switch as \'out/ArrayStyle\'.\r\n      // see https://github.com/gruntjs/grunt-docs/blob/master/Configuring-tasks.md#files-array-format\r\n      files: [{ src: [\'files1/**/*.ts\'], dest: \'out/ArrayStyle\' },\r\n              { src: [\'files2/**/*.ts\'], dest: \'out/ArrayStyle\' }],\r\n      options: {\r\n        fast: \'never\'\r\n      }\r\n    },\r\n    compileTwoSetsOfFilesUsingObjectStyle: {\r\n      // This will run tsc twice.  The first time, the result of the \'files1/**/*.ts\' glob will be\r\n      // passed to tsc with the --out switch as \'out/ObjectStyle/1.js\'.\r\n      // see https://github.com/gruntjs/grunt-docs/blob/master/Configuring-tasks.md#files-object-format\r\n      files: {\r\n        \'out/ObjectStyle/1.js\': [\'files1/**/*.ts\'],\r\n        \'out/ObjectStyle/2.js\': [\'files2/**/*.ts\']\r\n      },\r\n      options: {\r\n        fast: \'never\'\r\n      }\r\n    },\r\n    compileTwoSetsOfFilesToDirUsingObjectStyle: {\r\n      // This will run tsc once.  The result of the globs will be passed to tsc with the\r\n      // --outDir switch as \'out/ObjectStyle\'.\r\n      // see https://github.com/gruntjs/grunt-docs/blob/master/Configuring-tasks.md#files-object-format\r\n      files: {\r\n        \'out/ObjectStyle\': [\'files1/**/*.ts\',\'files2/**/*.ts\']\r\n        },\r\n        options: {\r\n          fast: \'never\'\r\n        }\r\n      }\r\n    }\r\n});\r\n````\r\n\r\n#### html\r\n\r\nGrunt-ts supports compilation of `.html` file content to TypeScript variables which is explained in detail [here](/docs/html2ts.md).  The `html` target property acts similarly to `src`, except that it searches for html files to convert to TypeScript variables.  See also [htmlModuleTemplate](#htmlmoduletemplate) and [htmlVarTemplate](#htmlvartemplate).\r\n\r\n````javascript\r\n// How to use the html target property (incomplete example)\r\ngrunt.initConfig({\r\n  ts: {\r\n    default: {\r\n      html: ["templates/**/*.html"]\r\n    }\r\n  }\r\n});\r\n````\r\n\r\nNote: the `html` compilation functionality will not fire if the `src` property is not specified.  If you wish to only have the HTML compile to TypeScript without compiling the resulting `.ts` files to JavaScript, make sure they\'re excluded from the `src` globs, or else specify an empty `src` array alongside the `html` task property, and set the target `compile` option to `false`:\r\n\r\n````javascript\r\n// Example of how to compile html files to TypeScript without compiling the resulting\r\n// .ts files to JavaScript.\r\ngrunt.initConfig({\r\n  ts: {\r\n    default: {\r\n      html: ["templates/**/*.html"],\r\n      src: [],\r\n      options: {\r\n        compile: false\r\n      }\r\n    }\r\n  }\r\n});\r\n````\r\n\r\n\r\n#### options\r\n\r\nThis section allows global configuration for the grunt-ts task.  All [target-specific options](#grunt-ts-target-options) are supported.  If a target also has options set, the target\'s options override the global task options.\r\n\r\n<!--\r\n#### nolib\r\n\r\nSpecify this option if you do not want the lib.d.ts to be loaded by the TypeScript compiler.\r\n-->\r\n\r\n#### out\r\n\r\nPasses the --out switch to `tsc`.  This will cause the emitted JavaScript to be concatenated to a single file if your code allows for that.\r\n\r\n````javascript\r\ngrunt.initConfig({\r\n  ts: {\r\n    default: {\r\n      out: "dist/myscript.js"\r\n    }\r\n  }\r\n});\r\n````\r\n\r\n*Warning:* Using the compiler with `out` and `reference` will prevent  grunt-ts from using its fast compile feature.  Consider using external modules with transforms instead.\r\n\r\n#### outDir\r\n\r\nPasses the --outDir switch to `tsc`.  This will redirect the emitted JavaScript to the specified directory and subdirectories.\r\n\r\n````javascript\r\ngrunt.initConfig({\r\n  ts: {\r\n    default: {\r\n      outDir: "dist"\r\n    }\r\n  }\r\n});\r\n````\r\n\r\n#### reference\r\n\r\nGrunt-ts can automatically generate a TypeScript file containing a reference to all other found `.ts` files.  This means that the developer will not need to cross-reference each of their TypeScript files manually; instead, they can just reference the single `reference` file in each of their code files.\r\n\r\n````javascript\r\ngrunt.initConfig({\r\n  ts: {\r\n    default: {\r\n      src: ["references.ts","some/other/path/**/*.ts"],\r\n      reference: "references.ts"\r\n    }\r\n  }\r\n});\r\n````\r\n**Note:** the TypeScript file identified in the `reference` property *must* be included in the `src` or `files` property in the Grunt target, or `reference` won\'t work (either directly or via wildcard/glob).\r\n\r\n*Note:* It is not supported to use `reference` with `files`.\r\n\r\n*Warning:* Using the compiler with `out` and `reference` will prevent grunt-ts from using its fast compile feature.  Consider using external modules with transforms instead.\r\n\r\n\r\n#### src\r\n\r\nAllows you to specify the TypeScript files that will be passed to the compiler.  Supports standard GruntJS functionality such as globbing.  More info at Configuring GruntJS Tasks](http://gruntjs.com/configuring-tasks#files).\r\n\r\n````javascript\r\ngrunt.initConfig({\r\n  ts: {\r\n    default: {\r\n      src: ["app/**/*.ts"]\r\n    }\r\n  }\r\n});\r\n````\r\n\r\n#### vs\r\n\r\nGrunt-ts can use the TypeScript compilation settings from a Visual Studio project file (.csproj or .vbproj).\r\n\r\nIn the simplest use case, specify a string identifying the Visual Studio project file name in the `vs` target property.  Grunt-ts will extract the TypeScript settings *last saved* into the project file and compile the TypeScript files identified in the project in the manner specified by the Visual Studio project\'s configuration.\r\n\r\n````javascript\r\ngrunt.initConfig({\r\n  ts: {\r\n    default: {\r\n      vs: \'test/vsproj/testproject.csproj\'\r\n    }\r\n  }\r\n});\r\n````\r\n\r\nIf more control is desired, you may pass the `vs` target property as an object literal with the following properties:\r\n\r\n  * `project`: (`string`, mandatory) the relative path (from the `gruntfile.js`) to the Visual Studio project file.\r\n  * `config`: (`string`, optional, default = \'\') the Visual Studio project configuration to use (allows choosing a different project configuration than the one currently in-use/saved in Visual Studio).\r\n  * `ignoreFiles`: (`boolean`, optional, default = `false`) Will ignore the files identified in the Visual Studio project.  This is useful if you want to keep your command-line build settings synchronized with the project\'s TypeScript Build settings, but want to specify a custom set of files to compile in your own `src` glob.  If not specified or set to false, the TypeScript files referenced in the Visual Studio project will be compiled in addition to any files identified in the `src` target property.\r\n  * `ignoreSettings`: (`boolean`, optional, default = `false`) Will ignore the compile settings identified in the Visual Studio project.  If specified, grunt-ts will follow its normal behavior and use any TypeScript build settings specified on the target or its defaults.\r\n\r\nAll features of grunt-ts other than `files`, are compatible with the `vs` target property.  If you wish to add more files to the compilation than are referenced in the Visual Studio project, the `src` grunt-ts property can be used; any files found in the glob are *added* to the compilation list (grunt-ts will resolve duplicates).  All other target properties and target options specified in the gruntfile.js will **override** the settings in the Visual Studio project file.  For example, if you were referencing a Visual Studio project configuration that had source maps enabled, specifying `sourcemap: false` in the gruntfile.js would keep all other Visual Studio build settings, but disable generation of source maps.\r\n\r\n**Note:** Using the `vs` target property with `files` is not supported.\r\n\r\nExample: Use all compilation settings specified in the "Release" TypeScript configuration from the project, but compile only the TypeScript files in the `lib` subfolder to a single file in the `built` folder.\r\n\r\n````javascript\r\ngrunt.initConfig({\r\n  ts: {\r\n    CompileMyLibsOnly: {\r\n      src: \'MyProject/lib/**/*.ts\',\r\n      out: \'built/mylibs.js\',\r\n      vs: {\r\n        project: \'MyProject/MyProject.csproj\',\r\n        ignoreFiles: true,\r\n        config: \'Release\'\r\n      }\r\n    }\r\n  }\r\n});\r\n````\r\n\r\nIf you wish to disable the Visual Studio built-in TypeScript build, but keep the Visual Studio project properties TypeScript Build pane working, follow [these instructions](./docs/DisableVisualStudioBuild.md).\r\n\r\n\r\n#### watch\r\n\r\nGrunt-ts can watch a directory and recompile TypeScript files when any TypeScript or HTML file is changed, added, or removed. Use the `watch` *target* option specifying a target directory that will be watched.  All subdirectories are automatically included.\r\n\r\nNote: this feature does not allow for additional tasks to run after the compilation step is done - for that you should use `grunt-contrib-watch`.\r\n\r\n````javascript\r\ngrunt.initConfig({\r\n  ts: {\r\n    default: {\r\n      watch: "."  //will re-run this task if any .ts or .html file is changed.\r\n    }\r\n  }\r\n});\r\n````\r\n\r\n### grunt-ts target options\r\n\r\n#### compile\r\n\r\n````javascript\r\ntrue (default)| false\r\n````\r\n\r\nIndicates if the TypeScript compilation should be attempted.  Turn this off if you wish to just run transforms.\r\n\r\n````javascript\r\ngrunt.initConfig({\r\n  ts: {\r\n    default: {\r\n      options: {\r\n        compile: false\r\n      }\r\n    }\r\n  }\r\n});\r\n````\r\n\r\n#### compiler\r\n\r\nThis target option allows the developer to select an alternate TypeScript compiler.\r\n\r\nBy default, `grunt-ts` will use the TypeScript compiler that came bundled with it.  Alternate compilers can be used by this target option (for custom compiler builds) or using `package.json` (for npm released version of `typescript`).\r\n\r\nTo use a custom compiler, update your gruntfile.js file with this code:\r\n\r\n````javascript\r\ngrunt.initConfig({\r\n  ts: {\r\n    options: {\r\n      compiler: \'./node_modules/grunt-ts/customcompiler/tsc\'\r\n    }\r\n  }\r\n});\r\n````\r\n\r\nDownload custom compilers from the current [TypeScript repository on GitHub](https://github.com/Microsoft/TypeScript/releases) or the old [TypeScript repository on CodePlex](http://typescript.codeplex.com/releases) and extract it to a folder in your project.  The compiler will be in the `bin` folder.  Copy all of the files to your project folder and then reference `tsc` using the `compiler` task option.  For example, if you extracted everything to a `mycompiler` folder in your project, you\'d set the grunt-ts `compiler` property to `\'./mycompiler/tsc\'`.\r\n\r\nIn the absence of a compiler argument, `grunt-ts` will look for an alternate compiler in its *peer* `node_modules` folder (where `grunt-ts` and `typescript` are peers).\r\n\r\nThe `package.json` would look something like this for a legacy project:\r\n\r\n```javascript\r\n{\r\n  "devDependencies": {\r\n    "grunt" : "~0.4.1",\r\n    "grunt-ts" : "~1.9.2",\r\n    "typescript" : "0.9.7"\r\n  }\r\n}\r\n```\r\nNote: It is safest to pin the exact TypeScript version (do not use `~` or `>`).\r\n\r\n\r\n\r\n#### noResolve\r\n\r\n````javascript\r\ntrue | false (default)\r\n````\r\n\r\n*Deprecated:* Grunt-ts supports passing this parameter to legacy versions of `tsc`.  It will pass `--noResolve` on the command line.\r\n\r\n#### comments\r\n\r\n````javascript\r\ntrue | false (default)\r\n````\r\n\r\nRetains comments in the emitted JavaScript if set to `true`.  Removes comments if set to `false`.  Note that if `comments` and `removeComments` are both used, the value of `removeComments` will win; regardless, please don\'t do this as it is just confusing to everyone.\r\n\r\n````javascript\r\ngrunt.initConfig({\r\n  ts: {\r\n    options: {\r\n      comments: true //preserves comments in output.\r\n    }\r\n  }\r\n});\r\n````\r\n\r\n#### removeComments\r\n\r\n````javascript\r\ntrue (default)| false\r\n````\r\n\r\nRemoves comments in the emitted JavaScript if set to `true`.  Preserves comments if set to `false`.  Note that if `comments` and `removeComments` are both used, the value of `removeComments` will win; regardless, please don\'t do this as it is just confusing to everyone.\r\n\r\n````javascript\r\ngrunt.initConfig({\r\n  ts: {\r\n    options: {\r\n      removeComments: false //preserves comments in output.\r\n    }\r\n  }\r\n});\r\n````\r\n\r\n#### declaration\r\n\r\n````javascript\r\ntrue | false (default)\r\n````\r\n\r\nGenerates corresponding .d.ts file(s) for compiled TypeScript files.\r\n\r\n````javascript\r\ngrunt.initConfig({\r\n  ts: {\r\n    options: {\r\n      declaration: true\r\n    }\r\n  }\r\n});\r\n````\r\n\r\n#### failOnTypeErrors\r\n\r\n````javascript\r\ntrue (default) | false\r\n````\r\n\r\nTypeScript has two types of errors: emit preventing and non-emit preventing.  Generally, type errors do not prevent the JavaScript emit.  Therefore, it can be useful to allow the Grunt pipeline to continue even if there are type errors because `tsc` will still generate JavaScript.\r\n\r\nIf `failOnTypeErrors` is set to `false`, grunt-ts will not halt the Grunt pipeline if a TypeScript type error is encountered.  Note that syntax errors or other general `tsc` errors will always halt the pipeline.\r\n\r\n````javascript\r\ngrunt.initConfig({\r\n  ts: {\r\n    options: {\r\n      failOnTypeErrors: true\r\n    }\r\n  }\r\n});\r\n````\r\n\r\n#### fast\r\n\r\n````javascript\r\n"watch" (default) | "always" | "never"\r\n````\r\n\r\nIf you are using *external modules*, grunt-ts will try to do a `fast` compile **by default**, basically only compiling what\'s changed. It should "just work" with the built-in file watching as well as with external tools like `grunt-contrib-watch`.\r\n\r\nTo do a fast compile, grunt-ts maintains a cache of hashes for TypeScript files in the `.tscache` folder to detect changes (needed for external watch tool support).  It also creates a `.baseDir.ts` file at the root, passing it to the compiler to make sure that `--outDir` is always respected in the generated JavaScript.\r\n\r\nYou can [customize the behaviour](https://github.com/grunt-ts/grunt-ts/blob/master/docs/fast.md) of grunt-ts `fast`.\r\n\r\nIf you are using `files`, grunt-ts can\'t do a fast compile.  You should set `fast` to \'never\'.\r\n\r\n````javascript\r\ngrunt.initConfig({\r\n  ts: {\r\n    options: {\r\n      // disable the grunt-ts fast feature\r\n      fast: \'never\'\r\n    }\r\n  }\r\n});\r\n````\r\n\r\n#### htmlModuleTemplate\r\n\r\nGrunt-ts supports compilation of `.html` file content to TypeScript variables which is explained in detail [here](/docs/html2ts.md).  The `htmlModuleTemplate` target property allows the developer to define a namespace for the templates.  See also [html](#html) and [htmlVarTemplate](#htmlvartemplate).\r\n\r\n````javascript\r\n//Note: incomplete - combine with html and htmlVarTemplate\r\ngrunt.initConfig({\r\n  ts: {\r\n    default: {\r\n      options: {\r\n        //MyTemplate.html will be accessible as HtmlTemplates.MyTemplate\r\n        htmlModuleTemplate: \'HtmlTemplates.<%= filename %>\'\r\n      }\r\n    }\r\n  }\r\n});\r\n````\r\n\r\n#### htmlVarTemplate\r\n\r\nGrunt-ts supports compilation of `.html` file content to TypeScript variables which is explained in detail [here](/docs/html2ts.md).  The `htmlVarTemplate` target property allows the developer to define a property name for the template contents.  See also [html](#html) and [htmlModuleTemplate](#htmlmoduletemplate).\r\n\r\n````javascript\r\n//Note: incomplete - combine with html and htmlModuleTemplate\r\ngrunt.initConfig({\r\n  ts: {\r\n    default: {\r\n      options: {\r\n        //HTML template objects will expose their content via a property called markup.\r\n        htmlVarTemplate: \'markup\'\r\n      }\r\n    }\r\n  }\r\n});\r\n````\r\n\r\n#### mapRoot\r\n\r\nSpecifies the root for where `.js.map` sourcemap files should be referenced.  This is useful if you intend to move your `.js.map` files to a different location.  Leave this blank or omit entirely if the `.js.map` files will be deployed to the same folder as the corresponding `.js` files.  See also [sourceRoot](#sourceroot).\r\n\r\n````javascript\r\ngrunt.initConfig({\r\n  ts: {\r\n    default: {\r\n      options: {\r\n        //When abc.ts is compiled to abc.js, it will reference /maps/abc.js.map\r\n        mapRoot: "/maps"\r\n      }\r\n    }\r\n  }\r\n});\r\n````\r\n\r\n#### module\r\n\r\n````javascript\r\n"amd" (default) | "commonjs" | ""\r\n````\r\n\r\nSpecifies if TypeScript should emit AMD or CommonJS-style external modules.  Has no effect if internal modules are used.\r\n\r\n````javascript\r\ngrunt.initConfig({\r\n  ts: {\r\n    default: {\r\n      options: {\r\n        module: "amd"\r\n      }\r\n    }\r\n  }\r\n});\r\n````\r\n\r\n#### noEmitOnError\r\n\r\n````javascript\r\ntrue | false (default)\r\n````\r\n\r\nSet to true to pass `--noEmitOnError` to the compiler.  If set to true, TypeScript will not emit JavaScript if there is a type error.  This flag does not affect the Grunt pipeline; to force the Grunt pipeline to continue (or halt) in the presence of TypeScript type errors, see [failOnTypeErrors](#failontypeerrors).\r\n\r\n````javascript\r\ngrunt.initConfig({\r\n  ts: {\r\n    default: {\r\n      options: {\r\n        noEmitOnError: true\r\n      }\r\n    }\r\n  }\r\n});\r\n````\r\n\r\n#### noImplicitAny\r\n\r\n````javascript\r\ntrue | false (default)\r\n````\r\n\r\nSet to true to pass `--noImplicitAny` to the compiler.  Requires more strict type checking.  If `noImplicitAny` is enabled, TypeScript will raise a type error whenever it is unable to infer the type of a variable.  By default, grunt-ts will halt the Grunt pipeline on type errors.  See [failOnTypeErrors](#failontypeerrors) for more info.\r\n\r\n````javascript\r\ngrunt.initConfig({\r\n  ts: {\r\n    default: {\r\n      options: {\r\n        noImplicitAny: true\r\n      }\r\n    }\r\n  }\r\n});\r\n````\r\n\r\n#### preserveConstEnums\r\n\r\n````javascript\r\ntrue | false (default)\r\n````\r\n\r\nSet to true to pass `--preserveConstEnums` to the compiler.  If set to true, TypeScript will emit code that allows other JavaScript code to use the enum.  If false (the default), TypeScript will inline the enum values as magic numbers with a comment in the emitted JS.\r\n\r\n````javascript\r\ngrunt.initConfig({\r\n  ts: {\r\n    default: {\r\n      options: {\r\n        preserveConstEnums: true\r\n      }\r\n    }\r\n  }\r\n});\r\n````\r\n\r\n#### sourceMap\r\n\r\n````javascript\r\ntrue (default) | false\r\n````\r\n\r\nIf true, grunt-ts will instruct `tsc` to emit source maps (`.js.map` files).\r\n\r\n````javascript\r\ngrunt.initConfig({\r\n  ts: {\r\n    default: {\r\n      options: {\r\n        sourceMap: true\r\n      }\r\n    }\r\n  }\r\n});\r\n````\r\n\r\n#### sourceRoot\r\n\r\nThe sourceRoot to use in the emitted source map files.  Allows mapping moved `.js.map` files back to the original TypeScript files.  See also [mapRoot](#maproot).\r\n\r\n````javascript\r\ngrunt.initConfig({\r\n  ts: {\r\n    default: {\r\n      options: {\r\n        sourceRoot: "/dev"\r\n      }\r\n    }\r\n  }\r\n});\r\n````\r\n\r\n\r\n#### suppressImplicitAnyIndexErrors\r\n\r\n````javascript\r\ntrue | false (default)\r\n````\r\n\r\nSet to true to pass `--suppressImplicitAnyIndexErrors` to the compiler.  If set to true, TypeScript will allow access to properties of an object by string indexer when `--noImplicitAny` is active, even if TypeScript doesn\'t know about them.  This setting has no effect unless `--noImplicitAny` is active.\r\n\r\n````javascript\r\ngrunt.initConfig({\r\n  ts: {\r\n    default: {\r\n      options: {\r\n        suppressImplicitAnyIndexErrors: true,\r\n        noImplicitAny: true\r\n      }\r\n    }\r\n  }\r\n});\r\n````\r\n\r\nFor example, the following code would not compile with `--noImplicitAny` alone, but it would be legal with `--noImplicitAny` and `--suppressImplicitAnyIndexErrors` both enabled:\r\n\r\n````typescript\r\ninterface person {\r\n    name: string;\r\n}\r\n\r\nvar p : person = { name: "Test" };\r\np["age"] = 101;  //property age does not exist on interface person.\r\nconsole.log(p["age"]);\r\n````\r\n\r\n#### target\r\n\r\n````javascript\r\n"es5" (default) | "es3" | "es6"\r\n````\r\n\r\nAllows the developer to specify if they are targeting ECMAScript version 3, 5, or 6.  Support for `es6` emit was added in TypeScript 1.4 and is listed as experimental.  Only select ES3 if you are targeting old browsers (IE8 or below).  The default for grunt-ts (es5) is different than the default for `tsc` (es3).\r\n\r\n````javascript\r\ngrunt.initConfig({\r\n  ts: {\r\n    default: {\r\n      options: {\r\n        target: "es3" //for IE8 and below\r\n      }\r\n    }\r\n  }\r\n});\r\n````\r\n\r\n#### verbose\r\n\r\n````javascript\r\nfalse (default) | true\r\n````\r\n\r\nWill print the switches passed to `tsc` on the console.  Helpful for debugging.\r\n\r\n````javascript\r\ngrunt.initConfig({\r\n  ts: {\r\n    default: {\r\n      options: {\r\n        verbose: true\r\n      }\r\n    }\r\n  }\r\n});\r\n````\r\n\r\n### Transforms\r\n\r\nObjective: To allow for easier code refactoring by taking relative path maintenance burden off the developer.  If the path to a referenced file changes, `grunt-ts` will regenerate the relevant lines.\r\n\r\nTransforms begin with a three-slash comment `///` and are prefixed with `ts:`.  When grunt-ts is run against your TypeScript file, it will add a new line with the appropriate TypeScript code to reference the file, or it will generate a comment indicating that the file you referenced could not be found.\r\n\r\nFor example, if you put this in your code:\r\n\r\n```typescript\r\n///ts:ref=mylibrary\r\n```\r\n\r\nThe next time grunt-ts runs, it might change that line to this:\r\n\r\n```typescript\r\n///ts:ref=mylibrary\r\n/// <reference path=\'../path/to/mylibrary.d.ts\'/> ///ts:ref:generated\r\n```\r\n\r\n**Important Note:** All transforms require the searched-for file to be *included* in the result of the `files`, `src`, or `vs` Grunt globs.  Grunt-ts will only search within the results that *Grunt has identified*; it does not go searching through your disk for files!\r\n\r\n\r\nYou can also run transforms without compiling your code by setting `compile: false` in your config. For example:\r\n```javascript\r\ngrunt.initConfig({\r\n  ts: {\r\n    "transforms-only": {\r\n      options: {\r\n        compile: false\r\n      },\r\n      // in addition to your standard settings:\r\n      // src: ...\r\n      // outDir: ...\r\n    },\r\n    // ...\r\n  }\r\n} );\r\n```\r\n\r\n#### Import Transform\r\n\r\n```typescript\r\n///ts:import=<fileOrDirectoryName>[,<variableName>]\r\n```\r\n\r\nThis will generate the relevant `import foo = require(\'./path/to/foo\');` code without you having to figure out the relative path.\r\n\r\nIf a directory is provided, the entire contents of the directory will be imported. However if a directory has a file `index.ts` inside of it, then instead of importing the entire folder only `index.ts` is imported.\r\n\r\n##### Examples\r\n\r\nImport file:\r\n```typescript\r\n///ts:import=filename\r\nimport filename = require(\'../path/to/filename\'); ///ts:import:generated\r\n```\r\n\r\nImport file with an alternate name:\r\n```typescript\r\n///ts:import=BigLongClassName,foo\r\nimport foo = require(\'../path/to/BigLongClassName\'); ///ts:import:generated\r\n```\r\n\r\nImport directory:\r\n```typescript\r\n///ts:import=directoryName\r\nimport filename = require(\'../path/to/directoryName/filename\'); ///ts:import:generated\r\nimport anotherfile = require(\'../path/to/directoryName/deeper/anotherfile\'); ///ts:import:generated\r\n...\r\n```\r\n\r\nImport directory that has an `index.ts` file in it:\r\n```typescript\r\n///ts:import=directoryName\r\nimport directoryName = require(\'../path/to/directoryName/index\'); ///ts:import:generated\r\n```\r\n> See Exports for examples of how grunt-ts can generate an `index.ts` file for you\r\n\r\n#### Export Transform\r\n\r\n```typescript\r\n///ts:export=<fileOrDirectoryName>[,<variableName>]\r\n```\r\n\r\nThis is similar to `///ts:import` but will generate `export import foo = require(\'./path/to/foo\');` and is very useful for generating indexes of entire module directories when using external modules (which you should **always** be using).\r\n\r\n##### Examples\r\n\r\nExport file:\r\n```typescript\r\n///ts:export=filename\r\nexport import filename = require(\'../path/to/filename\'); ///ts:export:generated\r\n```\r\n\r\nExport file with an alternate name:\r\n```typescript\r\n///ts:export=filename,foo\r\nexport import foo = require(\'../path/to/filename\'); ///ts:export:generated\r\n```\r\n\r\nExport directory:\r\n```typescript\r\n///ts:export=dirName\r\nexport import filename = require(\'../path/to/dirName/filename\'); ///ts:export:generated\r\nexport import anotherfile = require(\'../path/to/dirName/deeper/anotherfile\'); ///ts:export:generated\r\n...\r\n```\r\n\r\n#### References\r\n\r\n```typescript\r\n///ts:ref=<fileName>\r\n```\r\n\r\nThis will generate the relevant `/// <references path="./path/to/foo" />` code without you having to figure out the relative path.\r\n\r\n**Note:** grunt-ts only searches through the enumerated results of the `src` or `files` property in the Grunt target.  The referenced TypeScript file *must* be included for compilation (either directly or via wildcard/glob) or the transform won\'t work.  This is so that grunt-ts doesn\'t go searching through your whole drive for files.\r\n\r\n##### Examples\r\n\r\nReference file:\r\n```typescript\r\n///ts:ref=filename\r\n/// <reference path=\'../path/to/filename\'/> ///ts:ref:generated\r\n```\r\n\r\n### JavaScript Generation\r\n\r\nWhen a output file is specified via `out` in combination with a reference file via `reference` then grunt-ts uses the generated reference file to *order the code in the generated JavaScript*.\r\n\r\nUse `reference.ts` to specify the order for the few files the build really cares about and leave the rest to be maintained by grunt-ts.\r\n\r\nE.g. in the following case the generated JavaScript for `someBaseClass.ts` is guaranteed to be at the top, and the generated JavaScript for `main.ts` is guaranteed to be at the bottom of the single merged `js` file.\r\n\r\nEverything between `grunt-start` and `grunt-end` is generated and maintained by grunt-ts. If there is no `grunt-start` section found, it is created. If `reference.ts` does not exist originally, it is also created.\r\n\r\n````typescript\r\n/// <reference path="someBaseClass.ts" />\r\n\r\n// Put comments here and they are preserved\r\n\r\n//grunt-start\r\n/// <reference path="autoreference.ts" />\r\n/// <reference path="someOtherFile.ts" />\r\n//grunt-end\r\n\r\n\r\n/// <reference path="main.ts" />\r\n````\r\n\r\n### Standardizing Line Endings\r\n\r\nAs of grunt-ts v2.0.2, If you wish to standardize the line endings used by grunt-ts transforms, you can set the `grunt.util.linefeed` property in your gruntfile.js to the desired standard line ending for the grunt-ts managed TypeScript files.\r\n\r\n````javascript\r\nmodule.exports = function(grunt) {\r\n\r\n  grunt.util.linefeed = \'\\r\\n\';  // this would standardize on CRLF\r\n\r\n  /* rest of config */\r\n};\r\n````\r\n\r\nNote that it is not currently possible to force TypeScript to emit all JavaScript with a particular line ending, but a switch to allow that is under discussion here: https://github.com/Microsoft/TypeScript/issues/1693\r\n\r\n\r\n## Video Examples\r\n**TypeScript programming using grunt-ts (YouTube):**\r\n\r\n<a href="https://youtu.be/Km0DpfX5ZxM" target="_blank" alt="TypeScript programming using grunt-ts"><img src="https://img.youtube.com/vi/Km0DpfX5ZxM/0.jpg" /></a>\r\n\r\n**AngularJS + TypeScript : Workflow with grunt-ts (YouTube)**\r\n\r\n<a href="https://youtu.be/0-6vT7xgE4Y" target="_blank" alt="AngularJS + TypeScript : Workflow"><img src="https://img.youtube.com/vi/0-6vT7xgE4Y/0.jpg" /></a>\r\n\r\n## Contributing\r\n\r\nWith npm and grunt-cli installed, run the following from the root of the repository:\r\n\r\n```bash\r\n$ npm install\r\n```\r\n### Building the project:\r\n\r\nTo build all\r\n\r\n```bash\r\n$ grunt build\r\n```\r\n### Running the tests:\r\n\r\nTo test all\r\n\r\n```bash\r\n$ grunt test\r\n```\r\n\r\n### Before PR\r\n\r\n```bash\r\n$ grunt release\r\n```\r\n\r\nIt runs `build` followed by `test`. This is also the default task. You should run this before sending a PR.\r\n\r\n### Development\r\n\r\nThe easiest/fastest way to work on grunt-ts is to modify `tasksToTest` toward the bottom of the `gruntfile.js`.  The `grunt dev` command is set up to compile grunt-ts with your changes and then reload itself; then, your newly-compiled grunt-ts will be used to run whatever tasks are listed in the `tasksToTest` array.\r\n\r\nWithout using `tasksToTest` while working on grunt-ts, the old grunt-ts remains in memory for successive tasks on the same run.  This means you might have to run your grunt commands twice; once to compile grunt-ts and once to see how the new grunt-ts works with your code.\r\n\r\n\r\n### Additional commands\r\nUpdate the current `grunt-ts` to be the last known good version (dogfood). Commit message should be `Update LKG`.\r\n\r\n```bash\r\n$ grunt upgrade\r\n```\r\n\r\n### Publishing Checklist\r\n\r\n * Run `grunt release` and ensure it comes back clean (should finish but with warnings).\r\n * Update the version in package.json.\r\n * Update CHANGELOG.md.\r\n * Commit to master.\r\n * Publish to npm.\r\n * Push version tag to GitHub.\r\n\r\n## License\r\n\r\nLicensed under the MIT License.\r\n',
+130 silly resolved     readmeFilename: 'README.md' } ]
+131 info install grunt-ts-1.5@4.0.1 into /Users/bert/Work/meteorpersistence
+132 info installOne grunt-ts-1.5@4.0.1
+133 info /Users/bert/Work/meteorpersistence/node_modules/grunt-ts-1.5 unbuild
+134 verbose tar unpack /Users/bert/.npm/grunt-ts-1.5/4.0.1/package.tgz
+135 silly lockFile bb8d0ffd-stence-node-modules-grunt-ts-1-5 tar:///Users/bert/Work/meteorpersistence/node_modules/grunt-ts-1.5
+136 verbose lock tar:///Users/bert/Work/meteorpersistence/node_modules/grunt-ts-1.5 /Users/bert/.npm/bb8d0ffd-stence-node-modules-grunt-ts-1-5.lock
+137 silly lockFile 0c161b7d-m-grunt-ts-1-5-4-0-1-package-tgz tar:///Users/bert/.npm/grunt-ts-1.5/4.0.1/package.tgz
+138 verbose lock tar:///Users/bert/.npm/grunt-ts-1.5/4.0.1/package.tgz /Users/bert/.npm/0c161b7d-m-grunt-ts-1-5-4-0-1-package-tgz.lock
+139 silly gunzTarPerm modes [ '755', '644' ]
+140 silly gunzTarPerm extractEntry package.json
+141 silly gunzTarPerm modified mode [ 'package.json', 438, 420 ]
+142 silly gunzTarPerm extractEntry README.md
+143 silly gunzTarPerm modified mode [ 'README.md', 438, 420 ]
+144 silly gunzTarPerm extractEntry LICENSE
+145 silly gunzTarPerm modified mode [ 'LICENSE', 438, 420 ]
+146 silly gunzTarPerm extractEntry AUTHORS
+147 silly gunzTarPerm modified mode [ 'AUTHORS', 438, 420 ]
+148 silly gunzTarPerm extractEntry CHANGELOG.md
+149 silly gunzTarPerm modified mode [ 'CHANGELOG.md', 438, 420 ]
+150 silly gunzTarPerm extractEntry custom.TypeScript.targets
+151 silly gunzTarPerm modified mode [ 'custom.TypeScript.targets', 438, 420 ]
+152 silly gunzTarPerm extractEntry docs/DetailedGettingStartedInstructions.md
+153 silly gunzTarPerm modified mode [ 'docs/DetailedGettingStartedInstructions.md', 438, 420 ]
+154 silly gunzTarPerm extractEntry docs/DisableVisualStudioBuild.md
+155 silly gunzTarPerm modified mode [ 'docs/DisableVisualStudioBuild.md', 438, 420 ]
+156 silly gunzTarPerm extractEntry docs/amdLoader.md
+157 silly gunzTarPerm modified mode [ 'docs/amdLoader.md', 438, 420 ]
+158 silly gunzTarPerm extractEntry docs/fast.md
+159 silly gunzTarPerm modified mode [ 'docs/fast.md', 438, 420 ]
+160 silly gunzTarPerm extractEntry docs/html2ts.md
+161 silly gunzTarPerm modified mode [ 'docs/html2ts.md', 438, 420 ]
+162 silly gunzTarPerm extractEntry tasks/ts.js
+163 silly gunzTarPerm modified mode [ 'tasks/ts.js', 438, 420 ]
+164 silly gunzTarPerm extractEntry tasks/modules/amdLoader.js
+165 silly gunzTarPerm modified mode [ 'tasks/modules/amdLoader.js', 438, 420 ]
+166 silly gunzTarPerm extractEntry tasks/modules/cacheUtils.js
+167 silly gunzTarPerm modified mode [ 'tasks/modules/cacheUtils.js', 438, 420 ]
+168 silly gunzTarPerm extractEntry tasks/modules/compile.js
+169 silly gunzTarPerm modified mode [ 'tasks/modules/compile.js', 438, 420 ]
+170 silly gunzTarPerm extractEntry tasks/modules/html2ts.js
+171 silly gunzTarPerm modified mode [ 'tasks/modules/html2ts.js', 438, 420 ]
+172 silly gunzTarPerm extractEntry tasks/modules/reference.js
+173 silly gunzTarPerm modified mode [ 'tasks/modules/reference.js', 438, 420 ]
+174 silly gunzTarPerm extractEntry tasks/modules/templateCache.js
+175 silly gunzTarPerm modified mode [ 'tasks/modules/templateCache.js', 438, 420 ]
+176 silly gunzTarPerm extractEntry tasks/modules/transformers.js
+177 silly gunzTarPerm modified mode [ 'tasks/modules/transformers.js', 438, 420 ]
+178 silly gunzTarPerm extractEntry tasks/modules/utils.js
+179 silly gunzTarPerm modified mode [ 'tasks/modules/utils.js', 438, 420 ]
+180 silly gunzTarPerm extractEntry tasks/modules/compile.ts
+181 silly gunzTarPerm modified mode [ 'tasks/modules/compile.ts', 438, 420 ]
+182 silly gunzTarPerm extractEntry tasks/modules/utils.ts
+183 silly gunzTarPerm modified mode [ 'tasks/modules/utils.ts', 438, 420 ]
+184 silly gunzTarPerm extractEntry tasks/modules/html2ts.js.map
+185 silly gunzTarPerm modified mode [ 'tasks/modules/html2ts.js.map', 438, 420 ]
+186 silly gunzTarPerm extractEntry tasks/modules/html2ts.ts
+187 silly gunzTarPerm modified mode [ 'tasks/modules/html2ts.ts', 438, 420 ]
+188 silly gunzTarPerm extractEntry tasks/modules/amdLoader.js.map
+189 silly gunzTarPerm modified mode [ 'tasks/modules/amdLoader.js.map', 438, 420 ]
+190 silly gunzTarPerm extractEntry tasks/modules/cacheUtils.js.map
+191 silly gunzTarPerm modified mode [ 'tasks/modules/cacheUtils.js.map', 438, 420 ]
+192 silly gunzTarPerm extractEntry tasks/modules/reference.js.map
+193 silly gunzTarPerm modified mode [ 'tasks/modules/reference.js.map', 438, 420 ]
+194 silly gunzTarPerm extractEntry tasks/modules/reference.ts
+195 silly gunzTarPerm modified mode [ 'tasks/modules/reference.ts', 438, 420 ]
+196 silly gunzTarPerm extractEntry tasks/modules/cacheUtils.ts
+197 silly gunzTarPerm modified mode [ 'tasks/modules/cacheUtils.ts', 438, 420 ]
+198 silly gunzTarPerm extractEntry tasks/modules/templateCache.js.map
+199 silly gunzTarPerm modified mode [ 'tasks/modules/templateCache.js.map', 438, 420 ]
+200 silly gunzTarPerm extractEntry tasks/modules/templateCache.ts
+201 silly gunzTarPerm modified mode [ 'tasks/modules/templateCache.ts', 438, 420 ]
+202 silly gunzTarPerm extractEntry tasks/modules/amdLoader.ts
+203 silly gunzTarPerm modified mode [ 'tasks/modules/amdLoader.ts', 438, 420 ]
+204 silly gunzTarPerm extractEntry tasks/modules/transformers.js.map
+205 silly gunzTarPerm modified mode [ 'tasks/modules/transformers.js.map', 438, 420 ]
+206 silly gunzTarPerm extractEntry tasks/modules/transformers.ts
+207 silly gunzTarPerm modified mode [ 'tasks/modules/transformers.ts', 438, 420 ]
+208 silly gunzTarPerm extractEntry tasks/modules/compile.js.map
+209 silly gunzTarPerm modified mode [ 'tasks/modules/compile.js.map', 438, 420 ]
+210 silly gunzTarPerm extractEntry tasks/modules/utils.js.map
+211 silly gunzTarPerm modified mode [ 'tasks/modules/utils.js.map', 438, 420 ]
+212 silly gunzTarPerm extractEntry tasks/modules/interfaces.d.ts
+213 silly gunzTarPerm modified mode [ 'tasks/modules/interfaces.d.ts', 438, 420 ]
+214 silly gunzTarPerm extractEntry tasks/ts.js.map
+215 silly gunzTarPerm modified mode [ 'tasks/ts.js.map', 438, 420 ]
+216 silly gunzTarPerm extractEntry tasks/ts.ts
+217 silly gunzTarPerm modified mode [ 'tasks/ts.ts', 438, 420 ]
+218 silly lockFile bb8d0ffd-stence-node-modules-grunt-ts-1-5 tar:///Users/bert/Work/meteorpersistence/node_modules/grunt-ts-1.5
+219 silly lockFile bb8d0ffd-stence-node-modules-grunt-ts-1-5 tar:///Users/bert/Work/meteorpersistence/node_modules/grunt-ts-1.5
+220 silly lockFile 0c161b7d-m-grunt-ts-1-5-4-0-1-package-tgz tar:///Users/bert/.npm/grunt-ts-1.5/4.0.1/package.tgz
+221 silly lockFile 0c161b7d-m-grunt-ts-1-5-4-0-1-package-tgz tar:///Users/bert/.npm/grunt-ts-1.5/4.0.1/package.tgz
+222 info preinstall grunt-ts-1.5@4.0.1
+223 verbose readDependencies using package.json deps
+224 verbose readDependencies using package.json deps
+225 verbose cache add [ 'chokidar@0.12.5', null ]
+226 verbose cache add name=undefined spec="chokidar@0.12.5" args=["chokidar@0.12.5",null]
+227 verbose parsed url { protocol: null,
+227 verbose parsed url   slashes: null,
+227 verbose parsed url   auth: null,
+227 verbose parsed url   host: null,
+227 verbose parsed url   port: null,
+227 verbose parsed url   hostname: null,
+227 verbose parsed url   hash: null,
+227 verbose parsed url   search: null,
+227 verbose parsed url   query: null,
+227 verbose parsed url   pathname: 'chokidar@0.12.5',
+227 verbose parsed url   path: 'chokidar@0.12.5',
+227 verbose parsed url   href: 'chokidar@0.12.5' }
+228 verbose cache add name="chokidar" spec="0.12.5" args=["chokidar","0.12.5"]
+229 verbose parsed url { protocol: null,
+229 verbose parsed url   slashes: null,
+229 verbose parsed url   auth: null,
+229 verbose parsed url   host: null,
+229 verbose parsed url   port: null,
+229 verbose parsed url   hostname: null,
+229 verbose parsed url   hash: null,
+229 verbose parsed url   search: null,
+229 verbose parsed url   query: null,
+229 verbose parsed url   pathname: '0.12.5',
+229 verbose parsed url   path: '0.12.5',
+229 verbose parsed url   href: '0.12.5' }
+230 verbose addNamed [ 'chokidar', '0.12.5' ]
+231 verbose addNamed [ '0.12.5', '0.12.5' ]
+232 silly lockFile 0ee8b773-chokidar-0-12-5 chokidar@0.12.5
+233 verbose lock chokidar@0.12.5 /Users/bert/.npm/0ee8b773-chokidar-0-12-5.lock
+234 verbose cache add [ 'csproj2ts@0.0.2', null ]
+235 verbose cache add name=undefined spec="csproj2ts@0.0.2" args=["csproj2ts@0.0.2",null]
+236 verbose parsed url { protocol: null,
+236 verbose parsed url   slashes: null,
+236 verbose parsed url   auth: null,
+236 verbose parsed url   host: null,
+236 verbose parsed url   port: null,
+236 verbose parsed url   hostname: null,
+236 verbose parsed url   hash: null,
+236 verbose parsed url   search: null,
+236 verbose parsed url   query: null,
+236 verbose parsed url   pathname: 'csproj2ts@0.0.2',
+236 verbose parsed url   path: 'csproj2ts@0.0.2',
+236 verbose parsed url   href: 'csproj2ts@0.0.2' }
+237 verbose cache add name="csproj2ts" spec="0.0.2" args=["csproj2ts","0.0.2"]
+238 verbose parsed url { protocol: null,
+238 verbose parsed url   slashes: null,
+238 verbose parsed url   auth: null,
+238 verbose parsed url   host: null,
+238 verbose parsed url   port: null,
+238 verbose parsed url   hostname: null,
+238 verbose parsed url   hash: null,
+238 verbose parsed url   search: null,
+238 verbose parsed url   query: null,
+238 verbose parsed url   pathname: '0.0.2',
+238 verbose parsed url   path: '0.0.2',
+238 verbose parsed url   href: '0.0.2' }
+239 verbose addNamed [ 'csproj2ts', '0.0.2' ]
+240 verbose addNamed [ '0.0.2', '0.0.2' ]
+241 silly lockFile 8f159e3c-csproj2ts-0-0-2 csproj2ts@0.0.2
+242 verbose lock csproj2ts@0.0.2 /Users/bert/.npm/8f159e3c-csproj2ts-0-0-2.lock
+243 verbose cache add [ 'es6-promise@~0.1.1', null ]
+244 verbose cache add name=undefined spec="es6-promise@~0.1.1" args=["es6-promise@~0.1.1",null]
+245 verbose parsed url { protocol: null,
+245 verbose parsed url   slashes: null,
+245 verbose parsed url   auth: null,
+245 verbose parsed url   host: null,
+245 verbose parsed url   port: null,
+245 verbose parsed url   hostname: null,
+245 verbose parsed url   hash: null,
+245 verbose parsed url   search: null,
+245 verbose parsed url   query: null,
+245 verbose parsed url   pathname: 'es6-promise@~0.1.1',
+245 verbose parsed url   path: 'es6-promise@~0.1.1',
+245 verbose parsed url   href: 'es6-promise@~0.1.1' }
+246 verbose cache add name="es6-promise" spec="~0.1.1" args=["es6-promise","~0.1.1"]
+247 verbose parsed url { protocol: null,
+247 verbose parsed url   slashes: null,
+247 verbose parsed url   auth: null,
+247 verbose parsed url   host: null,
+247 verbose parsed url   port: null,
+247 verbose parsed url   hostname: null,
+247 verbose parsed url   hash: null,
+247 verbose parsed url   search: null,
+247 verbose parsed url   query: null,
+247 verbose parsed url   pathname: '~0.1.1',
+247 verbose parsed url   path: '~0.1.1',
+247 verbose parsed url   href: '~0.1.1' }
+248 verbose addNamed [ 'es6-promise', '~0.1.1' ]
+249 verbose addNamed [ null, '>=0.1.1-0 <0.2.0-0' ]
+250 silly lockFile a314a4ea-es6-promise-0-1-1 es6-promise@~0.1.1
+251 verbose lock es6-promise@~0.1.1 /Users/bert/.npm/a314a4ea-es6-promise-0-1-1.lock
+252 verbose cache add [ 'lodash@2.4.1', null ]
+253 verbose cache add name=undefined spec="lodash@2.4.1" args=["lodash@2.4.1",null]
+254 verbose parsed url { protocol: null,
+254 verbose parsed url   slashes: null,
+254 verbose parsed url   auth: null,
+254 verbose parsed url   host: null,
+254 verbose parsed url   port: null,
+254 verbose parsed url   hostname: null,
+254 verbose parsed url   hash: null,
+254 verbose parsed url   search: null,
+254 verbose parsed url   query: null,
+254 verbose parsed url   pathname: 'lodash@2.4.1',
+254 verbose parsed url   path: 'lodash@2.4.1',
+254 verbose parsed url   href: 'lodash@2.4.1' }
+255 verbose cache add name="lodash" spec="2.4.1" args=["lodash","2.4.1"]
+256 verbose parsed url { protocol: null,
+256 verbose parsed url   slashes: null,
+256 verbose parsed url   auth: null,
+256 verbose parsed url   host: null,
+256 verbose parsed url   port: null,
+256 verbose parsed url   hostname: null,
+256 verbose parsed url   hash: null,
+256 verbose parsed url   search: null,
+256 verbose parsed url   query: null,
+256 verbose parsed url   pathname: '2.4.1',
+256 verbose parsed url   path: '2.4.1',
+256 verbose parsed url   href: '2.4.1' }
+257 verbose addNamed [ 'lodash', '2.4.1' ]
+258 verbose addNamed [ '2.4.1', '2.4.1' ]
+259 silly lockFile 8502be2a-lodash-2-4-1 lodash@2.4.1
+260 verbose lock lodash@2.4.1 /Users/bert/.npm/8502be2a-lodash-2-4-1.lock
+261 verbose cache add [ 'ncp@0.5.1', null ]
+262 verbose cache add name=undefined spec="ncp@0.5.1" args=["ncp@0.5.1",null]
+263 verbose parsed url { protocol: null,
+263 verbose parsed url   slashes: null,
+263 verbose parsed url   auth: null,
+263 verbose parsed url   host: null,
+263 verbose parsed url   port: null,
+263 verbose parsed url   hostname: null,
+263 verbose parsed url   hash: null,
+263 verbose parsed url   search: null,
+263 verbose parsed url   query: null,
+263 verbose parsed url   pathname: 'ncp@0.5.1',
+263 verbose parsed url   path: 'ncp@0.5.1',
+263 verbose parsed url   href: 'ncp@0.5.1' }
+264 verbose cache add name="ncp" spec="0.5.1" args=["ncp","0.5.1"]
+265 verbose parsed url { protocol: null,
+265 verbose parsed url   slashes: null,
+265 verbose parsed url   auth: null,
+265 verbose parsed url   host: null,
+265 verbose parsed url   port: null,
+265 verbose parsed url   hostname: null,
+265 verbose parsed url   hash: null,
+265 verbose parsed url   search: null,
+265 verbose parsed url   query: null,
+265 verbose parsed url   pathname: '0.5.1',
+265 verbose parsed url   path: '0.5.1',
+265 verbose parsed url   href: '0.5.1' }
+266 verbose addNamed [ 'ncp', '0.5.1' ]
+267 verbose addNamed [ '0.5.1', '0.5.1' ]
+268 silly lockFile a9bc330e-ncp-0-5-1 ncp@0.5.1
+269 verbose lock ncp@0.5.1 /Users/bert/.npm/a9bc330e-ncp-0-5-1.lock
+270 verbose url raw csproj2ts
+271 verbose url resolving [ 'https://registry.npmjs.org/', './csproj2ts' ]
+272 verbose url resolved https://registry.npmjs.org/csproj2ts
+273 info trying registry request attempt 1 at 16:22:03
+274 http GET https://registry.npmjs.org/csproj2ts
+275 silly addNameRange { name: 'es6-promise',
+275 silly addNameRange   range: '>=0.1.1-0 <0.2.0-0',
+275 silly addNameRange   hasData: false }
+276 verbose cache add [ 'rimraf@2.2.6', null ]
+277 verbose cache add name=undefined spec="rimraf@2.2.6" args=["rimraf@2.2.6",null]
+278 verbose parsed url { protocol: null,
+278 verbose parsed url   slashes: null,
+278 verbose parsed url   auth: null,
+278 verbose parsed url   host: null,
+278 verbose parsed url   port: null,
+278 verbose parsed url   hostname: null,
+278 verbose parsed url   hash: null,
+278 verbose parsed url   search: null,
+278 verbose parsed url   query: null,
+278 verbose parsed url   pathname: 'rimraf@2.2.6',
+278 verbose parsed url   path: 'rimraf@2.2.6',
+278 verbose parsed url   href: 'rimraf@2.2.6' }
+279 verbose cache add name="rimraf" spec="2.2.6" args=["rimraf","2.2.6"]
+280 verbose parsed url { protocol: null,
+280 verbose parsed url   slashes: null,
+280 verbose parsed url   auth: null,
+280 verbose parsed url   host: null,
+280 verbose parsed url   port: null,
+280 verbose parsed url   hostname: null,
+280 verbose parsed url   hash: null,
+280 verbose parsed url   search: null,
+280 verbose parsed url   query: null,
+280 verbose parsed url   pathname: '2.2.6',
+280 verbose parsed url   path: '2.2.6',
+280 verbose parsed url   href: '2.2.6' }
+281 verbose addNamed [ 'rimraf', '2.2.6' ]
+282 verbose addNamed [ '2.2.6', '2.2.6' ]
+283 silly lockFile b59ed777-rimraf-2-2-6 rimraf@2.2.6
+284 verbose lock rimraf@2.2.6 /Users/bert/.npm/b59ed777-rimraf-2-2-6.lock
+285 verbose cache add [ 'typescript@^1.5.0-alpha', null ]
+286 verbose cache add name=undefined spec="typescript@^1.5.0-alpha" args=["typescript@^1.5.0-alpha",null]
+287 verbose parsed url { protocol: null,
+287 verbose parsed url   slashes: null,
+287 verbose parsed url   auth: null,
+287 verbose parsed url   host: null,
+287 verbose parsed url   port: null,
+287 verbose parsed url   hostname: null,
+287 verbose parsed url   hash: null,
+287 verbose parsed url   search: null,
+287 verbose parsed url   query: null,
+287 verbose parsed url   pathname: 'typescript@^1.5.0-alpha',
+287 verbose parsed url   path: 'typescript@^1.5.0-alpha',
+287 verbose parsed url   href: 'typescript@^1.5.0-alpha' }
+288 verbose cache add name="typescript" spec="^1.5.0-alpha" args=["typescript","^1.5.0-alpha"]
+289 verbose parsed url { protocol: null,
+289 verbose parsed url   slashes: null,
+289 verbose parsed url   auth: null,
+289 verbose parsed url   host: null,
+289 verbose parsed url   port: null,
+289 verbose parsed url   hostname: null,
+289 verbose parsed url   hash: null,
+289 verbose parsed url   search: null,
+289 verbose parsed url   query: null,
+289 verbose parsed url   pathname: '^1.5.0-alpha',
+289 verbose parsed url   path: '^1.5.0-alpha',
+289 verbose parsed url   href: '^1.5.0-alpha' }
+290 verbose addNamed [ 'typescript', '^1.5.0-alpha' ]
+291 verbose addNamed [ null, '>=1.5.0-alpha <2.0.0-0' ]
+292 silly lockFile 2feecb36-typescript-1-5-0-alpha typescript@^1.5.0-alpha
+293 verbose lock typescript@^1.5.0-alpha /Users/bert/.npm/2feecb36-typescript-1-5-0-alpha.lock
+294 verbose url raw es6-promise
+295 verbose url resolving [ 'https://registry.npmjs.org/', './es6-promise' ]
+296 verbose url resolved https://registry.npmjs.org/es6-promise
+297 info trying registry request attempt 1 at 16:22:03
+298 http GET https://registry.npmjs.org/es6-promise
+299 verbose cache add [ 'underscore@1.5.1', null ]
+300 verbose cache add name=undefined spec="underscore@1.5.1" args=["underscore@1.5.1",null]
+301 verbose parsed url { protocol: null,
+301 verbose parsed url   slashes: null,
+301 verbose parsed url   auth: null,
+301 verbose parsed url   host: null,
+301 verbose parsed url   port: null,
+301 verbose parsed url   hostname: null,
+301 verbose parsed url   hash: null,
+301 verbose parsed url   search: null,
+301 verbose parsed url   query: null,
+301 verbose parsed url   pathname: 'underscore@1.5.1',
+301 verbose parsed url   path: 'underscore@1.5.1',
+301 verbose parsed url   href: 'underscore@1.5.1' }
+302 verbose cache add name="underscore" spec="1.5.1" args=["underscore","1.5.1"]
+303 verbose parsed url { protocol: null,
+303 verbose parsed url   slashes: null,
+303 verbose parsed url   auth: null,
+303 verbose parsed url   host: null,
+303 verbose parsed url   port: null,
+303 verbose parsed url   hostname: null,
+303 verbose parsed url   hash: null,
+303 verbose parsed url   search: null,
+303 verbose parsed url   query: null,
+303 verbose parsed url   pathname: '1.5.1',
+303 verbose parsed url   path: '1.5.1',
+303 verbose parsed url   href: '1.5.1' }
+304 verbose addNamed [ 'underscore', '1.5.1' ]
+305 verbose addNamed [ '1.5.1', '1.5.1' ]
+306 silly lockFile f6569b8a-underscore-1-5-1 underscore@1.5.1
+307 verbose lock underscore@1.5.1 /Users/bert/.npm/f6569b8a-underscore-1-5-1.lock
+308 verbose cache add [ 'underscore.string@2.3.3', null ]
+309 verbose cache add name=undefined spec="underscore.string@2.3.3" args=["underscore.string@2.3.3",null]
+310 verbose parsed url { protocol: null,
+310 verbose parsed url   slashes: null,
+310 verbose parsed url   auth: null,
+310 verbose parsed url   host: null,
+310 verbose parsed url   port: null,
+310 verbose parsed url   hostname: null,
+310 verbose parsed url   hash: null,
+310 verbose parsed url   search: null,
+310 verbose parsed url   query: null,
+310 verbose parsed url   pathname: 'underscore.string@2.3.3',
+310 verbose parsed url   path: 'underscore.string@2.3.3',
+310 verbose parsed url   href: 'underscore.string@2.3.3' }
+311 verbose cache add name="underscore.string" spec="2.3.3" args=["underscore.string","2.3.3"]
+312 verbose parsed url { protocol: null,
+312 verbose parsed url   slashes: null,
+312 verbose parsed url   auth: null,
+312 verbose parsed url   host: null,
+312 verbose parsed url   port: null,
+312 verbose parsed url   hostname: null,
+312 verbose parsed url   hash: null,
+312 verbose parsed url   search: null,
+312 verbose parsed url   query: null,
+312 verbose parsed url   pathname: '2.3.3',
+312 verbose parsed url   path: '2.3.3',
+312 verbose parsed url   href: '2.3.3' }
+313 verbose addNamed [ 'underscore.string', '2.3.3' ]
+314 verbose addNamed [ '2.3.3', '2.3.3' ]
+315 silly lockFile a37b16cb-underscore-string-2-3-3 underscore.string@2.3.3
+316 verbose lock underscore.string@2.3.3 /Users/bert/.npm/a37b16cb-underscore-string-2-3-3.lock
+317 silly addNameRange { name: 'typescript',
+317 silly addNameRange   range: '>=1.5.0-alpha <2.0.0-0',
+317 silly addNameRange   hasData: false }
+318 verbose url raw ncp
+319 verbose url resolving [ 'https://registry.npmjs.org/', './ncp' ]
+320 verbose url resolved https://registry.npmjs.org/ncp
+321 info trying registry request attempt 1 at 16:22:03
+322 http GET https://registry.npmjs.org/ncp
+323 verbose url raw chokidar
+324 verbose url resolving [ 'https://registry.npmjs.org/', './chokidar' ]
+325 verbose url resolved https://registry.npmjs.org/chokidar
+326 info trying registry request attempt 1 at 16:22:03
+327 verbose etag "8V396QKWE30LNPBW3U6E6NRG5"
+328 http GET https://registry.npmjs.org/chokidar
+329 verbose url raw lodash
+330 verbose url resolving [ 'https://registry.npmjs.org/', './lodash' ]
+331 verbose url resolved https://registry.npmjs.org/lodash
+332 info trying registry request attempt 1 at 16:22:03
+333 verbose etag "DMYU3PHVHJMVBI85HN37UFDFM"
+334 http GET https://registry.npmjs.org/lodash
+335 verbose url raw rimraf
+336 verbose url resolving [ 'https://registry.npmjs.org/', './rimraf' ]
+337 verbose url resolved https://registry.npmjs.org/rimraf
+338 info trying registry request attempt 1 at 16:22:03
+339 verbose etag "6I4EOA5Q384WECQJQVMHGA5OL"
+340 http GET https://registry.npmjs.org/rimraf
+341 verbose url raw typescript
+342 verbose url resolving [ 'https://registry.npmjs.org/', './typescript' ]
+343 verbose url resolved https://registry.npmjs.org/typescript
+344 info trying registry request attempt 1 at 16:22:03
+345 verbose etag "5HTGGVSQOAABIHTKL08UVTAD9"
+346 http GET https://registry.npmjs.org/typescript
+347 verbose url raw underscore.string
+348 verbose url resolving [ 'https://registry.npmjs.org/', './underscore.string' ]
+349 verbose url resolved https://registry.npmjs.org/underscore.string
+350 info trying registry request attempt 1 at 16:22:03
+351 verbose etag "60HLX9DZZD0IG6JZYF8Z775IA"
+352 http GET https://registry.npmjs.org/underscore.string
+353 verbose url raw underscore
+354 verbose url resolving [ 'https://registry.npmjs.org/', './underscore' ]
+355 verbose url resolved https://registry.npmjs.org/underscore
+356 info trying registry request attempt 1 at 16:22:03
+357 verbose etag "5DNHFSPZ83J79IRI363KMPDSZ"
+358 http GET https://registry.npmjs.org/underscore
+359 http 304 https://registry.npmjs.org/chokidar
+360 silly registry.get cb [ 304,
+360 silly registry.get   { date: 'Sun, 10 May 2015 14:21:09 GMT',
+360 silly registry.get     via: '1.1 varnish',
+360 silly registry.get     'cache-control': 'max-age=60',
+360 silly registry.get     etag: '"8V396QKWE30LNPBW3U6E6NRG5"',
+360 silly registry.get     age: '7',
+360 silly registry.get     connection: 'keep-alive',
+360 silly registry.get     'x-served-by': 'cache-fra1235-FRA',
+360 silly registry.get     'x-cache': 'HIT',
+360 silly registry.get     'x-cache-hits': '1',
+360 silly registry.get     'x-timer': 'S1431267669.010170,VS0,VE0',
+360 silly registry.get     vary: 'Accept' } ]
+361 verbose etag chokidar from cache
+362 silly lockFile bac54eea-org-chokidar-chokidar-0-12-5-tgz https://registry.npmjs.org/chokidar/-/chokidar-0.12.5.tgz
+363 verbose lock https://registry.npmjs.org/chokidar/-/chokidar-0.12.5.tgz /Users/bert/.npm/bac54eea-org-chokidar-chokidar-0-12-5-tgz.lock
+364 verbose addRemoteTarball [ 'https://registry.npmjs.org/chokidar/-/chokidar-0.12.5.tgz',
+364 verbose addRemoteTarball   '69ce0c49752dc4d32b5a45023b4b83661f858107' ]
+365 info retry fetch attempt 1 at 16:22:03
+366 verbose fetch to= /var/folders/68/wk42fgnj0bz8vn11sm4g0gtr0000gn/T/npm-17385-NKwZR639/1431267723934-0.5961460736580193/tmp.tgz
+367 http GET https://registry.npmjs.org/chokidar/-/chokidar-0.12.5.tgz
+368 http 200 https://registry.npmjs.org/es6-promise
+369 silly registry.get cb [ 200,
+369 silly registry.get   { server: 'CouchDB/1.5.0 (Erlang OTP/R16B03)',
+369 silly registry.get     etag: '"BKVW1F6XU5H7ZECFAOTIAM78X"',
+369 silly registry.get     'content-type': 'application/json',
+369 silly registry.get     'cache-control': 'max-age=60',
+369 silly registry.get     'content-length': '17855',
+369 silly registry.get     'accept-ranges': 'bytes',
+369 silly registry.get     date: 'Sun, 10 May 2015 14:21:08 GMT',
+369 silly registry.get     via: '1.1 varnish',
+369 silly registry.get     age: '8',
+369 silly registry.get     connection: 'keep-alive',
+369 silly registry.get     'x-served-by': 'cache-fra1243-FRA',
+369 silly registry.get     'x-cache': 'HIT',
+369 silly registry.get     'x-cache-hits': '1',
+369 silly registry.get     'x-timer': 'S1431267668.996076,VS0,VE0',
+369 silly registry.get     vary: 'Accept' } ]
+370 silly addNameRange number 2 { name: 'es6-promise',
+370 silly addNameRange   range: '>=0.1.1-0 <0.2.0-0',
+370 silly addNameRange   hasData: true }
+371 silly addNameRange versions [ 'es6-promise',
+371 silly addNameRange   [ '0.1.0',
+371 silly addNameRange     '0.1.1',
+371 silly addNameRange     '0.1.2',
+371 silly addNameRange     '1.0.0',
+371 silly addNameRange     '2.0.0',
+371 silly addNameRange     '2.0.1',
+371 silly addNameRange     '2.1.0',
+371 silly addNameRange     '2.1.1' ] ]
+372 verbose addNamed [ 'es6-promise', '0.1.2' ]
+373 verbose addNamed [ '0.1.2', '0.1.2' ]
+374 silly lockFile d4449dec-es6-promise-0-1-2 es6-promise@0.1.2
+375 verbose lock es6-promise@0.1.2 /Users/bert/.npm/d4449dec-es6-promise-0-1-2.lock
+376 silly lockFile 4200a21f-s6-promise-es6-promise-0-1-2-tgz https://registry.npmjs.org/es6-promise/-/es6-promise-0.1.2.tgz
+377 verbose lock https://registry.npmjs.org/es6-promise/-/es6-promise-0.1.2.tgz /Users/bert/.npm/4200a21f-s6-promise-es6-promise-0-1-2-tgz.lock
+378 verbose addRemoteTarball [ 'https://registry.npmjs.org/es6-promise/-/es6-promise-0.1.2.tgz',
+378 verbose addRemoteTarball   'f112c29fea5a0998539fcb6a2fd21443d28f05f7' ]
+379 info retry fetch attempt 1 at 16:22:03
+380 verbose fetch to= /var/folders/68/wk42fgnj0bz8vn11sm4g0gtr0000gn/T/npm-17385-NKwZR639/1431267723958-0.6432164737489074/tmp.tgz
+381 http GET https://registry.npmjs.org/es6-promise/-/es6-promise-0.1.2.tgz
+382 http 200 https://registry.npmjs.org/ncp
+383 silly registry.get cb [ 200,
+383 silly registry.get   { server: 'CouchDB/1.5.0 (Erlang OTP/R16B03)',
+383 silly registry.get     etag: '"76A9PWL3ZJ9K62LJIM2E833O6"',
+383 silly registry.get     'content-type': 'application/json',
+383 silly registry.get     'cache-control': 'max-age=60',
+383 silly registry.get     'content-length': '26126',
+383 silly registry.get     'accept-ranges': 'bytes',
+383 silly registry.get     date: 'Sun, 10 May 2015 14:21:09 GMT',
+383 silly registry.get     via: '1.1 varnish',
+383 silly registry.get     age: '48',
+383 silly registry.get     connection: 'keep-alive',
+383 silly registry.get     'x-served-by': 'cache-fra1227-FRA',
+383 silly registry.get     'x-cache': 'HIT',
+383 silly registry.get     'x-cache-hits': '2',
+383 silly registry.get     'x-timer': 'S1431267669.003963,VS0,VE0',
+383 silly registry.get     vary: 'Accept' } ]
+384 silly lockFile 87cf09cc-stry-npmjs-org-ncp-ncp-0-5-1-tgz https://registry.npmjs.org/ncp/-/ncp-0.5.1.tgz
+385 verbose lock https://registry.npmjs.org/ncp/-/ncp-0.5.1.tgz /Users/bert/.npm/87cf09cc-stry-npmjs-org-ncp-ncp-0-5-1-tgz.lock
+386 verbose addRemoteTarball [ 'https://registry.npmjs.org/ncp/-/ncp-0.5.1.tgz',
+386 verbose addRemoteTarball   '743985316e3db459281b587169e845735a05439f' ]
+387 info retry fetch attempt 1 at 16:22:03
+388 verbose fetch to= /var/folders/68/wk42fgnj0bz8vn11sm4g0gtr0000gn/T/npm-17385-NKwZR639/1431267723974-0.09163071261718869/tmp.tgz
+389 http GET https://registry.npmjs.org/ncp/-/ncp-0.5.1.tgz
+390 http 304 https://registry.npmjs.org/typescript
+391 silly registry.get cb [ 304,
+391 silly registry.get   { date: 'Sun, 10 May 2015 14:21:09 GMT',
+391 silly registry.get     via: '1.1 varnish',
+391 silly registry.get     'cache-control': 'max-age=60',
+391 silly registry.get     etag: '"5HTGGVSQOAABIHTKL08UVTAD9"',
+391 silly registry.get     age: '33',
+391 silly registry.get     connection: 'keep-alive',
+391 silly registry.get     'x-served-by': 'cache-fra1243-FRA',
+391 silly registry.get     'x-cache': 'HIT',
+391 silly registry.get     'x-cache-hits': '1',
+391 silly registry.get     'x-timer': 'S1431267669.095174,VS0,VE0',
+391 silly registry.get     vary: 'Accept' } ]
+392 verbose etag typescript from cache
+393 silly addNameRange number 2 { name: 'typescript',
+393 silly addNameRange   range: '>=1.5.0-alpha <2.0.0-0',
+393 silly addNameRange   hasData: true }
+394 silly addNameRange versions [ 'typescript',
+394 silly addNameRange   [ '0.8.0',
+394 silly addNameRange     '0.8.1',
+394 silly addNameRange     '0.8.1-1',
+394 silly addNameRange     '0.8.2',
+394 silly addNameRange     '0.8.3',
+394 silly addNameRange     '0.9.0',
+394 silly addNameRange     '0.9.0-1',
+394 silly addNameRange     '0.9.1',
+394 silly addNameRange     '0.9.1-1',
+394 silly addNameRange     '0.9.5',
+394 silly addNameRange     '0.9.7',
+394 silly addNameRange     '1.0.0',
+394 silly addNameRange     '1.0.1',
+394 silly addNameRange     '1.1.0-1',
+394 silly addNameRange     '1.3.0',
+394 silly addNameRange     '1.4.1',
+394 silly addNameRange     '1.5.0-alpha',
+394 silly addNameRange     '1.5.0-beta' ] ]
+395 verbose addNamed [ 'typescript', '1.5.0-beta' ]
+396 verbose addNamed [ '1.5.0-beta', '1.5.0-beta' ]
+397 silly lockFile 07adb830-typescript-1-5-0-beta typescript@1.5.0-beta
+398 verbose lock typescript@1.5.0-beta /Users/bert/.npm/07adb830-typescript-1-5-0-beta.lock
+399 silly lockFile 07adb830-typescript-1-5-0-beta typescript@1.5.0-beta
+400 silly lockFile 07adb830-typescript-1-5-0-beta typescript@1.5.0-beta
+401 silly lockFile 2feecb36-typescript-1-5-0-alpha typescript@^1.5.0-alpha
+402 silly lockFile 2feecb36-typescript-1-5-0-alpha typescript@^1.5.0-alpha
+403 http 200 https://registry.npmjs.org/underscore.string
+404 silly registry.get cb [ 200,
+404 silly registry.get   { server: 'CouchDB/1.5.0 (Erlang OTP/R16B03)',
+404 silly registry.get     etag: '"EUR2XPGZX64EHU0KFCNIFQUCI"',
+404 silly registry.get     'content-type': 'application/json',
+404 silly registry.get     'cache-control': 'max-age=60',
+404 silly registry.get     'content-length': '55288',
+404 silly registry.get     'accept-ranges': 'bytes',
+404 silly registry.get     date: 'Sun, 10 May 2015 14:21:09 GMT',
+404 silly registry.get     via: '1.1 varnish',
+404 silly registry.get     age: '52',
+404 silly registry.get     connection: 'keep-alive',
+404 silly registry.get     'x-served-by': 'cache-fra1227-FRA',
+404 silly registry.get     'x-cache': 'HIT',
+404 silly registry.get     'x-cache-hits': '2',
+404 silly registry.get     'x-timer': 'S1431267669.108139,VS0,VE0',
+404 silly registry.get     vary: 'Accept' } ]
+405 silly lockFile b74e7c47-ring-underscore-string-2-3-3-tgz https://registry.npmjs.org/underscore.string/-/underscore.string-2.3.3.tgz
+406 verbose lock https://registry.npmjs.org/underscore.string/-/underscore.string-2.3.3.tgz /Users/bert/.npm/b74e7c47-ring-underscore-string-2-3-3-tgz.lock
+407 verbose addRemoteTarball [ 'https://registry.npmjs.org/underscore.string/-/underscore.string-2.3.3.tgz',
+407 verbose addRemoteTarball   '71c08bf6b428b1133f37e78fa3a21c82f7329b0d' ]
+408 info retry fetch attempt 1 at 16:22:04
+409 verbose fetch to= /var/folders/68/wk42fgnj0bz8vn11sm4g0gtr0000gn/T/npm-17385-NKwZR639/1431267724108-0.8195175779983401/tmp.tgz
+410 http GET https://registry.npmjs.org/underscore.string/-/underscore.string-2.3.3.tgz
+411 http 200 https://registry.npmjs.org/rimraf
+412 silly registry.get cb [ 200,
+412 silly registry.get   { server: 'CouchDB/1.5.0 (Erlang OTP/R16B03)',
+412 silly registry.get     etag: '"CLHWSUMK5RCXLR9UTGOTWBL57"',
+412 silly registry.get     'content-type': 'application/json',
+412 silly registry.get     'cache-control': 'max-age=60',
+412 silly registry.get     'content-length': '37306',
+412 silly registry.get     'accept-ranges': 'bytes',
+412 silly registry.get     date: 'Sun, 10 May 2015 14:21:09 GMT',
+412 silly registry.get     via: '1.1 varnish',
+412 silly registry.get     age: '59',
+412 silly registry.get     connection: 'keep-alive',
+412 silly registry.get     'x-served-by': 'cache-fra1235-FRA',
+412 silly registry.get     'x-cache': 'HIT',
+412 silly registry.get     'x-cache-hits': '4',
+412 silly registry.get     'x-timer': 'S1431267669.065629,VS0,VE0',
+412 silly registry.get     vary: 'Accept' } ]
+413 silly lockFile 650419f3-pmjs-org-rimraf-rimraf-2-2-6-tgz https://registry.npmjs.org/rimraf/-/rimraf-2.2.6.tgz
+414 verbose lock https://registry.npmjs.org/rimraf/-/rimraf-2.2.6.tgz /Users/bert/.npm/650419f3-pmjs-org-rimraf-rimraf-2-2-6-tgz.lock
+415 verbose addRemoteTarball [ 'https://registry.npmjs.org/rimraf/-/rimraf-2.2.6.tgz',
+415 verbose addRemoteTarball   'c59597569b14d956ad29cacc42bdddf5f0ea4f4c' ]
+416 info retry fetch attempt 1 at 16:22:04
+417 verbose fetch to= /var/folders/68/wk42fgnj0bz8vn11sm4g0gtr0000gn/T/npm-17385-NKwZR639/1431267724220-0.06824465002864599/tmp.tgz
+418 http GET https://registry.npmjs.org/rimraf/-/rimraf-2.2.6.tgz
+419 http 200 https://registry.npmjs.org/lodash
+420 silly registry.get cb [ 200,
+420 silly registry.get   { server: 'CouchDB/1.5.0 (Erlang OTP/R16B03)',
+420 silly registry.get     etag: '"38SQ0I9GZIR7FR1JS0UMTGFJR"',
+420 silly registry.get     'content-type': 'application/json',
+420 silly registry.get     'cache-control': 'max-age=60',
+420 silly registry.get     'content-length': '97070',
+420 silly registry.get     'accept-ranges': 'bytes',
+420 silly registry.get     date: 'Sun, 10 May 2015 14:21:09 GMT',
+420 silly registry.get     via: '1.1 varnish',
+420 silly registry.get     age: '37',
+420 silly registry.get     connection: 'keep-alive',
+420 silly registry.get     'x-served-by': 'cache-fra1223-FRA',
+420 silly registry.get     'x-cache': 'HIT',
+420 silly registry.get     'x-cache-hits': '1',
+420 silly registry.get     'x-timer': 'S1431267669.015449,VS0,VE0',
+420 silly registry.get     vary: 'Accept' } ]
+421 http 200 https://registry.npmjs.org/underscore
+422 silly registry.get cb [ 200,
+422 silly registry.get   { server: 'CouchDB/1.5.0 (Erlang OTP/R16B03)',
+422 silly registry.get     etag: '"8SXMDGGWIHHGAS6XTKZQDB565"',
+422 silly registry.get     'content-type': 'application/json',
+422 silly registry.get     'cache-control': 'max-age=60',
+422 silly registry.get     'content-length': '40580',
+422 silly registry.get     'accept-ranges': 'bytes',
+422 silly registry.get     date: 'Sun, 10 May 2015 14:21:09 GMT',
+422 silly registry.get     via: '1.1 varnish',
+422 silly registry.get     age: '38',
+422 silly registry.get     connection: 'keep-alive',
+422 silly registry.get     'x-served-by': 'cache-fra1243-FRA',
+422 silly registry.get     'x-cache': 'HIT',
+422 silly registry.get     'x-cache-hits': '3',
+422 silly registry.get     'x-timer': 'S1431267669.139352,VS0,VE0',
+422 silly registry.get     vary: 'Accept' } ]
+423 silly lockFile 0d74032f-pmjs-org-lodash-lodash-2-4-1-tgz https://registry.npmjs.org/lodash/-/lodash-2.4.1.tgz
+424 verbose lock https://registry.npmjs.org/lodash/-/lodash-2.4.1.tgz /Users/bert/.npm/0d74032f-pmjs-org-lodash-lodash-2-4-1-tgz.lock
+425 silly lockFile f23aba0e--underscore-underscore-1-5-1-tgz https://registry.npmjs.org/underscore/-/underscore-1.5.1.tgz
+426 verbose lock https://registry.npmjs.org/underscore/-/underscore-1.5.1.tgz /Users/bert/.npm/f23aba0e--underscore-underscore-1-5-1-tgz.lock
+427 verbose addRemoteTarball [ 'https://registry.npmjs.org/lodash/-/lodash-2.4.1.tgz',
+427 verbose addRemoteTarball   '5b7723034dda4d262e5a46fb2c58d7cc22f71420' ]
+428 verbose addRemoteTarball [ 'https://registry.npmjs.org/underscore/-/underscore-1.5.1.tgz',
+428 verbose addRemoteTarball   'd2bde817d176ffade894ab71458e682a14b86dc9' ]
+429 info retry fetch attempt 1 at 16:22:04
+430 verbose fetch to= /var/folders/68/wk42fgnj0bz8vn11sm4g0gtr0000gn/T/npm-17385-NKwZR639/1431267724274-0.013516315957531333/tmp.tgz
+431 info retry fetch attempt 1 at 16:22:04
+432 verbose fetch to= /var/folders/68/wk42fgnj0bz8vn11sm4g0gtr0000gn/T/npm-17385-NKwZR639/1431267724274-0.1507706413976848/tmp.tgz
+433 http GET https://registry.npmjs.org/lodash/-/lodash-2.4.1.tgz
+434 http GET https://registry.npmjs.org/underscore/-/underscore-1.5.1.tgz
+435 http 200 https://registry.npmjs.org/ncp/-/ncp-0.5.1.tgz
+436 verbose tar unpack /var/folders/68/wk42fgnj0bz8vn11sm4g0gtr0000gn/T/npm-17385-NKwZR639/1431267723974-0.09163071261718869/tmp.tgz
+437 silly lockFile 1c614499-Users-bert-npm-ncp-0-5-1-package tar:///Users/bert/.npm/ncp/0.5.1/package
+438 verbose lock tar:///Users/bert/.npm/ncp/0.5.1/package /Users/bert/.npm/1c614499-Users-bert-npm-ncp-0-5-1-package.lock
+439 silly lockFile c33360a5-3974-0-09163071261718869-tmp-tgz tar:///var/folders/68/wk42fgnj0bz8vn11sm4g0gtr0000gn/T/npm-17385-NKwZR639/1431267723974-0.09163071261718869/tmp.tgz
+440 verbose lock tar:///var/folders/68/wk42fgnj0bz8vn11sm4g0gtr0000gn/T/npm-17385-NKwZR639/1431267723974-0.09163071261718869/tmp.tgz /Users/bert/.npm/c33360a5-3974-0-09163071261718869-tmp-tgz.lock
+441 silly gunzTarPerm modes [ '755', '644' ]
+442 silly gunzTarPerm extractEntry package.json
+443 silly gunzTarPerm extractEntry .npmignore
+444 silly gunzTarPerm extractEntry README.md
+445 silly gunzTarPerm extractEntry .travis.yml
+446 silly gunzTarPerm extractEntry LICENSE.md
+447 silly gunzTarPerm extractEntry bin/ncp
+448 silly gunzTarPerm extractEntry lib/ncp.js
+449 silly gunzTarPerm extractEntry test/ncp.js
+450 silly gunzTarPerm extractEntry test/fixtures/src/a
+451 silly gunzTarPerm extractEntry test/fixtures/src/b
+452 silly gunzTarPerm extractEntry test/fixtures/src/c
+453 silly gunzTarPerm extractEntry test/fixtures/src/d
+454 silly gunzTarPerm extractEntry test/fixtures/src/e
+455 silly gunzTarPerm extractEntry test/fixtures/src/f
+456 silly gunzTarPerm extractEntry test/fixtures/src/sub/a
+457 silly gunzTarPerm extractEntry test/fixtures/src/sub/b
+458 http 200 https://registry.npmjs.org/csproj2ts
+459 silly registry.get cb [ 200,
+459 silly registry.get   { server: 'CouchDB/1.5.0 (Erlang OTP/R16B03)',
+459 silly registry.get     etag: '"249W0LJ3Q7DZ9950F7R1YLVY7"',
+459 silly registry.get     'content-type': 'application/json',
+459 silly registry.get     'cache-control': 'max-age=60',
+459 silly registry.get     'content-length': '6364',
+459 silly registry.get     'accept-ranges': 'bytes',
+459 silly registry.get     date: 'Sun, 10 May 2015 14:21:09 GMT',
+459 silly registry.get     via: '1.1 varnish',
+459 silly registry.get     age: '0',
+459 silly registry.get     connection: 'keep-alive',
+459 silly registry.get     'x-served-by': 'cache-fra1234-FRA',
+459 silly registry.get     'x-cache': 'MISS',
+459 silly registry.get     'x-cache-hits': '0',
+459 silly registry.get     'x-timer': 'S1431267668.985859,VS0,VE421',
+459 silly registry.get     vary: 'Accept' } ]
+460 silly lockFile e4eace32-rg-csproj2ts-csproj2ts-0-0-2-tgz https://registry.npmjs.org/csproj2ts/-/csproj2ts-0.0.2.tgz
+461 verbose lock https://registry.npmjs.org/csproj2ts/-/csproj2ts-0.0.2.tgz /Users/bert/.npm/e4eace32-rg-csproj2ts-csproj2ts-0-0-2-tgz.lock
+462 verbose addRemoteTarball [ 'https://registry.npmjs.org/csproj2ts/-/csproj2ts-0.0.2.tgz',
+462 verbose addRemoteTarball   '5b674f72f984b94260b7a4199a4f9184bc4215fb' ]
+463 info retry fetch attempt 1 at 16:22:04
+464 verbose fetch to= /var/folders/68/wk42fgnj0bz8vn11sm4g0gtr0000gn/T/npm-17385-NKwZR639/1431267724328-0.9925522678531706/tmp.tgz
+465 http GET https://registry.npmjs.org/csproj2ts/-/csproj2ts-0.0.2.tgz
+466 silly lockFile 1c614499-Users-bert-npm-ncp-0-5-1-package tar:///Users/bert/.npm/ncp/0.5.1/package
+467 silly lockFile 1c614499-Users-bert-npm-ncp-0-5-1-package tar:///Users/bert/.npm/ncp/0.5.1/package
+468 silly lockFile c33360a5-3974-0-09163071261718869-tmp-tgz tar:///var/folders/68/wk42fgnj0bz8vn11sm4g0gtr0000gn/T/npm-17385-NKwZR639/1431267723974-0.09163071261718869/tmp.tgz
+469 silly lockFile c33360a5-3974-0-09163071261718869-tmp-tgz tar:///var/folders/68/wk42fgnj0bz8vn11sm4g0gtr0000gn/T/npm-17385-NKwZR639/1431267723974-0.09163071261718869/tmp.tgz
+470 silly lockFile 87cf09cc-stry-npmjs-org-ncp-ncp-0-5-1-tgz https://registry.npmjs.org/ncp/-/ncp-0.5.1.tgz
+471 silly lockFile 87cf09cc-stry-npmjs-org-ncp-ncp-0-5-1-tgz https://registry.npmjs.org/ncp/-/ncp-0.5.1.tgz
+472 silly lockFile a9bc330e-ncp-0-5-1 ncp@0.5.1
+473 silly lockFile a9bc330e-ncp-0-5-1 ncp@0.5.1
+474 http 200 https://registry.npmjs.org/chokidar/-/chokidar-0.12.5.tgz
+475 verbose tar unpack /var/folders/68/wk42fgnj0bz8vn11sm4g0gtr0000gn/T/npm-17385-NKwZR639/1431267723934-0.5961460736580193/tmp.tgz
+476 silly lockFile 8875c1d7-bert-npm-chokidar-0-12-5-package tar:///Users/bert/.npm/chokidar/0.12.5/package
+477 verbose lock tar:///Users/bert/.npm/chokidar/0.12.5/package /Users/bert/.npm/8875c1d7-bert-npm-chokidar-0-12-5-package.lock
+478 silly lockFile d889838e-23934-0-5961460736580193-tmp-tgz tar:///var/folders/68/wk42fgnj0bz8vn11sm4g0gtr0000gn/T/npm-17385-NKwZR639/1431267723934-0.5961460736580193/tmp.tgz
+479 verbose lock tar:///var/folders/68/wk42fgnj0bz8vn11sm4g0gtr0000gn/T/npm-17385-NKwZR639/1431267723934-0.5961460736580193/tmp.tgz /Users/bert/.npm/d889838e-23934-0-5961460736580193-tmp-tgz.lock
+480 silly gunzTarPerm modes [ '755', '644' ]
+481 silly gunzTarPerm extractEntry package.json
+482 silly gunzTarPerm extractEntry README.md
+483 silly gunzTarPerm extractEntry lib/fsevents-handler.js
+484 silly gunzTarPerm extractEntry lib/index.js
+485 silly gunzTarPerm extractEntry lib/is-binary.js
+486 silly gunzTarPerm extractEntry lib/nodefs-handler.js
+487 silly lockFile 8875c1d7-bert-npm-chokidar-0-12-5-package tar:///Users/bert/.npm/chokidar/0.12.5/package
+488 silly lockFile 8875c1d7-bert-npm-chokidar-0-12-5-package tar:///Users/bert/.npm/chokidar/0.12.5/package
+489 silly lockFile d889838e-23934-0-5961460736580193-tmp-tgz tar:///var/folders/68/wk42fgnj0bz8vn11sm4g0gtr0000gn/T/npm-17385-NKwZR639/1431267723934-0.5961460736580193/tmp.tgz
+490 silly lockFile d889838e-23934-0-5961460736580193-tmp-tgz tar:///var/folders/68/wk42fgnj0bz8vn11sm4g0gtr0000gn/T/npm-17385-NKwZR639/1431267723934-0.5961460736580193/tmp.tgz
+491 silly lockFile bac54eea-org-chokidar-chokidar-0-12-5-tgz https://registry.npmjs.org/chokidar/-/chokidar-0.12.5.tgz
+492 silly lockFile bac54eea-org-chokidar-chokidar-0-12-5-tgz https://registry.npmjs.org/chokidar/-/chokidar-0.12.5.tgz
+493 silly lockFile 0ee8b773-chokidar-0-12-5 chokidar@0.12.5
+494 silly lockFile 0ee8b773-chokidar-0-12-5 chokidar@0.12.5
+495 http 200 https://registry.npmjs.org/es6-promise/-/es6-promise-0.1.2.tgz
+496 verbose tar unpack /var/folders/68/wk42fgnj0bz8vn11sm4g0gtr0000gn/T/npm-17385-NKwZR639/1431267723958-0.6432164737489074/tmp.tgz
+497 silly lockFile 34ec10b2-rt-npm-es6-promise-0-1-2-package tar:///Users/bert/.npm/es6-promise/0.1.2/package
+498 verbose lock tar:///Users/bert/.npm/es6-promise/0.1.2/package /Users/bert/.npm/34ec10b2-rt-npm-es6-promise-0-1-2-package.lock
+499 silly lockFile ee814e59-23958-0-6432164737489074-tmp-tgz tar:///var/folders/68/wk42fgnj0bz8vn11sm4g0gtr0000gn/T/npm-17385-NKwZR639/1431267723958-0.6432164737489074/tmp.tgz
+500 verbose lock tar:///var/folders/68/wk42fgnj0bz8vn11sm4g0gtr0000gn/T/npm-17385-NKwZR639/1431267723958-0.6432164737489074/tmp.tgz /Users/bert/.npm/ee814e59-23958-0-6432164737489074-tmp-tgz.lock
+501 silly gunzTarPerm modes [ '755', '644' ]
+502 silly gunzTarPerm extractEntry package.json
+503 silly gunzTarPerm extractEntry README.md
+504 silly gunzTarPerm extractEntry LICENSE
+505 silly gunzTarPerm extractEntry CHANGELOG.md
+506 silly gunzTarPerm extractEntry dist/promise-0.1.2.amd.js
+507 silly gunzTarPerm extractEntry dist/promise-0.1.2.js
+508 silly gunzTarPerm extractEntry dist/promise-0.1.2.min.js
+509 silly gunzTarPerm extractEntry dist/commonjs/main.js
+510 silly gunzTarPerm extractEntry dist/commonjs/promise/all.js
+511 silly gunzTarPerm extractEntry dist/commonjs/promise/asap.js
+512 silly gunzTarPerm extractEntry dist/commonjs/promise/cast.js
+513 silly gunzTarPerm extractEntry dist/commonjs/promise/config.js
+514 silly gunzTarPerm extractEntry dist/commonjs/promise/polyfill.js
+515 silly gunzTarPerm extractEntry dist/commonjs/promise/promise.js
+516 silly gunzTarPerm extractEntry dist/commonjs/promise/race.js
+517 silly gunzTarPerm extractEntry dist/commonjs/promise/reject.js
+518 silly gunzTarPerm extractEntry dist/commonjs/promise/resolve.js
+519 silly gunzTarPerm extractEntry dist/commonjs/promise/utils.js
+520 silly lockFile 34ec10b2-rt-npm-es6-promise-0-1-2-package tar:///Users/bert/.npm/es6-promise/0.1.2/package
+521 silly lockFile 34ec10b2-rt-npm-es6-promise-0-1-2-package tar:///Users/bert/.npm/es6-promise/0.1.2/package
+522 silly lockFile ee814e59-23958-0-6432164737489074-tmp-tgz tar:///var/folders/68/wk42fgnj0bz8vn11sm4g0gtr0000gn/T/npm-17385-NKwZR639/1431267723958-0.6432164737489074/tmp.tgz
+523 silly lockFile ee814e59-23958-0-6432164737489074-tmp-tgz tar:///var/folders/68/wk42fgnj0bz8vn11sm4g0gtr0000gn/T/npm-17385-NKwZR639/1431267723958-0.6432164737489074/tmp.tgz
+524 silly lockFile 4200a21f-s6-promise-es6-promise-0-1-2-tgz https://registry.npmjs.org/es6-promise/-/es6-promise-0.1.2.tgz
+525 silly lockFile 4200a21f-s6-promise-es6-promise-0-1-2-tgz https://registry.npmjs.org/es6-promise/-/es6-promise-0.1.2.tgz
+526 silly lockFile d4449dec-es6-promise-0-1-2 es6-promise@0.1.2
+527 silly lockFile d4449dec-es6-promise-0-1-2 es6-promise@0.1.2
+528 silly lockFile a314a4ea-es6-promise-0-1-1 es6-promise@~0.1.1
+529 silly lockFile a314a4ea-es6-promise-0-1-1 es6-promise@~0.1.1
+530 http 200 https://registry.npmjs.org/lodash/-/lodash-2.4.1.tgz
+531 http 200 https://registry.npmjs.org/csproj2ts/-/csproj2ts-0.0.2.tgz
+532 verbose tar unpack /var/folders/68/wk42fgnj0bz8vn11sm4g0gtr0000gn/T/npm-17385-NKwZR639/1431267724328-0.9925522678531706/tmp.tgz
+533 silly lockFile f920e914-bert-npm-csproj2ts-0-0-2-package tar:///Users/bert/.npm/csproj2ts/0.0.2/package
+534 verbose lock tar:///Users/bert/.npm/csproj2ts/0.0.2/package /Users/bert/.npm/f920e914-bert-npm-csproj2ts-0-0-2-package.lock
+535 silly lockFile e7cb3d0f-24328-0-9925522678531706-tmp-tgz tar:///var/folders/68/wk42fgnj0bz8vn11sm4g0gtr0000gn/T/npm-17385-NKwZR639/1431267724328-0.9925522678531706/tmp.tgz
+536 verbose lock tar:///var/folders/68/wk42fgnj0bz8vn11sm4g0gtr0000gn/T/npm-17385-NKwZR639/1431267724328-0.9925522678531706/tmp.tgz /Users/bert/.npm/e7cb3d0f-24328-0-9925522678531706-tmp-tgz.lock
+537 silly gunzTarPerm modes [ '755', '644' ]
+538 silly gunzTarPerm extractEntry package.json
+539 silly gunzTarPerm modified mode [ 'package.json', 438, 420 ]
+540 silly gunzTarPerm extractEntry .npmignore
+541 silly gunzTarPerm modified mode [ '.npmignore', 438, 420 ]
+542 silly gunzTarPerm extractEntry README.md
+543 silly gunzTarPerm modified mode [ 'README.md', 438, 420 ]
+544 silly gunzTarPerm extractEntry demo.js
+545 silly gunzTarPerm modified mode [ 'demo.js', 438, 420 ]
+546 silly gunzTarPerm extractEntry csproj2ts.js
+547 silly gunzTarPerm modified mode [ 'csproj2ts.js', 438, 420 ]
+548 silly gunzTarPerm extractEntry gruntfile.js
+549 silly gunzTarPerm modified mode [ 'gruntfile.js', 438, 420 ]
+550 silly lockFile f920e914-bert-npm-csproj2ts-0-0-2-package tar:///Users/bert/.npm/csproj2ts/0.0.2/package
+551 silly lockFile f920e914-bert-npm-csproj2ts-0-0-2-package tar:///Users/bert/.npm/csproj2ts/0.0.2/package
+552 silly lockFile e7cb3d0f-24328-0-9925522678531706-tmp-tgz tar:///var/folders/68/wk42fgnj0bz8vn11sm4g0gtr0000gn/T/npm-17385-NKwZR639/1431267724328-0.9925522678531706/tmp.tgz
+553 silly lockFile e7cb3d0f-24328-0-9925522678531706-tmp-tgz tar:///var/folders/68/wk42fgnj0bz8vn11sm4g0gtr0000gn/T/npm-17385-NKwZR639/1431267724328-0.9925522678531706/tmp.tgz
+554 silly lockFile e4eace32-rg-csproj2ts-csproj2ts-0-0-2-tgz https://registry.npmjs.org/csproj2ts/-/csproj2ts-0.0.2.tgz
+555 silly lockFile e4eace32-rg-csproj2ts-csproj2ts-0-0-2-tgz https://registry.npmjs.org/csproj2ts/-/csproj2ts-0.0.2.tgz
+556 silly lockFile 8f159e3c-csproj2ts-0-0-2 csproj2ts@0.0.2
+557 silly lockFile 8f159e3c-csproj2ts-0-0-2 csproj2ts@0.0.2
+558 http 200 https://registry.npmjs.org/underscore/-/underscore-1.5.1.tgz
+559 verbose tar unpack /var/folders/68/wk42fgnj0bz8vn11sm4g0gtr0000gn/T/npm-17385-NKwZR639/1431267724274-0.1507706413976848/tmp.tgz
+560 silly lockFile 14421ef8-ert-npm-underscore-1-5-1-package tar:///Users/bert/.npm/underscore/1.5.1/package
+561 verbose lock tar:///Users/bert/.npm/underscore/1.5.1/package /Users/bert/.npm/14421ef8-ert-npm-underscore-1-5-1-package.lock
+562 silly lockFile ca1d17b2-24274-0-1507706413976848-tmp-tgz tar:///var/folders/68/wk42fgnj0bz8vn11sm4g0gtr0000gn/T/npm-17385-NKwZR639/1431267724274-0.1507706413976848/tmp.tgz
+563 verbose lock tar:///var/folders/68/wk42fgnj0bz8vn11sm4g0gtr0000gn/T/npm-17385-NKwZR639/1431267724274-0.1507706413976848/tmp.tgz /Users/bert/.npm/ca1d17b2-24274-0-1507706413976848-tmp-tgz.lock
+564 silly gunzTarPerm modes [ '755', '644' ]
+565 silly gunzTarPerm extractEntry package.json
+566 silly gunzTarPerm extractEntry .npmignore
+567 silly gunzTarPerm extractEntry README.md
+568 silly gunzTarPerm extractEntry LICENSE
+569 silly gunzTarPerm extractEntry index.js
+570 silly gunzTarPerm extractEntry underscore.js
+571 silly gunzTarPerm extractEntry CONTRIBUTING.md
+572 silly gunzTarPerm extractEntry .travis.yml
+573 silly gunzTarPerm extractEntry favicon.ico
+574 silly gunzTarPerm extractEntry CNAME
+575 silly gunzTarPerm extractEntry underscore-min.map
+576 silly lockFile 14421ef8-ert-npm-underscore-1-5-1-package tar:///Users/bert/.npm/underscore/1.5.1/package
+577 silly lockFile 14421ef8-ert-npm-underscore-1-5-1-package tar:///Users/bert/.npm/underscore/1.5.1/package
+578 silly lockFile ca1d17b2-24274-0-1507706413976848-tmp-tgz tar:///var/folders/68/wk42fgnj0bz8vn11sm4g0gtr0000gn/T/npm-17385-NKwZR639/1431267724274-0.1507706413976848/tmp.tgz
+579 silly lockFile ca1d17b2-24274-0-1507706413976848-tmp-tgz tar:///var/folders/68/wk42fgnj0bz8vn11sm4g0gtr0000gn/T/npm-17385-NKwZR639/1431267724274-0.1507706413976848/tmp.tgz
+580 silly lockFile f23aba0e--underscore-underscore-1-5-1-tgz https://registry.npmjs.org/underscore/-/underscore-1.5.1.tgz
+581 silly lockFile f23aba0e--underscore-underscore-1-5-1-tgz https://registry.npmjs.org/underscore/-/underscore-1.5.1.tgz
+582 silly lockFile f6569b8a-underscore-1-5-1 underscore@1.5.1
+583 silly lockFile f6569b8a-underscore-1-5-1 underscore@1.5.1
+584 http 200 https://registry.npmjs.org/underscore.string/-/underscore.string-2.3.3.tgz
+585 http 200 https://registry.npmjs.org/rimraf/-/rimraf-2.2.6.tgz
+586 verbose tar unpack /var/folders/68/wk42fgnj0bz8vn11sm4g0gtr0000gn/T/npm-17385-NKwZR639/1431267724220-0.06824465002864599/tmp.tgz
+587 silly lockFile 2dad6d2d-rs-bert-npm-rimraf-2-2-6-package tar:///Users/bert/.npm/rimraf/2.2.6/package
+588 verbose lock tar:///Users/bert/.npm/rimraf/2.2.6/package /Users/bert/.npm/2dad6d2d-rs-bert-npm-rimraf-2-2-6-package.lock
+589 silly lockFile f843961c-4220-0-06824465002864599-tmp-tgz tar:///var/folders/68/wk42fgnj0bz8vn11sm4g0gtr0000gn/T/npm-17385-NKwZR639/1431267724220-0.06824465002864599/tmp.tgz
+590 verbose lock tar:///var/folders/68/wk42fgnj0bz8vn11sm4g0gtr0000gn/T/npm-17385-NKwZR639/1431267724220-0.06824465002864599/tmp.tgz /Users/bert/.npm/f843961c-4220-0-06824465002864599-tmp-tgz.lock
+591 silly gunzTarPerm modes [ '755', '644' ]
+592 silly gunzTarPerm extractEntry package.json
+593 silly gunzTarPerm extractEntry README.md
+594 silly gunzTarPerm extractEntry LICENSE
+595 silly gunzTarPerm extractEntry bin.js
+596 silly gunzTarPerm extractEntry rimraf.js
+597 silly gunzTarPerm extractEntry AUTHORS
+598 silly gunzTarPerm extractEntry test/test-async.js
+599 silly gunzTarPerm extractEntry test/test-sync.js
+600 silly gunzTarPerm extractEntry test/run.sh
+601 silly gunzTarPerm extractEntry test/setup.sh
+602 silly lockFile 2dad6d2d-rs-bert-npm-rimraf-2-2-6-package tar:///Users/bert/.npm/rimraf/2.2.6/package
+603 silly lockFile 2dad6d2d-rs-bert-npm-rimraf-2-2-6-package tar:///Users/bert/.npm/rimraf/2.2.6/package
+604 silly lockFile f843961c-4220-0-06824465002864599-tmp-tgz tar:///var/folders/68/wk42fgnj0bz8vn11sm4g0gtr0000gn/T/npm-17385-NKwZR639/1431267724220-0.06824465002864599/tmp.tgz
+605 silly lockFile f843961c-4220-0-06824465002864599-tmp-tgz tar:///var/folders/68/wk42fgnj0bz8vn11sm4g0gtr0000gn/T/npm-17385-NKwZR639/1431267724220-0.06824465002864599/tmp.tgz
+606 silly lockFile 650419f3-pmjs-org-rimraf-rimraf-2-2-6-tgz https://registry.npmjs.org/rimraf/-/rimraf-2.2.6.tgz
+607 silly lockFile 650419f3-pmjs-org-rimraf-rimraf-2-2-6-tgz https://registry.npmjs.org/rimraf/-/rimraf-2.2.6.tgz
+608 silly lockFile b59ed777-rimraf-2-2-6 rimraf@2.2.6
+609 silly lockFile b59ed777-rimraf-2-2-6 rimraf@2.2.6
+610 verbose tar unpack /var/folders/68/wk42fgnj0bz8vn11sm4g0gtr0000gn/T/npm-17385-NKwZR639/1431267724274-0.013516315957531333/tmp.tgz
+611 silly lockFile ae204913-rs-bert-npm-lodash-2-4-1-package tar:///Users/bert/.npm/lodash/2.4.1/package
+612 verbose lock tar:///Users/bert/.npm/lodash/2.4.1/package /Users/bert/.npm/ae204913-rs-bert-npm-lodash-2-4-1-package.lock
+613 silly lockFile 7360c28f-274-0-013516315957531333-tmp-tgz tar:///var/folders/68/wk42fgnj0bz8vn11sm4g0gtr0000gn/T/npm-17385-NKwZR639/1431267724274-0.013516315957531333/tmp.tgz
+614 verbose lock tar:///var/folders/68/wk42fgnj0bz8vn11sm4g0gtr0000gn/T/npm-17385-NKwZR639/1431267724274-0.013516315957531333/tmp.tgz /Users/bert/.npm/7360c28f-274-0-013516315957531333-tmp-tgz.lock
+615 silly gunzTarPerm modes [ '755', '644' ]
+616 silly gunzTarPerm extractEntry package.json
+617 silly gunzTarPerm extractEntry README.md
+618 silly gunzTarPerm extractEntry lodash.js
+619 silly gunzTarPerm extractEntry LICENSE.txt
+620 silly gunzTarPerm extractEntry dist/lodash.compat.js
+621 silly gunzTarPerm extractEntry dist/lodash.compat.min.js
+622 silly gunzTarPerm extractEntry dist/lodash.js
+623 silly gunzTarPerm extractEntry dist/lodash.min.js
+624 silly gunzTarPerm extractEntry dist/lodash.underscore.js
+625 silly gunzTarPerm extractEntry dist/lodash.underscore.min.js
+626 verbose tar unpack /var/folders/68/wk42fgnj0bz8vn11sm4g0gtr0000gn/T/npm-17385-NKwZR639/1431267724108-0.8195175779983401/tmp.tgz
+627 silly lockFile 0f8889ec--underscore-string-2-3-3-package tar:///Users/bert/.npm/underscore.string/2.3.3/package
+628 verbose lock tar:///Users/bert/.npm/underscore.string/2.3.3/package /Users/bert/.npm/0f8889ec--underscore-string-2-3-3-package.lock
+629 silly lockFile 94019c10-24108-0-8195175779983401-tmp-tgz tar:///var/folders/68/wk42fgnj0bz8vn11sm4g0gtr0000gn/T/npm-17385-NKwZR639/1431267724108-0.8195175779983401/tmp.tgz
+630 verbose lock tar:///var/folders/68/wk42fgnj0bz8vn11sm4g0gtr0000gn/T/npm-17385-NKwZR639/1431267724108-0.8195175779983401/tmp.tgz /Users/bert/.npm/94019c10-24108-0-8195175779983401-tmp-tgz.lock
+631 silly gunzTarPerm modes [ '755', '644' ]
+632 silly gunzTarPerm extractEntry package.json
+633 silly gunzTarPerm extractEntry component.json
+634 silly gunzTarPerm extractEntry Gemfile.lock
+635 silly gunzTarPerm extractEntry README.markdown
+636 silly gunzTarPerm extractEntry Rakefile
+637 silly gunzTarPerm extractEntry Gemfile
+638 silly gunzTarPerm extractEntry dist/underscore.string.min.js
+639 silly gunzTarPerm extractEntry lib/underscore.string.js
+640 silly gunzTarPerm extractEntry libpeerconnection.log
+641 silly gunzTarPerm extractEntry .travis.yml
+642 silly gunzTarPerm extractEntry test/run-qunit.js
+643 silly gunzTarPerm extractEntry test/speed.js
+644 silly gunzTarPerm extractEntry test/strings.js
+645 silly gunzTarPerm extractEntry test/strings_standalone.js
+646 silly gunzTarPerm extractEntry test/underscore.js
+647 silly gunzTarPerm extractEntry test/test.html
+648 silly gunzTarPerm extractEntry test/test_standalone.html
+649 silly gunzTarPerm extractEntry test/test_underscore/arrays.js
+650 silly gunzTarPerm extractEntry test/test_underscore/chaining.js
+651 silly gunzTarPerm extractEntry test/test_underscore/collections.js
+652 silly gunzTarPerm extractEntry test/test_underscore/functions.js
+653 silly gunzTarPerm extractEntry test/test_underscore/objects.js
+654 silly gunzTarPerm extractEntry test/test_underscore/speed.js
+655 silly gunzTarPerm extractEntry test/test_underscore/utility.js
+656 silly gunzTarPerm extractEntry test/test_underscore/index.html
+657 silly gunzTarPerm extractEntry test/test_underscore/vendor/jquery.js
+658 silly gunzTarPerm extractEntry test/test_underscore/vendor/jslitmus.js
+659 silly gunzTarPerm extractEntry test/test_underscore/vendor/qunit.js
+660 silly gunzTarPerm extractEntry test/test_underscore/vendor/qunit.css
+661 silly lockFile ae204913-rs-bert-npm-lodash-2-4-1-package tar:///Users/bert/.npm/lodash/2.4.1/package
+662 silly lockFile ae204913-rs-bert-npm-lodash-2-4-1-package tar:///Users/bert/.npm/lodash/2.4.1/package
+663 silly lockFile 7360c28f-274-0-013516315957531333-tmp-tgz tar:///var/folders/68/wk42fgnj0bz8vn11sm4g0gtr0000gn/T/npm-17385-NKwZR639/1431267724274-0.013516315957531333/tmp.tgz
+664 silly lockFile 7360c28f-274-0-013516315957531333-tmp-tgz tar:///var/folders/68/wk42fgnj0bz8vn11sm4g0gtr0000gn/T/npm-17385-NKwZR639/1431267724274-0.013516315957531333/tmp.tgz
+665 silly lockFile 0d74032f-pmjs-org-lodash-lodash-2-4-1-tgz https://registry.npmjs.org/lodash/-/lodash-2.4.1.tgz
+666 silly lockFile 0d74032f-pmjs-org-lodash-lodash-2-4-1-tgz https://registry.npmjs.org/lodash/-/lodash-2.4.1.tgz
+667 silly lockFile 8502be2a-lodash-2-4-1 lodash@2.4.1
+668 silly lockFile 8502be2a-lodash-2-4-1 lodash@2.4.1
+669 verbose about to build /Users/bert/Work/meteorpersistence/node_modules/grunt-ts-1.5
+670 info /Users/bert/Work/meteorpersistence/node_modules/grunt-ts-1.5 unbuild
+671 info preuninstall grunt-ts-1.5@4.0.1
+672 info uninstall grunt-ts-1.5@4.0.1
+673 verbose true,/Users/bert/Work/meteorpersistence/node_modules,/Users/bert/Work/meteorpersistence/node_modules unbuild grunt-ts-1.5@4.0.1
+674 info postuninstall grunt-ts-1.5@4.0.1
+675 error Error: EACCES, open '/Users/bert/.npm/lodash/2.4.1/package.tgz'
+675 error  { [Error: EACCES, open '/Users/bert/.npm/lodash/2.4.1/package.tgz']
+675 error   errno: 3,
+675 error   code: 'EACCES',
+675 error   path: '/Users/bert/.npm/lodash/2.4.1/package.tgz',
+675 error   parent: 'grunt-ts-1.5' }
+676 error Please try running this command again as root/Administrator.
+677 error System Darwin 14.3.0
+678 error command "node" "/usr/local/bin/npm" "install" "grunt-ts-1.5"
+679 error cwd /Users/bert/Work/meteorpersistence/meteor
+680 error node -v v0.10.28
+681 error npm -v 1.4.9
+682 error path /Users/bert/.npm/lodash/2.4.1/package.tgz
+683 error code EACCES
+684 error errno 3
+685 error stack Error: EACCES, open '/Users/bert/.npm/lodash/2.4.1/package.tgz'
+686 verbose exit [ 3, true ]

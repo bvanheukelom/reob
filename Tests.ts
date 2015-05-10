@@ -223,6 +223,17 @@ describe("The persistence thing", function(){
         expect(personCollection.getById("tp").leaf.greenNess).toBe(t1.getLeaves()[5].greenNess);
     });
 
+    it("can save object in a map", function(){
+        var tp = new TestPerson("tp");
+        tp.phoneBook["1"] = new TestPhoneNumber("121212");
+        personCollection.insert( tp );
+
+        expect( personCollection.getById("tp").phoneBook ).toBeDefined();
+        expect( typeof personCollection.getById("tp").phoneBook ).toBe("object");
+        expect( personCollection.getById("tp").phoneBook["1"] ).toBeDefined();
+        expect( personCollection.getById("tp").phoneBook["1"] instanceof TestPhoneNumber ).toBeTruthy();
+        expect( personCollection.getById("tp").phoneBook["1"].getNumber() ).toBe("121212");
+    })
 
     // Maps (merge with array, use .Collection("<Entry-ClassName>") annotation for both
 

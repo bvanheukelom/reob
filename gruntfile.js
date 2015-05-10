@@ -3,8 +3,8 @@ module.exports = function (grunt) {
 	// GRUNT CONFIGURATION
 	grunt.initConfig({
 		watch: {
-			files: ["*.js"],
-			tasks: ["copyCode"]
+			files: ["*.ts"],
+			tasks: ["compile","copyCode"]
 		},
 		typescript: {
 			options: {
