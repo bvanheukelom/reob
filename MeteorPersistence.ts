@@ -45,7 +45,7 @@ module persistence {
             if (collection) {
                 var rootValue = collection.getById(persistencePath.getId());
                 var newValue = rootValue ? persistencePath.getSubObject(rootValue) : undefined;
-                console.log("Lazy loading foreign key:" + s + ". Loaded: " + newValue);
+                console.log("Lazy loading foreign key:" + s + " Loaded: ", newValue);
                 return newValue;
             }
             else

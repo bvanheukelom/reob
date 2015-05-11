@@ -15,6 +15,7 @@ var Tests;
             this.trees = [];
             this.phoneBook = {};
             this.wood = {};
+            this.family = {};
             this._id = id;
             this.name = name;
         }
@@ -24,6 +25,7 @@ var Tests;
         TestPerson.prototype.addAddress = function (a) {
             console.log("inside add address:", (a instanceof Tests.TestAddress));
             this.addresses.push(a);
+            return a;
         };
         TestPerson.prototype.rename = function (n) {
             this.name = n;
@@ -65,6 +67,10 @@ var Tests;
             persistence.PersistenceAnnotation.ArrayOrMap("TestTree"),
             persistence.PersistenceAnnotation.AsForeignKeys
         ], TestPerson.prototype, "wood");
+        __decorate([
+            persistence.PersistenceAnnotation.ArrayOrMap("TestPerson"),
+            persistence.PersistenceAnnotation.AsForeignKeys
+        ], TestPerson.prototype, "family");
         Object.defineProperty(TestPerson.prototype, "addAddress",
             __decorate([
                 persistence.PersistenceAnnotation.Wrap

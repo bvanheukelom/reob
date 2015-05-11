@@ -163,21 +163,12 @@ module persistence
 
         static isStoredAsForeignKeys( typeClass:Function, propertyName:string ):boolean
         {
-
-            var arr:any = Reflect.getMetadata("persistence:askeys", typeClass.prototype );
-            return arr && arr.indexOf(propertyName)!=-1;
+            return PersistenceAnnotation.getPropertyProperty(typeClass.prototype, propertyName, "askeys");
         }
 
         static AsForeignKeys( targetPrototypeObject:Function, propertyName:string  )
         {
-            console.log("  "+propertyName+" as foreign key" );
-            var arr:any = Reflect.getMetadata("persistence:askeys", targetPrototypeObject);
-            if( !arr )
-            {
-                arr = [];
-                Reflect.defineMetadata("persistence:askeys", arr, targetPrototypeObject );
-            }
-            arr.push(propertyName);
+            return PersistenceAnnotation.setPropertyProperty(targetPrototypeObject, propertyName, "askeys", true);
         }
 
         // for grammar reasons

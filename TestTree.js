@@ -32,19 +32,11 @@ var Tests;
             return this.leaves;
         };
         __decorate([
-            persistence
-                .
-                    PersistenceAnnotation
-                .
-                    ArrayOrMap("TestLeaf")
+            persistence.PersistenceAnnotation.ArrayOrMap("TestLeaf")
         ], TestTree.prototype, "leaves");
         Object.defineProperty(TestTree.prototype, "grow",
             __decorate([
-                persistence
-                    .
-                        PersistenceAnnotation
-                    .
-                        Wrap
+                persistence.PersistenceAnnotation.Wrap
             ], TestTree.prototype, "grow", Object.getOwnPropertyDescriptor(TestTree.prototype, "grow")));
         TestTree = __decorate([
             persistence.PersistenceAnnotation.Entity("TestTree")

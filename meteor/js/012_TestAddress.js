@@ -16,6 +16,9 @@ Tests;
         TestAddress.prototype.getStreet = function () {
             return this.street;
         };
+        TestAddress.prototype.getId = function () {
+            return this.street;
+        };
         TestAddress = __decorate([
             persistence.PersistenceAnnotation.Entity
         ], TestAddress);

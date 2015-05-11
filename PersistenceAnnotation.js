@@ -119,17 +119,10 @@ var persistence;
             return undefined;
         };
         PersistenceAnnotation.isStoredAsForeignKeys = function (typeClass, propertyName) {
-            var arr = Reflect.getMetadata("persistence:askeys", typeClass.prototype);
-            return arr && arr.indexOf(propertyName) != -1;
+            return PersistenceAnnotation.getPropertyProperty(typeClass.prototype, propertyName, "askeys");
         };
         PersistenceAnnotation.AsForeignKeys = function (targetPrototypeObject, propertyName) {
-            console.log("  " + propertyName + " as foreign key");
-            var arr = Reflect.getMetadata("persistence:askeys", targetPrototypeObject);
-            if (!arr) {
-                arr = [];
-                Reflect.defineMetadata("persistence:askeys", arr, targetPrototypeObject);
-            }
-            arr.push(propertyName);
+            return PersistenceAnnotation.setPropertyProperty(targetPrototypeObject, propertyName, "askeys", true);
         };
         PersistenceAnnotation.AsForeignKey = function (targetPrototypeObject, propertyName) {
             return PersistenceAnnotation.AsForeignKeys(targetPrototypeObject, propertyName);

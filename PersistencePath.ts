@@ -27,14 +27,18 @@ module persistence {
             var o:any = rootObject;
             if (this.path.indexOf(".") != -1) {
                 this.path.split("].")[1].split(".").forEach(function (entry:string) {
+                    var foundEntry:boolean = false;
                     if (o instanceof Array) {
                         for (var j in o) {
                             var arrayEntry:Persistable = o[j];
                             if (arrayEntry.getId() == entry) {
                                 o = arrayEntry;
+                                foundEntry=true;
                                 break;
                             }
                         }
+                        if(!foundEntry)
+                            return undefined;
                     }
                     else if (o)
                         o = o[entry];

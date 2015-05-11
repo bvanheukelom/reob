@@ -32,6 +32,12 @@ module Tests
         @persistence.PersistenceAnnotation.AsForeignKeys
         wood:{ [index:string]: Tests.TestTree } = {};
 
+
+        @persistence.PersistenceAnnotation.ArrayOrMap("TestPerson")
+        @persistence.PersistenceAnnotation.AsForeignKeys
+        family:{ [index:string]: Tests.TestPerson } = {};
+
+
         constructor(id?:string, name?:string)
         {
             this._id = id;
@@ -44,10 +50,11 @@ module Tests
         }
 
         @persistence.PersistenceAnnotation.Wrap
-        addAddress(a:TestAddress):void
+        addAddress(a:TestAddress):Tests.TestAddress
         {
             console.log("inside add address:", (a instanceof TestAddress));
             this.addresses.push(a);
+            return a;
         }
 
         rename(n:string):void

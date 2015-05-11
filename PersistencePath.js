@@ -22,14 +22,18 @@ var persistence;
             var o = rootObject;
             if (this.path.indexOf(".") != -1) {
                 this.path.split("].")[1].split(".").forEach(function (entry) {
+                    var foundEntry = false;
                     if (o instanceof Array) {
                         for (var j in o) {
                             var arrayEntry = o[j];
                             if (arrayEntry.getId() == entry) {
                                 o = arrayEntry;
+                                foundEntry = true;
                                 break;
                             }
                         }
+                        if (!foundEntry)
+                            return undefined;
                     }
                     else if (o)
                         o = o[entry];

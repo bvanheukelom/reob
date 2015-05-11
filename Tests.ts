@@ -243,30 +243,125 @@ describe("The persistence thing", function(){
         tp.wood["peter"] = new Tests.TestTree("t2");
         treeCollection.insert(tp.wood["peter"]);
         expect(tp.wood["peter"] instanceof Tests.TestTree ).toBeTruthy();
-        console.log("-----");
-        debugger;
         personCollection.insert( tp );
-        console.log("-----2");
         expect( personCollection.getById("tp") ).toBeDefined();
-        console.log("-----21");
         expect( personCollection.getById("tp").wood ).toBeDefined();
-        console.log("-----3");
         expect( typeof personCollection.getById("tp").wood ).toBe("object");
-        console.log("-----4");
         expect( personCollection.getById("tp").wood["peter"] ).toBeDefined();
-        console.log("-----5", personCollection.getById("tp").wood["peter"]);
         expect( personCollection.getById("tp").wood["peter"] instanceof Tests.TestTree ).toBeTruthy();
-        console.log("-----6");
         expect( personCollection.getById("tp").wood["peter"].getId() ).toBe("t2");
     });
 
-    // Maps (merge with array, use .Collection("<Entry-ClassName>") annotation for both
+    it("can save objects keys in a map", function(){
+        var tp = new Tests.TestPerson("tp");
+        tp.phoneBook["ernie"] = new Tests.TestPhoneNumber("333");
+        tp.phoneBook["cookie monster"] = new Tests.TestPhoneNumber("444");
+        tp.phoneBook["superman"] = new Tests.TestPhoneNumber("12345");
+        personCollection.insert( tp );
 
-    // callbacks
+        expect( personCollection.getById("tp") ).toBeDefined();
+        expect( persistence.MeteorPersistence.needsLazyLoading(personCollection.getById("tp"), "wood")).toBeFalsy();
+        expect( personCollection.getById("tp").phoneBook ).toBeDefined();
+        expect( typeof personCollection.getById("tp").phoneBook ).toBe("object");
+        expect( personCollection.getById("tp").phoneBook["superman"] ).toBeDefined();
+        expect( personCollection.getById("tp").phoneBook["superman"] instanceof Tests.TestPhoneNumber ).toBeTruthy();
+        expect( personCollection.getById("tp").phoneBook["superman"].getNumber() ).toBe("12345");
+    });
 
-    // tests
+    it("can save objects with a dictionary to objects in the same collection", function(){
+        var kid = new Tests.TestPerson("kid");
+        var mom = new Tests.TestPerson("mom");
+        var dad = new Tests.TestPerson("dad");
+        personCollection.insert(mom);
+        personCollection.insert(dad);
+        kid.family["mommy"] = mom;
+        kid.family["daddy"] = dad;
+        mom.family["thelittleone"] = kid;
+        mom.family["him"] = dad;
+        personCollection.insert( kid );
+        personCollection.update("mom", function(m:Tests.TestPerson){
+            m.family["thelittleone"] = kid;
+            m.family["him"] = dad;
+        });
+        expect( personCollection.getById("kid").family["mommy"].getId() ).toBe("mom");
+        expect( personCollection.getById("kid").family["daddy"].getId() ).toBe("dad");
+        expect( personCollection.getById("mom").family["him"].getId() ).toBe("dad");
+    });
 
-    // store smart objects in dumb objects ?
+
+    it("can return values from a wrapped function", function(){
+        var kid = new Tests.TestPerson("kid");
+        personCollection.insert( kid );
+        var a = kid.addAddress(new Tests.TestAddress("streetsss"));
+
+        expect( a instanceof Tests.TestAddress).toBeTruthy();
+        expect( a.getStreet() ).toBe("streetsss");
+    });
+
+    it("stores something as a foreign key turns undefined after the foreign object is deleted", function(){
+        var t1 = new Tests.TestTree("t1");
+        treeCollection.insert( t1 );
+        t1.grow();
+        var kid = new Tests.TestPerson("kid");
+        kid.tree = t1;
+        personCollection.insert( kid );
+        kid.collectLeaf();
+        expect( personCollection.getById("kid").leaf ).toBeDefined();
+        treeCollection.remove(t1);
+        expect( personCollection.getById("kid").leaf ).toBeUndefined();
+    });
+
+
+    it("stores something as a foreign key turns undefined after the foreign sub object is deleted", function(){
+        var t1 = new Tests.TestTree("t1");
+        treeCollection.insert( t1 );
+        t1.grow();
+        var kid = new Tests.TestPerson("kid");
+        kid.tree = t1;
+        personCollection.insert( kid );
+        kid.collectLeaf();
+        expect( personCollection.getById("kid").leaf ).toBeDefined();
+        treeCollection.update("t1", function(t:Tests.TestTree){
+            t.leaves = [];
+        });
+        expect( personCollection.getById("kid").leaf ).toBeUndefined();
+    });
+
+    xit("can store a subdocument by id. The subducoment is from a different collection. It is stored in a dictionary on a key that is something else than it's id.", function(){
+        // the subdocument either needs to have an Id or it is stored by the id in the dictionary.
+    });
+
+    xit("calls registered callbacks", function(){
+        // something like this....
+        //MeteorPersistence.callWithCallback(function(){
+        //    t1.grow();
+        //}, function callback( result, error ){
+        //
+        //} );
+    });
+
+    xit("supports wrapped calls whose last parameter is a callback function.", function(){
+    });
+
+    xit("offers a way to annotate wrapped calls as 'performed on the server'.", function() {
+    });
+
+
+
+// Maps (merge with array, use .Collection("<Entry-ClassName>") annotation for both
+
+// callbacks
+
+// tests
+
+// foreign key arrays with undefined entries
+// subdocument arrays with undefined entries
+// wrapped function results
+// test that something stored as a foreign key (both sub and root) turns undefined after the foreign root is deleted
+
+
+
+// store smart objects in dumb objects ?
 
     // foreign key arrays with undefined entries
     // subdocument arrays with undefined entries

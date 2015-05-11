@@ -16,5 +16,8 @@ module Tests
         getStreet():string {
             return this.street;
         }
+        getId():string {
+            return this.street;
+        }
     }
 }

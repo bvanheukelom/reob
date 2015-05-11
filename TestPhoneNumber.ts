@@ -11,5 +11,8 @@ module Tests {
         getNumber():string {
             return this.number;
         }
+        getId():string {
+            return this.number;
+        }
     }
 }

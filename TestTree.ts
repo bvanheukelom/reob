@@ -8,25 +8,14 @@ module Tests
         private _id:string;
         private height:number = 10;
 
-        @persistence
-    .
-        PersistenceAnnotation
-    .
-        ArrayOrMap(
-
-        "TestLeaf"
-    )
-        private leaves:Array<TestLeaf> = [];
+        @persistence.PersistenceAnnotation.ArrayOrMap("TestLeaf")
+        leaves:Array<TestLeaf> = [];
 
         constructor(id?:string) {
             this._id = id;
         }
 
-        @persistence
-    .
-        PersistenceAnnotation
-    .
-        Wrap
+        @persistence.PersistenceAnnotation.Wrap
 
         grow():void {
             this.height++;

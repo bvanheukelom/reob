@@ -16,6 +16,9 @@ Tests;
         TestPhoneNumber.prototype.getNumber = function () {
             return this.number;
         };
+        TestPhoneNumber.prototype.getId = function () {
+            return this.number;
+        };
         TestPhoneNumber = __decorate([
             persistence.PersistenceAnnotation.Entity
         ], TestPhoneNumber);
