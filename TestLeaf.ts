@@ -3,36 +3,38 @@
  */
 
 ///<reference path="references.d.ts"/>
-
-@persistence.PersistenceAnnotation.Entity
-class TestLeaf
+module Tests
 {
-    _id:string;
-    greenNess:number;
-
-    @persistence.PersistenceAnnotation.Type("TestTree")
-    @persistence.PersistenceAnnotation.AsForeignKey
-    parent:TestTree;
-
-    constructor(id?:string, parent?:TestTree)
+    @persistence.PersistenceAnnotation.Entity
+    export class TestLeaf
     {
-        this._id = id;
-        this.greenNess = 1;
-        this.parent = parent;
-    }
+        _id:string;
+        greenNess:number;
 
-    getId():string
-    {
-        return this._id;
-    }
+        @persistence.PersistenceAnnotation.Type("TestTree")
+        @persistence.PersistenceAnnotation.AsForeignKey
+        parent:TestTree;
 
-    grow():void
-    {
-        this.greenNess++;
-    }
+        constructor(id?:string, parent?:Tests.TestTree)
+        {
+            this._id = id;
+            this.greenNess = 1;
+            this.parent = parent;
+        }
 
-    getTree():TestTree
-    {
-        return this.parent;
+        getId():string
+        {
+            return this._id;
+        }
+
+        grow():void
+        {
+            this.greenNess++;
+        }
+
+        getTree():Tests.TestTree
+        {
+            return this.parent;
+        }
     }
 }

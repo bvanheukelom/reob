@@ -1,4 +1,3 @@
-///<reference path="references.d.ts"/>
 if (typeof __decorate !== "function") __decorate = function (decorators, target, key, desc) {
     if (typeof Reflect === "object" && typeof Reflect.decorate === "function") return Reflect.decorate(decorators, target, key, desc);
     switch (arguments.length) {
@@ -7,15 +6,20 @@ if (typeof __decorate !== "function") __decorate = function (decorators, target,
         case 4: return decorators.reduceRight(function(o, d) { return (d && d(target, key, o)) || o; }, desc);
     }
 };
-TestPhoneNumber = (function () {
-    function TestPhoneNumber(n) {
-        this.number = n;
-    }
-    TestPhoneNumber.prototype.getNumber = function () {
-        return this.number;
-    };
-    TestPhoneNumber = __decorate([
-        persistence.PersistenceAnnotation.Entity
-    ], TestPhoneNumber);
-    return TestPhoneNumber;
-})();
+///<reference path="references.d.ts"/>
+Tests;
+(function (Tests) {
+    var TestPhoneNumber = (function () {
+        function TestPhoneNumber(n) {
+            this.number = n;
+        }
+        TestPhoneNumber.prototype.getNumber = function () {
+            return this.number;
+        };
+        TestPhoneNumber = __decorate([
+            persistence.PersistenceAnnotation.Entity
+        ], TestPhoneNumber);
+        return TestPhoneNumber;
+    })();
+    Tests.TestPhoneNumber = TestPhoneNumber;
+})(Tests || (Tests = {}));

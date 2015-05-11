@@ -1,4 +1,7 @@
 ///<reference path="references.d.ts"/>
+/**
+ * Created by bert on 04.05.15.
+ */
 DeSerializer;
 (function (DeSerializer) {
     var Serializer = (function () {

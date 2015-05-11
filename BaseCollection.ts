@@ -127,7 +127,9 @@ module persistence {
             doc.serial = 0;
             console.log( "inserting document: ", doc)
             this.meteorCollection.insert(doc);
+            console.log( "inserting object: ", p, (<any>p).wood );
             MeteorPersistence.updatePersistencePaths(p);
+            console.log( "!!!!" );
         }
 
     }

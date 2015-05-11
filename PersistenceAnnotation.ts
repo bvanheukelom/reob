@@ -159,7 +159,6 @@ module persistence
             }
             return undefined;
         }
-    a;
         // ---- AsForeignKeys ----
 
         static isStoredAsForeignKeys( typeClass:Function, propertyName:string ):boolean

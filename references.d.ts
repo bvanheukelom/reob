@@ -17,4 +17,3 @@
 
 ///<reference path="typings/meteor/meteor.d.ts"/>
 
-declare var global:any;

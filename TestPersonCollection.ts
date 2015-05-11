@@ -1,9 +1,8 @@
 ///<reference path="references.d.ts"/>
-
-class TestPersonCollection extends persistence.BaseCollection<TestPerson>
+class TestPersonCollection extends persistence.BaseCollection<Tests.TestPerson>
 {
     constructor()
     {
-        super(TestPerson);
+        super(Tests.TestPerson);
     }
 }

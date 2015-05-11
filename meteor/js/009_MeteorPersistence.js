@@ -78,13 +78,11 @@ persistence;
                                     v = MeteorPersistence.loadPath(v);
                                     this[propertyName] = v;
                                 }
-                                else if (Array.isArray(v)) {
-                                    console.log("Lazy loading array " + className + "." + propertyName);
-                                    var arr = v;
-                                    if (arr.length > 0 && typeof arr[0] == "string") {
-                                        arr.forEach(function (ele, index) {
-                                            arr[index] = MeteorPersistence.loadPath(ele);
-                                        });
+                                else {
+                                    console.log("Lazy loading array/map " + className + "." + propertyName);
+                                    for (var i in v) {
+                                        var ele = v[i];
+                                        v[i] = MeteorPersistence.loadPath(ele);
                                     }
                                 }
                             }
@@ -115,17 +113,24 @@ persistence;
         };
         MeteorPersistence.needsLazyLoading = function (object, propertyName) {
             var oc = persistence.PersistenceAnnotation.getClass(object);
-            var shadowpropertyDescriptor = Object.getOwnPropertyDescriptor(object, "_" + propertyName);
-            var shadowPropertyIsKeys = false;
-            if (shadowpropertyDescriptor)
-                if (typeof object["_" + propertyName] == "string")
-                    shadowPropertyIsKeys = true;
-                else if (Array.isArray(object["_" + propertyName])) {
-                    var arr = object["_" + propertyName];
-                    if (arr.length > 0 && typeof arr[0] == "string")
+            if (persistence.PersistenceAnnotation.isStoredAsForeignKeys(oc, propertyName)) {
+                var shadowpropertyDescriptor = Object.getOwnPropertyDescriptor(object, "_" + propertyName);
+                var shadowPropertyIsKeys = false;
+                if (shadowpropertyDescriptor)
+                    if (typeof object["_" + propertyName] == "string")
                         shadowPropertyIsKeys = true;
-                }
-            return persistence.PersistenceAnnotation.isStoredAsForeignKeys(oc, propertyName) && shadowPropertyIsKeys;
+                    else if (persistence.PersistenceAnnotation.isArrayOrMap(oc, propertyName)) {
+                        var v = object["_" + propertyName];
+                        for (var i in v) {
+                            if (typeof v[i] == "string")
+                                shadowPropertyIsKeys = true;
+                            break;
+                        }
+                    }
+                return shadowPropertyIsKeys;
+            }
+            else
+                return false;
         };
         MeteorPersistence.updatePersistencePaths = function (object, visited) {
             if (!visited)
@@ -156,11 +161,9 @@ persistence;
             }
             persistence.PersistenceAnnotation.getTypedPropertyNames(objectClass).forEach(function (typedPropertyName) {
                 if (!persistence.PersistenceAnnotation.isStoredAsForeignKeys(objectClass, typedPropertyName)) {
-                    console.log("updating foreignkey property " + typedPropertyName);
                     var v = object[typedPropertyName];
                     if (v) {
                         if (persistence.PersistenceAnnotation.isArrayOrMap(objectClass, typedPropertyName)) {
-                            console.log("updating foreignkey property " + typedPropertyName + " is array");
                             for (var i in v) {
                                 var e = v[i];
                                 console.log("updating persistnece path for isArrayOrMap " + typedPropertyName + "  key:" + i + " value:", e, "object: ", object);
@@ -175,7 +178,6 @@ persistence;
                             }
                         }
                         else {
-                            console.log("updating foreignkey property direct property " + typedPropertyName);
                             v.persistencePath = object.persistencePath.clone();
                             v.persistencePath.appendPropertyLookup(typedPropertyName);
                             MeteorPersistence.updatePersistencePaths(v, visited);
@@ -183,14 +185,17 @@ persistence;
                     }
                 }
                 else {
+                    console.log("foreign key " + typedPropertyName);
                     if (!MeteorPersistence.needsLazyLoading(object, typedPropertyName)) {
                         var v = object[typedPropertyName];
                         if (v) {
                             if (persistence.PersistenceAnnotation.isArrayOrMap(objectClass, typedPropertyName)) {
                                 for (var i in v) {
                                     var e = v[i];
-                                    if (!e.persistencePath)
+                                    if (!e.persistencePath) {
+                                        console.log("non- foreign key array/map entry key:" + i + " value:" + e);
                                         MeteorPersistence.updatePersistencePaths(e, visited);
+                                    }
                                 }
                                 ;
                             }

@@ -2,8 +2,8 @@
 /**
  * Created by bert on 04.05.15.
  */
-module DeSerializer {
 
+module DeSerializer{
     export class Serializer {
         static toObject<T extends Persistable>(doc:any, f:TypeClass<T>):T {
             var o:any;
