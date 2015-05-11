@@ -1,6 +1,3 @@
-/**
- * Created by bert on 04.05.15.
- */
 ///<reference path="references.d.ts"/>
 var PersistenceAnnotation = require("./PersistenceAnnotation");
 var Serializer = require("./Serializer");
@@ -30,7 +27,6 @@ var MeteorPersistence = (function () {
         else
             return o[fktName].apply(o, args);
     };
-    // TODO new name
     MeteorPersistence.objectsClassName = function (o) {
         return PersistenceAnnotation.className(o.constructor);
     };
@@ -52,15 +48,11 @@ var MeteorPersistence = (function () {
     MeteorPersistence.wrapClass = function (c) {
         var className = PersistenceAnnotation.className(c);
         console.log("Wrapping transactional functions for class " + className);
-        // iterate over all properties of the prototype. this is where the functions are.
         PersistenceAnnotation.getWrappedFunctionNames(c).forEach(function (functionName) {
             var originalFunction = c.prototype[functionName];
-            // replace the function with a wrapper function that either does a meteor call or call to the original
             console.log("Wrapping transactional functions for class " + className + " function: " + functionName);
             var f = function meteorCallWrapper() {
-                // If this is object is part of persistence and no wrapped call is in progress ...
                 if (!MeteorPersistence.wrappedCallInProgress && this.persistencePath) {
-                    // hello meteor
                     console.log("Meteor call " + arguments.callee.functionName + " with arguments ", arguments, " path:", this.persistencePath);
                     var typeNames = [];
                     for (var ai = 0; ai < arguments.length; ai++) {
@@ -70,14 +62,10 @@ var MeteorPersistence = (function () {
                 }
                 var result = arguments.callee.originalFunction.apply(this, arguments);
                 MeteorPersistence.updatePersistencePaths(this);
-                // also call the method on the current object so that it reflects the update
                 return result;
             };
-            // this stores the old function on the wrapping one
             f.originalFunction = originalFunction;
-            // this keeps the original method name accessible as the closure somehow cant access a loop iterator
             f.functionName = functionName;
-            // set the wrapping function on the class
             c.prototype[functionName] = f;
         });
         PersistenceAnnotation.getTypedPropertyNames(c).forEach(function (propertyName) {
@@ -86,8 +74,6 @@ var MeteorPersistence = (function () {
                 var propertyDescriptor = Object.getOwnPropertyDescriptor(c.prototype, propertyName);
                 Object.defineProperty(c.prototype, propertyName, {
                     get: function () {
-                        // TODO this doesnt work for subdocuments
-                        //console.log("Monkey patched getter "+propertyName);
                         var v;
                         if (propertyDescriptor && propertyDescriptor.get)
                             v = propertyDescriptor.get.apply(this);
@@ -108,7 +94,6 @@ var MeteorPersistence = (function () {
                                 }
                             }
                         }
-                        //console.log("Monkey patched getter "+propertyName+" returns ",v);
                         return v;
                     },
                     set: function (v) {
@@ -135,7 +120,6 @@ var MeteorPersistence = (function () {
         });
     };
     MeteorPersistence.needsLazyLoading = function (object, propertyName) {
-        // TODO inheritance
         var oc = PersistenceAnnotation.getClass(object);
         var shadowpropertyDescriptor = Object.getOwnPropertyDescriptor(object, "_" + propertyName);
         var shadowPropertyIsKeys = false;
@@ -154,6 +138,7 @@ var MeteorPersistence = (function () {
             visited = [];
         if (visited.indexOf(object) != -1)
             return;
+        console.log("updating persistence path for ", object);
         if (!Object.getOwnPropertyDescriptor(object, "persistencePath")) {
             Object.defineProperty(object, "persistencePath", {
                 configurable: false,
@@ -173,14 +158,18 @@ var MeteorPersistence = (function () {
         }
         else {
             if (!object.persistencePath)
-                throw new Error("Can not set the persistence path of non root collection object.");
+                throw new Error("Can not set the persistence path of non root collection object. " + PersistenceAnnotation.className(objectClass));
         }
         PersistenceAnnotation.getTypedPropertyNames(objectClass).forEach(function (typedPropertyName) {
             if (!PersistenceAnnotation.isStoredAsForeignKeys(objectClass, typedPropertyName)) {
+                console.log("updating foreignkey property " + typedPropertyName);
                 var v = object[typedPropertyName];
                 if (v) {
-                    if (Array.isArray(v)) {
-                        v.forEach(function (e) {
+                    if (PersistenceAnnotation.isArrayOrMap(objectClass, typedPropertyName)) {
+                        console.log("updating foreignkey property " + typedPropertyName + " is array");
+                        for (var i in v) {
+                            var e = v[i];
+                            console.log("updating persistnece path for isArrayOrMap " + typedPropertyName + "  key:" + i + " value:", e, "object: ", object);
                             if (e.getId && e.getId()) {
                                 e.persistencePath = object.persistencePath.clone();
                                 e.persistencePath.appendPropertyLookup(typedPropertyName);
@@ -189,9 +178,10 @@ var MeteorPersistence = (function () {
                             }
                             else
                                 throw new Error("An element of the array '" + typedPropertyName + "' stored on the classe " + PersistenceAnnotation.className(objectClass) + " does not have an id. Total persistence path so far:" + object.persistencePath.toString());
-                        });
+                        }
                     }
                     else {
+                        console.log("updating foreignkey property direct property " + typedPropertyName);
                         v.persistencePath = object.persistencePath.clone();
                         v.persistencePath.appendPropertyLookup(typedPropertyName);
                         MeteorPersistence.updatePersistencePaths(v, visited);
@@ -202,11 +192,13 @@ var MeteorPersistence = (function () {
                 if (!MeteorPersistence.needsLazyLoading(object, typedPropertyName)) {
                     var v = object[typedPropertyName];
                     if (v) {
-                        if (Array.isArray(v)) {
-                            v.forEach(function (e) {
+                        if (PersistenceAnnotation.isArrayOrMap(objectClass, typedPropertyName)) {
+                            for (var i in v) {
+                                var e = v[i];
                                 if (!e.persistencePath)
                                     MeteorPersistence.updatePersistencePaths(e, visited);
-                            });
+                            }
+                            ;
                         }
                         else if (!v.persistencePath)
                             MeteorPersistence.updatePersistencePaths(v, visited);

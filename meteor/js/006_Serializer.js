@@ -15,17 +15,16 @@ Serializer = (function () {
         }
         for (var propertyName in doc) {
             var value = doc[propertyName];
-            if (value instanceof Array) {
-                var arr = value;
-                var result = [];
+            if (PersistenceAnnotation.isArrayOrMap(f, propertyName)) {
+                var result = Array.isArray(value) ? [] : {};
                 var entryClass = PersistenceAnnotation.getPropertyClass(f, propertyName);
-                for (var i = 0; i < arr.length; i++) {
-                    var arrayEntry = arr[i];
+                var arr = value;
+                for (var i in value) {
+                    var entry = value[i];
                     if (entryClass && !PersistenceAnnotation.isStoredAsForeignKeys(f, propertyName))
-                        arrayEntry = Serializer.toObject(arr[i], entryClass);
-                    result[i] = arrayEntry;
+                        entry = Serializer.toObject(entry, entryClass);
+                    result[i] = entry;
                 }
-                // this can only happen once because if the property is accessed the "lazy load" already kicks in
                 o[propertyName] = result;
             }
             else if (typeof value == 'object') {
@@ -56,7 +55,6 @@ Serializer = (function () {
                     throw new Error("Can not serialize '" + propertyNameOnParentObject + "' on class " + PersistenceAnnotation.className(parentClass) + ". Objects that should be stored as foreign keys need to be persisted beforehand or be the root entity of a collection and have an id. Value of '" + propertyNameOnParentObject + "':" + object);
                 }
             }
-            return object.getId();
         }
         else if (typeof object.toDocument == "function")
             result = object.toDocument();
@@ -66,22 +64,26 @@ Serializer = (function () {
     };
     Serializer.createDocument = function (object, rootClass, parentObject, propertyNameOnParentObject) {
         var doc = {};
+        var objectClass = PersistenceAnnotation.getClass(object);
         for (var property in object) {
             var value = object[property];
             if (property == "id") {
                 doc._id = object.id;
             }
             else if (object[property] !== undefined && property != "persistencePath") {
-                // primitives
                 if (typeof value == "string" || typeof value == "number" || typeof value == "date" || typeof value == "boolean")
                     doc[property] = value;
-                else if (value instanceof Array) {
-                    doc[property] = [];
-                    var arr = value;
-                    for (var i = 0; i < arr.length; i++) {
-                        var subObject = arr[i];
-                        doc[property].push(Serializer.toDocument(subObject, rootClass, object, property));
+                else if (PersistenceAnnotation.isArrayOrMap(objectClass, property)) {
+                    var result;
+                    if (Array.isArray(object[property]))
+                        result = [];
+                    else
+                        result = {};
+                    for (var i in value) {
+                        var subObject = value[i];
+                        result[i] = Serializer.toDocument(subObject, rootClass, object, property);
                     }
+                    doc[property] = result;
                 }
                 else if (typeof object[property] == 'object') {
                     doc[property] = Serializer.toDocument(value, rootClass, object, property);

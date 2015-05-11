@@ -76,6 +76,7 @@ class PersistenceAnnotation
         }
         return result;
     }
+
     public static getEntityClasses():Array<TypeClass<Persistable>>
     {
         var result:Array<TypeClass<Persistable>> = [];
@@ -91,23 +92,23 @@ class PersistenceAnnotation
         return Reflect.getMetadata("persistence:collectionName", f);
     }
     static isRootEntity(f:TypeClass<any>):boolean {
-        return !!Reflect.getMetadata("persistence:collectionName", f);
+        return !!PersistenceAnnotation.getCollectionName(f);
     }
 
     // ---- Collection ----
 
-    static Collection( typeClassName:string )
+    static ArrayOrMap( typeClassName:string )
     {
         return function (targetPrototypeObject: Function, propertyName:string) {
             console.log("  "+propertyName+" as collection of "+typeClassName);
             PersistenceAnnotation.setPropertyProperty( targetPrototypeObject, propertyName, "type", typeClassName);
-            PersistenceAnnotation.setPropertyProperty( targetPrototypeObject, propertyName, "collection", true);
+            PersistenceAnnotation.setPropertyProperty( targetPrototypeObject, propertyName, "arrayOrMap", true);
         };
     }
 
-    static isCollection( typeClass:Function, propertyName:string ):boolean
+    static isArrayOrMap( typeClass:Function, propertyName:string ):boolean
     {
-        return PersistenceAnnotation.getPropertyProperty( typeClass.prototype, propertyName, "collection")==true;
+        return PersistenceAnnotation.getPropertyProperty( typeClass.prototype, propertyName, "arrayOrMap")==true;
     }
 
 // ---- typed properties ----
@@ -160,10 +161,8 @@ class PersistenceAnnotation
         }
         return undefined;
     }
-
-
+a;
     // ---- AsForeignKeys ----
-
 
     static isStoredAsForeignKeys( typeClass:Function, propertyName:string ):boolean
     {
@@ -189,7 +188,6 @@ class PersistenceAnnotation
     {
         return PersistenceAnnotation.AsForeignKeys(targetPrototypeObject, propertyName );
     }
-
 
     // ---- Wrap ----
 

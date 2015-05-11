@@ -21,17 +21,21 @@ class BaseCollection<T extends Persistable>
             // as it doesnt really matter which base collection is used in meteor-calls, we're just using the first that is created
             MeteorPersistence.collections[collectionName] = this;
         }
-        this.meteorCollection = BaseCollection.getMeteorCollection(collectionName);
+        this.meteorCollection = BaseCollection._getMeteorCollection(collectionName);
         this.theClass = persistableClass;
     }
 
-    static getMeteorCollection( name?:string )
+    private static _getMeteorCollection( name?:string )
     {
         if( !BaseCollection.meteorCollections[name] )
         {
             BaseCollection.meteorCollections[name] = new (<any>Meteor).Collection( name );
         }
         return BaseCollection.meteorCollections[name];
+    }
+    getMeteorCollection( ):any
+    {
+        return this.meteorCollection;
     }
 
     getById(id:string):T
@@ -127,6 +131,7 @@ class BaseCollection<T extends Persistable>
         var doc : Document = Serializer.toDocument( p );
         doc._id = p.getId();
         doc.serial = 0;
+        console.log( "inserting document: ", doc)
         this.meteorCollection.insert(doc);
         MeteorPersistence.updatePersistencePaths(p);
     }

@@ -196,6 +196,8 @@ class MeteorPersistence
             visited = [];
         if( visited.indexOf(object)!=-1 )
             return;
+
+        console.log( "updating persistence path for ", object)
         if( !Object.getOwnPropertyDescriptor(object,"persistencePath") )
         {
             Object.defineProperty(object,"persistencePath", {
@@ -217,26 +219,31 @@ class MeteorPersistence
         else
         {
             if( !object.persistencePath )
-                throw new Error( "Can not set the persistence path of non root collection object.");
+                throw new Error( "Can not set the persistence path of non root collection object. "+PersistenceAnnotation.className(objectClass));
         }
         PersistenceAnnotation.getTypedPropertyNames(objectClass).forEach(function(typedPropertyName:string){
             if( !PersistenceAnnotation.isStoredAsForeignKeys(objectClass,typedPropertyName) ) {
+                console.log("updating foreignkey property "+typedPropertyName);
                 var v:Persistable = object[typedPropertyName];
                 if( v ) {
-                    if (Array.isArray(v)) {
-                        (<Array<Persistable>>v).forEach(function (e:Persistable) {
-
+                    if (PersistenceAnnotation.isArrayOrMap(objectClass, typedPropertyName)) {
+                        console.log( "updating foreignkey property "+typedPropertyName+" is array" );
+                        for( var i in v ) {
+                            var e = v[i];
+                            console.log("updating persistnece path for isArrayOrMap "+typedPropertyName+"  key:"+i+" value:",e, "object: ",object);
                             if (e.getId && e.getId()) {
                                 e.persistencePath = object.persistencePath.clone();
-                                e.persistencePath.appendPropertyLookup(typedPropertyName)
+                                e.persistencePath.appendPropertyLookup(typedPropertyName);
                                 e.persistencePath.appendArrayLookup(e.getId());
                                 MeteorPersistence.updatePersistencePaths(e, visited);
                             }
                             else
                                 throw new Error("An element of the array '" + typedPropertyName + "' stored on the classe " + PersistenceAnnotation.className(objectClass) + " does not have an id. Total persistence path so far:" + object.persistencePath.toString());
-                        });
+                        }
                     }
                     else {
+                        console.log("updating foreignkey property direct property "+typedPropertyName);
+
                         v.persistencePath = object.persistencePath.clone();
                         v.persistencePath.appendPropertyLookup(typedPropertyName);
                         MeteorPersistence.updatePersistencePaths(v, visited);
@@ -247,11 +254,12 @@ class MeteorPersistence
                 if( !MeteorPersistence.needsLazyLoading(object, typedPropertyName) ) {
                     var v:Persistable = object[typedPropertyName];
                     if( v ) {
-                        if (Array.isArray(v)) {
-                            (<Array<Persistable>>v).forEach(function (e:Persistable) {
+                        if (PersistenceAnnotation.isArrayOrMap(objectClass, typedPropertyName))  {
+                            for( var i in v ) {
+                                var e = v[i];
                                 if (!e.persistencePath)
                                     MeteorPersistence.updatePersistencePaths(e, visited);
-                            });
+                            };
                         }
                         else if (!v.persistencePath)
                             MeteorPersistence.updatePersistencePaths(v, visited);

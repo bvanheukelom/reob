@@ -16,7 +16,7 @@ class TestPerson
     @PersistenceAnnotation.Type("TestPhoneNumber")
     phoneNumber:TestPhoneNumber;
 
-    @PersistenceAnnotation.Type("TestAddress")
+    @PersistenceAnnotation.ArrayOrMap("TestAddress")
     private addresses:Array<TestAddress> = [];
 
     @PersistenceAnnotation.Type("TestTree")
@@ -27,13 +27,16 @@ class TestPerson
     @PersistenceAnnotation.AsForeignKeys
     leaf:TestLeaf;
 
-    @PersistenceAnnotation.Collection("TestLeaf")
+    @PersistenceAnnotation.ArrayOrMap("TestLeaf")
     @PersistenceAnnotation.AsForeignKeys
     trees:Array<TestTree> = [];
 
-    @PersistenceAnnotation.Collection("TestPhoneNumber")
+    @PersistenceAnnotation.ArrayOrMap("TestPhoneNumber")
     phoneBook:{ [index:string]: TestPhoneNumber } = {};
 
+    @PersistenceAnnotation.ArrayOrMap("TestTree")
+    @PersistenceAnnotation.AsForeignKeys
+    wood:{ [index:string]: TestTree } = {};
 
     constructor(id?:string, name?:string)
     {

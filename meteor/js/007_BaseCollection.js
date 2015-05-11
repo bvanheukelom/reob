@@ -4,17 +4,19 @@ BaseCollection = (function () {
         MeteorPersistence.init();
         var collectionName = PersistenceAnnotation.getCollectionName(persistableClass);
         if (!MeteorPersistence.collections[collectionName]) {
-            // as it doesnt really matter which base collection is used in meteor-calls, we're just using the first that is created
             MeteorPersistence.collections[collectionName] = this;
         }
-        this.meteorCollection = BaseCollection.getMeteorCollection(collectionName);
+        this.meteorCollection = BaseCollection._getMeteorCollection(collectionName);
         this.theClass = persistableClass;
     }
-    BaseCollection.getMeteorCollection = function (name) {
+    BaseCollection._getMeteorCollection = function (name) {
         if (!BaseCollection.meteorCollections[name]) {
             BaseCollection.meteorCollections[name] = new Meteor.Collection(name);
         }
         return BaseCollection.meteorCollections[name];
+    };
+    BaseCollection.prototype.getMeteorCollection = function () {
+        return this.meteorCollection;
     };
     BaseCollection.prototype.getById = function (id) {
         var o = this.find({
@@ -56,21 +58,18 @@ BaseCollection = (function () {
             if (!document)
                 return undefined;
             var currentSerial = document.serial;
-            // call the update function
             var object = this.documentToObject(document);
             updateFunction(object);
             MeteorPersistence.updatePersistencePaths(object);
             var documentToSave = Serializer.toDocument(object);
             documentToSave.serial = currentSerial + 1;
-            // update the collection
             console.log("writing document ", documentToSave);
             var updatedDocumentCount = this.meteorCollection.update({
                 _id: id,
                 serial: currentSerial
             }, documentToSave);
-            // verify that that went well
             if (updatedDocumentCount == 1) {
-                return object; // we're done
+                return object;
             }
             else if (updatedDocumentCount > 1)
                 throw new Meteor.Error("verifiedUpdate should only update one document");
@@ -86,6 +85,7 @@ BaseCollection = (function () {
         var doc = Serializer.toDocument(p);
         doc._id = p.getId();
         doc.serial = 0;
+        console.log("inserting document: ", doc);
         this.meteorCollection.insert(doc);
         MeteorPersistence.updatePersistencePaths(p);
     };

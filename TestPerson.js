@@ -6,9 +6,6 @@ if (typeof __decorate !== "function") __decorate = function (decorators, target,
         case 4: return decorators.reduceRight(function(o, d) { return (d && d(target, key, o)) || o; }, desc);
     }
 };
-/**
- * Created by bert on 04.05.15.
- */
 var PersistenceAnnotation = require("./PersistenceAnnotation");
 var TestAddress = require("./TestAddress");
 var TestPerson = (function () {
@@ -16,6 +13,7 @@ var TestPerson = (function () {
         this.addresses = [];
         this.trees = [];
         this.phoneBook = {};
+        this.wood = {};
         this._id = id;
         this.name = name;
     }
@@ -32,15 +30,6 @@ var TestPerson = (function () {
     TestPerson.prototype.getName = function () {
         return this.name;
     };
-    //getAddressById(id:String):TestAddress
-    //{
-    //    for( var i=0;i<this.addresses.length; i++ )
-    //    {
-    //        var address = this.addresses[i];
-    //        if( address.getId()==id )
-    //            return address;
-    //    }
-    //}
     TestPerson.prototype.getAddresses = function () {
         return this.addresses;
     };
@@ -54,7 +43,7 @@ var TestPerson = (function () {
         PersistenceAnnotation.Type("TestPhoneNumber")
     ], TestPerson.prototype, "phoneNumber");
     __decorate([
-        PersistenceAnnotation.Type("TestAddress")
+        PersistenceAnnotation.ArrayOrMap("TestAddress")
     ], TestPerson.prototype, "addresses");
     __decorate([
         PersistenceAnnotation.Type("TestTree"),
@@ -65,12 +54,16 @@ var TestPerson = (function () {
         PersistenceAnnotation.AsForeignKeys
     ], TestPerson.prototype, "leaf");
     __decorate([
-        PersistenceAnnotation.Collection("TestLeaf"),
+        PersistenceAnnotation.ArrayOrMap("TestLeaf"),
         PersistenceAnnotation.AsForeignKeys
     ], TestPerson.prototype, "trees");
     __decorate([
-        PersistenceAnnotation.Collection("TestPhoneNumber")
+        PersistenceAnnotation.ArrayOrMap("TestPhoneNumber")
     ], TestPerson.prototype, "phoneBook");
+    __decorate([
+        PersistenceAnnotation.ArrayOrMap("TestTree"),
+        PersistenceAnnotation.AsForeignKeys
+    ], TestPerson.prototype, "wood");
     Object.defineProperty(TestPerson.prototype, "addAddress",
         __decorate([
             PersistenceAnnotation.Wrap

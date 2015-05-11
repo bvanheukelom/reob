@@ -18,6 +18,16 @@ module.exports = function (grunt) {
 				src: ["*.ts"]
 			}
 		},
+		ts: {
+			default : {
+				src: ["**/*.ts", "!node_modules/**/*.ts"],
+				options:{
+					module:"commonjs",
+					compiler:"/usr/local/bin/tsc"
+				}
+			}
+
+		},
 		jasmine_node: {
 			testing: {
 				options: {
@@ -45,7 +55,7 @@ module.exports = function (grunt) {
 	});
 
 	// NPM TASKS
-	grunt.loadNpmTasks("grunt-typescript");
+	grunt.loadNpmTasks("grunt-ts-1.5");
 	grunt.loadNpmTasks("grunt-nodemon");
 	grunt.loadNpmTasks("grunt-concurrent");
 	grunt.loadNpmTasks('grunt-contrib-copy');
@@ -54,7 +64,7 @@ module.exports = function (grunt) {
 
 	// TASK MAPPING
 	//grunt.registerTask("watch", ["typescript:compile", "watch"]);
-	grunt.registerTask("compile", ["typescript:compile", "copyCode"]);
+	grunt.registerTask("compile", ["ts", "copyCode"]);
 	grunt.registerTask("test", ["jasmine_node"]);
 
 	// CUSTOM TASKS

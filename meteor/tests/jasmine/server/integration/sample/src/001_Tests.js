@@ -7,14 +7,11 @@ describe("The persistence thing", function () {
         treeCollection = new BaseCollection(TestTree);
     });
     afterEach(function () {
-        personCollection.getAll().forEach(function (person) {
-            personCollection.remove(person);
-        });
-        treeCollection.getAll().forEach(function (tree) {
-            treeCollection.remove(tree);
-        });
+        personCollection.getMeteorCollection().remove({});
+        treeCollection.getMeteorCollection().remove({});
     });
     it("knows the difference between root entities and subdocument entities ", function () {
+        expect(PersistenceAnnotation.getCollectionName(TestPerson)).toBe("TestPerson");
         expect(PersistenceAnnotation.isRootEntity(TestPerson)).toBeTruthy();
         expect(PersistenceAnnotation.isRootEntity(TestTree)).toBeTruthy();
         expect(PersistenceAnnotation.isRootEntity(TestLeaf)).toBeFalsy();
@@ -25,6 +22,7 @@ describe("The persistence thing", function () {
     });
     it("can do basic inserts", function () {
         var t1 = new TestTree("tree1");
+        console.log("tree :", t1);
         treeCollection.insert(t1);
         expect(treeCollection.getById("tree1")).toBeDefined();
         expect(treeCollection.getById("tree1").getId()).toBe("tree1");
@@ -182,9 +180,36 @@ describe("The persistence thing", function () {
         expect(personCollection.getById("tp").leaf.getId()).toBe(t1.getLeaves()[5].getId());
         expect(personCollection.getById("tp").leaf.greenNess).toBe(t1.getLeaves()[5].greenNess);
     });
-    it("can save object in a map", function () {
+    it("can serialize object in a map", function () {
         var tp = new TestPerson("tp");
-        tp.phoneBook["1"] = new TestPhoneNumber("121212");
+        tp.phoneBook["klaus"] = new TestPhoneNumber("121212");
+        var doc = Serializer.toDocument(tp);
+        expect(doc).toBeDefined();
+        expect(doc.phoneBook).toBeDefined();
+        expect(doc.phoneBook["klaus"]).toBeDefined();
+        expect(doc.phoneBook["klaus"].number).toBeDefined();
+    });
+    it("can serialize object in a map as foreign key", function () {
+        var tp = new TestPerson("tp");
+        tp.wood["klaus"] = new TestTree("t1");
+        treeCollection.insert(tp.wood["klaus"]);
+        tp.wood["peter"] = new TestTree("t2");
+        treeCollection.insert(tp.wood["peter"]);
+        var doc = Serializer.toDocument(tp);
+        expect(doc).toBeDefined();
+        expect(doc.wood).toBeDefined();
+        expect(doc.wood["klaus"]).toBeDefined();
+        expect(doc.wood["klaus"]).toBe("TestTree[t1]");
+        expect(doc.wood["peter"]).toBe("TestTree[t2]");
+    });
+    fit("can save object in a map", function () {
+        var tp = new TestPerson("tp");
+        tp.wood["klaus"] = new TestTree("t1");
+        treeCollection.insert(tp.wood["klaus"]);
+        tp.wood["peter"] = new TestTree("t2");
+        treeCollection.insert(tp.wood["peter"]);
+        console.log("-----");
+        debugger;
         personCollection.insert(tp);
         expect(personCollection.getById("tp").phoneBook).toBeDefined();
         expect(typeof personCollection.getById("tp").phoneBook).toBe("object");
@@ -192,12 +217,4 @@ describe("The persistence thing", function () {
         expect(personCollection.getById("tp").phoneBook["1"] instanceof TestPhoneNumber).toBeTruthy();
         expect(personCollection.getById("tp").phoneBook["1"].getNumber()).toBe("121212");
     });
-    // Maps (merge with array, use .Collection("<Entry-ClassName>") annotation for both
-    // callbacks
-    // tests
-    // store smart objects in dumb objects ?
-    // foreign key arrays with undefined entries
-    // subdocument arrays with undefined entries
-    // wrapped function results
-    // test that something stored as a foreign key (both sub and root) turns undefined after the foreign root is deleted
 });

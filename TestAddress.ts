@@ -17,5 +17,4 @@ class TestAddress
         return this.street;
     }
 }
-
 export = TestAddress;

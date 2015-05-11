@@ -10,7 +10,7 @@ class TestTree
     private _id:string;
     private height:number=10;
 
-    @PersistenceAnnotation.Type("TestLeaf")
+    @PersistenceAnnotation.ArrayOrMap("TestLeaf")
     private leaves:Array<TestLeaf> = [];
 
     constructor( id?:string )
