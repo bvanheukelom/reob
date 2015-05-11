@@ -1,5 +1,5 @@
 ///<reference path="references.d.ts"/>
-var DeSerializer;
+DeSerializer;
 (function (DeSerializer) {
     var Serializer = (function () {
         function Serializer() {
@@ -101,4 +101,3 @@ var DeSerializer;
     })();
     DeSerializer.Serializer = Serializer;
 })(DeSerializer || (DeSerializer = {}));
-//# sourceMappingURL=Serializer.js.map

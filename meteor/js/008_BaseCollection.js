@@ -1,5 +1,5 @@
 ///<reference path="references.d.ts"/>
-var persistence;
+persistence;
 (function (persistence) {
     var BaseCollection = (function () {
         function BaseCollection(persistableClass) {
@@ -96,4 +96,3 @@ var persistence;
     })();
     persistence.BaseCollection = BaseCollection;
 })(persistence || (persistence = {}));
-//# sourceMappingURL=BaseCollection.js.map

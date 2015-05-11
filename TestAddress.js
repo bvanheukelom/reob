@@ -1,3 +1,7 @@
+/**
+ * Created by bert on 04.05.15.
+ */
+///<reference path="references.d.ts"/>
 if (typeof __decorate !== "function") __decorate = function (decorators, target, key, desc) {
     if (typeof Reflect === "object" && typeof Reflect.decorate === "function") return Reflect.decorate(decorators, target, key, desc);
     switch (arguments.length) {
@@ -6,7 +10,6 @@ if (typeof __decorate !== "function") __decorate = function (decorators, target,
         case 4: return decorators.reduceRight(function(o, d) { return (d && d(target, key, o)) || o; }, desc);
     }
 };
-var PersistenceAnnotation = require("./PersistenceAnnotation");
 var TestAddress = (function () {
     function TestAddress(street) {
         this.street = street;
@@ -15,9 +18,8 @@ var TestAddress = (function () {
         return this.street;
     };
     TestAddress = __decorate([
-        PersistenceAnnotation.Entity
+        persistence.PersistenceAnnotation.Entity
     ], TestAddress);
     return TestAddress;
 })();
-module.exports = TestAddress;
 //# sourceMappingURL=TestAddress.js.map

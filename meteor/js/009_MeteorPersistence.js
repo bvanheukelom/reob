@@ -1,5 +1,5 @@
 ///<reference path="references.d.ts"/>
-var persistence;
+persistence;
 (function (persistence) {
     var MeteorPersistence = (function () {
         function MeteorPersistence() {
@@ -250,4 +250,3 @@ Meteor.methods({
         }
     }
 });
-//# sourceMappingURL=MeteorPersistence.js.map

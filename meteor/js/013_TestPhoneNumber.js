@@ -1,3 +1,4 @@
+///<reference path="references.d.ts"/>
 if (typeof __decorate !== "function") __decorate = function (decorators, target, key, desc) {
     if (typeof Reflect === "object" && typeof Reflect.decorate === "function") return Reflect.decorate(decorators, target, key, desc);
     switch (arguments.length) {
@@ -6,15 +7,15 @@ if (typeof __decorate !== "function") __decorate = function (decorators, target,
         case 4: return decorators.reduceRight(function(o, d) { return (d && d(target, key, o)) || o; }, desc);
     }
 };
-TestAddress = (function () {
-    function TestAddress(street) {
-        this.street = street;
+TestPhoneNumber = (function () {
+    function TestPhoneNumber(n) {
+        this.number = n;
     }
-    TestAddress.prototype.getStreet = function () {
-        return this.street;
+    TestPhoneNumber.prototype.getNumber = function () {
+        return this.number;
     };
-    TestAddress = __decorate([
-        PersistenceAnnotation.Entity
-    ], TestAddress);
-    return TestAddress;
+    TestPhoneNumber = __decorate([
+        persistence.PersistenceAnnotation.Entity
+    ], TestPhoneNumber);
+    return TestPhoneNumber;
 })();

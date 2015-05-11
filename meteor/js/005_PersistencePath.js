@@ -1,5 +1,5 @@
 ///<reference path="references.d.ts"/>
-var persistence;
+persistence;
 (function (persistence) {
     var PersistencePath = (function () {
         function PersistencePath(className, id) {
@@ -50,4 +50,3 @@ var persistence;
     })();
     persistence.PersistencePath = PersistencePath;
 })(persistence || (persistence = {}));
-//# sourceMappingURL=PersistencePath.js.map

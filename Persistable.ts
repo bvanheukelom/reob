@@ -1,13 +1,11 @@
 /**
  * Created by bert on 04.05.15.
  */
-
-import PersistencPath = require("./PersistencePath");
+///<reference path="references.d.ts"/>
 
 interface Persistable
 {
     getId?():string;
     toDocument?():Document;
-    persistencePath?:PersistencPath;
+    persistencePath?:persistence.PersistencePath;
 }
-export = Persistable;

@@ -1,68 +1,60 @@
 ///<reference path="references.d.ts"/>
+module persistence {
+    export class PersistencePath {
+        private path:string;
 
-import Persistable = require("./Persistable");
+        constructor(className:string, id?:string) {
+            this.path = className;
+            if (id) this.path += "[" + id + "]";
+            if (!this.getId())
+                throw new Error("id is undefined");
+        }
 
-class PersistencePath
-{
-    private path:string;
+        clone():PersistencePath {
+            return new PersistencePath(this.path);
+        }
 
-    constructor( className:string, id?:string )
-    {
-        this.path = className;
-        if( id ) this.path+="["+id+"]";
-        if( !this.getId() )
-            throw new Error("id is undefined");
-    }
+        getClassName():string {
+            return this.path.split("[")[0];
+        }
 
-    clone():PersistencePath
-    {
-        return new PersistencePath(this.path);
-    }
-
-    getClassName():string
-    {
-        return this.path.split("[")[0];
-    }
-
-    getId():string
-    {
-        return this.path.split("[")[1].split("]")[0];
-    }
+        getId():string {
+            return this.path.split("[")[1].split("]")[0];
+        }
 
 
-    getSubObject( rootObject:Persistable ):Persistable
-    {
-        var o:any = rootObject;
-        if( this.path.indexOf(".")!=-1 ) {
-            this.path.split("].")[1].split(".").forEach(function (entry:string) {
-                if (o instanceof Array) {
-                    for (var j in o) {
-                        var arrayEntry:Persistable = o[j];
-                        if (arrayEntry.getId() == entry) {
-                            o = arrayEntry;
-                            break;
+        getSubObject(rootObject:Persistable):Persistable {
+            var o:any = rootObject;
+            if (this.path.indexOf(".") != -1) {
+                this.path.split("].")[1].split(".").forEach(function (entry:string) {
+                    if (o instanceof Array) {
+                        for (var j in o) {
+                            var arrayEntry:Persistable = o[j];
+                            if (arrayEntry.getId() == entry) {
+                                o = arrayEntry;
+                                break;
+                            }
                         }
                     }
-                }
-                else if (o)
-                    o = o[entry];
-            });
+                    else if (o)
+                        o = o[entry];
+                });
+            }
+            return o;
         }
-        return o;
-    }
 
-    appendArrayLookup(id:string):void
-    {
-        this.path+="."+id;
-    }
+        appendArrayLookup(id:string):void {
+            this.path += "." + id;
+        }
 
-    appendPropertyLookup( name:string ):void
-    {
-        this.path+="."+name;
-    }
-    toString(){
-        return this.path;
+        appendPropertyLookup(name:string):void {
+            this.path += "." + name;
+        }
+
+        toString() {
+            return this.path;
+        }
+
     }
 
 }
-export = PersistencePath

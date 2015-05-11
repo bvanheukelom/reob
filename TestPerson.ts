@@ -1,41 +1,33 @@
-/**
- * Created by bert on 04.05.15.
- */
-import PersistenceAnnotation = require( "./PersistenceAnnotation" );
-import TestPhoneNumber = require("./TestPhoneNumber");
-import TestTree = require("./TestTree");
-import TestLeaf = require("./TestLeaf");
-import TestAddress = require("./TestAddress");
-
-@PersistenceAnnotation.Entity(true)
+///<reference path="references.d.ts"/>
+@persistence.PersistenceAnnotation.Entity(true)
 class TestPerson
 {
     name:string;
     _id:string;
 
-    @PersistenceAnnotation.Type("TestPhoneNumber")
+    @persistence.PersistenceAnnotation.Type("TestPhoneNumber")
     phoneNumber:TestPhoneNumber;
 
-    @PersistenceAnnotation.ArrayOrMap("TestAddress")
+    @persistence.PersistenceAnnotation.ArrayOrMap("TestAddress")
     private addresses:Array<TestAddress> = [];
 
-    @PersistenceAnnotation.Type("TestTree")
-    @PersistenceAnnotation.AsForeignKeys
+    @persistence.PersistenceAnnotation.Type("TestTree")
+    @persistence.PersistenceAnnotation.AsForeignKeys
     tree:TestTree;
 
-    @PersistenceAnnotation.Type("TestLeaf")
-    @PersistenceAnnotation.AsForeignKeys
+    @persistence.PersistenceAnnotation.Type("TestLeaf")
+    @persistence.PersistenceAnnotation.AsForeignKeys
     leaf:TestLeaf;
 
-    @PersistenceAnnotation.ArrayOrMap("TestLeaf")
-    @PersistenceAnnotation.AsForeignKeys
+    @persistence.PersistenceAnnotation.ArrayOrMap("TestLeaf")
+    @persistence.PersistenceAnnotation.AsForeignKeys
     trees:Array<TestTree> = [];
 
-    @PersistenceAnnotation.ArrayOrMap("TestPhoneNumber")
+    @persistence.PersistenceAnnotation.ArrayOrMap("TestPhoneNumber")
     phoneBook:{ [index:string]: TestPhoneNumber } = {};
 
-    @PersistenceAnnotation.ArrayOrMap("TestTree")
-    @PersistenceAnnotation.AsForeignKeys
+    @persistence.PersistenceAnnotation.ArrayOrMap("TestTree")
+    @persistence.PersistenceAnnotation.AsForeignKeys
     wood:{ [index:string]: TestTree } = {};
 
     constructor(id?:string, name?:string)
@@ -49,7 +41,7 @@ class TestPerson
         return this._id;
     }
 
-    @PersistenceAnnotation.Wrap
+    @persistence.PersistenceAnnotation.Wrap
     addAddress(a:TestAddress):void
     {
         console.log("inside add address:", (a instanceof TestAddress));
@@ -88,12 +80,12 @@ class TestPerson
     }
 
 
-    @PersistenceAnnotation.Wrap
+    @persistence.PersistenceAnnotation.Wrap
     collectLeaf()
     {
         this.leaf = this.tree.getLeaves()[0];
     }
 
 }
-export = TestPerson;
+
 

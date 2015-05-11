@@ -9,6 +9,7 @@ if (typeof __decorate !== "function") __decorate = function (decorators, target,
         case 4: return decorators.reduceRight(function(o, d) { return (d && d(target, key, o)) || o; }, desc);
     }
 };
+///<reference path="references.d.ts"/>
 TestLeaf = (function () {
     function TestLeaf(id, parent) {
         this._id = id;
@@ -25,11 +26,11 @@ TestLeaf = (function () {
         return this.parent;
     };
     __decorate([
-        PersistenceAnnotation.Type("TestTree"),
-        PersistenceAnnotation.AsForeignKey
+        persistence.PersistenceAnnotation.Type("TestTree"),
+        persistence.PersistenceAnnotation.AsForeignKey
     ], TestLeaf.prototype, "parent");
     TestLeaf = __decorate([
-        PersistenceAnnotation.Entity
+        persistence.PersistenceAnnotation.Entity
     ], TestLeaf);
     return TestLeaf;
 })();

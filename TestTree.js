@@ -1,3 +1,6 @@
+/**
+ * Created by bert on 04.05.15.
+ */
 if (typeof __decorate !== "function") __decorate = function (decorators, target, key, desc) {
     if (typeof Reflect === "object" && typeof Reflect.decorate === "function") return Reflect.decorate(decorators, target, key, desc);
     switch (arguments.length) {
@@ -6,8 +9,6 @@ if (typeof __decorate !== "function") __decorate = function (decorators, target,
         case 4: return decorators.reduceRight(function(o, d) { return (d && d(target, key, o)) || o; }, desc);
     }
 };
-var PersistenceAnnotation = require("./PersistenceAnnotation");
-var TestLeaf = require("./TestLeaf");
 var TestTree = (function () {
     function TestTree(id) {
         this.height = 10;
@@ -32,16 +33,15 @@ var TestTree = (function () {
         return this.leaves;
     };
     __decorate([
-        PersistenceAnnotation.ArrayOrMap("TestLeaf")
+        persistence.PersistenceAnnotation.ArrayOrMap("TestLeaf")
     ], TestTree.prototype, "leaves");
     Object.defineProperty(TestTree.prototype, "grow",
         __decorate([
-            PersistenceAnnotation.Wrap
+            persistence.PersistenceAnnotation.Wrap
         ], TestTree.prototype, "grow", Object.getOwnPropertyDescriptor(TestTree.prototype, "grow")));
     TestTree = __decorate([
-        PersistenceAnnotation.Entity("TestTree")
+        persistence.PersistenceAnnotation.Entity("TestTree")
     ], TestTree);
     return TestTree;
 })();
-module.exports = TestTree;
 //# sourceMappingURL=TestTree.js.map

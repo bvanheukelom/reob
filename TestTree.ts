@@ -1,16 +1,14 @@
 /**
  * Created by bert on 04.05.15.
  */
-import PersistenceAnnotation = require( "./PersistenceAnnotation" );
-import TestLeaf = require("./TestLeaf");
 
-@PersistenceAnnotation.Entity("TestTree")
+@persistence.PersistenceAnnotation.Entity("TestTree")
 class TestTree
 {
     private _id:string;
     private height:number=10;
 
-    @PersistenceAnnotation.ArrayOrMap("TestLeaf")
+    @persistence.PersistenceAnnotation.ArrayOrMap("TestLeaf")
     private leaves:Array<TestLeaf> = [];
 
     constructor( id?:string )
@@ -18,7 +16,7 @@ class TestTree
         this._id = id;
     }
 
-    @PersistenceAnnotation.Wrap
+    @persistence.PersistenceAnnotation.Wrap
     grow():void
     {
         this.height++;
@@ -45,4 +43,3 @@ class TestTree
         return this.leaves;
     }
 }
-export = TestTree

@@ -2,18 +2,16 @@
  * Created by bert on 07.05.15.
  */
 
-import PersistenceAnnotation = require( "./PersistenceAnnotation" );
-import TestTree = require( "./TestTree" );
+///<reference path="references.d.ts"/>
 
-
-@PersistenceAnnotation.Entity
+@persistence.PersistenceAnnotation.Entity
 class TestLeaf
 {
     _id:string;
     greenNess:number;
 
-    @PersistenceAnnotation.Type("TestTree")
-    @PersistenceAnnotation.AsForeignKey
+    @persistence.PersistenceAnnotation.Type("TestTree")
+    @persistence.PersistenceAnnotation.AsForeignKey
     parent:TestTree;
 
     constructor(id?:string, parent?:TestTree)
@@ -38,4 +36,3 @@ class TestLeaf
         return this.parent;
     }
 }
-export = TestLeaf;

@@ -1,5 +1,5 @@
 ///<reference path="references.d.ts"/>
-var persistence;
+persistence;
 (function (persistence) {
     var PersistenceAnnotation = (function () {
         function PersistenceAnnotation() {
@@ -159,4 +159,3 @@ var persistence;
         return PersistencePrivate;
     })();
 })(persistence || (persistence = {}));
-//# sourceMappingURL=PersistenceAnnotation.js.map

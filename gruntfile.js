@@ -108,6 +108,7 @@ module.exports = function (grunt) {
 		grunt.file.delete(sharedCodeDirectory);
 		grunt.file.copy("node_modules/reflect-metadata/Reflect.js", sharedCodeDirectory+"000_Reflect.js");
 		cp("Tests.js", "meteor/tests/jasmine/server/integration/sample/src/");
+		cp("module.js");
 		cp("Persistable.js");
 		cp("Document.js");
 		cp("PersistencePath.js");

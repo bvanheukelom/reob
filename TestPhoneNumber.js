@@ -1,6 +1,4 @@
-/**
- * Created by bert on 04.05.15.
- */
+///<reference path="references.d.ts"/>
 if (typeof __decorate !== "function") __decorate = function (decorators, target, key, desc) {
     if (typeof Reflect === "object" && typeof Reflect.decorate === "function") return Reflect.decorate(decorators, target, key, desc);
     switch (arguments.length) {
@@ -9,7 +7,6 @@ if (typeof __decorate !== "function") __decorate = function (decorators, target,
         case 4: return decorators.reduceRight(function(o, d) { return (d && d(target, key, o)) || o; }, desc);
     }
 };
-var PersistenceAnnotation = require("./PersistenceAnnotation");
 var TestPhoneNumber = (function () {
     function TestPhoneNumber(n) {
         this.number = n;
@@ -18,9 +15,8 @@ var TestPhoneNumber = (function () {
         return this.number;
     };
     TestPhoneNumber = __decorate([
-        PersistenceAnnotation.Entity
+        persistence.PersistenceAnnotation.Entity
     ], TestPhoneNumber);
     return TestPhoneNumber;
 })();
-module.exports = TestPhoneNumber;
 //# sourceMappingURL=TestPhoneNumber.js.map

@@ -1,9 +1,9 @@
 /**
  * Created by bert on 04.05.15.
  */
-import PersistenceAnnotation = require( "./PersistenceAnnotation" )
+///<reference path="references.d.ts"/>
 
-@PersistenceAnnotation.Entity
+@persistence.PersistenceAnnotation.Entity
 class TestAddress
 {
     street:string;
@@ -17,4 +17,3 @@ class TestAddress
         return this.street;
     }
 }
-export = TestAddress;

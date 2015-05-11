@@ -1,12 +1,6 @@
-/**
- * Created by bert on 04.05.15.
- */
+///<reference path="references.d.ts"/>
 
-import PersistenceAnnotation = require( "./PersistenceAnnotation" );
-
-declare class TestPerson {}
-
-@PersistenceAnnotation.Entity
+@persistence.PersistenceAnnotation.Entity
 class TestPhoneNumber
 {
     number:string;
@@ -20,5 +14,3 @@ class TestPhoneNumber
         return this.number;
     }
 }
-
-export = TestPhoneNumber

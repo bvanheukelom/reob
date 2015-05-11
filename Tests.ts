@@ -1,23 +1,13 @@
 ///<reference path="references.d.ts"/>
 
-import TestPersonCollection = require("./TestPersonCollection");
-import BaseCollection = require("./BaseCollection");
-import TestTree = require("./TestTree");
-import TestPerson = require("./TestPerson");
-import TestLeaf = require("./TestLeaf");
-import TestPhoneNumber = require("./TestPhoneNumber");
-import MeteorPersistence = require("./MeteorPersistence");
-import PersistenceAnnotation = require("./PersistenceAnnotation");
-import Serializer = require("./Serializer");
-
 describe("The persistence thing", function(){
 
     var personCollection:TestPersonCollection;
-    var treeCollection:BaseCollection<TestTree>;
+    var treeCollection:persistence.BaseCollection<TestTree>;
 
     beforeAll(function(){
         personCollection = new TestPersonCollection();
-        treeCollection = new BaseCollection<TestTree>(TestTree);
+        treeCollection = new persistence.BaseCollection<TestTree>(TestTree);
     });
 
     afterEach(function(){
@@ -26,15 +16,15 @@ describe("The persistence thing", function(){
     });
 
     it( "knows the difference between root entities and subdocument entities ", function(){
-        expect( PersistenceAnnotation.getCollectionName(TestPerson) ).toBe("TestPerson");
-        expect( PersistenceAnnotation.isRootEntity(TestPerson) ).toBeTruthy();
-        expect( PersistenceAnnotation.isRootEntity(TestTree) ).toBeTruthy();
-        expect( PersistenceAnnotation.isRootEntity(TestLeaf) ).toBeFalsy();
+        expect( persistence.PersistenceAnnotation.getCollectionName(TestPerson) ).toBe("TestPerson");
+        expect( persistence.PersistenceAnnotation.isRootEntity(TestPerson) ).toBeTruthy();
+        expect( persistence.PersistenceAnnotation.isRootEntity(TestTree) ).toBeTruthy();
+        expect( persistence.PersistenceAnnotation.isRootEntity(TestLeaf) ).toBeFalsy();
     });
 
     it( "knows types ", function(){
-        expect( PersistenceAnnotation.getPropertyClass(TestPerson, "tree") ).toBe(TestTree);
-        expect( PersistenceAnnotation.getPropertyClass(TestPerson, "leaf") ).toBe(TestLeaf);
+        expect( persistence.PersistenceAnnotation.getPropertyClass(TestPerson, "tree") ).toBe(TestTree);
+        expect( persistence.PersistenceAnnotation.getPropertyClass(TestPerson, "leaf") ).toBe(TestLeaf);
     });
 
     it("can do basic inserts", function(){
@@ -56,7 +46,7 @@ describe("The persistence thing", function(){
     it("uses persistence paths on root documents", function(){
         var t1:TestTree = new TestTree("tree1");
         t1.grow();
-        MeteorPersistence.updatePersistencePaths(t1);
+        persistence.MeteorPersistence.updatePersistencePaths(t1);
         expect(t1["persistencePath"]).toBeDefined();
         expect(t1["persistencePath"].toString()).toBe("TestTree[tree1]");
     });
@@ -64,7 +54,7 @@ describe("The persistence thing", function(){
     it("uses persistence paths on sub documents", function(){
         var tp:TestPerson = new TestPerson("tp1");
         tp.phoneNumber = new TestPhoneNumber("12345");
-        MeteorPersistence.updatePersistencePaths(tp);
+        persistence.MeteorPersistence.updatePersistencePaths(tp);
         expect(tp.phoneNumber["persistencePath"]).toBeDefined();
         expect(tp.phoneNumber["persistencePath"].toString()).toBe("TestPerson[tp1].phoneNumber");
     });
@@ -72,7 +62,7 @@ describe("The persistence thing", function(){
     it("uses persistence paths on subdocuments in arrays", function(){
         var t1:TestTree = new TestTree("tree1");
         t1.grow();
-        MeteorPersistence.updatePersistencePaths(t1);
+        persistence.MeteorPersistence.updatePersistencePaths(t1);
         expect(t1.getLeaves()[0]["persistencePath"]).toBeDefined();
         expect(t1.getLeaves()[0]["persistencePath"].toString()).toBe("TestTree[tree1].leaves.leaf11");
     });
@@ -80,7 +70,7 @@ describe("The persistence thing", function(){
     it("serializes basic objects", function(){
         var t1:TestPerson = new TestPerson("tp1");
         t1.phoneNumber = new TestPhoneNumber("12345");
-        var doc = Serializer.toDocument(t1);
+        var doc = DeSerializer.Serializer.toDocument(t1);
         expect(doc._id).toBe("tp1");
         expect(doc["phoneNumber"]["number"]).toBe("12345");
     });
@@ -88,8 +78,8 @@ describe("The persistence thing", function(){
     it("deserializes basic objects", function(){
         var t1:TestPerson = new TestPerson("tp1");
         t1.phoneNumber = new TestPhoneNumber("12345");
-        var doc = Serializer.toDocument(t1);
-        var t1:TestPerson = Serializer.toObject(doc, TestPerson);
+        var doc = DeSerializer.Serializer.toDocument(t1);
+        var t1:TestPerson = DeSerializer.Serializer.toObject(doc, TestPerson);
         expect(t1.getId()).toBe("tp1");
         expect(t1.phoneNumber instanceof TestPhoneNumber).toBeTruthy();
         expect(t1.phoneNumber.getNumber()).toBe("12345");
@@ -97,8 +87,8 @@ describe("The persistence thing", function(){
     it("deserializes objects that have subobjects", function(){
         var t1:TestTree = new TestTree("t1");
         t1.grow();
-        var doc = Serializer.toDocument(t1);
-        var t1:TestTree = Serializer.toObject(doc, TestTree);
+        var doc = DeSerializer.Serializer.toDocument(t1);
+        var t1:TestTree = DeSerializer.Serializer.toObject(doc, TestTree);
         expect(t1.getId()).toBe("t1");
         expect(t1.getLeaves()[0] instanceof TestLeaf).toBeTruthy();
     });
@@ -139,14 +129,14 @@ describe("The persistence thing", function(){
         var t1:TestTree = new TestTree("tree1");
         var tp:TestPerson = new TestPerson("tp");
         tp.tree = t1;
-        MeteorPersistence.updatePersistencePaths(tp);
+        persistence.MeteorPersistence.updatePersistencePaths(tp);
     });
 
     it("can serialize objects that have foreign key properties", function(){
         var t1:TestTree = new TestTree("tree1");
         var tp:TestPerson = new TestPerson("tp");
         tp.tree = t1;
-        var doc = Serializer.toDocument(tp);
+        var doc = DeSerializer.Serializer.toDocument(tp);
         expect( doc["tree"] ).toBe("TestTree[tree1]");
     });
 
@@ -158,10 +148,10 @@ describe("The persistence thing", function(){
         tp.tree = t1;
         personCollection.insert(tp);
         var tp2 = personCollection.getById("tp");
-        expect( MeteorPersistence.needsLazyLoading(tp2, "tree") ).toBeTruthy();
+        expect( persistence.MeteorPersistence.needsLazyLoading(tp2, "tree") ).toBeTruthy();
         var trt = tp2.tree;
         expect( trt ).toBeDefined();
-        expect( MeteorPersistence.needsLazyLoading(tp2, "tree") ).toBeFalsy();
+        expect( persistence.MeteorPersistence.needsLazyLoading(tp2, "tree") ).toBeFalsy();
     });
 
     it("can save objects that have foreign key properties", function(){
@@ -224,7 +214,7 @@ describe("The persistence thing", function(){
     it("can serialize object in a map", function(){
         var tp = new TestPerson("tp");
         tp.phoneBook["klaus"] = new TestPhoneNumber("121212");
-        var doc:any = Serializer.toDocument(tp);
+        var doc:any = DeSerializer.Serializer.toDocument(tp);
 
         expect( doc ).toBeDefined();
         expect( doc.phoneBook ).toBeDefined();
@@ -238,7 +228,7 @@ describe("The persistence thing", function(){
         treeCollection.insert(tp.wood["klaus"]);
         tp.wood["peter"] = new TestTree("t2");
         treeCollection.insert(tp.wood["peter"]);
-        var doc:any = Serializer.toDocument(tp);
+        var doc:any = DeSerializer.Serializer.toDocument(tp);
         expect( doc ).toBeDefined();
         expect( doc.wood ).toBeDefined();
         expect( doc.wood["klaus"] ).toBeDefined();
@@ -246,7 +236,7 @@ describe("The persistence thing", function(){
         expect( doc.wood["peter"] ).toBe("TestTree[t2]");
     });
 
-    fit("can save object in a map", function(){
+    it("can save object in a map", function(){
         var tp = new TestPerson("tp");
         tp.wood["klaus"] = new TestTree("t1");
         treeCollection.insert(tp.wood["klaus"]);
