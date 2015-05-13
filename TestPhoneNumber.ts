@@ -24,6 +24,14 @@ module Tests {
                 callback( undefined, "Called:"+that.number );
             },300);
         }
+        callNumberFrantically( degreeOfUrgency:number, callback:( error:any, answer:string )=>void )
+        {
+            var that = this;
+            console.log("Calling a phone number : ",callback)
+            setTimeout(function(){
+                callback( undefined, "Called:"+that.number+" "+degreeOfUrgency+" time(s)" );
+            },300);
+        }
 
     }
 }

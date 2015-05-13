@@ -26,6 +26,13 @@ Tests;
                 callback(undefined, "Called:" + that.number);
             }, 300);
         };
+        TestPhoneNumber.prototype.callNumberFrantically = function (degreeOfUrgency, callback) {
+            var that = this;
+            console.log("Calling a phone number : ", callback);
+            setTimeout(function () {
+                callback(undefined, "Called:" + that.number + " " + degreeOfUrgency + " time(s)");
+            }, 300);
+        };
         Object.defineProperty(TestPhoneNumber.prototype, "callNumber",
             __decorate([
                 persistence.PersistenceAnnotation.Wrap

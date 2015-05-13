@@ -5,12 +5,14 @@ module persistence {
     {
         private meteorCollection:any;
         private theClass:TypeClass<T>;
+        private name:string;
         private static meteorCollections:{[index:string]:any} = { };
 
         constructor( persistableClass:TypeClass<T> )
         {
             persistence.MeteorPersistence.init();
             var collectionName = persistence.PersistenceAnnotation.getCollectionName(persistableClass);
+            this.name = collectionName;
             if( !MeteorPersistence.collections[collectionName] ) {
                 // as it doesnt really matter which base collection is used in meteor-calls, we're just using the first that is created
                 MeteorPersistence.collections[collectionName] = this;
@@ -27,6 +29,12 @@ module persistence {
             }
             return BaseCollection.meteorCollections[name];
         }
+
+        getName():string
+        {
+            return this.name;
+        }
+
         getMeteorCollection( ):any
         {
             return this.meteorCollection;
@@ -76,6 +84,8 @@ module persistence {
 
         update(id:string, updateFunction:(o:T)=>void)
         {
+            if( !id )
+                throw new Error("Id missing");
             for (var i = 0; i < 10; i++)
             {
                 var document:Document = this.meteorCollection.findOne({
@@ -115,22 +125,51 @@ module persistence {
                     // we need to do this again
                 }
             }
-            return undefined;
+            throw new Error("update gave up after 10 attempts to update the object ");
         }
 
-        insert( p:T ):void
+        protected insert( p:T, cb?:(error:any, insertedObject?:T)=>void ):void
         {
-            if( !p.getId || !p.getId() )
-                throw new Error("Object has no Id");
-            var doc : Document = DeSerializer.Serializer.toDocument( p );
-            doc._id = p.getId();
-            doc.serial = 0;
-            console.log( "inserting document: ", doc)
-            this.meteorCollection.insert(doc);
-            console.log( "inserting object: ", p, (<any>p).wood );
-            MeteorPersistence.updatePersistencePaths(p);
-            console.log( "!!!!" );
+            if( Meteor.isServer )
+            {
+                var doc : Document = DeSerializer.Serializer.toDocument( p );
+                if( p.getId() )
+                    doc._id = p.getId();
+                doc.serial = 0;
+                console.log( "inserting document: ", doc)
+                var that = this;
+                this.meteorCollection.insert(doc, function(error, resultId:string){
+                    if( cb )
+                    {
+                        var result = that.getById(resultId);
+                        MeteorPersistence.updatePersistencePaths(result);
+                        if( !error )
+                            cb(undefined, result);
+                        else
+                            cb( error );
+                    }
+                });
+                console.log( "inserting object: ", p, (<any>p).wood );
+            }
+            else
+                throw new Error("Insert can not be called on the client. Wrap it into a meteor method.");
+        }
+
+        removeAll( cb:(error,result)=>void){
+            if( !this.name )
+                throw new Error("Collection has no name");
+            console.log("removing all of collection "+this.name);
+            Meteor.call("removeAll", this.name, cb);
         }
 
     }
+}
+
+if( Meteor.isServer ) {
+    Meteor.methods({
+        removeAll: function (collectionName:string) {
+            check(collectionName, String);
+            persistence.MeteorPersistence.collections[collectionName].getMeteorCollection().remove({});
+        }
+    });
 }

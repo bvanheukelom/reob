@@ -28,8 +28,11 @@ persistence;
             if (typeof s != "string")
                 throw new Error("Path needs to be a string");
             var persistencePath = new persistence.PersistencePath(s);
-            var propertyClassName = persistencePath.getClassName();
-            var collection = propertyClassName ? MeteorPersistence.collections[propertyClassName] : undefined;
+            var typeClass = persistence.PersistenceAnnotation.getEntityClassByName(persistencePath.getClassName());
+            if (!typeClass || typeof typeClass != "function")
+                throw new Error("Could not load path. No class found for class name :" + persistencePath.getClassName() + ". Total path:" + s);
+            var collectionName = persistence.PersistenceAnnotation.getCollectionName(typeClass);
+            var collection = collectionName ? MeteorPersistence.collections[collectionName] : undefined;
             if (collection) {
                 var rootValue = collection.getById(persistencePath.getId());
                 var newValue = rootValue ? persistencePath.getSubObject(rootValue) : undefined;
@@ -38,6 +41,11 @@ persistence;
             }
             else
                 throw new Error("No collection found for lazy loading foreign key:" + s);
+        };
+        MeteorPersistence.withCallback = function (p, c) {
+            MeteorPersistence.nextCallback = c;
+            p();
+            MeteorPersistence.nextCallback = undefined;
         };
         MeteorPersistence.wrapClass = function (c) {
             var className = persistence.PersistenceAnnotation.className(c);
@@ -54,23 +62,21 @@ persistence;
                         else
                             args[i] = DeSerializer.Serializer.toDocument(arguments[i]);
                     }
-                    if (!MeteorPersistence.wrappedCallInProgress && this.persistencePath) {
-                        console.log("Meteor call " + arguments.callee.functionName + " with arguments ", arguments, " path:", this.persistencePath);
+                    if (this.persistencePath) {
+                        console.log("Meteor call " + arguments.callee.functionName + " with arguments ", arguments, " path:", this.persistencePath + " registered callback:" + MeteorPersistence.nextCallback);
                         var typeNames = [];
                         for (var ai = 0; ai < args.length; ai++) {
                             typeNames.push(MeteorPersistence.objectsClassName(args[ai]));
                         }
-                        Meteor.call("wrappedCall", this.persistencePath.toString(), arguments.callee.functionName, args, typeNames, !!callback, function (error, result) {
-                            if (callback) {
-                                callback(error, result);
-                            }
+                        Meteor.call("wrappedCall", this.persistencePath.toString(), arguments.callee.functionName, args, typeNames, !!callback, callback || MeteorPersistence.nextCallback);
+                    }
+                    if (callback) {
+                        args.push(function (err, result) {
                         });
                     }
-                    if (!callback) {
-                        var result = arguments.callee.originalFunction.apply(this, arguments);
-                        MeteorPersistence.updatePersistencePaths(this);
-                        return result;
-                    }
+                    var result = arguments.callee.originalFunction.apply(this, args);
+                    MeteorPersistence.updatePersistencePaths(this);
+                    return result;
                 };
                 f.originalFunction = originalFunction;
                 f.functionName = functionName;
@@ -161,7 +167,7 @@ persistence;
             if (persistence.PersistenceAnnotation.isRootEntity(objectClass)) {
                 if (!object.persistencePath) {
                     if (object.getId && object.getId())
-                        object.persistencePath = new persistence.PersistencePath(persistence.PersistenceAnnotation.className(objectClass), object.getId());
+                        object.persistencePath = new persistence.PersistencePath(persistence.PersistenceAnnotation.getCollectionName(objectClass), object.getId());
                     else
                         throw new Error("Can not set the persistence path of root collection object without id. Class:" + persistence.PersistenceAnnotation.className(objectClass));
                 }

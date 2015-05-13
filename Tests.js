@@ -2,16 +2,35 @@
 describe("The persistence thing", function () {
     var personCollection;
     var treeCollection;
+    return;
     beforeAll(function () {
         personCollection = new TestPersonCollection();
         treeCollection = new persistence.BaseCollection(Tests.TestTree);
-        personCollection.getMeteorCollection().remove({});
-        treeCollection.getMeteorCollection().remove({});
     });
-    beforeEach(function () {
+    beforeEach(function (done) {
         console.log("------------------- new test");
-        personCollection.getMeteorCollection().remove({});
-        treeCollection.getMeteorCollection().remove({});
+        treeCollection.removeAll(function (err) {
+            if (!err) {
+                treeCollection.removeAll(function (error) {
+                    if (!error)
+                        done();
+                    else
+                        fail(error);
+                });
+            }
+            else
+                fail(err);
+        });
+    });
+    it("knows the difference between root entities and subdocument entities ", function () {
+        expect(persistence.PersistenceAnnotation.getCollectionName(Tests.TestPerson)).toBe("TestPerson");
+        expect(persistence.PersistenceAnnotation.isRootEntity(Tests.TestPerson)).toBeTruthy();
+        expect(persistence.PersistenceAnnotation.isRootEntity(Tests.TestTree)).toBeTruthy();
+        expect(persistence.PersistenceAnnotation.isRootEntity(Tests.TestLeaf)).toBeFalsy();
+    });
+    it("knows the name of collections", function () {
+        expect(personCollection.getName()).toBe("TestPerson");
+        expect(treeCollection.getName()).toBe("TheTreeCollection");
     });
     it("knows the difference between root entities and subdocument entities ", function () {
         expect(persistence.PersistenceAnnotation.getCollectionName(Tests.TestPerson)).toBe("TestPerson");
@@ -32,7 +51,7 @@ describe("The persistence thing", function () {
     });
     it("uses persistence paths to return undefined for non existent subobjects ", function () {
         var t1 = new Tests.TestTree("tree1");
-        var pp = new persistence.PersistencePath("TestTree", "tree1");
+        var pp = new persistence.PersistencePath("TheTreeCollection", "tree1");
         pp.appendArrayOrMapLookup("leaves", "nonexistentLeaf");
         expect(pp.getSubObject(t1)).toBeUndefined();
     });
@@ -48,7 +67,7 @@ describe("The persistence thing", function () {
         t1.grow();
         persistence.MeteorPersistence.updatePersistencePaths(t1);
         expect(t1["persistencePath"]).toBeDefined();
-        expect(t1["persistencePath"].toString()).toBe("TestTree[tree1]");
+        expect(t1["persistencePath"].toString()).toBe("TheTreeCollection[tree1]");
     });
     it("uses persistence paths on sub documents", function () {
         var tp = new Tests.TestPerson("tp1");
@@ -62,7 +81,7 @@ describe("The persistence thing", function () {
         t1.grow();
         persistence.MeteorPersistence.updatePersistencePaths(t1);
         expect(t1.getLeaves()[0]["persistencePath"]).toBeDefined();
-        expect(t1.getLeaves()[0]["persistencePath"].toString()).toBe("TestTree[tree1].leaves|leaf11");
+        expect(t1.getLeaves()[0]["persistencePath"].toString()).toBe("TheTreeCollection[tree1].leaves|leaf11");
     });
     it("serializes basic objects", function () {
         var t1 = new Tests.TestPerson("tp1");
@@ -109,7 +128,7 @@ describe("The persistence thing", function () {
         expect(treeCollection.getById("tree1")).toBeDefined();
         expect(treeCollection.getById("tree1").getLeaves()[0] instanceof Tests.TestLeaf).toBeTruthy();
     });
-    it("can call wrapped functions ", function () {
+    fit("can call wrapped functions ", function () {
         var t1 = new Tests.TestTree("tree1");
         treeCollection.insert(t1);
         t1.grow();
@@ -127,7 +146,7 @@ describe("The persistence thing", function () {
         var tp = new Tests.TestPerson("tp");
         tp.tree = t1;
         var doc = DeSerializer.Serializer.toDocument(tp);
-        expect(doc["tree"]).toBe("TestTree[tree1]");
+        expect(doc["tree"]).toBe("TheTreeCollection[tree1]");
     });
     it("lazy loads objects", function () {
         var t1 = new Tests.TestTree("tree1");
@@ -208,8 +227,8 @@ describe("The persistence thing", function () {
         expect(doc).toBeDefined();
         expect(doc.wood).toBeDefined();
         expect(doc.wood["klaus"]).toBeDefined();
-        expect(doc.wood["klaus"]).toBe("TestTree[t1]");
-        expect(doc.wood["peter"]).toBe("TestTree[t2]");
+        expect(doc.wood["klaus"]).toBe("TheTreeCollection[t1]");
+        expect(doc.wood["peter"]).toBe("TheTreeCollection[t2]");
     });
     it("can save foreign keys in a map", function () {
         var tp = new Tests.TestPerson("tp");
@@ -248,16 +267,9 @@ describe("The persistence thing", function () {
         personCollection.insert(dad);
         kid.family["mommy"] = mom;
         kid.family["daddy"] = dad;
-        mom.family["thelittleone"] = kid;
-        mom.family["him"] = dad;
         personCollection.insert(kid);
-        personCollection.update("mom", function (m) {
-            m.family["thelittleone"] = kid;
-            m.family["him"] = dad;
-        });
         expect(personCollection.getById("kid").family["mommy"].getId()).toBe("mom");
         expect(personCollection.getById("kid").family["daddy"].getId()).toBe("dad");
-        expect(personCollection.getById("mom").family["him"].getId()).toBe("dad");
     });
     it("can return values from a wrapped function", function () {
         var kid = new Tests.TestPerson("kid");
@@ -287,14 +299,50 @@ describe("The persistence thing", function () {
         personCollection.insert(kid);
         kid.collectLeaf();
         expect(personCollection.getById("kid").leaf).toBeDefined();
-        treeCollection.update("t1", function (t) {
-            t.leaves = [];
-        });
+        t1.wither();
         expect(personCollection.getById("kid").leaf).toBeUndefined();
     });
     xit("can store a subdocument by id. The subducoment is from a different collection. It is stored in a dictionary on a key that is something else than it's id.", function () {
     });
-    xit("calls registered callbacks", function () {
+    it("calls registered callbacks that receive results directly from the server ", function (done) {
+        var t1 = new Tests.TestTree("t1");
+        treeCollection.insert(t1);
+        persistence.MeteorPersistence.withCallback(function () {
+            var s = t1.grow();
+            expect(s).toBe("grown on the client");
+        }, function callback(error, result) {
+            expect(result).toBe("grown on the server");
+            done();
+        });
+    });
+    it("sets ids on the server", function (done) {
+        var t1 = new Tests.TestPerson();
+        t1.name = "Klaus";
+        personCollection.insert(t1, function (err, p) {
+            if (err)
+                fail();
+            else {
+                expect(p).toBeDefined();
+                setTimeout(function () {
+                    expect(personCollection.getById(p.getId()).name).toBe("Klaus");
+                    expect(p.name).toBe("Klaus");
+                    done();
+                }, 1000);
+            }
+        });
+    });
+    it("cannot do two wrapped calls in 'withCallback'", function (done) {
+        var t1 = new Tests.TestTree("t1");
+        treeCollection.insert(t1);
+        var count = 0;
+        persistence.MeteorPersistence.withCallback(function () {
+            var s = t1.grow();
+            var s = t1.grow();
+        }, function callback(result, error) {
+            count++;
+            if (count == 2)
+                done();
+        });
     });
     it("supports wrapped calls whose last parameter is a callback function.", function (done) {
         var t1 = new Tests.TestPerson("p1");
@@ -306,11 +354,21 @@ describe("The persistence thing", function () {
             done();
         });
     });
+    it("supports wrapped calls whose last parameter is a callback function and has more parameters.", function (done) {
+        var t1 = new Tests.TestPerson("p1");
+        t1.phoneBook["mike"] = new Tests.TestPhoneNumber("12345");
+        personCollection.insert(t1);
+        var t2 = personCollection.getById("p1");
+        t2.phoneBook["mike"].callNumberFrantically(5, function (err, r) {
+            expect(r).toBe("Called:12345 5 time(s)");
+            done();
+        });
+    });
     xit("offers a way to annotate wrapped calls as 'performed on the server'.", function () {
     });
-    xit("Allows to pass objects to wrapped functions'.", function () {
-    });
-    xit("Allows to pass entities to wrapped functions'.", function () {
+    xit("can insert Ids on the server.", function () {
+        var t1 = new Tests.TestPerson();
+        personCollection.insert(t1);
     });
 });
 //# sourceMappingURL=Tests.js.map
