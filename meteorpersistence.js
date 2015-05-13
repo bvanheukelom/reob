@@ -46,17 +46,31 @@ var persistence;
                 var originalFunction = c.prototype[functionName];
                 console.log("Wrapping transactional functions for class " + className + " function: " + functionName);
                 var f = function meteorCallWrapper() {
+                    var args = [];
+                    var callback;
+                    for (var i in arguments) {
+                        if (i == arguments.length - 1 && typeof arguments[i] == "function")
+                            callback = arguments[i];
+                        else
+                            args[i] = DeSerializer.Serializer.toDocument(arguments[i]);
+                    }
                     if (!MeteorPersistence.wrappedCallInProgress && this.persistencePath) {
                         console.log("Meteor call " + arguments.callee.functionName + " with arguments ", arguments, " path:", this.persistencePath);
                         var typeNames = [];
-                        for (var ai = 0; ai < arguments.length; ai++) {
-                            typeNames.push(MeteorPersistence.objectsClassName(arguments[ai]));
+                        for (var ai = 0; ai < args.length; ai++) {
+                            typeNames.push(MeteorPersistence.objectsClassName(args[ai]));
                         }
-                        Meteor.call("wrappedCall", this.persistencePath.toString(), arguments.callee.functionName, arguments, typeNames);
+                        Meteor.call("wrappedCall", this.persistencePath.toString(), arguments.callee.functionName, args, typeNames, !!callback, function (error, result) {
+                            if (callback) {
+                                callback(error, result);
+                            }
+                        });
                     }
-                    var result = arguments.callee.originalFunction.apply(this, arguments);
-                    MeteorPersistence.updatePersistencePaths(this);
-                    return result;
+                    if (!callback) {
+                        var result = arguments.callee.originalFunction.apply(this, arguments);
+                        MeteorPersistence.updatePersistencePaths(this);
+                        return result;
+                    }
                 };
                 f.originalFunction = originalFunction;
                 f.functionName = functionName;
@@ -64,7 +78,6 @@ var persistence;
             });
             persistence.PersistenceAnnotation.getTypedPropertyNames(c).forEach(function (propertyName) {
                 if (persistence.PersistenceAnnotation.isStoredAsForeignKeys(c, propertyName)) {
-                    console.log("On Class " + className + ": creating lazy loader for " + propertyName);
                     var propertyDescriptor = Object.getOwnPropertyDescriptor(c.prototype, propertyName);
                     Object.defineProperty(c.prototype, propertyName, {
                         get: function () {
@@ -79,7 +92,6 @@ var persistence;
                                     this[propertyName] = v;
                                 }
                                 else {
-                                    console.log("Lazy loading array/map " + className + "." + propertyName);
                                     for (var i in v) {
                                         var ele = v[i];
                                         v[i] = MeteorPersistence.loadPath(ele);
@@ -89,7 +101,7 @@ var persistence;
                             return v;
                         },
                         set: function (v) {
-                            console.log("Monkey patched setter " + propertyName + " v:" + v);
+                            //console.log("Monkey patched setter " + propertyName + " v:" + v);
                             if (propertyDescriptor && propertyDescriptor.set)
                                 propertyDescriptor.set.apply(this, arguments);
                             else {
@@ -137,7 +149,6 @@ var persistence;
                 visited = [];
             if (visited.indexOf(object) != -1)
                 return;
-            console.log("updating persistence path for ", object);
             if (!Object.getOwnPropertyDescriptor(object, "persistencePath")) {
                 Object.defineProperty(object, "persistencePath", {
                     configurable: false,
@@ -166,11 +177,9 @@ var persistence;
                         if (persistence.PersistenceAnnotation.isArrayOrMap(objectClass, typedPropertyName)) {
                             for (var i in v) {
                                 var e = v[i];
-                                console.log("updating persistnece path for isArrayOrMap " + typedPropertyName + "  key:" + i + " value:", e, "object: ", object);
                                 if (e.getId && e.getId()) {
                                     e.persistencePath = object.persistencePath.clone();
-                                    e.persistencePath.appendPropertyLookup(typedPropertyName);
-                                    e.persistencePath.appendArrayLookup(e.getId());
+                                    e.persistencePath.appendArrayOrMapLookup(typedPropertyName, e.getId());
                                     MeteorPersistence.updatePersistencePaths(e, visited);
                                 }
                                 else
@@ -185,7 +194,6 @@ var persistence;
                     }
                 }
                 else {
-                    console.log("foreign key " + typedPropertyName);
                     if (!MeteorPersistence.needsLazyLoading(object, typedPropertyName)) {
                         var v = object[typedPropertyName];
                         if (v) {
@@ -193,11 +201,9 @@ var persistence;
                                 for (var i in v) {
                                     var e = v[i];
                                     if (!e.persistencePath) {
-                                        console.log("non- foreign key array/map entry key:" + i + " value:" + e);
                                         MeteorPersistence.updatePersistencePaths(e, visited);
                                     }
                                 }
-                                ;
                             }
                             else if (!v.persistencePath)
                                 MeteorPersistence.updatePersistencePaths(v, visited);
@@ -215,7 +221,7 @@ var persistence;
     persistence.MeteorPersistence = MeteorPersistence;
 })(persistence || (persistence = {}));
 Meteor.methods({
-    wrappedCall: function (persistencePathString, functionName, args, typeNames) {
+    wrappedCall: function (persistencePathString, functionName, args, typeNames, appendCallback) {
         // TODO authentication
         console.log("meteor method: wrappedCall arguments: ", arguments, typeNames);
         check(persistencePathString, String);
@@ -224,7 +230,6 @@ Meteor.methods({
         check(typeNames, Array);
         if (args.length != typeNames.length)
             throw new Error("array length does not match");
-        debugger;
         var persistencePath = new persistence.PersistencePath(persistencePathString);
         for (var ai = 0; ai < args.length; ai++) {
             if (persistence.PersistenceAnnotation.getEntityClassByName(typeNames[ai])) {
@@ -235,16 +240,27 @@ Meteor.methods({
         var collection = persistence.MeteorPersistence.collections[persistencePath.getClassName()];
         try {
             persistence.MeteorPersistence.wrappedCallInProgress = true;
-            collection.update(persistencePath.getId(), function (o) {
+            return collection.update(persistencePath.getId(), function (o) {
                 var subDocument = persistencePath.getSubObject(o);
-                if (subDocument) {
-                    var fkt = subDocument[functionName];
-                    if (fkt && fkt.originalFunction)
-                        fkt = fkt.originalFunction;
-                    console.log("function: " + fkt);
-                    console.log("type of: ", typeof o, "typeof ");
-                    if (fkt)
-                        return fkt.apply(o, args);
+                var fkt = subDocument ? subDocument[functionName] : undefined;
+                if (fkt && fkt.originalFunction)
+                    fkt = fkt.originalFunction;
+                if (subDocument && fkt) {
+                    console.log("Meteor method call. Function name:" + functionName + " function: ", fkt, " appendCallback: ", appendCallback);
+                    if (appendCallback) {
+                        console.log(" Meteor method call. Calling function with callback on ", subDocument);
+                        var syncFunction = Meteor.wrapAsync(function (cb) {
+                            args.push(cb);
+                            fkt.apply(subDocument, args);
+                        });
+                        var result = syncFunction();
+                        console.log("received async result from function ('" + functionName + "') invocation :" + result);
+                        return result;
+                    }
+                    else {
+                        console.log("Meteor method call. Calling function without callback");
+                        return fkt.apply(subDocument, args);
+                    }
                 }
                 else
                     console.log("did not find subdocument");

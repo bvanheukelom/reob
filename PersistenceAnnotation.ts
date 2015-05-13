@@ -92,6 +92,9 @@ module persistence
         static isRootEntity(f:TypeClass<any>):boolean {
             return !!PersistenceAnnotation.getCollectionName(f);
         }
+        static isEntity(f:TypeClass<any>):boolean {
+            return !!PersistencePrivate.entityClasses[PersistenceAnnotation.className(f)];
+        }
 
         // ---- Collection ----
 

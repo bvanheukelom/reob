@@ -14,5 +14,16 @@ module Tests {
         getId():string {
             return this.number;
         }
+
+        @persistence.PersistenceAnnotation.Wrap
+        callNumber( callback:( error:any, answer:string )=>void )
+        {
+            var that = this;
+            console.log("Calling a phone number : ",callback)
+            setTimeout(function(){
+                callback( undefined, "Called:"+that.number );
+            },300);
+        }
+
     }
 }

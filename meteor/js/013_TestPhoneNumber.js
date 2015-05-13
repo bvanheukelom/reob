@@ -19,6 +19,17 @@ Tests;
         TestPhoneNumber.prototype.getId = function () {
             return this.number;
         };
+        TestPhoneNumber.prototype.callNumber = function (callback) {
+            var that = this;
+            console.log("Calling a phone number : ", callback);
+            setTimeout(function () {
+                callback(undefined, "Called:" + that.number);
+            }, 300);
+        };
+        Object.defineProperty(TestPhoneNumber.prototype, "callNumber",
+            __decorate([
+                persistence.PersistenceAnnotation.Wrap
+            ], TestPhoneNumber.prototype, "callNumber", Object.getOwnPropertyDescriptor(TestPhoneNumber.prototype, "callNumber")));
         TestPhoneNumber = __decorate([
             persistence.PersistenceAnnotation.Entity
         ], TestPhoneNumber);

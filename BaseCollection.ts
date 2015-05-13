@@ -89,7 +89,7 @@ module persistence {
 
                 // call the update function
                 var object:T = this.documentToObject(document);
-                updateFunction(object);
+                var result = updateFunction(object);
 
                 MeteorPersistence.updatePersistencePaths(object);
 
@@ -97,7 +97,7 @@ module persistence {
                 documentToSave.serial = currentSerial+1;
 
                 // update the collection
-                console.log("writing document ", documentToSave);
+                //console.log("writing document ", documentToSave);
                 var updatedDocumentCount = this.meteorCollection.update({
                     _id:id,
                     serial:currentSerial
@@ -105,7 +105,7 @@ module persistence {
 
                 // verify that that went well
                 if (updatedDocumentCount == 1){
-                    return object; // we're done
+                    return result; // we're done
                 }
                 else if (updatedDocumentCount > 1)
                     throw new Meteor.Error( "verifiedUpdate should only update one document");

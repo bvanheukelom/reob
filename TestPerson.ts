@@ -26,7 +26,7 @@ module Tests
         trees:Array<Tests.TestTree> = [];
 
         @persistence.PersistenceAnnotation.ArrayOrMap("TestPhoneNumber")
-        phoneBook:{ [index:string]: TestPhoneNumber } = {};
+        phoneBook:{ [index:string]: Tests.TestPhoneNumber } = {};
 
         @persistence.PersistenceAnnotation.ArrayOrMap("TestTree")
         @persistence.PersistenceAnnotation.AsForeignKeys

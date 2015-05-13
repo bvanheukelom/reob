@@ -27,28 +27,33 @@ module persistence {
             var o:any = rootObject;
             if (this.path.indexOf(".") != -1) {
                 this.path.split("].")[1].split(".").forEach(function (entry:string) {
-                    var foundEntry:boolean = false;
-                    if (o instanceof Array) {
-                        for (var j in o) {
-                            var arrayEntry:Persistable = o[j];
-                            if (arrayEntry.getId() == entry) {
-                                o = arrayEntry;
-                                foundEntry=true;
-                                break;
+                    if( o ) {
+                        if (entry.indexOf("|") != -1) {
+                            var p = entry.split("|");
+                            var arrayOrMap = o[p[0]];
+                            var id = p[1];
+                            var foundEntry:boolean = false;
+                            for (var j in arrayOrMap) {
+                                var arrayEntry:Persistable = arrayOrMap[j];
+                                if (arrayEntry.getId() == id) {
+                                    o = arrayEntry;
+                                    foundEntry = true;
+                                    break;
+                                }
                             }
+                            if (!foundEntry)
+                                o = undefined;
                         }
-                        if(!foundEntry)
-                            return undefined;
+                        else
+                            o = o[entry];
                     }
-                    else if (o)
-                        o = o[entry];
                 });
             }
             return o;
         }
 
-        appendArrayLookup(id:string):void {
-            this.path += "." + id;
+        appendArrayOrMapLookup(name:string, id:string):void {
+            this.path += "." + name + "|" + id;
         }
 
         appendPropertyLookup(name:string):void {

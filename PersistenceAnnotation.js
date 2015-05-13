@@ -69,6 +69,9 @@ var persistence;
         PersistenceAnnotation.isRootEntity = function (f) {
             return !!PersistenceAnnotation.getCollectionName(f);
         };
+        PersistenceAnnotation.isEntity = function (f) {
+            return !!PersistencePrivate.entityClasses[PersistenceAnnotation.className(f)];
+        };
         PersistenceAnnotation.ArrayOrMap = function (typeClassName) {
             return function (targetPrototypeObject, propertyName) {
                 console.log("  " + propertyName + " as collection of " + typeClassName);

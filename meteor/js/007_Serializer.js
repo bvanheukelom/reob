@@ -18,24 +18,21 @@ DeSerializer;
             }
             for (var propertyName in doc) {
                 var value = doc[propertyName];
-                if (persistence.PersistenceAnnotation.isArrayOrMap(f, propertyName)) {
-                    var result = Array.isArray(value) ? [] : {};
-                    var entryClass = persistence.PersistenceAnnotation.getPropertyClass(f, propertyName);
-                    var arr = value;
-                    for (var i in value) {
-                        var entry = value[i];
-                        if (entryClass && !persistence.PersistenceAnnotation.isStoredAsForeignKeys(f, propertyName))
-                            entry = Serializer.toObject(entry, entryClass);
-                        result[i] = entry;
+                var propertyClass = persistence.PersistenceAnnotation.getPropertyClass(f, propertyName);
+                var isStoredAsKeys = persistence.PersistenceAnnotation.isStoredAsForeignKeys(f, propertyName);
+                if (propertyClass && !isStoredAsKeys) {
+                    if (persistence.PersistenceAnnotation.isArrayOrMap(f, propertyName)) {
+                        var result = Array.isArray(value) ? [] : {};
+                        for (var i in value) {
+                            var entry = value[i];
+                            entry = Serializer.toObject(entry, propertyClass);
+                            result[i] = entry;
+                        }
+                        o[propertyName] = result;
                     }
-                    o[propertyName] = result;
-                }
-                else if (typeof value == 'object') {
-                    var propertyClass = persistence.PersistenceAnnotation.getPropertyClass(f, propertyName);
-                    if (propertyClass)
+                    else {
                         o[propertyName] = DeSerializer.Serializer.toObject(value, propertyClass);
-                    else
-                        o[propertyName] = value;
+                    }
                 }
                 else {
                     o[propertyName] = value;
@@ -44,25 +41,30 @@ DeSerializer;
             return o;
         };
         Serializer.toDocument = function (object, rootClass, parentObject, propertyNameOnParentObject) {
-            var result;
-            var parentClass = persistence.PersistenceAnnotation.getClass(parentObject);
-            if (parentObject && propertyNameOnParentObject && persistence.PersistenceAnnotation.isStoredAsForeignKeys(parentClass, propertyNameOnParentObject)) {
-                if (object.persistencePath)
-                    return object.persistencePath.toString();
-                else {
-                    var objectClass = persistence.PersistenceAnnotation.getClass(object);
-                    if (persistence.PersistenceAnnotation.isRootEntity(objectClass) && object.getId()) {
-                        return new persistence.PersistencePath(persistence.PersistenceAnnotation.className(objectClass), object.getId()).toString();
-                    }
+            if (typeof object == "string" || typeof object == "number" || typeof object == "date" || typeof object == "boolean")
+                return object;
+            else {
+                var result;
+                var parentClass = persistence.PersistenceAnnotation.getClass(parentObject);
+                if (parentObject && propertyNameOnParentObject && persistence.PersistenceAnnotation.isStoredAsForeignKeys(parentClass, propertyNameOnParentObject)) {
+                    if (object.persistencePath)
+                        return object.persistencePath.toString();
                     else {
-                        throw new Error("Can not serialize '" + propertyNameOnParentObject + "' on class " + persistence.PersistenceAnnotation.className(parentClass) + ". Objects that should be stored as foreign keys need to be persisted beforehand or be the root entity of a collection and have an id. Value of '" + propertyNameOnParentObject + "':" + object);
+                        var objectClass = persistence.PersistenceAnnotation.getClass(object);
+                        if (persistence.PersistenceAnnotation.isRootEntity(objectClass) && object.getId()) {
+                            result = new persistence.PersistencePath(persistence.PersistenceAnnotation.className(objectClass), object.getId()).toString();
+                        }
+                        else {
+                            throw new Error("Can not serialize '" + propertyNameOnParentObject + "' on class " + persistence.PersistenceAnnotation.className(parentClass) + ". Objects that should be stored as foreign keys need to be persisted beforehand or be the root entity of a collection and have an id. Value of '" + propertyNameOnParentObject + "':" + object);
+                        }
                     }
                 }
+                else if (typeof object.toDocument == "function")
+                    result = object.toDocument();
+                else {
+                    result = Serializer.createDocument(object, rootClass ? rootClass : persistence.PersistenceAnnotation.getClass(object), parentObject, propertyNameOnParentObject);
+                }
             }
-            else if (typeof object.toDocument == "function")
-                result = object.toDocument();
-            else
-                result = Serializer.createDocument(object, rootClass ? rootClass : persistence.PersistenceAnnotation.getClass(object), parentObject, propertyNameOnParentObject);
             return result;
         };
         Serializer.createDocument = function (object, rootClass, parentObject, propertyNameOnParentObject) {

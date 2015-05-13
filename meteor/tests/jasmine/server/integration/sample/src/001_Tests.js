@@ -5,8 +5,11 @@ describe("The persistence thing", function () {
     beforeAll(function () {
         personCollection = new TestPersonCollection();
         treeCollection = new persistence.BaseCollection(Tests.TestTree);
+        personCollection.getMeteorCollection().remove({});
+        treeCollection.getMeteorCollection().remove({});
     });
-    afterEach(function () {
+    beforeEach(function () {
+        console.log("------------------- new test");
         personCollection.getMeteorCollection().remove({});
         treeCollection.getMeteorCollection().remove({});
     });
@@ -26,6 +29,12 @@ describe("The persistence thing", function () {
         treeCollection.insert(t1);
         expect(treeCollection.getById("tree1")).toBeDefined();
         expect(treeCollection.getById("tree1").getId()).toBe("tree1");
+    });
+    it("uses persistence paths to return undefined for non existent subobjects ", function () {
+        var t1 = new Tests.TestTree("tree1");
+        var pp = new persistence.PersistencePath("TestTree", "tree1");
+        pp.appendArrayOrMapLookup("leaves", "nonexistentLeaf");
+        expect(pp.getSubObject(t1)).toBeUndefined();
     });
     it("can do basic removes", function () {
         var t1 = new Tests.TestTree("tree1");
@@ -53,7 +62,7 @@ describe("The persistence thing", function () {
         t1.grow();
         persistence.MeteorPersistence.updatePersistencePaths(t1);
         expect(t1.getLeaves()[0]["persistencePath"]).toBeDefined();
-        expect(t1.getLeaves()[0]["persistencePath"].toString()).toBe("TestTree[tree1].leaves.leaf11");
+        expect(t1.getLeaves()[0]["persistencePath"].toString()).toBe("TestTree[tree1].leaves|leaf11");
     });
     it("serializes basic objects", function () {
         var t1 = new Tests.TestPerson("tp1");
@@ -100,7 +109,7 @@ describe("The persistence thing", function () {
         expect(treeCollection.getById("tree1")).toBeDefined();
         expect(treeCollection.getById("tree1").getLeaves()[0] instanceof Tests.TestLeaf).toBeTruthy();
     });
-    it("can call wrapped functions", function () {
+    it("can call wrapped functions ", function () {
         var t1 = new Tests.TestTree("tree1");
         treeCollection.insert(t1);
         t1.grow();
@@ -287,8 +296,20 @@ describe("The persistence thing", function () {
     });
     xit("calls registered callbacks", function () {
     });
-    xit("supports wrapped calls whose last parameter is a callback function.", function () {
+    it("supports wrapped calls whose last parameter is a callback function.", function (done) {
+        var t1 = new Tests.TestPerson("p1");
+        t1.phoneBook["mike"] = new Tests.TestPhoneNumber("12345");
+        personCollection.insert(t1);
+        var t2 = personCollection.getById("p1");
+        t2.phoneBook["mike"].callNumber(function (err, r) {
+            expect(r).toBe("Called:12345");
+            done();
+        });
     });
     xit("offers a way to annotate wrapped calls as 'performed on the server'.", function () {
+    });
+    xit("Allows to pass objects to wrapped functions'.", function () {
+    });
+    xit("Allows to pass entities to wrapped functions'.", function () {
     });
 });

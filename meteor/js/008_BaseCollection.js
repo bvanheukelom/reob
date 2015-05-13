@@ -61,17 +61,16 @@ persistence;
                     return undefined;
                 var currentSerial = document.serial;
                 var object = this.documentToObject(document);
-                updateFunction(object);
+                var result = updateFunction(object);
                 persistence.MeteorPersistence.updatePersistencePaths(object);
                 var documentToSave = DeSerializer.Serializer.toDocument(object);
                 documentToSave.serial = currentSerial + 1;
-                console.log("writing document ", documentToSave);
                 var updatedDocumentCount = this.meteorCollection.update({
                     _id: id,
                     serial: currentSerial
                 }, documentToSave);
                 if (updatedDocumentCount == 1) {
-                    return object;
+                    return result;
                 }
                 else if (updatedDocumentCount > 1)
                     throw new Meteor.Error("verifiedUpdate should only update one document");

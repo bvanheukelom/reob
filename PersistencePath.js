@@ -22,27 +22,32 @@ var persistence;
             var o = rootObject;
             if (this.path.indexOf(".") != -1) {
                 this.path.split("].")[1].split(".").forEach(function (entry) {
-                    var foundEntry = false;
-                    if (o instanceof Array) {
-                        for (var j in o) {
-                            var arrayEntry = o[j];
-                            if (arrayEntry.getId() == entry) {
-                                o = arrayEntry;
-                                foundEntry = true;
-                                break;
+                    if (o) {
+                        if (entry.indexOf("|") != -1) {
+                            var p = entry.split("|");
+                            var arrayOrMap = o[p[0]];
+                            var id = p[1];
+                            var foundEntry = false;
+                            for (var j in arrayOrMap) {
+                                var arrayEntry = arrayOrMap[j];
+                                if (arrayEntry.getId() == id) {
+                                    o = arrayEntry;
+                                    foundEntry = true;
+                                    break;
+                                }
                             }
+                            if (!foundEntry)
+                                o = undefined;
                         }
-                        if (!foundEntry)
-                            return undefined;
+                        else
+                            o = o[entry];
                     }
-                    else if (o)
-                        o = o[entry];
                 });
             }
             return o;
         };
-        PersistencePath.prototype.appendArrayLookup = function (id) {
-            this.path += "." + id;
+        PersistencePath.prototype.appendArrayOrMapLookup = function (name, id) {
+            this.path += "." + name + "|" + id;
         };
         PersistencePath.prototype.appendPropertyLookup = function (name) {
             this.path += "." + name;
