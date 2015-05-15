@@ -122,6 +122,7 @@ module.exports = function (grunt) {
 		cp("TestPhoneNumber.js");
 		cp("TestPerson.js");
 		cp("TestPersonCollection.js");
+		cp("TestTreeCollection.js");
 	});
 
 };

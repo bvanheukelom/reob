@@ -6,5 +6,4 @@ class TestPersonCollection extends persistence.BaseCollection<Tests.TestPerson>
         super(Tests.TestPerson);
     }
 
-    newPerson( id:string,)
 }

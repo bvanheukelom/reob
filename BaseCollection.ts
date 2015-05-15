@@ -6,10 +6,13 @@ module persistence {
         private meteorCollection:any;
         private theClass:TypeClass<T>;
         private name:string;
+        private serializer:DeSerializer.Serializer;
+
         private static meteorCollections:{[index:string]:any} = { };
 
         constructor( persistableClass:TypeClass<T> )
         {
+            this.serializer = new DeSerializer.Serializer( new MeteorObjectRetriever() );
             persistence.MeteorPersistence.init();
             var collectionName = persistence.PersistenceAnnotation.getCollectionName(persistableClass);
             this.name = collectionName;
@@ -19,6 +22,11 @@ module persistence {
             }
             this.meteorCollection = BaseCollection._getMeteorCollection(collectionName);
             this.theClass = persistableClass;
+        }
+
+        static getCollection<P extends Persistable>( t:TypeClass<P> ):BaseCollection<P>
+        {
+            return MeteorPersistence.collections[persistence.PersistenceAnnotation.getCollectionName(t)];
         }
 
         private static _getMeteorCollection( name?:string )
@@ -64,20 +72,22 @@ module persistence {
             return this.find({});
         }
 
-        remove( t:T )
+        remove( id:string )
         {
-            if( t ) {
-                if( t.getId && t.getId() ) {
-                    this.meteorCollection.remove(t.getId());
+            if( Meteor.isServer ) {
+                if (id) {
+                    this.meteorCollection.remove(id);
                 }
                 else
                     throw new Error("Trying to remove an object that does not have an id.");
             }
+            else
+                throw new Error("Trying to remove an object from the client. 'remove' can only be called on the server.");
         }
 
         protected documentToObject( doc:Document ):T
         {
-            var p:T = DeSerializer.Serializer.toObject<T>(doc, this.theClass);
+            var p:T = this.serializer.toObject<T>(doc, this.theClass);
             MeteorPersistence.updatePersistencePaths(p);
             return p;
         }
@@ -103,7 +113,7 @@ module persistence {
 
                 MeteorPersistence.updatePersistencePaths(object);
 
-                var documentToSave:Document = DeSerializer.Serializer.toDocument(object);
+                var documentToSave:Document = this.serializer.toDocument(object);
                 documentToSave.serial = currentSerial+1;
 
                 // update the collection
@@ -128,27 +138,20 @@ module persistence {
             throw new Error("update gave up after 10 attempts to update the object ");
         }
 
-        protected insert( p:T, cb?:(error:any, insertedObject?:T)=>void ):void
+
+        insert( p:T ):void
         {
             if( Meteor.isServer )
             {
-                var doc : Document = DeSerializer.Serializer.toDocument( p );
+                var doc : Document = this.serializer.toDocument( p );
                 if( p.getId() )
                     doc._id = p.getId();
                 doc.serial = 0;
                 console.log( "inserting document: ", doc)
                 var that = this;
-                this.meteorCollection.insert(doc, function(error, resultId:string){
-                    if( cb )
-                    {
-                        var result = that.getById(resultId);
-                        MeteorPersistence.updatePersistencePaths(result);
-                        if( !error )
-                            cb(undefined, result);
-                        else
-                            cb( error );
-                    }
-                });
+                var id = this.meteorCollection.insert(doc);
+                p.setId(id);
+                MeteorPersistence.updatePersistencePaths(p);
                 console.log( "inserting object: ", p, (<any>p).wood );
             }
             else

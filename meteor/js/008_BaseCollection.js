@@ -12,6 +12,9 @@ persistence;
             this.meteorCollection = BaseCollection._getMeteorCollection(collectionName);
             this.theClass = persistableClass;
         }
+        BaseCollection.getCollection = function (t) {
+            return persistence.MeteorPersistence.collections[persistence.PersistenceAnnotation.getCollectionName(t)];
+        };
         BaseCollection._getMeteorCollection = function (name) {
             if (!BaseCollection.meteorCollections[name]) {
                 BaseCollection.meteorCollections[name] = new Meteor.Collection(name);
@@ -86,24 +89,21 @@ persistence;
             }
             throw new Error("update gave up after 10 attempts to update the object ");
         };
-        BaseCollection.prototype.insert = function (p, cb) {
-            var doc = DeSerializer.Serializer.toDocument(p);
-            if (p.getId())
-                doc._id = p.getId();
-            doc.serial = 0;
-            console.log("inserting document: ", doc);
-            var that = this;
-            this.meteorCollection.insert(doc, function (error, resultId) {
-                if (cb) {
-                    var result = that.getById(resultId);
-                    persistence.MeteorPersistence.updatePersistencePaths(result);
-                    if (!error)
-                        cb(undefined, result);
-                    else
-                        cb(error);
-                }
-            });
-            console.log("inserting object: ", p, p.wood);
+        BaseCollection.prototype.insert = function (p) {
+            if (Meteor.isServer) {
+                var doc = DeSerializer.Serializer.toDocument(p);
+                if (p.getId())
+                    doc._id = p.getId();
+                doc.serial = 0;
+                console.log("inserting document: ", doc);
+                var that = this;
+                var id = this.meteorCollection.insert(doc);
+                p.setId(id);
+                persistence.MeteorPersistence.updatePersistencePaths(p);
+                console.log("inserting object: ", p, p.wood);
+            }
+            else
+                throw new Error("Insert can not be called on the client. Wrap it into a meteor method.");
         };
         BaseCollection.prototype.removeAll = function (cb) {
             if (!this.name)

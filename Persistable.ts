@@ -6,6 +6,7 @@
 interface Persistable
 {
     getId?():string;
+    setId?( s:string ):void;
     toDocument?():Document;
     persistencePath?:persistence.PersistencePath;
 }

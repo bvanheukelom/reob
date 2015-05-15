@@ -9,10 +9,10 @@ if (typeof __decorate !== "function") __decorate = function (decorators, target,
 Tests;
 (function (Tests) {
     var TestTree = (function () {
-        function TestTree(id) {
+        function TestTree(initialHeight) {
             this.height = 10;
             this.leaves = [];
-            this._id = id;
+            this.height = initialHeight || 10;
         }
         TestTree.prototype.grow = function () {
             this.height++;
@@ -31,6 +31,9 @@ Tests;
         };
         TestTree.prototype.getId = function () {
             return this._id;
+        };
+        TestTree.prototype.setId = function (i) {
+            this._id = i;
         };
         TestTree.prototype.getHeight = function () {
             return this.height;

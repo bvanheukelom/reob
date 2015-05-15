@@ -33,6 +33,15 @@ var Tests;
         TestPerson.prototype.getName = function () {
             return this.name;
         };
+        //getAddressById(id:String):TestAddress
+        //{
+        //    for( var i=0;i<this.addresses.length; i++ )
+        //    {
+        //        var address = this.addresses[i];
+        //        if( address.getId()==id )
+        //            return address;
+        //    }
+        //}
         TestPerson.prototype.getAddresses = function () {
             return this.addresses;
         };

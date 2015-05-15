@@ -11,8 +11,8 @@ module Tests
         @persistence.PersistenceAnnotation.ArrayOrMap("TestLeaf")
         leaves:Array<TestLeaf> = [];
 
-        constructor(id?:string) {
-            this._id = id;
+        constructor( initialHeight?:number) {
+            this.height = initialHeight || 10;
         }
 
         @persistence.PersistenceAnnotation.Wrap
@@ -38,6 +38,10 @@ module Tests
 
         getId():string {
             return this._id;
+        }
+        setId(i:string)
+        {
+            this._id = i;
         }
 
         getHeight():number {

@@ -2,8 +2,8 @@ Meteor.startup(function(){
 
 	if( Meteor.isServer )
 	{
-		var treeCollection = new persistence.BaseCollection(Tests.TestTree);
-		var personCollection = new persistence.BaseCollection(Tests.TestPerson);
+		var treeCollection = new TestPersonCollection();
+		var personCollection = new TestTreeCollection();
 		//
 		personCollection.getMeteorCollection().remove({});
 		treeCollection.getMeteorCollection().remove({});
