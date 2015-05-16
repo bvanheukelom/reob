@@ -16,7 +16,6 @@ var persistence;
             else
                 return undefined;
         };
-        // ---- Entity ----
         PersistenceAnnotation.Entity = function (p1) {
             if (typeof p1 == "string") {
                 return function (target) {
@@ -38,12 +37,8 @@ var persistence;
                 };
             }
             else if (typeof p1 == "function") {
-                //var tc:TypeClass<Persistable> = <TypeClass<Persistable>>p1;
-                //var className = PersistenceAnnotation.className(tc);
-                //PersistencePrivate.collectionRootClasses.push(tc);
                 var typeClass = p1;
                 console.log("Entity() " + PersistenceAnnotation.className(typeClass));
-                //Reflect.defineMetadata("persistence:collectionName", PersistenceAnnotation.className(typeClass), typeClass);
                 Reflect.defineMetadata("persistence:entity", true, typeClass);
                 PersistencePrivate.entityClasses[PersistenceAnnotation.className(typeClass)] = typeClass;
             }
@@ -77,7 +72,6 @@ var persistence;
         PersistenceAnnotation.isEntity = function (f) {
             return !!PersistencePrivate.entityClasses[PersistenceAnnotation.className(f)];
         };
-        // ---- Collection ----
         PersistenceAnnotation.ArrayOrMap = function (typeClassName) {
             return function (targetPrototypeObject, propertyName) {
                 console.log("  " + propertyName + " as collection of " + typeClassName);
@@ -88,7 +82,6 @@ var persistence;
         PersistenceAnnotation.isArrayOrMap = function (typeClass, propertyName) {
             return PersistenceAnnotation.getPropertyProperty(typeClass.prototype, propertyName, "arrayOrMap") == true;
         };
-        // ---- typed properties ----
         PersistenceAnnotation.Type = function (typeClassName) {
             return function (targetPrototypeObject, propertyName) {
                 console.log("  " + propertyName + " as " + typeClassName);
@@ -97,7 +90,10 @@ var persistence;
         };
         PersistenceAnnotation.getPropertyClass = function (f, propertyName) {
             var className = PersistenceAnnotation.getPropertyProperty(f.prototype, propertyName, "type");
-            return PersistenceAnnotation.getEntityClassByName(className);
+            if (!className)
+                return undefined;
+            else
+                return PersistenceAnnotation.getEntityClassByName(className);
         };
         PersistenceAnnotation.getTypedPropertyNames = function (f) {
             var result = [];
@@ -128,18 +124,15 @@ var persistence;
             }
             return undefined;
         };
-        // ---- AsForeignKeys ----
         PersistenceAnnotation.isStoredAsForeignKeys = function (typeClass, propertyName) {
             return PersistenceAnnotation.getPropertyProperty(typeClass.prototype, propertyName, "askeys");
         };
         PersistenceAnnotation.AsForeignKeys = function (targetPrototypeObject, propertyName) {
             return PersistenceAnnotation.setPropertyProperty(targetPrototypeObject, propertyName, "askeys", true);
         };
-        // for grammar reasons
         PersistenceAnnotation.AsForeignKey = function (targetPrototypeObject, propertyName) {
             return PersistenceAnnotation.AsForeignKeys(targetPrototypeObject, propertyName);
         };
-        // ---- Wrap ----
         PersistenceAnnotation.getWrappedFunctionNames = function (f) {
             return PersistenceAnnotation.getPropertyNamesByMetaData(f.prototype, "persistence:wrap");
         };
@@ -147,7 +140,6 @@ var persistence;
             var result = [];
             for (var i in o) {
                 var value = o[i];
-                //console.log("Cave man style debugging 1",i, value,Reflect.getMetadata("persistence:wrap", value) );
                 if (typeof value == "function" && Reflect.getMetadata(metaData, value))
                     result.push(i);
             }

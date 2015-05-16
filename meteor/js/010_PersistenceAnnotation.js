@@ -90,7 +90,10 @@ persistence;
         };
         PersistenceAnnotation.getPropertyClass = function (f, propertyName) {
             var className = PersistenceAnnotation.getPropertyProperty(f.prototype, propertyName, "type");
-            return PersistenceAnnotation.getEntityClassByName(className);
+            if (!className)
+                return undefined;
+            else
+                return PersistenceAnnotation.getEntityClassByName(className);
         };
         PersistenceAnnotation.getTypedPropertyNames = function (f) {
             var result = [];

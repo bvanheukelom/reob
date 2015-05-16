@@ -10,13 +10,17 @@ var DeSerializer;
         }
         Serializer.prototype.toObject = function (doc, f) {
             var o;
+            if (typeof doc == "function")
+                throw new Error("Error in 'toObject'. doc is a function.");
             if (f) {
                 o = Object.create(f.prototype);
                 f.call(o);
             }
-            else {
+            else if (typeof doc == "object") {
                 o = {};
             }
+            else
+                return doc;
             for (var propertyName in doc) {
                 var value = doc[propertyName];
                 var propertyClass = persistence.PersistenceAnnotation.getPropertyClass(f, propertyName);
@@ -29,7 +33,6 @@ var DeSerializer;
                             entry = this.toObject(entry, propertyClass);
                             result[i] = entry;
                         }
-                        // this can only happen once because if the property is accessed the "lazy load" already kicks in
                         o[propertyName] = result;
                     }
                     else {
@@ -68,7 +71,6 @@ var DeSerializer;
                     doc._id = object.id;
                 }
                 else if (object[property] !== undefined && property != "persistencePath") {
-                    // primitives
                     if (typeof value == "string" || typeof value == "number" || typeof value == "date" || typeof value == "boolean")
                         doc[property] = value;
                     else if (persistence.PersistenceAnnotation.isArrayOrMap(objectClass, property)) {
@@ -96,7 +98,11 @@ var DeSerializer;
             return doc;
         };
         Serializer.prototype.getClassName = function (o) {
-            return persistence.PersistenceAnnotation.className(persistence.PersistenceAnnotation.getClass(o));
+            if (typeof o == "object" && persistence.PersistenceAnnotation.getClass(o)) {
+                return persistence.PersistenceAnnotation.className(persistence.PersistenceAnnotation.getClass(o));
+            }
+            else
+                return typeof o;
         };
         return Serializer;
     })();

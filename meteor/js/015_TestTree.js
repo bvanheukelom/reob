@@ -16,7 +16,7 @@ Tests;
         }
         TestTree.prototype.grow = function () {
             this.height++;
-            console.log("Tree is growing to new heights: ", this.height);
+            console.log("Tree is growing to new heights: ", this.height + " on the " + (Meteor.isServer ? "server" : "client"));
             this.leaves.push(new Tests.TestLeaf("leaf" + this.getHeight(), this));
             this.leaves.forEach(function (l) {
                 l.grow();
@@ -33,6 +33,7 @@ Tests;
             return this._id;
         };
         TestTree.prototype.setId = function (i) {
+            console.log("Setting tree id:" + i);
             this._id = i;
         };
         TestTree.prototype.getHeight = function () {

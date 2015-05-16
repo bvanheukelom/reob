@@ -13,13 +13,17 @@ module DeSerializer{
 
         toObject<T extends Persistable>(doc:any, f:TypeClass<T>):T {
             var o:any;
+            if(typeof doc=="function")
+                throw new Error("Error in 'toObject'. doc is a function.");
             if (f) {
                 o = Object.create(f.prototype);
                 f.call(o);
             }
-            else {
+            else if( typeof doc=="object" ) {
                 o = {};
             }
+            else
+                return doc;
             for (var propertyName in doc) {
                 var value = doc[propertyName];
                 var propertyClass = persistence.PersistenceAnnotation.getPropertyClass(f, propertyName);
@@ -115,8 +119,14 @@ module DeSerializer{
             return <Document>doc;
         }
 
-        getClassName(o:Object):string{
-            return persistence.PersistenceAnnotation.className( persistence.PersistenceAnnotation.getClass( o ) );
+        getClassName(o:Object):string
+        {
+            if( typeof o =="object" && persistence.PersistenceAnnotation.getClass( o ))
+            {
+                return persistence.PersistenceAnnotation.className( persistence.PersistenceAnnotation.getClass( o ) );
+            }
+            else
+                return typeof o;
         }
 
     }

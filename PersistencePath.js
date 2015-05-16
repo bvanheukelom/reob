@@ -12,7 +12,7 @@ var persistence;
         PersistencePath.prototype.clone = function () {
             return new PersistencePath(this.path);
         };
-        PersistencePath.prototype.getClassName = function () {
+        PersistencePath.prototype.getCollectionName = function () {
             return this.path.split("[")[0];
         };
         PersistencePath.prototype.getId = function () {

@@ -1,16 +1,18 @@
 ///<reference path="references.d.ts"/>
-class ConstantObjectRetriever implements ObjectRetriever{
-    private value:Object;
-    constructor( o:Object ){
-        this.value = o;
-    }
+module persistence {
+    export class ConstantObjectRetriever implements ObjectRetriever {
+        private value:Object;
 
-    getId(o:Object){
-        return "constant";
-    }
+        constructor(o:Object) {
+            this.value = o;
+        }
 
-    getObject(s:string):Object{
-        return this.value;
-    }
+        getId(o:Object) {
+            return "constant";
+        }
 
+        getObject(s:string):Object {
+            return this.value;
+        }
+    }
 }

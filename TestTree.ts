@@ -19,7 +19,7 @@ module Tests
 
         grow():string {
             this.height++;
-            console.log("Tree is growing to new heights: ", this.height);
+            console.log("Tree is growing to new heights: ", this.height+" on the "+(Meteor.isServer?"server":"client"));
             this.leaves.push(new Tests.TestLeaf("leaf" + this.getHeight(), this));
             this.leaves.forEach(function (l:Tests.TestLeaf) {
                 l.grow();
@@ -41,6 +41,7 @@ module Tests
         }
         setId(i:string)
         {
+            console.log("Setting tree id:"+i)
             this._id = i;
         }
 

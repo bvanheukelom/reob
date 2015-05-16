@@ -1,7 +1,6 @@
 ///<reference path="references.d.ts"/>
 
 describe("The persistence thing", function(){
-
     var personCollection:TestPersonCollection;
     var treeCollection:TestTreeCollection;
     beforeAll(function(){
@@ -12,19 +11,11 @@ describe("The persistence thing", function(){
 
     beforeEach(function(done){
         console.log("------------------- new test");
-        treeCollection.removeAll(function(err){
-            if (!err)
-            {
-                treeCollection.removeAll(function (error)
-                {
-                    if (!error)
-                        done();
-                    else
-                        fail(error);
-                });
-            }
+        persistence.BaseCollection.resetAll(function(error){
+            if (!error)
+                done();
             else
-                fail(err);
+                fail(error);
         });
     });
 
@@ -53,11 +44,11 @@ describe("The persistence thing", function(){
     });
 
     it("can do basic inserts", function( done ){
-        var t1:Tests.TestTree = new Tests.TestTree();
-        console.log("tree :",t1);
         treeCollection.newTree( 20, function(error, tree:Tests.TestTree){
-            expect(error).toBeUndefined();
-            expect( tree).toBeDefined();
+            expect( error ).toBeFalsy();
+            expect( tree ).toBeDefined();
+            expect( (<any>tree).persistencePath ).toBeDefined();
+            expect( tree instanceof Tests.TestTree).toBeTruthy();
             expect( tree.getId()).toBeDefined();
             expect( tree.getHeight()).toBe(20);
             expect( treeCollection.getById(tree.getId())).toBeDefined();
@@ -66,119 +57,131 @@ describe("The persistence thing", function(){
             done();
         });
     });
-
-    it("can monkey patch functions", function( done ){
-        var t1:Tests.TestTree = new Tests.TestTree();
-        console.log("tree :",t1);
-        treeCollection.newTree( 20, function(error, tree:Tests.TestTree){
-            expect(error).toBeUndefined();
-            expect( tree).toBeDefined();
-            expect( tree.getId()).toBeDefined();
-            expect( tree.getHeight()).toBe(20);
-            expect( treeCollection.getById(tree.getId())).toBeDefined();
-            expect( treeCollection.getById(tree.getId()).getId()).toBeDefined();
-            expect( treeCollection.getById(tree.getId()).getHeight()).toBe(20);
+    fit("can call server functions", function( done ){
+        treeCollection.serverFunction("World", new Tests.TestTree(212), 42, function(e:any,s:string){
+            expect( s ).toBe( "Hello World! This is on the server t:true 212 n:42 number" );
+            expect(e).toBeUndefined();
             done();
         });
     });
 
-    //it("uses persistence paths to return undefined for non existent subobjects ", function(){
-    //    var t1:Tests.TestTree = new Tests.TestTree("tree1");
-    //    var pp:persistence.PersistencePath = new persistence.PersistencePath("TheTreeCollection", "tree1");
-    //    pp.appendArrayOrMapLookup("leaves", "nonexistentLeaf");
-    //    expect( pp.getSubObject(t1) ).toBeUndefined();
-    //});
+    it("can monkey patch functions", function( ){
+        var f = function f(){
+            this.c = 0;
+        };
+        f.prototype.hello = function(p){
+            this.c+=p;
+        };
+        persistence.MeteorPersistence.monkeyPatch(f.prototype, "hello", function( original, p ){
+            expect(this.c).toBe(0);
+            this.c++;
+            original.call(this, p);
 
-    //it("can do basic removes", function(){
-    //    var t1:Tests.TestTree = new Tests.TestTree("tree1");
-    //    treeCollection.insert(20,);
-    //    expect( treeCollection.getById("tree1")).toBeDefined();
-    //    treeCollection.remove(t1);
-    //    expect( treeCollection.getById("tree1")).toBeUndefined();
-    //});
+        });
+        var x:any = new f();
+        x.hello(20);
+        expect( x.c ).toBe(21)
+    });
+
+    it("uses persistence paths to return undefined for non existent subobjects ", function(){
+        var t1:Tests.TestTree = new Tests.TestTree(10);
+        var pp:persistence.PersistencePath = new persistence.PersistencePath("TestTree", "tree1");
+        pp.appendArrayOrMapLookup("leaves", "nonexistentLeaf");
+        expect( pp.getSubObject(t1) ).toBeUndefined();
+    });
+
+    it("can do basic removes", function(done){
+
+
+        treeCollection.newTree(20,function(err, t:Tests.TestTree){
+            expect( treeCollection.getById(t.getId())).toBeDefined();
+            treeCollection.deleteTree(t.getId(), function(err){
+                expect( treeCollection.getById(t.getId())).toBeUndefined();
+                done();
+            });
+        });
+    });
     //
-    //it("uses persistence paths on root documents", function(){
-    //    var t1:Tests.TestTree = new Tests.TestTree("tree1");
-    //    t1.grow();
-    //    persistence.MeteorPersistence.updatePersistencePaths(t1);
-    //    expect(t1["persistencePath"]).toBeDefined();
-    //    expect(t1["persistencePath"].toString()).toBe("TheTreeCollection[tree1]");
-    //});
-    //
-    //it("uses persistence paths on sub documents", function(){
-    //    var tp:Tests.TestPerson = new Tests.TestPerson("tp1");
-    //    tp.phoneNumber = new Tests.TestPhoneNumber("12345");
-    //    persistence.MeteorPersistence.updatePersistencePaths(tp);
-    //    expect(tp.phoneNumber["persistencePath"]).toBeDefined();
-    //    expect(tp.phoneNumber["persistencePath"].toString()).toBe("TestPerson[tp1].phoneNumber");
-    //});
-    //
-    //it("uses persistence paths on subdocuments in arrays", function(){
-    //    var t1:Tests.TestTree = new Tests.TestTree("tree1");
-    //    t1.grow();
-    //    persistence.MeteorPersistence.updatePersistencePaths(t1);
-    //    expect(t1.getLeaves()[0]["persistencePath"]).toBeDefined();
-    //    expect(t1.getLeaves()[0]["persistencePath"].toString()).toBe("TheTreeCollection[tree1].leaves|leaf11");
-    //});
-    //
-    //it("serializes basic objects", function(){
-    //    var t1:Tests.TestPerson = new Tests.TestPerson("tp1");
-    //    t1.phoneNumber = new Tests.TestPhoneNumber("12345");
-    //    var doc = DeSerializer.Serializer.toDocument(t1);
-    //    expect(doc._id).toBe("tp1");
-    //    expect(doc["phoneNumber"]["number"]).toBe("12345");
-    //});
-    //
-    //it("deserializes basic objects", function(){
-    //    var t1:Tests.TestPerson = new Tests.TestPerson("tp1");
-    //    t1.phoneNumber = new Tests.TestPhoneNumber("12345");
-    //    var doc = DeSerializer.Serializer.toDocument(t1);
-    //    var t1:Tests.TestPerson = DeSerializer.Serializer.toObject(doc, Tests.TestPerson);
-    //    expect(t1.getId()).toBe("tp1");
-    //    expect(t1.phoneNumber instanceof Tests.TestPhoneNumber).toBeTruthy();
-    //    expect(t1.phoneNumber.getNumber()).toBe("12345");
-    //});
-    //
-    //it("deserializes objects that have subobjects", function(){
-    //    var t1:Tests.TestTree = new Tests.TestTree("t1");
-    //    t1.grow();
-    //    var doc = DeSerializer.Serializer.toDocument(t1);
-    //    var t1:Tests.TestTree = DeSerializer.Serializer.toObject(doc, Tests.TestTree);
-    //    expect(t1.getId()).toBe("t1");
-    //    expect(t1.getLeaves()[0] instanceof Tests.TestLeaf).toBeTruthy();
-    //});
-    //
-    //it("can load objects that have subobjects", function(){
-    //    var t1:Tests.TestPerson = new Tests.TestPerson("t");
-    //    t1.phoneNumber = new Tests.TestPhoneNumber("1212");
-    //    personCollection.insert(t1);
-    //    expect(personCollection.getById("t")).toBeDefined();
-    //    expect(personCollection.getById("t").phoneNumber instanceof Tests.TestPhoneNumber).toBeTruthy();
-    //});
-    //
-    //it("can load objects that have subobjects (in an array) which have a parent reference", function(){
-    //    var t1:Tests.TestTree = new Tests.TestTree("tree1");
-    //    t1.grow();
-    //    treeCollection.insert(t1);
-    //    expect(treeCollection.getById("tree1")).toBeDefined();
-    //    expect(treeCollection.getById("tree1").getLeaves()[0] instanceof Tests.TestLeaf).toBeTruthy();
-    //});
-    //
-    //it("can remove objects that have subobjects", function(){
-    //    var t1:Tests.TestTree = new Tests.TestTree("tree1");
-    //    t1.grow();
-    //    treeCollection.insert(t1);
-    //    expect(treeCollection.getById("tree1")).toBeDefined();
-    //    expect(treeCollection.getById("tree1").getLeaves()[0] instanceof Tests.TestLeaf).toBeTruthy();
-    //});
-    //
-    //fit("can call wrapped functions ", function(){
-    //    var t1:Tests.TestTree = new Tests.TestTree("tree1");
-    //    treeCollection.insert(t1);
-    //    t1.grow();
-    //    expect(treeCollection.getById("tree1")).toBeDefined();
-    //    expect(treeCollection.getById("tree1").getLeaves()[0] instanceof Tests.TestLeaf).toBeTruthy();
-    //});
+    it("uses persistence paths on root documents", function(){
+        var t1:Tests.TestTree = new Tests.TestTree(123);
+        t1.setId("tree1");
+        t1.grow();
+        persistence.MeteorPersistence.updatePersistencePaths(t1);
+        expect(t1["persistencePath"]).toBeDefined();
+        expect(t1["persistencePath"].toString()).toBe("TheTreeCollection[tree1]");
+    });
+
+    it("uses persistence paths on sub documents", function(){
+        var tp:Tests.TestPerson = new Tests.TestPerson("tp1");
+        tp.phoneNumber = new Tests.TestPhoneNumber("12345");
+        persistence.MeteorPersistence.updatePersistencePaths(tp);
+        expect(tp.phoneNumber["persistencePath"]).toBeDefined();
+        expect(tp.phoneNumber["persistencePath"].toString()).toBe("TestPerson[tp1].phoneNumber");
+    });
+
+    it("can call wrapped functions that are not part of a collection", function(){
+        var t1:Tests.TestTree = new Tests.TestTree(10);
+        t1.grow();
+        expect(t1.getLeaves().length).toBe(1);
+    });
+
+
+    it("uses persistence paths on subdocuments in arrays", function(){
+        var t1:Tests.TestTree = new Tests.TestTree(10);
+        t1.setId("tree1");
+        t1.grow();
+        persistence.MeteorPersistence.updatePersistencePaths(t1);
+        expect(t1.getLeaves().length).toBe(1);
+        expect(t1.getLeaves()[0]["persistencePath"]).toBeDefined();
+        expect(t1.getLeaves()[0]["persistencePath"].toString()).toBe("TheTreeCollection[tree1].leaves|leaf11");
+    });
+
+    it("serializes basic objects", function(){
+        var t1:Tests.TestPerson = new Tests.TestPerson("tp1");
+        t1.phoneNumber = new Tests.TestPhoneNumber("12345");
+        var doc = new DeSerializer.Serializer( new persistence.MeteorObjectRetriever() ).toDocument(t1);
+        expect(doc._id).toBe("tp1");
+        expect(doc["phoneNumber"]["number"]).toBe("12345");
+    });
+
+    it("deserializes basic objects", function(){
+        var serializer:DeSerializer.Serializer = new DeSerializer.Serializer( new persistence.MeteorObjectRetriever() );
+        var t1:Tests.TestPerson = new Tests.TestPerson("tp1");
+        t1.phoneNumber = new Tests.TestPhoneNumber("12345");
+        var doc = serializer.toDocument(t1);
+        var t1:Tests.TestPerson = serializer.toObject(doc, Tests.TestPerson);
+        expect(t1.getId()).toBe("tp1");
+        expect(t1.phoneNumber instanceof Tests.TestPhoneNumber).toBeTruthy();
+        expect(t1.phoneNumber.getNumber()).toBe("12345");
+    });
+
+    it("deserializes objects that have subobjects", function(){
+        var serializer:DeSerializer.Serializer = new DeSerializer.Serializer( new persistence.MeteorObjectRetriever() );
+        var t1:Tests.TestTree = new Tests.TestTree(123);
+        t1.setId("t1");
+        t1.grow();
+        var doc = serializer.toDocument(t1);
+        var t1:Tests.TestTree = serializer.toObject(doc, Tests.TestTree);
+        expect(t1.getId()).toBe("t1");
+        expect(t1.getLeaves()[0] instanceof Tests.TestLeaf).toBeTruthy();
+    });
+
+    it("can call wrapped functions", function(done){
+        treeCollection.newTree(24,function(err:any,t:Tests.TestTree){
+            t.grow();
+            t.grow();
+            expect(treeCollection.getById(t.getId())).toBeDefined();
+            expect(treeCollection.getById(t.getId()).getLeaves().length).toBe(2);
+            expect(treeCollection.getById(t.getId()).getLeaves()[0] instanceof Tests.TestLeaf).toBeTruthy();
+            expect(treeCollection.getById(t.getId()).getLeaves()[1] instanceof Tests.TestLeaf).toBeTruthy();
+            done();
+        });
+    });
+
+    it("reoves all", function(){
+        expect(true).toBeTruthy();
+    });
+    // test that properties that need lazy loading are not loaded during serialization
     //
     //it("can use persistence paths on objects that have foreign key properties", function(){
     //    var t1:Tests.TestTree = new Tests.TestTree("tree1");
@@ -286,8 +289,8 @@ describe("The persistence thing", function(){
     //    expect( doc ).toBeDefined();
     //    expect( doc.wood ).toBeDefined();
     //    expect( doc.wood["klaus"] ).toBeDefined();
-    //    expect( doc.wood["klaus"] ).toBe("TheTreeCollection[t1]");
-    //    expect( doc.wood["peter"] ).toBe("TheTreeCollection[t2]");
+    //    expect( doc.wood["klaus"] ).toBe("TestTree[t1]");
+    //    expect( doc.wood["peter"] ).toBe("TestTree[t2]");
     //});
     //
     //it("can save foreign keys in a map", function(){

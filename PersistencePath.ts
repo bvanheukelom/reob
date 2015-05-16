@@ -14,7 +14,7 @@ module persistence {
             return new PersistencePath(this.path);
         }
 
-        getClassName():string {
+        getCollectionName():string {
             return this.path.split("[")[0];
         }
 

@@ -3,12 +3,11 @@ var persistence;
 (function (persistence) {
     var BaseCollection = (function () {
         function BaseCollection(persistableClass) {
-            this.serializer = new DeSerializer.Serializer(new MeteorObjectRetriever());
+            this.serializer = new DeSerializer.Serializer(new persistence.MeteorObjectRetriever());
             persistence.MeteorPersistence.init();
             var collectionName = persistence.PersistenceAnnotation.getCollectionName(persistableClass);
             this.name = collectionName;
             if (!persistence.MeteorPersistence.collections[collectionName]) {
-                // as it doesnt really matter which base collection is used in meteor-calls, we're just using the first that is created
                 persistence.MeteorPersistence.collections[collectionName] = this;
             }
             this.meteorCollection = BaseCollection._getMeteorCollection(collectionName);
@@ -47,10 +46,10 @@ var persistence;
         BaseCollection.prototype.getAll = function () {
             return this.find({});
         };
-        BaseCollection.prototype.remove = function (id) {
+        BaseCollection.prototype.remove = function (id, cb) {
             if (Meteor.isServer) {
                 if (id) {
-                    this.meteorCollection.remove(id);
+                    this.meteorCollection.remove(id, cb);
                 }
                 else
                     throw new Error("Trying to remove an object that does not have an id.");
@@ -73,21 +72,18 @@ var persistence;
                 if (!document)
                     return undefined;
                 var currentSerial = document.serial;
-                // call the update function
                 var object = this.documentToObject(document);
                 var result = updateFunction(object);
                 persistence.MeteorPersistence.updatePersistencePaths(object);
                 var documentToSave = this.serializer.toDocument(object);
                 documentToSave.serial = currentSerial + 1;
-                // update the collection
-                //console.log("writing document ", documentToSave);
+                console.log("writing document ", documentToSave);
                 var updatedDocumentCount = this.meteorCollection.update({
                     _id: id,
                     serial: currentSerial
                 }, documentToSave);
-                // verify that that went well
                 if (updatedDocumentCount == 1) {
-                    return result; // we're done
+                    return result;
                 }
                 else if (updatedDocumentCount > 1)
                     throw new Meteor.Error("verifiedUpdate should only update one document");
@@ -97,39 +93,51 @@ var persistence;
             }
             throw new Error("update gave up after 10 attempts to update the object ");
         };
-        BaseCollection.prototype.insert = function (p) {
+        BaseCollection.prototype.insert = function (p, cb) {
             if (Meteor.isServer) {
                 var doc = this.serializer.toDocument(p);
-                if (p.getId())
+                if (typeof p.getId == "function" && p.getId())
                     doc._id = p.getId();
                 doc.serial = 0;
                 console.log("inserting document: ", doc);
                 var that = this;
-                var id = this.meteorCollection.insert(doc);
-                p.setId(id);
-                persistence.MeteorPersistence.updatePersistencePaths(p);
-                console.log("inserting object: ", p, p.wood);
+                var id = this.meteorCollection.insert(doc, function (error, id) {
+                    if (!error) {
+                        console.log("inserted into '" + that.getName() + "' new id:" + id);
+                        if (typeof p.setId == "function")
+                            p.setId(id);
+                        persistence.MeteorPersistence.updatePersistencePaths(p);
+                    }
+                    else
+                        console.log("inserted into '" + this.getName() + "' error:" + error);
+                    cb(error, id);
+                });
             }
             else
                 throw new Error("Insert can not be called on the client. Wrap it into a meteor method.");
         };
-        BaseCollection.prototype.removeAll = function (cb) {
-            if (!this.name)
-                throw new Error("Collection has no name");
-            console.log("removing all of collection " + this.name);
-            Meteor.call("removeAll", this.name, cb);
+        BaseCollection.resetAll = function (cb) {
+            var arr = [];
+            for (var i in BaseCollection.meteorCollections)
+                arr.push(BaseCollection.meteorCollections[i]);
+            if (arr.length > 0) {
+                for (var j in arr) {
+                    if (j != arr.length - 1)
+                        Meteor.wrapAsync(function (cb2) {
+                            arr[j].remove({}, cb2);
+                        })();
+                    else {
+                        arr[j].remove({}, cb);
+                    }
+                }
+            }
+            else
+                cb();
         };
         BaseCollection.meteorCollections = {};
         return BaseCollection;
     })();
     persistence.BaseCollection = BaseCollection;
 })(persistence || (persistence = {}));
-if (Meteor.isServer) {
-    Meteor.methods({
-        removeAll: function (collectionName) {
-            check(collectionName, String);
-            persistence.MeteorPersistence.collections[collectionName].getMeteorCollection().remove({});
-        }
-    });
-}
+persistence.MeteorPersistence.wrapFunction(persistence.BaseCollection, "resetAll", "resetAll", true, null, new persistence.ConstantObjectRetriever(persistence.BaseCollection));
 //# sourceMappingURL=BaseCollection.js.map

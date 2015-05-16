@@ -14,15 +14,29 @@ var TestTreeCollection = (function (_super) {
         _super.call(this, Tests.TestTree);
     }
     TestTreeCollection.prototype.newTree = function (initialHeight, callback) {
-        var that = this;
-        this.insert(new Tests.TestTree(initialHeight));
+        var t = new Tests.TestTree(initialHeight);
+        this.insert(t, function (err, id) {
+            console.log("loading tree ", this.getById(id).persistencePath);
+            callback(err, this.getById(id));
+        }.bind(this));
     };
-    TestTreeCollection.prototype.deleteTree = function (treeId) {
-        this.remove(treeId);
+    TestTreeCollection.prototype.deleteTree = function (treeId, cb) {
+        this.remove(treeId, cb);
+    };
+    TestTreeCollection.prototype.serverFunction = function (treeId, t, n, cb) {
+        cb(undefined, "Hello " + treeId + "! This is on the " + (Meteor.isServer ? "server" : "client") + " t:" + (t instanceof Tests.TestTree) + " " + t.getHeight() + " n:" + n + " " + (typeof n));
     };
     return TestTreeCollection;
 })(persistence.BaseCollection);
-// TODO move to annotation
-persistence.MeteorPersistence.wrapFunction(TestTreeCollection.prototype, "newTree", "newTree", true, null, new ConstantObjectRetriever(new TestTreeCollection()));
-persistence.MeteorPersistence.wrapFunction(TestTreeCollection.prototype, "deleteTree", "deleteTree", true, null, new ConstantObjectRetriever(new TestTreeCollection()));
+if (Meteor.isServer) {
+    Meteor.publish("trees", function () {
+        return persistence.MeteorPersistence.collections["TheTreeCollection"].getMeteorCollection().find({});
+    });
+}
+else {
+    Meteor.subscribe("trees");
+}
+persistence.MeteorPersistence.wrapFunction(TestTreeCollection.prototype, "newTree", "newTree", true, new DeSerializer.Serializer(new persistence.MeteorObjectRetriever()), new persistence.ConstantObjectRetriever(new TestTreeCollection()));
+persistence.MeteorPersistence.wrapFunction(TestTreeCollection.prototype, "deleteTree", "deleteTree", true, new DeSerializer.Serializer(new persistence.MeteorObjectRetriever()), new persistence.ConstantObjectRetriever(new TestTreeCollection()));
+persistence.MeteorPersistence.wrapFunction(TestTreeCollection.prototype, "serverFunction", "serverFunction", true, new DeSerializer.Serializer(new persistence.MeteorObjectRetriever()), new persistence.ConstantObjectRetriever(new TestTreeCollection()));
 //# sourceMappingURL=TestTreeCollection.js.map

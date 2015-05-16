@@ -6,9 +6,6 @@ if (typeof __decorate !== "function") __decorate = function (decorators, target,
         case 4: return decorators.reduceRight(function(o, d) { return (d && d(target, key, o)) || o; }, desc);
     }
 };
-/**
- * Created by bert on 04.05.15.
- */
 var Tests;
 (function (Tests) {
     var TestTree = (function () {
@@ -19,7 +16,7 @@ var Tests;
         }
         TestTree.prototype.grow = function () {
             this.height++;
-            console.log("Tree is growing to new heights: ", this.height);
+            console.log("Tree is growing to new heights: ", this.height + " on the " + (Meteor.isServer ? "server" : "client"));
             this.leaves.push(new Tests.TestLeaf("leaf" + this.getHeight(), this));
             this.leaves.forEach(function (l) {
                 l.grow();
@@ -36,6 +33,7 @@ var Tests;
             return this._id;
         };
         TestTree.prototype.setId = function (i) {
+            console.log("Setting tree id:" + i);
             this._id = i;
         };
         TestTree.prototype.getHeight = function () {

@@ -9,16 +9,33 @@ class TestTreeCollection extends persistence.BaseCollection<Tests.TestTree> {
         super(Tests.TestTree);
     }
 
-    newTree( initialHeight:number, callback:(err:any, tree?:Tests.TestTree)=>void){
-        var that = this;
-        this.insert( new Tests.TestTree(initialHeight) );
+    newTree( initialHeight:number, callback:(err:any, tree?:Tests.TestTree)=>void):void{
+        var t:Tests.TestTree  = new Tests.TestTree(initialHeight);
+        this.insert( t, function(err:any, id:string){
+            console.log("loading tree ",this.getById(id).persistencePath );
+            callback( err, this.getById(id) );
+        }.bind(this) );
     }
-    deleteTree( treeId:string ){
-        this.remove( treeId );
+    deleteTree( treeId:string, cb:(err:any)=>void ){
+        this.remove( treeId, cb );
+    }
+    serverFunction( treeId:string, t:Tests.TestTree, n:number, cb:(e:any, r:string)=>void ){
+        cb( undefined, "Hello "+treeId+"! This is on the "+(Meteor.isServer?"server":"client")+" t:"+(t instanceof Tests.TestTree)+" "+t.getHeight()+" n:"+n+" "+(typeof n) );
     }
 
 }
 
+if( Meteor.isServer ) {
+    Meteor.publish("trees", function(){
+        return persistence.MeteorPersistence.collections["TheTreeCollection"].getMeteorCollection().find({});
+    });
+}
+else
+{
+    Meteor.subscribe("trees");
+}
 // TODO move to annotation
-persistence.MeteorPersistence.wrapFunction(TestTreeCollection.prototype, "newTree", "newTree", true, null, new ConstantObjectRetriever(new TestTreeCollection()) );
-persistence.MeteorPersistence.wrapFunction(TestTreeCollection.prototype, "deleteTree", "deleteTree", true, null, new ConstantObjectRetriever(new TestTreeCollection()) );
+
+persistence.MeteorPersistence.wrapFunction(TestTreeCollection.prototype, "newTree", "newTree", true, new DeSerializer.Serializer(new persistence.MeteorObjectRetriever()), new persistence.ConstantObjectRetriever(new TestTreeCollection()) );
+persistence.MeteorPersistence.wrapFunction(TestTreeCollection.prototype, "deleteTree", "deleteTree", true, new DeSerializer.Serializer(new persistence.MeteorObjectRetriever()), new persistence.ConstantObjectRetriever(new TestTreeCollection()) );
+persistence.MeteorPersistence.wrapFunction(TestTreeCollection.prototype, "serverFunction", "serverFunction", true, new DeSerializer.Serializer(new persistence.MeteorObjectRetriever()), new persistence.ConstantObjectRetriever(new TestTreeCollection()) );

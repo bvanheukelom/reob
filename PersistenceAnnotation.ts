@@ -123,7 +123,10 @@ module persistence
 
         static getPropertyClass(f:Function, propertyName:string):TypeClass<Persistable> {
             var className = PersistenceAnnotation.getPropertyProperty( f.prototype, propertyName, "type")
-            return PersistenceAnnotation.getEntityClassByName(className);
+            if( !className )
+                return undefined;
+            else
+                return PersistenceAnnotation.getEntityClassByName(className);
         }
 
         static getTypedPropertyNames<T extends Persistable>(f:TypeClass<T>):Array<string> {
