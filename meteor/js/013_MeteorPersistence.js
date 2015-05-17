@@ -33,11 +33,13 @@ persistence;
                     for (var _i = 1; _i < arguments.length; _i++) {
                         args[_i - 1] = arguments[_i];
                     }
-                    if (Meteor.isServer) {
-                        var collection = persistence.MeteorPersistence.collections[persistence.PersistenceAnnotation.getCollectionName(c)];
-                        return collection.update(this.getId(), function (o) {
+                    var collection = persistence.MeteorPersistence.collections[persistence.PersistenceAnnotation.getCollectionName(c)];
+                    if (MeteorPersistence.wrappedCallInProgress || Meteor.isServer) {
+                        var r = collection.update(this.getId(), function (o) {
                             return originalFunction.apply(o, args);
                         });
+                        originalFunction.apply(this, args);
+                        return r;
                     }
                     else
                         return originalFunction.apply(this, args);

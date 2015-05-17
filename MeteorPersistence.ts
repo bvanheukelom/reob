@@ -68,14 +68,18 @@ module persistence {
                 var domainObjectFunction = c.prototype[functionName];
                 // this is executed last. it wraps the original function into a collection.update
                 MeteorPersistence.monkeyPatch(c.prototype, functionName, function (originalFunction, ...args:string[]) {
-                    if( Meteor.isServer ) {
-                        var collection:persistence.BaseCollection<any> = persistence.MeteorPersistence.collections[persistence.PersistenceAnnotation.getCollectionName(c)];
-                        return collection.update(this.getId(), function (o) {
+                    var collection:persistence.BaseCollection<any> = persistence.MeteorPersistence.collections[persistence.PersistenceAnnotation.getCollectionName(c)];
+                    if( MeteorPersistence.wrappedCallInProgress || Meteor.isServer )
+                    {
+                        var r = collection.update(this.getId(), function (o) {
                             return originalFunction.apply(o, args);
                         });
+                        originalFunction.apply(this, args);
+                        return r;
+
                     }
                     else
-                        return originalFunction.apply(this,args);
+                        return originalFunction.apply(this, args);
                 });
                 // this is executed second. a meteor call is made for the objects that need updating
                 MeteorPersistence.wrapFunction(c.prototype, functionName, className+"."+functionName, false, MeteorPersistence.serializer, MeteorPersistence.meteorObjectRetriever )
@@ -342,6 +346,8 @@ module persistence {
                             MeteorPersistence.nextCallback = undefined;
                         }
                     });
+
+                    // the object needs to be updated with the result form the update function
                     if (!serverOnly) {
                         // also call the method on the current object so that it reflects the update
                         var result = patchedFunction.apply(this, originalArguments);
