@@ -11,10 +11,13 @@ class TestTreeCollection extends persistence.BaseCollection<Tests.TestTree> {
 
     newTree( initialHeight:number, callback:(err:any, tree?:Tests.TestTree)=>void):void{
         var t:Tests.TestTree  = new Tests.TestTree(initialHeight);
-        this.insert( t, function(err:any, id:string){
-            console.log("loading tree ",this.getById(id).persistencePath );
-            callback( err, this.getById(id) );
-        }.bind(this) );
+        try{
+            var id:string = this.insert( t );
+            callback( undefined, this.getById(id) );
+        }catch( err )
+        {
+            callback( err );
+        }
     }
     deleteTree( treeId:string, cb:(err:any)=>void ){
         this.remove( treeId, cb );

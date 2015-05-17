@@ -1,11 +1,11 @@
-var __extends = this.__extends || function (d, b) {
+__extends = this.__extends || function (d, b) {
     for (var p in b) if (b.hasOwnProperty(p)) d[p] = b[p];
     function __() { this.constructor = d; }
     __.prototype = b.prototype;
     d.prototype = new __();
 };
 ///<reference path="references.d.ts"/>
-var TestPersonCollection = (function (_super) {
+TestPersonCollection = (function (_super) {
     __extends(TestPersonCollection, _super);
     function TestPersonCollection() {
         _super.call(this, Tests.TestPerson);
@@ -34,4 +34,3 @@ else {
     Meteor.subscribe("persons");
 }
 persistence.MeteorPersistence.wrapFunction(TestPersonCollection.prototype, "newPerson", "newPerson", true, new DeSerializer.Serializer(new persistence.MeteorObjectRetriever()), new persistence.ConstantObjectRetriever(new TestPersonCollection()));
-//# sourceMappingURL=TestPersonCollection.js.map

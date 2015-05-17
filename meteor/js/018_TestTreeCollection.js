@@ -15,10 +15,13 @@ TestTreeCollection = (function (_super) {
     }
     TestTreeCollection.prototype.newTree = function (initialHeight, callback) {
         var t = new Tests.TestTree(initialHeight);
-        this.insert(t, function (err, id) {
-            console.log("loading tree ", this.getById(id).persistencePath);
-            callback(err, this.getById(id));
-        }.bind(this));
+        try {
+            var id = this.insert(t);
+            callback(undefined, this.getById(id));
+        }
+        catch (err) {
+            callback(err);
+        }
     };
     TestTreeCollection.prototype.deleteTree = function (treeId, cb) {
         this.remove(treeId, cb);

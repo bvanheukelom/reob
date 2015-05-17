@@ -57,7 +57,7 @@ describe("The persistence thing", function(){
             done();
         });
     });
-    fit("can call server functions", function( done ){
+    it("can call server functions", function( done ){
         treeCollection.serverFunction("World", new Tests.TestTree(212), 42, function(e:any,s:string){
             expect( s ).toBe( "Hello World! This is on the server t:true 212 n:42 number" );
             expect(e).toBeUndefined();
@@ -91,8 +91,6 @@ describe("The persistence thing", function(){
     });
 
     it("can do basic removes", function(done){
-
-
         treeCollection.newTree(20,function(err, t:Tests.TestTree){
             expect( treeCollection.getById(t.getId())).toBeDefined();
             treeCollection.deleteTree(t.getId(), function(err){
@@ -166,92 +164,62 @@ describe("The persistence thing", function(){
         expect(t1.getLeaves()[0] instanceof Tests.TestLeaf).toBeTruthy();
     });
 
-    it("can call wrapped functions", function(done){
-        treeCollection.newTree(24,function(err:any,t:Tests.TestTree){
-            t.grow();
-            t.grow();
-            expect(treeCollection.getById(t.getId())).toBeDefined();
-            expect(treeCollection.getById(t.getId()).getLeaves().length).toBe(2);
-            expect(treeCollection.getById(t.getId()).getLeaves()[0] instanceof Tests.TestLeaf).toBeTruthy();
-            expect(treeCollection.getById(t.getId()).getLeaves()[1] instanceof Tests.TestLeaf).toBeTruthy();
-            done();
-        });
-    });
-
     it("reoves all", function(){
         expect(true).toBeTruthy();
     });
+
     // test that properties that need lazy loading are not loaded during serialization
+
+    it("can use persistence paths on objects that have foreign key properties", function(){
+        var t1:Tests.TestTree = new Tests.TestTree(12);
+        t1.setId("dfdf");
+        var tp:Tests.TestPerson = new Tests.TestPerson("tp");
+        tp.tree = t1;
+        persistence.MeteorPersistence.updatePersistencePaths(tp);
+    });
+
+    it("can serialize objects that have foreign key properties", function(){
+        var t1:Tests.TestTree = new Tests.TestTree(122);
+        t1.setId( "tree1" );
+        var tp:Tests.TestPerson = new Tests.TestPerson("tp");
+        tp.tree = t1;
+        var doc = new DeSerializer.Serializer( new persistence.MeteorObjectRetriever() ).toDocument(tp);
+        expect( doc["tree"] ).toBe("TheTreeCollection[tree1]");
+    });
+
+    it("can save objects that have foreign key properties", function(done){
+        personCollection.newPerson( "jake", function( error:any, jake:Tests.TestPerson ){
+            expect(error).toBeUndefined();
+            expect(jake).toBeDefined();
+            treeCollection.newTree(12, function( error, t:Tests.TestTree ){
+                jake.chooseTree(t);
+                setTimeout(function(){
+                    var loadedJake = personCollection.getById(jake.getId());
+                    expect(loadedJake).toBeDefined();
+                    expect(loadedJake.tree).toBeDefined();
+                    done();
+                },1000);
+            });
+        });
+    });
     //
-    //it("can use persistence paths on objects that have foreign key properties", function(){
-    //    var t1:Tests.TestTree = new Tests.TestTree("tree1");
-    //    var tp:Tests.TestPerson = new Tests.TestPerson("tp");
-    //    tp.tree = t1;
-    //    persistence.MeteorPersistence.updatePersistencePaths(tp);
-    //});
     //
-    //it("can serialize objects that have foreign key properties", function(){
-    //    var t1:Tests.TestTree = new Tests.TestTree("tree1");
-    //    var tp:Tests.TestPerson = new Tests.TestPerson("tp");
-    //    tp.tree = t1;
-    //    var doc = DeSerializer.Serializer.toDocument(tp);
-    //    expect( doc["tree"] ).toBe("TheTreeCollection[tree1]");
-    //});
-    //
-    //it("lazy loads objects", function(){
-    //    var t1:Tests.TestTree = new Tests.TestTree("tree1");
-    //    treeCollection.insert(t1);
-    //    var tp:Tests.TestPerson = new Tests.TestPerson("tp");
-    //    tp.tree = t1;
-    //    personCollection.insert(tp);
-    //    var tp2 = personCollection.getById("tp");
-    //    expect( persistence.MeteorPersistence.needsLazyLoading(tp2, "tree") ).toBeTruthy();
-    //    var trt = tp2.tree;
-    //    expect( trt ).toBeDefined();
-    //    expect( persistence.MeteorPersistence.needsLazyLoading(tp2, "tree") ).toBeFalsy();
-    //});
-    //
-    //it("can save objects that have foreign key properties", function(){
-    //    var t1:Tests.TestTree = new Tests.TestTree("tree1");
-    //    treeCollection.insert(t1);
-    //    var tp:Tests.TestPerson = new Tests.TestPerson("tp");
-    //    tp.tree = t1;
-    //    personCollection.insert(tp);
-    //    expect(personCollection.getById("tp")).toBeDefined();
-    //    expect(personCollection.getById("tp").tree).toBeDefined();
-    //});
-    //
-    //it("XXXXXX can save an array of foreign ids", function(){
-    //    var p1:Tests.TestPerson = new Tests.TestPerson("p1");
-    //
-    //    var t1:Tests.TestTree = new Tests.TestTree("t1");
-    //    treeCollection.insert(t1);
-    //    var t2:Tests.TestTree = new Tests.TestTree("t2");
-    //    treeCollection.insert(t2);
-    //    var t3:Tests.TestTree = new Tests.TestTree("t3");
-    //    treeCollection.insert(t3);
-    //
-    //    p1.trees.push(t1);
-    //    p1.trees.push(t2);
-    //    p1.trees.push(t3);
-    //    personCollection.insert(p1);
-    //
-    //    expect(personCollection.getById("p1").trees).toBeDefined();
-    //    expect(Array.isArray( personCollection.getById("p1").trees )).toBeTruthy();
-    //    expect( personCollection.getById("p1").trees[1].getId()).toBe("t2");
-    //});
-    //
-    //it("can save objects that have subobjects which are subobjects of other root objects", function(){
-    //    var t1:Tests.TestTree = new Tests.TestTree("tree1");
-    //    treeCollection.insert(t1);
-    //    t1.grow();
-    //    var tp:Tests.TestPerson = new Tests.TestPerson("tp");
-    //    tp.tree = t1;
-    //    personCollection.insert(tp);
-    //    tp.collectLeaf();
-    //    expect(personCollection.getById("tp").leaf).toBeDefined();
-    //    expect(personCollection.getById("tp").leaf.getId()).toBe(t1.getLeaves()[0].getId());
-    //});
+    fit("can save objects that have subobjects which are subobjects of other root objects", function(done){
+        treeCollection.newTree(10,function(err,t:Tests.TestTree){
+            expect(t).toBeDefined();
+            t.grow();
+            personCollection.newPerson("girl", function(err,tp:Tests.TestPerson){
+
+                tp.chooseTree(t);
+                tp.collectLeaf();
+                expect(tp.leaf).toBeDefined();
+                expect(tp.leaf.getId()).toBe(t.getLeaves()[0].getId());
+                expect(personCollection.getById(tp.getId()).leaf).toBeDefined();
+                expect(personCollection.getById(tp.getId()).leaf.getId()).toBe(t.getLeaves()[0].getId());
+                done();
+            });
+        });
+    });
     //
     //it("can save objects that have subobjects which are one of many elements in a subobject-array of another root object", function(){
     //    var t1:Tests.TestTree = new Tests.TestTree("tree1");

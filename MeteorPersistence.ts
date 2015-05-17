@@ -50,9 +50,13 @@ module persistence {
 
         static withCallback(p:Function,c:(error:any, result:any)=>void)
         {
-            MeteorPersistence.nextCallback = c;
-            p();
-            MeteorPersistence.nextCallback = undefined;
+            if( Meteor.isClient )
+            {
+                MeteorPersistence.nextCallback = c;
+                p();
+            }
+            else
+                throw new Error("'withCallback' only works on the client as it is called when the next wrapped meteor call returns" );
         }
 
         static wrapClass<T extends Persistable>(c:TypeClass<T>) {
@@ -63,18 +67,21 @@ module persistence {
             persistence.PersistenceAnnotation.getWrappedFunctionNames(c).forEach(function (functionName) {
                 var domainObjectFunction = c.prototype[functionName];
                 // this is executed last. it wraps the original function into a collection.update
-                MeteorPersistence.monkeyPatch(c.prototype, functionName, function (originalFunction, args:string[]) {
-                    console.log("Update patch function called for ", this);
-                    var collection:persistence.BaseCollection<any> = persistence.MeteorPersistence.collections[persistence.PersistenceAnnotation.getCollectionName(c)];
-                    return collection.update(this.getId(), function (o) {
-                        return originalFunction.apply(o, args);
-                    });
-                    originalFunction.apply(this,args);
+                MeteorPersistence.monkeyPatch(c.prototype, functionName, function (originalFunction, ...args:string[]) {
+                    if( Meteor.isServer ) {
+                        var collection:persistence.BaseCollection<any> = persistence.MeteorPersistence.collections[persistence.PersistenceAnnotation.getCollectionName(c)];
+                        return collection.update(this.getId(), function (o) {
+                            return originalFunction.apply(o, args);
+                        });
+                    }
+                    else
+                        return originalFunction.apply(this,args);
                 });
                 // this is executed second. a meteor call is made for the objects that need updating
                 MeteorPersistence.wrapFunction(c.prototype, functionName, className+"."+functionName, false, MeteorPersistence.serializer, MeteorPersistence.meteorObjectRetriever )
-                // this is executed first. it check if the object is part of the persistence layer and only if it is it calls the functions below
-                MeteorPersistence.monkeyPatch(c.prototype, functionName, function (originalFunction, args:string[]) {
+                //this is executed first. it check if the object is part of the persistence layer and only if it is it calls the functions below
+                MeteorPersistence.monkeyPatch(c.prototype, functionName, function (originalFunction, ...args:string[]) {
+
                     if( this.persistencePath ) {
                         originalFunction.apply(this,args);
                     }
@@ -209,7 +216,7 @@ module persistence {
 
         }
         // todo  make the persistencePath enumerable:false everywhere it is set
-        //static setPersistencePath(){
+        // static setPersistencePath(){
         //
         //}
 
@@ -217,6 +224,8 @@ module persistence {
             if (!visited)
                 visited = [];
             if (visited.indexOf(object) != -1)
+                return;
+            if( !object || typeof object!="object" )
                 return;
 
             //console.log("updating persistence path for ", object)
@@ -295,7 +304,6 @@ module persistence {
         static wrapFunction( object:any, propertyName:string, meteorMethodName:string, serverOnly:boolean, argumentSerializer:DeSerializer.Serializer, objectRetriever:ObjectRetriever ):void
         {
             var originalFunction = object[propertyName];
-
             if( Meteor.isClient ) {
                 MeteorPersistence.monkeyPatch(object, propertyName, function (patchedFunction:Function, ...originalArguments:any[]) {
                     var args = [];
@@ -304,42 +312,39 @@ module persistence {
                     for (var i in originalArguments) {
                         if (i == originalArguments.length - 1 && typeof originalArguments[i] == "function")
                             callback = originalArguments[i];
-                        else if( argumentSerializer )
-                        {
-                            args[i] = argumentSerializer?argumentSerializer.toDocument(originalArguments[i]):originalArguments[i];
-                            classNames[i] = argumentSerializer.getClassName( originalArguments[i] );
+                        else if (argumentSerializer) {
+                            args[i] = argumentSerializer ? argumentSerializer.toDocument(originalArguments[i]) : originalArguments[i];
+                            classNames[i] = argumentSerializer.getClassName(originalArguments[i]);
                         }
                         else
+                        {
                             args[i] = originalArguments[i];
+                        }
                     }
 
                     var id = objectRetriever.getId(this);
 
                     // If this is object is part of persistence and no wrapped call is in progress ...
                     console.log("Meteor call " + propertyName + " with arguments ", originalArguments, " registered callback:" + MeteorPersistence.nextCallback);
-                    Meteor.call(meteorMethodName,  id, args, classNames, !!callback, function(error, result){
-                        console.log("Returned from meteor method '"+meteorMethodName+"' with result:",result);
-                        if( !error )
-                        {
-                            if( argumentSerializer && result.className ) {
+                    Meteor.call(meteorMethodName, id, args, classNames, !!callback, function (error, result) {
+                        console.log("Returned from meteor method '" + meteorMethodName + "' with result:", result, MeteorPersistence.nextCallback);
+                        if (!error) {
+                            if (argumentSerializer && result.className) {
                                 result.result = argumentSerializer.toObject(result.result, persistence.PersistenceAnnotation.getEntityClassByName(result.className));
                                 MeteorPersistence.updatePersistencePaths(result.result);
                             }
 
                         }
-                        if( callback )
-                            callback( error, result?result.result:undefined );
-                        else if( MeteorPersistence.nextCallback )
-                            MeteorPersistence.nextCallback( error, result?result.result:undefined );
-                    });
-                    if( !serverOnly ) {
-                        if (callback) {
-                            args.push(function (err, result) {
-
-                            });
+                        if (callback)
+                            callback(error, result ? result.result : undefined);
+                        else if (MeteorPersistence.nextCallback) {
+                            MeteorPersistence.nextCallback(error, result ? result.result : undefined);
+                            MeteorPersistence.nextCallback = undefined;
                         }
+                    });
+                    if (!serverOnly) {
                         // also call the method on the current object so that it reflects the update
-                        var result = patchedFunction.apply(this, args);
+                        var result = patchedFunction.apply(this, originalArguments);
                         return result;
                     }
                 });
@@ -354,7 +359,8 @@ module persistence {
                     persistence.MeteorPersistence.wrappedCallInProgress = true;
                     try {
                         var object = objectRetriever.getObject(id);
-
+                        if( !object )
+                            throw new Error("Unable to retrieve object with id: "+id);
                         if (argumentSerializer) {
                             args.forEach(function (o:any, i:number) {
                                 var argumentClass = persistence.PersistenceAnnotation.getEntityClassByName(classNames[i]);
@@ -362,23 +368,25 @@ module persistence {
                             });
                         }
 
+                        var resultObj:any = {};
                         if (appendCallback) {
                             console.log(" Meteor method call. Calling function with callback on ", object);
                             var syncFunction = Meteor.wrapAsync(function (cb) {
                                 args.push(cb);
                                 originalFunction.apply(object, args);
                             });
-                            var resultObj:any = {};
                             resultObj.result = syncFunction();
-                            if( argumentSerializer )
-                                resultObj.className = argumentSerializer.getClassName(resultObj.result);
-                            console.log("Returning from meteor method '"+meteorMethodName+"' with result:", resultObj);
-                            return resultObj;
                         }
                         else {
                             console.log("Meteor method call. Calling function without callback");
-                            return originalFunction.apply(object, args);
+                            resultObj.result = originalFunction.apply(object, args);
                         }
+                        if( argumentSerializer )
+                            resultObj.className = argumentSerializer.getClassName(resultObj.result);
+
+                        console.log("Returning from meteor method '"+meteorMethodName+"' with result:", resultObj);
+
+                        return resultObj;
                     } finally {
                         persistence.MeteorPersistence.wrappedCallInProgress = false;
                     }

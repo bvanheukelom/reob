@@ -139,27 +139,31 @@ module persistence {
         }
 
 
-        insert( p:T, cb:(e:any, id:string)=>void ):void
+        insert( p:T ):string
         {
             if( Meteor.isServer )
             {
+
+                // TODO make sure that this is unique
+                if( typeof p.getId!="function" || !p.getId() )
+                    p.setId(new (<any>Mongo.ObjectID)()._str);
                 var doc : Document = this.serializer.toDocument( p );
-                if( typeof p.getId=="function" && p.getId() )
-                    doc._id = p.getId();
+                //if( typeof p.getId=="function" && p.getId() )
+                //    doc._id = p.getId();
+                //else
+                //    doc._id = ;
+
                 doc.serial = 0;
                 console.log( "inserting document: ", doc);
                 var that = this;
-                var id = this.meteorCollection.insert(doc, function(error,id){
-                    if( !error ) {
-                        console.log( "inserted into '"+that.getName()+"' new id:"+id);
-                        if( typeof p.setId == "function")
-                            p.setId(id);
-                        MeteorPersistence.updatePersistencePaths(p);
-                    }
-                    else
-                        console.log( "inserted into '"+this.getName()+"' error:"+error);
-                    cb(error, id);
-                });
+                var id = this.meteorCollection.insert(doc);
+                console.log( "inserted into '"+that.getName()+"' new id:"+id);
+                if( typeof p.setId == "function")
+                    p.setId(id);
+                else
+                    throw new Error("Unable to set Id after an object of class '"+persistence.PersistenceAnnotation.className(that.theClass)+"' was inserted into collection '"+that.name+"'. Either only call insert with objects that already have an ID or declare a 'setId' function on the class.");
+                MeteorPersistence.updatePersistencePaths(p);
+                return id;
             }
             else
                 throw new Error("Insert can not be called on the client. Wrap it into a meteor method.");

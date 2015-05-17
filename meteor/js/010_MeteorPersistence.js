@@ -16,25 +16,38 @@ persistence;
             return persistence.PersistenceAnnotation.className(o.constructor);
         };
         MeteorPersistence.withCallback = function (p, c) {
-            MeteorPersistence.nextCallback = c;
-            p();
-            MeteorPersistence.nextCallback = undefined;
+            if (Meteor.isClient) {
+                MeteorPersistence.nextCallback = c;
+                p();
+            }
+            else
+                throw new Error("'withCallback' only works on the client as it is called when the next wrapped meteor call returns");
         };
         MeteorPersistence.wrapClass = function (c) {
             var className = persistence.PersistenceAnnotation.className(c);
             console.log("Wrapping transactional functions for class " + className);
             persistence.PersistenceAnnotation.getWrappedFunctionNames(c).forEach(function (functionName) {
                 var domainObjectFunction = c.prototype[functionName];
-                MeteorPersistence.monkeyPatch(c.prototype, functionName, function (originalFunction, args) {
-                    console.log("Update patch function called for ", this);
-                    var collection = persistence.MeteorPersistence.collections[persistence.PersistenceAnnotation.getCollectionName(c)];
-                    return collection.update(this.getId(), function (o) {
-                        return originalFunction.apply(o, args);
-                    });
-                    originalFunction.apply(this, args);
+                MeteorPersistence.monkeyPatch(c.prototype, functionName, function (originalFunction) {
+                    var args = [];
+                    for (var _i = 1; _i < arguments.length; _i++) {
+                        args[_i - 1] = arguments[_i];
+                    }
+                    if (Meteor.isServer) {
+                        var collection = persistence.MeteorPersistence.collections[persistence.PersistenceAnnotation.getCollectionName(c)];
+                        return collection.update(this.getId(), function (o) {
+                            return originalFunction.apply(o, args);
+                        });
+                    }
+                    else
+                        return originalFunction.apply(this, args);
                 });
                 MeteorPersistence.wrapFunction(c.prototype, functionName, className + "." + functionName, false, MeteorPersistence.serializer, MeteorPersistence.meteorObjectRetriever);
-                MeteorPersistence.monkeyPatch(c.prototype, functionName, function (originalFunction, args) {
+                MeteorPersistence.monkeyPatch(c.prototype, functionName, function (originalFunction) {
+                    var args = [];
+                    for (var _i = 1; _i < arguments.length; _i++) {
+                        args[_i - 1] = arguments[_i];
+                    }
                     if (this.persistencePath) {
                         originalFunction.apply(this, args);
                     }
@@ -114,6 +127,8 @@ persistence;
             if (!visited)
                 visited = [];
             if (visited.indexOf(object) != -1)
+                return;
+            if (!object || typeof object != "object")
                 return;
             if (!Object.getOwnPropertyDescriptor(object, "persistencePath")) {
                 Object.defineProperty(object, "persistencePath", {
@@ -196,13 +211,14 @@ persistence;
                             args[i] = argumentSerializer ? argumentSerializer.toDocument(originalArguments[i]) : originalArguments[i];
                             classNames[i] = argumentSerializer.getClassName(originalArguments[i]);
                         }
-                        else
+                        else {
                             args[i] = originalArguments[i];
+                        }
                     }
                     var id = objectRetriever.getId(this);
                     console.log("Meteor call " + propertyName + " with arguments ", originalArguments, " registered callback:" + MeteorPersistence.nextCallback);
                     Meteor.call(meteorMethodName, id, args, classNames, !!callback, function (error, result) {
-                        console.log("Returned from meteor method '" + meteorMethodName + "' with result:", result);
+                        console.log("Returned from meteor method '" + meteorMethodName + "' with result:", result, MeteorPersistence.nextCallback);
                         if (!error) {
                             if (argumentSerializer && result.className) {
                                 result.result = argumentSerializer.toObject(result.result, persistence.PersistenceAnnotation.getEntityClassByName(result.className));
@@ -211,15 +227,13 @@ persistence;
                         }
                         if (callback)
                             callback(error, result ? result.result : undefined);
-                        else if (MeteorPersistence.nextCallback)
+                        else if (MeteorPersistence.nextCallback) {
                             MeteorPersistence.nextCallback(error, result ? result.result : undefined);
+                            MeteorPersistence.nextCallback = undefined;
+                        }
                     });
                     if (!serverOnly) {
-                        if (callback) {
-                            args.push(function (err, result) {
-                            });
-                        }
-                        var result = patchedFunction.apply(this, args);
+                        var result = patchedFunction.apply(this, originalArguments);
                         return result;
                     }
                 });
@@ -234,29 +248,31 @@ persistence;
                     persistence.MeteorPersistence.wrappedCallInProgress = true;
                     try {
                         var object = objectRetriever.getObject(id);
+                        if (!object)
+                            throw new Error("Unable to retrieve object with id: " + id);
                         if (argumentSerializer) {
                             args.forEach(function (o, i) {
                                 var argumentClass = persistence.PersistenceAnnotation.getEntityClassByName(classNames[i]);
                                 args[i] = argumentSerializer.toObject(o, argumentClass);
                             });
                         }
+                        var resultObj = {};
                         if (appendCallback) {
                             console.log(" Meteor method call. Calling function with callback on ", object);
                             var syncFunction = Meteor.wrapAsync(function (cb) {
                                 args.push(cb);
                                 originalFunction.apply(object, args);
                             });
-                            var resultObj = {};
                             resultObj.result = syncFunction();
-                            if (argumentSerializer)
-                                resultObj.className = argumentSerializer.getClassName(resultObj.result);
-                            console.log("Returning from meteor method '" + meteorMethodName + "' with result:", resultObj);
-                            return resultObj;
                         }
                         else {
                             console.log("Meteor method call. Calling function without callback");
-                            return originalFunction.apply(object, args);
+                            resultObj.result = originalFunction.apply(object, args);
                         }
+                        if (argumentSerializer)
+                            resultObj.className = argumentSerializer.getClassName(resultObj.result);
+                        console.log("Returning from meteor method '" + meteorMethodName + "' with result:", resultObj);
+                        return resultObj;
                     }
                     finally {
                         persistence.MeteorPersistence.wrappedCallInProgress = false;

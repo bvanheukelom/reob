@@ -93,25 +93,22 @@ var persistence;
             }
             throw new Error("update gave up after 10 attempts to update the object ");
         };
-        BaseCollection.prototype.insert = function (p, cb) {
+        BaseCollection.prototype.insert = function (p) {
             if (Meteor.isServer) {
+                if (typeof p.getId != "function" || !p.getId())
+                    p.setId(new Mongo.ObjectID()._str);
                 var doc = this.serializer.toDocument(p);
-                if (typeof p.getId == "function" && p.getId())
-                    doc._id = p.getId();
                 doc.serial = 0;
                 console.log("inserting document: ", doc);
                 var that = this;
-                var id = this.meteorCollection.insert(doc, function (error, id) {
-                    if (!error) {
-                        console.log("inserted into '" + that.getName() + "' new id:" + id);
-                        if (typeof p.setId == "function")
-                            p.setId(id);
-                        persistence.MeteorPersistence.updatePersistencePaths(p);
-                    }
-                    else
-                        console.log("inserted into '" + this.getName() + "' error:" + error);
-                    cb(error, id);
-                });
+                var id = this.meteorCollection.insert(doc);
+                console.log("inserted into '" + that.getName() + "' new id:" + id);
+                if (typeof p.setId == "function")
+                    p.setId(id);
+                else
+                    throw new Error("Unable to set Id after an object of class '" + persistence.PersistenceAnnotation.className(that.theClass) + "' was inserted into collection '" + that.name + "'. Either only call insert with objects that already have an ID or declare a 'setId' function on the class.");
+                persistence.MeteorPersistence.updatePersistencePaths(p);
+                return id;
             }
             else
                 throw new Error("Insert can not be called on the client. Wrap it into a meteor method.");

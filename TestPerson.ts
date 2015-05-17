@@ -49,6 +49,12 @@ module Tests
             return this._id;
         }
 
+        setId( id:string ):void
+        {
+            this._id = id;
+        }
+
+
         @persistence.PersistenceAnnotation.Wrap
         addAddress(a:TestAddress):Tests.TestAddress
         {
@@ -92,7 +98,20 @@ module Tests
         @persistence.PersistenceAnnotation.Wrap
         collectLeaf()
         {
+            console.log("collecting leaf:",this.tree);
             this.leaf = this.tree.getLeaves()[0];
+        }
+
+        @persistence.PersistenceAnnotation.Wrap
+        chooseTree(t:TestTree)
+        {
+            console.log("choosing tree:",t);
+            this.tree = t;
+        }
+        @persistence.PersistenceAnnotation.Wrap
+        addToWood(t:TestTree)
+        {
+            this.trees.push( t );
         }
 
     }

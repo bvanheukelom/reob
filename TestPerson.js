@@ -22,6 +22,9 @@ var Tests;
         TestPerson.prototype.getId = function () {
             return this._id;
         };
+        TestPerson.prototype.setId = function (id) {
+            this._id = id;
+        };
         TestPerson.prototype.addAddress = function (a) {
             console.log("inside add address:", (a instanceof Tests.TestAddress));
             this.addresses.push(a);
@@ -40,7 +43,15 @@ var Tests;
             return this.tree;
         };
         TestPerson.prototype.collectLeaf = function () {
+            console.log("collecting leaf:", this.tree);
             this.leaf = this.tree.getLeaves()[0];
+        };
+        TestPerson.prototype.chooseTree = function (t) {
+            console.log("choosing tree:", t);
+            this.tree = t;
+        };
+        TestPerson.prototype.addToWood = function (t) {
+            this.trees.push(t);
         };
         __decorate([
             persistence.PersistenceAnnotation.Type("TestPhoneNumber")
@@ -79,6 +90,14 @@ var Tests;
             __decorate([
                 persistence.PersistenceAnnotation.Wrap
             ], TestPerson.prototype, "collectLeaf", Object.getOwnPropertyDescriptor(TestPerson.prototype, "collectLeaf")));
+        Object.defineProperty(TestPerson.prototype, "chooseTree",
+            __decorate([
+                persistence.PersistenceAnnotation.Wrap
+            ], TestPerson.prototype, "chooseTree", Object.getOwnPropertyDescriptor(TestPerson.prototype, "chooseTree")));
+        Object.defineProperty(TestPerson.prototype, "addToWood",
+            __decorate([
+                persistence.PersistenceAnnotation.Wrap
+            ], TestPerson.prototype, "addToWood", Object.getOwnPropertyDescriptor(TestPerson.prototype, "addToWood")));
         TestPerson = __decorate([
             persistence.PersistenceAnnotation.Entity(true)
         ], TestPerson);

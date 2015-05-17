@@ -2,22 +2,18 @@ Meteor.startup(function(){
 
 	if( Meteor.isServer )
 	{
-		//var treeCollection = new TestPersonCollection();
-		//var personCollection = new TestTreeCollection();
-		////
-		//personCollection.getMeteorCollection().remove({});
-		//treeCollection.getMeteorCollection().remove({});
-		////
-		//var t1 = new Tests.TestTree("tree1");
-		//debugger;
-		//
-		//treeCollection.newTree(20, function(err,t){
-		//	debugger;
+		var treeCollection = new TestTreeCollection();
+		var personCollection = new TestPersonCollection();
+		//personCollection.newPerson( "jake", function( error, jake  ){
+		//	treeCollection.newTree(12, function( error, t ){
+		//		debugger;
+		//		jake.chooseTree(t);
+		//		var loadedJake = personCollection.getById(jake.getId());
+		//		expect(persistence.MeteorPersistence.needsLazyLoading(loadedJake, "tree") ).toBeTruthy();
+		//		//loadedJake.tree;
+		//		//expect(persistence.MeteorPersistence.needsLazyLoading(loadedJake, "tree") ).toBeFalsy();
+		//		done();
+		//	});
 		//});
-		//debugger;
-		//t1.grow();
-		//debugger;
-		////expect(treeCollection.getById("tree1")).toBeDefined();
-		////expect(treeCollection.getById("tree1").getLeaves()[0] instanceof Tests.TestLeaf).toBeTruthy();
 	}
 });
