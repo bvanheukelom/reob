@@ -19,9 +19,10 @@ module.exports = function (grunt) {
 			meteor : {
 				src: ["code/**/*.ts", "!node_modules/**/*.ts"],
 				options:{
-					compiler:"/usr/local/bin/tsc"
+					compiler:"/usr/local/bin/tsc",
+					declaration:"build/meteor/mapper/mapper.d.ts"
 				},
-				outDir:"build/meteor/mapper/"
+				out:"build/meteor/mapper/mapper.js"
 			},
 			commonjs : {
 				src: annotationFiles,
