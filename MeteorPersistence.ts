@@ -26,7 +26,7 @@ module persistence {
 
         // TODO new name
         static objectsClassName(o:any):string {
-            return persistence.PersistenceAnnotation.className(o.constructor);
+            return persistence.className(o.constructor);
         }
 
         //private static loadPath(s:string):Persistable {
@@ -60,7 +60,7 @@ module persistence {
         }
 
         static wrapClass<T extends Persistable>(c:TypeClass<T>) {
-            var className = persistence.PersistenceAnnotation.className(c);
+            var className = persistence.className(c);
             console.log("Wrapping transactional functions for class " + className);
             // iterate over all properties of the prototype. this is where the functions are.
             //var that = this;
@@ -245,12 +245,12 @@ module persistence {
                     if ( object.getId())
                         object.persistencePath = new persistence.PersistencePath(PersistenceAnnotation.getCollectionName(objectClass), object.getId())
                     else
-                        throw new Error("Can not set the persistence path of root collection object without id. Class:" + PersistenceAnnotation.className(objectClass));
+                        throw new Error("Can not set the persistence path of root collection object without id. Class:" + className(objectClass));
                 }
             }
             else {
                 if (!object.persistencePath)
-                    throw new Error("Can not set the persistence path of non root collection object. " + PersistenceAnnotation.className(objectClass));
+                    throw new Error("Can not set the persistence path of non root collection object. " + className(objectClass));
             }
             PersistenceAnnotation.getTypedPropertyNames(objectClass).forEach(function (typedPropertyName:string) {
                 if (!PersistenceAnnotation.isStoredAsForeignKeys(objectClass, typedPropertyName)) {
@@ -268,7 +268,7 @@ module persistence {
                                     MeteorPersistence.updatePersistencePaths(e, visited);
                                 }
                                 else
-                                    throw new Error("An element of the array '" + typedPropertyName + "' stored on the classe " + PersistenceAnnotation.className(objectClass) + " does not have an id. Total persistence path so far:" + object.persistencePath.toString());
+                                    throw new Error("An element of the array '" + typedPropertyName + "' stored on the classe " + className(objectClass) + " does not have an id. Total persistence path so far:" + object.persistencePath.toString());
                             }
                         }
                         else {

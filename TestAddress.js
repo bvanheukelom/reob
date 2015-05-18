@@ -20,7 +20,7 @@ var Tests;
             return this.street;
         };
         TestAddress = __decorate([
-            persistence.PersistenceAnnotation.Entity
+            persistence.Entity
         ], TestAddress);
         return TestAddress;
     })();

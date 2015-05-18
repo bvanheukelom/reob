@@ -1,40 +1,40 @@
 ///<reference path="references.d.ts"/>
 module Tests
 {
-    @persistence.PersistenceAnnotation.Entity(true)
+    @persistence.Entity(true)
     export class TestPerson
     {
         name:string;
         _id:string;
 
-        @persistence.PersistenceAnnotation.Type("TestPhoneNumber")
+        @persistence.Type("TestPhoneNumber")
         phoneNumber:Tests.TestPhoneNumber;
 
-        @persistence.PersistenceAnnotation.ArrayOrMap("TestAddress")
+        @persistence.ArrayOrMap("TestAddress")
         private addresses:Array<TestAddress> = [];
 
-        @persistence.PersistenceAnnotation.Type("TestTree")
-        @persistence.PersistenceAnnotation.AsForeignKeys
+        @persistence.Type("TestTree")
+        @persistence.AsForeignKeys
         tree:Tests.TestTree;
 
-        @persistence.PersistenceAnnotation.Type("TestLeaf")
-        @persistence.PersistenceAnnotation.AsForeignKeys
+        @persistence.Type("TestLeaf")
+        @persistence.AsForeignKeys
         leaf:Tests.TestLeaf;
 
-        @persistence.PersistenceAnnotation.ArrayOrMap("TestLeaf")
-        @persistence.PersistenceAnnotation.AsForeignKeys
+        @persistence.ArrayOrMap("TestLeaf")
+        @persistence.AsForeignKeys
         trees:Array<Tests.TestTree> = [];
 
-        @persistence.PersistenceAnnotation.ArrayOrMap("TestPhoneNumber")
+        @persistence.ArrayOrMap("TestPhoneNumber")
         phoneBook:{ [index:string]: Tests.TestPhoneNumber } = {};
 
-        @persistence.PersistenceAnnotation.ArrayOrMap("TestTree")
-        @persistence.PersistenceAnnotation.AsForeignKeys
+        @persistence.ArrayOrMap("TestTree")
+        @persistence.AsForeignKeys
         wood:{ [index:string]: Tests.TestTree } = {};
 
 
-        @persistence.PersistenceAnnotation.ArrayOrMap("TestPerson")
-        @persistence.PersistenceAnnotation.AsForeignKeys
+        @persistence.ArrayOrMap("TestPerson")
+        @persistence.AsForeignKeys
         family:{ [index:string]: Tests.TestPerson } = {};
 
 
@@ -55,7 +55,7 @@ module Tests
         }
 
 
-        @persistence.PersistenceAnnotation.Wrap
+        @persistence.Wrap
         addAddress(a:TestAddress):Tests.TestAddress
         {
             console.log("inside add address:", (a instanceof TestAddress));
@@ -95,25 +95,25 @@ module Tests
         }
 
 
-        @persistence.PersistenceAnnotation.Wrap
+        @persistence.Wrap
         collectLeaf()
         {
             console.log("collecting leaf:",this.tree);
             this.leaf = this.tree.getLeaves()[0];
         }
 
-        @persistence.PersistenceAnnotation.Wrap
+        @persistence.Wrap
         chooseTree(t:TestTree)
         {
             console.log("choosing tree:",t);
             this.tree = t;
         }
-        @persistence.PersistenceAnnotation.Wrap
+        @persistence.Wrap
         chooseLeaf(l:TestLeaf)
         {
             this.leaf = l;
         }
-        @persistence.PersistenceAnnotation.Wrap
+        @persistence.Wrap
         addToWood(t:TestTree, s?:string )
         {
             this.trees.push( t );
@@ -121,14 +121,14 @@ module Tests
                 this.wood[s] = t;
         }
 
-        @persistence.PersistenceAnnotation.Wrap
+        @persistence.Wrap
         addFamilyRelation(s:string, p:Tests.TestPerson )
         {
             if( s )
                 this.family[s] = p;
         }
 
-        @persistence.PersistenceAnnotation.Wrap
+        @persistence.Wrap
         addPhoneNumber(s:string, p:Tests.TestPhoneNumber )
         {
             this.phoneBook[s] = p;

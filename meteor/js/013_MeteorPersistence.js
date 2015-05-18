@@ -13,7 +13,7 @@ persistence;
             }
         };
         MeteorPersistence.objectsClassName = function (o) {
-            return persistence.PersistenceAnnotation.className(o.constructor);
+            return persistence.className(o.constructor);
         };
         MeteorPersistence.withCallback = function (p, c) {
             if (Meteor.isClient) {
@@ -24,7 +24,7 @@ persistence;
                 throw new Error("'withCallback' only works on the client as it is called when the next wrapped meteor call returns");
         };
         MeteorPersistence.wrapClass = function (c) {
-            var className = persistence.PersistenceAnnotation.className(c);
+            var className = persistence.className(c);
             console.log("Wrapping transactional functions for class " + className);
             persistence.PersistenceAnnotation.getWrappedFunctionNames(c).forEach(function (functionName) {
                 var domainObjectFunction = c.prototype[functionName];
@@ -144,12 +144,12 @@ persistence;
                     if (object.getId())
                         object.persistencePath = new persistence.PersistencePath(persistence.PersistenceAnnotation.getCollectionName(objectClass), object.getId());
                     else
-                        throw new Error("Can not set the persistence path of root collection object without id. Class:" + persistence.PersistenceAnnotation.className(objectClass));
+                        throw new Error("Can not set the persistence path of root collection object without id. Class:" + persistence.className(objectClass));
                 }
             }
             else {
                 if (!object.persistencePath)
-                    throw new Error("Can not set the persistence path of non root collection object. " + persistence.PersistenceAnnotation.className(objectClass));
+                    throw new Error("Can not set the persistence path of non root collection object. " + persistence.className(objectClass));
             }
             persistence.PersistenceAnnotation.getTypedPropertyNames(objectClass).forEach(function (typedPropertyName) {
                 if (!persistence.PersistenceAnnotation.isStoredAsForeignKeys(objectClass, typedPropertyName)) {
@@ -164,7 +164,7 @@ persistence;
                                     MeteorPersistence.updatePersistencePaths(e, visited);
                                 }
                                 else
-                                    throw new Error("An element of the array '" + typedPropertyName + "' stored on the classe " + persistence.PersistenceAnnotation.className(objectClass) + " does not have an id. Total persistence path so far:" + object.persistencePath.toString());
+                                    throw new Error("An element of the array '" + typedPropertyName + "' stored on the classe " + persistence.className(objectClass) + " does not have an id. Total persistence path so far:" + object.persistencePath.toString());
                             }
                         }
                         else {

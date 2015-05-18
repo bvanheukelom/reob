@@ -3,19 +3,19 @@
  */
 module Tests
 {
-    @persistence.PersistenceAnnotation.Entity("TheTreeCollection")
+    @persistence.Entity("TheTreeCollection")
     export class TestTree {
         private _id:string;
         private height:number = 10;
 
-        @persistence.PersistenceAnnotation.ArrayOrMap("TestLeaf")
+        @persistence.ArrayOrMap("TestLeaf")
         leaves:Array<TestLeaf> = [];
 
         constructor( initialHeight?:number) {
             this.height = initialHeight || 10;
         }
 
-        @persistence.PersistenceAnnotation.Wrap
+        @persistence.Wrap
 
         grow():string {
             this.height++;
@@ -30,7 +30,7 @@ module Tests
                 return "grown on the server";
         }
 
-        @persistence.PersistenceAnnotation.Wrap
+        @persistence.Wrap
         wither()
         {
             this.leaves = [];

@@ -107,7 +107,7 @@ var persistence;
                         if (typeof p.setId == "function")
                             p.setId(id);
                         else
-                            throw new Error("Unable to set Id after an object of class '" + persistence.PersistenceAnnotation.className(that.theClass) + "' was inserted into collection '" + that.name + "'. Either only call insert with objects that already have an ID or declare a 'setId' function on the class.");
+                            throw new Error("Unable to set Id after an object of class '" + persistence.className(that.theClass) + "' was inserted into collection '" + that.name + "'. Either only call insert with objects that already have an ID or declare a 'setId' function on the class.");
                         persistence.MeteorPersistence.updatePersistencePaths(p);
                     }
                     else

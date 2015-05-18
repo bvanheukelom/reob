@@ -5,7 +5,7 @@
 module Tests
 {
 
-    @persistence.PersistenceAnnotation.Entity
+    @persistence.Entity
     export class TestAddress {
         street:string;
 

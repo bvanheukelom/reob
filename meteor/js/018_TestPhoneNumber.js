@@ -35,10 +35,10 @@ Tests;
         };
         Object.defineProperty(TestPhoneNumber.prototype, "callNumber",
             __decorate([
-                persistence.PersistenceAnnotation.Wrap
+                persistence.Wrap
             ], TestPhoneNumber.prototype, "callNumber", Object.getOwnPropertyDescriptor(TestPhoneNumber.prototype, "callNumber")));
         TestPhoneNumber = __decorate([
-            persistence.PersistenceAnnotation.Entity
+            persistence.Entity
         ], TestPhoneNumber);
         return TestPhoneNumber;
     })();

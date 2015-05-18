@@ -99,7 +99,7 @@ DeSerializer;
         };
         Serializer.prototype.getClassName = function (o) {
             if (typeof o == "object" && persistence.PersistenceAnnotation.getClass(o)) {
-                return persistence.PersistenceAnnotation.className(persistence.PersistenceAnnotation.getClass(o));
+                return persistence.className(persistence.PersistenceAnnotation.getClass(o));
             }
             else
                 return typeof o;
