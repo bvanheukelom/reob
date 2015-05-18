@@ -1,14 +1,12 @@
 ///<reference path="./references.d.ts"/>
-var mapper;
+mapper;
 (function (mapper) {
     var BaseCollection = (function () {
         function BaseCollection(persistableClass) {
             this.serializer = new DeSerializer.Serializer(new mapper.MeteorObjectRetriever());
-            mapper.MeteorPersistence.init();
             var collectionName = mapper.PersistenceAnnotation.getCollectionName(persistableClass);
             this.name = collectionName;
             if (!mapper.MeteorPersistence.collections[collectionName]) {
-                // as it doesnt really matter which base collection is used in meteor-calls, we're just using the first that is created
                 mapper.MeteorPersistence.collections[collectionName] = this;
             }
             this.meteorCollection = BaseCollection._getMeteorCollection(collectionName);
@@ -19,7 +17,11 @@ var mapper;
         };
         BaseCollection._getMeteorCollection = function (name) {
             if (!BaseCollection.meteorCollections[name]) {
-                BaseCollection.meteorCollections[name] = new Meteor.Collection(name);
+                if (name != "users") {
+                    BaseCollection.meteorCollections[name] = new Meteor.Collection(name);
+                }
+                else
+                    BaseCollection.meteorCollections[name] = Meteor.users;
             }
             return BaseCollection.meteorCollections[name];
         };
@@ -73,21 +75,18 @@ var mapper;
                 if (!document)
                     return undefined;
                 var currentSerial = document.serial;
-                // call the update function
                 var object = this.documentToObject(document);
                 var result = updateFunction(object);
                 mapper.MeteorPersistence.updatePersistencePaths(object);
                 var documentToSave = this.serializer.toDocument(object);
                 documentToSave.serial = currentSerial + 1;
-                // update the collection
                 console.log("writing document ", documentToSave);
                 var updatedDocumentCount = this.meteorCollection.update({
                     _id: id,
                     serial: currentSerial
                 }, documentToSave);
-                // verify that that went well
                 if (updatedDocumentCount == 1) {
-                    return result; // we're done
+                    return result;
                 }
                 else if (updatedDocumentCount > 1)
                     throw new Meteor.Error("verifiedUpdate should only update one document");
@@ -99,14 +98,9 @@ var mapper;
         };
         BaseCollection.prototype.insert = function (p, callback) {
             if (Meteor.isServer) {
-                // TODO make sure that this is unique
                 if (typeof p.getId != "function" || !p.getId())
                     p.setId(new Mongo.ObjectID()._str);
                 var doc = this.serializer.toDocument(p);
-                //if( typeof p.getId=="function" && p.getId() )
-                //    doc._id = p.getId();
-                //else
-                //    doc._id = ;
                 doc.serial = 0;
                 console.log("inserting document: ", doc);
                 var that = this;

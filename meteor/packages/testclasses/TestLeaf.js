@@ -10,7 +10,7 @@ if (typeof __decorate !== "function") __decorate = function (decorators, target,
     }
 };
 ///<reference path="./references.d.ts"/>
-var Tests;
+Tests;
 (function (Tests) {
     var TestLeaf = (function () {
         function TestLeaf(id, parent) {

@@ -3,4 +3,42 @@
  */
 DeSerializer = {};
 mapper = {};
-Tests = {};
+
+Meteor.startup(function(){
+	mapper.MeteorPersistence.init();
+});
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+

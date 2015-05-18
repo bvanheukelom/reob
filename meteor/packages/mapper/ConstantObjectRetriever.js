@@ -1,5 +1,5 @@
 ///<reference path="./references.d.ts"/>
-var mapper;
+mapper;
 (function (mapper) {
     var ConstantObjectRetriever = (function () {
         function ConstantObjectRetriever(o) {

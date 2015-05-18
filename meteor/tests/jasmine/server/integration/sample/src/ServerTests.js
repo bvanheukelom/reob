@@ -1,10 +1,10 @@
-///<reference path="../../../../../../../references.d.ts"/>
+///<reference path="../../../../references.d.ts"/>
 describe("The persistence thing on the server", function () {
     var personCollection;
     var treeCollection;
     beforeAll(function () {
-        personCollection = new TestPersonCollection();
-        treeCollection = new TestTreeCollection();
+        personCollection = new Tests.TestPersonCollection();
+        treeCollection = new Tests.TestTreeCollection();
     });
     beforeEach(function (done) {
         console.log("------------------- new test");

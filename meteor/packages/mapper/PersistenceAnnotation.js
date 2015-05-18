@@ -1,5 +1,5 @@
 ///<reference path="./references.d.ts"/>
-var mapper;
+mapper;
 (function (mapper) {
     function Entity(p1) {
         if (typeof p1 == "string") {
@@ -22,12 +22,8 @@ var mapper;
             };
         }
         else if (typeof p1 == "function") {
-            //var tc:TypeClass<Persistable> = <TypeClass<Persistable>>p1;
-            //var className = PersistenceAnnotation.className(tc);
-            //PersistencePrivate.collectionRootClasses.push(tc);
             var typeClass = p1;
             console.log("Entity() " + className(typeClass));
-            //Reflect.defineMetadata("persistence:collectionName", PersistenceAnnotation.className(typeClass), typeClass);
             Reflect.defineMetadata("persistence:entity", true, typeClass);
             PersistencePrivate.entityClasses[className(typeClass)] = typeClass;
         }
@@ -49,7 +45,6 @@ var mapper;
         return PersistenceAnnotation.setPropertyProperty(targetPrototypeObject, propertyName, "askeys", true);
     }
     mapper.AsForeignKeys = AsForeignKeys;
-    // for grammar reasons
     function AsForeignKey(targetPrototypeObject, propertyName) {
         return AsForeignKeys(targetPrototypeObject, propertyName);
     }
@@ -77,7 +72,6 @@ var mapper;
             else
                 return undefined;
         };
-        // ---- Entity ----
         PersistenceAnnotation.getEntityClassByName = function (className) {
             return PersistencePrivate.entityClasses[className];
         };
@@ -107,11 +101,9 @@ var mapper;
         PersistenceAnnotation.isEntity = function (f) {
             return !!PersistencePrivate.entityClasses[className(f)];
         };
-        // ---- Collection ----
         PersistenceAnnotation.isArrayOrMap = function (typeClass, propertyName) {
             return PersistenceAnnotation.getPropertyProperty(typeClass.prototype, propertyName, "arrayOrMap") == true;
         };
-        // ---- typed properties ----
         PersistenceAnnotation.getPropertyClass = function (f, propertyName) {
             var className = PersistenceAnnotation.getPropertyProperty(f.prototype, propertyName, "type");
             if (!className)
@@ -148,11 +140,9 @@ var mapper;
             }
             return undefined;
         };
-        // ---- AsForeignKeys ----
         PersistenceAnnotation.isStoredAsForeignKeys = function (typeClass, propertyName) {
             return PersistenceAnnotation.getPropertyProperty(typeClass.prototype, propertyName, "askeys");
         };
-        // ---- Wrap ----
         PersistenceAnnotation.getWrappedFunctionNames = function (f) {
             return PersistenceAnnotation.getPropertyNamesByMetaData(f.prototype, "persistence:wrap");
         };
@@ -160,7 +150,6 @@ var mapper;
             var result = [];
             for (var i in o) {
                 var value = o[i];
-                //console.log("Cave man style debugging 1",i, value,Reflect.getMetadata("persistence:wrap", value) );
                 if (typeof value == "function" && Reflect.getMetadata(metaData, value))
                     result.push(i);
             }

@@ -1,11 +1,11 @@
-///<reference path="../../../../../../../references.d.ts"/>
+///<reference path="../../../../references.d.ts"/>
 
 describe("The persistence thing on the client ", function(){
-    var personCollection:TestPersonCollection;
-    var treeCollection:TestTreeCollection;
+    var personCollection:Tests.TestPersonCollection;
+    var treeCollection:Tests.TestTreeCollection;
     beforeAll(function(){
-        personCollection = new TestPersonCollection();
-        treeCollection = new TestTreeCollection();
+        personCollection = new Tests.TestPersonCollection();
+        treeCollection = new Tests.TestTreeCollection();
     });
 
 

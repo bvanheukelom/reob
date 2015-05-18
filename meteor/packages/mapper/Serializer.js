@@ -2,7 +2,7 @@
 /**
  * Created by bert on 04.05.15.
  */
-var DeSerializer;
+DeSerializer;
 (function (DeSerializer) {
     var Serializer = (function () {
         function Serializer(retri) {
@@ -33,7 +33,6 @@ var DeSerializer;
                             entry = this.toObject(entry, propertyClass);
                             result[i] = entry;
                         }
-                        // this can only happen once because if the property is accessed the "lazy load" already kicks in
                         o[propertyName] = result;
                     }
                     else {
@@ -72,7 +71,6 @@ var DeSerializer;
                     doc._id = object.id;
                 }
                 else if (object[property] !== undefined && property != "persistencePath") {
-                    // primitives
                     if (typeof value == "string" || typeof value == "number" || typeof value == "date" || typeof value == "boolean")
                         doc[property] = value;
                     else if (mapper.PersistenceAnnotation.isArrayOrMap(objectClass, property)) {

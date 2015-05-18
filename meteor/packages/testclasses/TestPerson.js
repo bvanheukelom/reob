@@ -7,7 +7,7 @@ if (typeof __decorate !== "function") __decorate = function (decorators, target,
     }
 };
 ///<reference path="./references.d.ts"/>
-var Tests;
+Tests;
 (function (Tests) {
     var TestPerson = (function () {
         function TestPerson(id, name) {
@@ -36,15 +36,6 @@ var Tests;
         TestPerson.prototype.getName = function () {
             return this.name;
         };
-        //getAddressById(id:String):TestAddress
-        //{
-        //    for( var i=0;i<this.addresses.length; i++ )
-        //    {
-        //        var address = this.addresses[i];
-        //        if( address.getId()==id )
-        //            return address;
-        //    }
-        //}
         TestPerson.prototype.getAddresses = function () {
             return this.addresses;
         };

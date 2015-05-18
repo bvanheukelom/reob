@@ -1,10 +1,10 @@
-///<reference path="../../../../../../../references.d.ts"/>
+///<reference path="../../../../references.d.ts"/>
 describe("The persistence thing on the client ", function () {
     var personCollection;
     var treeCollection;
     beforeAll(function () {
-        personCollection = new TestPersonCollection();
-        treeCollection = new TestTreeCollection();
+        personCollection = new Tests.TestPersonCollection();
+        treeCollection = new Tests.TestTreeCollection();
     });
     beforeEach(function (done) {
         console.log("------------------- new test");
@@ -26,7 +26,6 @@ describe("The persistence thing on the client ", function () {
             }, function () {
                 c++;
                 expect(c).toBe(3);
-                //expect(treeCollection.getById(t.getId())).toBeDefined();
                 expect(treeCollection.getById(t.getId()).getLeaves().length).toBe(1);
                 expect(treeCollection.getById(t.getId()).getLeaves()[0] instanceof Tests.TestLeaf).toBeTruthy();
                 done();
@@ -65,8 +64,6 @@ describe("The persistence thing on the client ", function () {
                     expect(loadedJake).toBeDefined();
                     expect(loadedJake._tree).toBeDefined();
                     expect(mapper.MeteorPersistence.needsLazyLoading(loadedJake, "tree")).toBeTruthy();
-                    //loadedJake.tree;
-                    //expect(mapper.MeteorPersistence.needsLazyLoading(loadedJake, "tree") ).toBeFalsy();
                     done();
                 });
             });

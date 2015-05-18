@@ -6,8 +6,8 @@ if (typeof __decorate !== "function") __decorate = function (decorators, target,
         case 4: return decorators.reduceRight(function(o, d) { return (d && d(target, key, o)) || o; }, desc);
     }
 };
-///<reference path="../../references.d.ts"/>
-var Tests;
+///<reference path="./references.d.ts"/>
+Tests;
 (function (Tests) {
     var TestPhoneNumber = (function () {
         function TestPhoneNumber(n) {

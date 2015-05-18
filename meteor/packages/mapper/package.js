@@ -11,23 +11,47 @@ Package.describe({
 });
 
 Package.onUse(function(api) {
-  api.versionsFrom('1.1.0.2');
-
-  api.addFiles('module.js');
-  api.addFiles('Persistable.js');
-  api.addFiles('MeteorObjectRetriever.js');
-  api.addFiles('ConstantObjectRetriever.js');
-  api.addFiles('Document.js');
-  api.addFiles('PersistencePath.js');
-  api.addFiles('PersistenceAnnotation.js');
-  api.addFiles('Serializer.js');
-  api.addFiles('MeteorPersistence.js');
-  api.addFiles('BaseCollection.js');
-  api.export('mapper', 'client');
-  api.export('mapper', 'server');
-  api.export('DeSerializer', 'client');
-  api.export('DeSerializer', 'server');
+    api.versionsFrom('1.0'); // ??
+    api.addFiles('Reflect.js');
+    api.addFiles('module.js');
+    api.addFiles('Persistable.js');
+    api.addFiles('MeteorObjectRetriever.js');
+    api.addFiles('ConstantObjectRetriever.js');
+    api.addFiles('Document.js');
+    api.addFiles('PersistencePath.js');
+    api.addFiles('PersistenceAnnotation.js');
+    api.addFiles('Serializer.js');
+	api.addFiles('MeteorPersistence.js');
+	api.addFiles('BaseCollection.js');
+	api.export('mapper', 'client');
+	api.export('mapper', 'server');
+    api.export('DeSerializer', 'client');
+    api.export('DeSerializer', 'server');
 });
 
-Npm.depends({
-	"reflect-metadata": "0.1.0" });
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+

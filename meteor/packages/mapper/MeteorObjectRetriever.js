@@ -1,4 +1,5 @@
 ///<reference path="./references.d.ts"/>
+mapper;
 (function (mapper) {
     var MeteorObjectRetriever = (function () {
         function MeteorObjectRetriever() {
@@ -20,9 +21,6 @@
             if (typeof s != "string")
                 throw new Error("Path needs to be a string");
             var persistencePath = new mapper.PersistencePath(s);
-            //var typeClass:TypeClass<any> = mapper.PersistenceAnnotation.getCollectionName(persistencePath.getClassName());
-            //if (!typeClass || typeof typeClass != "function")
-            //    throw new Error("Could not load path. No class found for class name :" + persistencePath.getClassName() + ". Key:" + s);
             var collectionName = persistencePath.getCollectionName();
             var collection = collectionName ? mapper.MeteorPersistence.collections[collectionName] : undefined;
             if (collection) {

@@ -13,7 +13,6 @@ module mapper {
         constructor( persistableClass:TypeClass<T> )
         {
             this.serializer = new DeSerializer.Serializer( new MeteorObjectRetriever() );
-            mapper.MeteorPersistence.init();
             var collectionName = mapper.PersistenceAnnotation.getCollectionName(persistableClass);
             this.name = collectionName;
             if( !MeteorPersistence.collections[collectionName] ) {
@@ -33,7 +32,12 @@ module mapper {
         {
             if( !BaseCollection.meteorCollections[name] )
             {
-                BaseCollection.meteorCollections[name] = new (<any>Meteor).Collection( name );
+                if( name!="users")
+                {
+                    BaseCollection.meteorCollections[name] = new (<any>Meteor).Collection( name );
+                }
+                else
+                    BaseCollection.meteorCollections[name] = Meteor.users;
             }
             return BaseCollection.meteorCollections[name];
         }

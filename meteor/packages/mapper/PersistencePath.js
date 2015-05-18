@@ -1,5 +1,5 @@
 ///<reference path="./references.d.ts"/>
-var mapper;
+mapper;
 (function (mapper) {
     var PersistencePath = (function () {
         function PersistencePath(className, id) {

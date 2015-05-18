@@ -6,11 +6,8 @@ if (typeof __decorate !== "function") __decorate = function (decorators, target,
         case 4: return decorators.reduceRight(function(o, d) { return (d && d(target, key, o)) || o; }, desc);
     }
 };
-/**
- * Created by bert on 04.05.15.
- */
 ///<reference path="./references.d.ts"/>
-var Tests;
+Tests;
 (function (Tests) {
     var TestAddress = (function () {
         function TestAddress(street) {

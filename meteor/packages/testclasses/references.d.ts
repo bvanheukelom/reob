@@ -5,5 +5,4 @@
 ///<reference path="./TestAddress.ts"/>
 ///<reference path="./TestPersonCollection.ts"/>
 ///<reference path="./TestTreeCollection.ts"/>
-///<reference path="../packages/mapper/references.d.ts"/>
-///<reference path="../packages/mapper/references.d.ts"/>
+///<reference path="../mapper/references.d.ts"/>

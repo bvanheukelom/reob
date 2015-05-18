@@ -1,10 +1,10 @@
-///<reference path="../../../references.d.ts"/>
+///<reference path="./references.d.ts"/>
 describe("The persistence thing", function () {
     var personCollection;
     var treeCollection;
     beforeAll(function (done) {
-        personCollection = new TestPersonCollection();
-        treeCollection = new TestTreeCollection();
+        personCollection = new Tests.TestPersonCollection();
+        treeCollection = new Tests.TestTreeCollection();
         done();
     });
     beforeEach(function (done) {
@@ -101,7 +101,6 @@ describe("The persistence thing", function () {
             });
         });
     });
-    //
     it("uses persistence paths on root documents", function () {
         var t1 = new Tests.TestTree(123);
         t1.setId("tree1");
@@ -161,7 +160,6 @@ describe("The persistence thing", function () {
     it("reoves all", function () {
         expect(true).toBeTruthy();
     });
-    // test that properties that need lazy loading are not loaded during serialization
     it("can use persistence paths on objects that have foreign key properties", function () {
         var t1 = new Tests.TestTree(12);
         t1.setId("dfdf");
@@ -190,14 +188,11 @@ describe("The persistence thing", function () {
             });
         });
     });
-    //
-    //
     it("can save objects that have subobjects which are subobjects of other root objects", function (done) {
         var c = 0;
         treeCollection.newTree(10, function (err, t) {
             c++;
             expect(c).toBe(1);
-            //expect(t).toBeDefined();
             t.grow();
             personCollection.newPerson("girl", function (err, tp) {
                 c++;
@@ -218,7 +213,6 @@ describe("The persistence thing", function () {
             c++;
             if (c > 1)
                 fail();
-            //expect(t1).toBeDefined();
             for (var i = 0; i < 10; i++)
                 t1.grow();
             t1 = treeCollection.getById(t1.getId());
@@ -230,8 +224,6 @@ describe("The persistence thing", function () {
                 expect(t1.getLeaves()[5]).toBeDefined();
                 tp.chooseLeaf(t1.getLeaves()[5]);
                 expect(personCollection.getById(tp.getId()).leaf).toBeDefined();
-                //expect(personCollection.getById(tp.getId()).leaf.getId()).toBe(t1.getLeaves()[5].getId());
-                //expect(personCollection.getById(tp.getId()).leaf.greenNess).toBe(t1.getLeaves()[5].greenNess);
                 done();
             });
         });
@@ -283,23 +275,6 @@ describe("The persistence thing", function () {
             });
         });
     });
-    //
-    //it("can save objects keys in a map", function(){
-    //    var tp = new Tests.TestPerson("tp");
-    //    tp.phoneBook["ernie"] = new Tests.TestPhoneNumber("333");
-    //    tp.phoneBook["cookie monster"] = new Tests.TestPhoneNumber("444");
-    //    tp.phoneBook["superman"] = new Tests.TestPhoneNumber("12345");
-    //    personCollection.insert( tp );
-    //
-    //    expect( personCollection.getById("tp") ).toBeDefined();
-    //    expect( mapper.MeteorPersistence.needsLazyLoading(personCollection.getById("tp"), "wood")).toBeFalsy();
-    //    expect( personCollection.getById("tp").phoneBook ).toBeDefined();
-    //    expect( typeof personCollection.getById("tp").phoneBook ).toBe("object");
-    //    expect( personCollection.getById("tp").phoneBook["superman"] ).toBeDefined();
-    //    expect( personCollection.getById("tp").phoneBook["superman"] instanceof Tests.TestPhoneNumber ).toBeTruthy();
-    //    expect( personCollection.getById("tp").phoneBook["superman"].getNumber() ).toBe("12345");
-    //});
-    //
     it("can save objects with a dictionary to objects in the same collection", function (done) {
         personCollection.newPerson("mom", function (e, mom) {
             personCollection.newPerson("dad", function (e, dad) {
@@ -311,9 +286,6 @@ describe("The persistence thing", function () {
             });
         });
     });
-    //
-    //
-    //
     it("stores something as a foreign key turns undefined after the foreign object is deleted", function (done) {
         personCollection.newPerson("mom", function (e, mom) {
             personCollection.newPerson("dad", function (e, dad) {
@@ -328,8 +300,6 @@ describe("The persistence thing", function () {
             });
         });
     });
-    //
-    //
     it("stores something as a foreign key turns undefined after the foreign sub object is deleted", function (done) {
         treeCollection.newTree(10, function (e, t) {
             t.grow();
@@ -343,7 +313,5 @@ describe("The persistence thing", function () {
             });
         });
     });
-    //xit("offers a way to annotate wrapped calls as 'performed on the server'.", function() {
-    //});
 });
 //# sourceMappingURL=Tests.js.map
