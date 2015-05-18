@@ -24,20 +24,3 @@ Package.onUse(function(api) {
 	api.export('Tests', 'server');
 	api.export('Tests', 'client');
 });
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-

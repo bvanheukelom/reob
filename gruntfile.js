@@ -111,6 +111,16 @@ module.exports = function (grunt) {
 		rewrite("test_meteor_web/packages/testclasses/*.js");
 		rewrite("test_meteor_web/tests/**/*.js");
 	});
+	grunt.registerTask("clean", "cleans files", function () {
+		grunt.file.delete("build");
+		grunt.file.delete("test_meteor_web/packages/mapper");
+		grunt.util.recurse(grunt.file.expand("code/*.js"), function(file) {
+			grunt.file.delete(file);
+		});
+		grunt.util.recurse(grunt.file.expand("code/*.map"), function(file) {
+			grunt.file.delete(file);
+		});
+	});
 
 	grunt.registerTask("copyCommonJsFiles", "Copies all necessary files for the common js package", function () {
 		grunt.file.copy("resources/commonjs/package.json", "build/commonjs/package.json");
