@@ -1,6 +1,15 @@
 module.exports = function (grunt) {
 
 	// GRUNT CONFIGURATION
+
+	var annotationFiles = [
+		"meteor/packages/mapper/Persistable.ts",
+		"meteor/packages/mapper/ObjectRetriever.ts",
+		"meteor/packages/mapper/TypeClass.ts",
+		"meteor/packages/mapper/PersistencePath.ts",
+		"meteor/packages/mapper/PersistenceAnnotation.ts",
+		"commonjs/main.ts"
+	];
 	grunt.initConfig({
 		watch: {
 			files: ["**/*.ts"],
@@ -8,14 +17,35 @@ module.exports = function (grunt) {
 		},
 		ts: {
 			default : {
-				src: ["**/*.ts", "!node_modules/**/*.ts"],
+				src: ["meteor/**/*.ts", "!node_modules/**/*.ts"],
 				options:{
 					compiler:"/usr/local/bin/tsc"
 				}
+			},
+			commonjs : {
+				src: annotationFiles,
+				options:{
+					module:"commonjs",
+					compiler:"/usr/local/bin/tsc"
+				},
+				out:"build/commonjs/mapper.js"
+			},
+			amd : {
+				src: annotationFiles,
+				options:{
+					compiler:"/usr/local/bin/tsc",
+					module:"amd"
+				},
+				out:"build/amd/mapper.js"
 			}
 
 		}
 	});
+
+	grunt.registerTask('default', ["meteor", "copyCode"]);
+	grunt.registerTask('meteor', ["ts","copyCode"]);
+	grunt.registerTask('commonjs', ['ts:npm', 'copyCommonJsFiles']);
+	grunt.registerTask('amd', ['ts:amd', 'copyAmdFiles']);
 
 	// NPM TASKS
 	grunt.loadNpmTasks("grunt-ts-1.5");
@@ -68,6 +98,12 @@ module.exports = function (grunt) {
 		rewrite("meteor/packages/mapper/*.js");
 		rewrite("meteor/packages/testclasses/*.js");
 		rewrite("meteor/js/*.js");
+	});
+	grunt.registerTask("copyCommonJsFiles", "Copies all necessary files for the common js package", function () {
+		grunt.file.copy("commonjs/package.json", "build/commonjs/package.json");
+	});
+	grunt.registerTask("copyAmdFiles", "Copies all necessary files for the amd js package", function () {
+		//grunt.file.copy("commonjs/package.json", "build/amd/package.json");
 	});
 
 };

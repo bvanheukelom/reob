@@ -307,4 +307,7 @@ mapper;
     })();
     mapper.MeteorPersistence = MeteorPersistence;
 })(mapper || (mapper = {}));
+Meteor.startup(function () {
+    mapper.MeteorPersistence.init();
+});
 //# sourceMappingURL=MeteorPersistence.js.map

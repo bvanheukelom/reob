@@ -430,6 +430,11 @@ module mapper {
 
 }
 
+Meteor.startup(function(){
+    mapper.MeteorPersistence.init();
+});
+
+
 //Meteor.methods({
 //    wrappedCall:function( persistencePathString:string, functionName:string, args:Array<any>, typeNames:Array<string>, appendCallback:boolean )
 //    {

@@ -13,7 +13,6 @@ Package.describe({
 Package.onUse(function(api) {
     api.versionsFrom('1.0'); // ??
     api.addFiles('Reflect.js');
-    api.addFiles('module.js');
     api.addFiles('Persistable.js');
     api.addFiles('MeteorObjectRetriever.js');
     api.addFiles('ConstantObjectRetriever.js');
@@ -28,6 +27,10 @@ Package.onUse(function(api) {
     api.export('DeSerializer', 'client');
     api.export('DeSerializer', 'server');
 });
+
+
+
+
 
 
 

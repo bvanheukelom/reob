@@ -1,0 +1,1 @@
+tsc --module commonjs meteor/packages/mapper/Persistable.ts meteor/packages/mapper/ObjectRetriever.ts meteor/packages/mapper/PersistenceAnnotation.ts commonjs/main.ts meteor/packages/mapper/TypeClass.ts meteor/packages/mapper/PersistencePath.ts -out commonjs/mapper.js

@@ -14,7 +14,6 @@ Package.onUse(function(api) {
 	api.versionsFrom('1.1.0.2');
 	api.use('bertundmax:mapper',"server");
 	api.use('bertundmax:mapper',"client");
-	api.addFiles('module.js');
 	api.addFiles('TestAddress.js');
 	api.addFiles('TestLeaf.js');
 	api.addFiles('TestPerson.js');
@@ -26,8 +25,6 @@ Package.onUse(function(api) {
 	api.export('Tests', 'client');
 });
 
-Npm.depends({
-	"reflect-metadata": "0.1.0" });
 
 
 
