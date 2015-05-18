@@ -1,2 +1,6 @@
 .tscache
 build
+node_modules
+test_meteor_web/packages/mapper
+code/*.js
+code/*.map

@@ -38,7 +38,7 @@ module.exports = function (grunt) {
 					compiler:"/usr/local/bin/tsc",
 					module:"amd"
 				},
-				out:"build/amd/mapper.js"
+				out:"build/amd/mapper/mapper.js"
 			},
 			test : {
 				src: ["test_meteor_web/**/*.ts", "!node_modules/**/*.ts"],
@@ -67,12 +67,14 @@ module.exports = function (grunt) {
 		var returnContent = "";
 		var splitArray = content.split("\n");
 		for (var i = 0; i < splitArray.length; i++) {
+			if( returnContent.length>0 )
+				returnContent+="\n";
 			if (splitArray[i].indexOf("var ") != 0 )
 			{
-				returnContent += splitArray[i]+"\n";
+				returnContent += splitArray[i];
 			}else
 			{
-				returnContent += splitArray[i].substr(4)+"\n";
+				returnContent += splitArray[i].substr(4);
 				console.log(splitArray[i]);
 			}
 
@@ -92,10 +94,13 @@ module.exports = function (grunt) {
 
 	var rewrite = function (dir) {
 		grunt.util.recurse(grunt.file.expand(dir), function(file){
-			console.log("Rewriting "+file );
-			grunt.file.copy(file, file, {
-				process: processFunction
-			});
+			if( file.indexOf("package.js")!=0)
+			{
+				console.log("Rewriting " + file);
+				grunt.file.copy(file, file, {
+					process: processFunction
+				});
+			}
 		});
 	};
 
@@ -112,10 +117,15 @@ module.exports = function (grunt) {
 		rewrite("test_meteor_web/tests/**/*.js");
 	});
 	grunt.registerTask("clean", "cleans files", function () {
+		grunt.file.delete("code/.baseDir.ts");
 		grunt.file.delete("build");
 		grunt.file.delete("test_meteor_web/packages/mapper");
 		grunt.util.recurse(grunt.file.expand("code/*.js"), function(file) {
 			grunt.file.delete(file);
+		});
+		grunt.util.recurse(grunt.file.expand("test_meteor_web/**/*.js"), function(file) {
+			if( file.indexOf("package.js")==-1)
+				grunt.file.delete(file);
 		});
 		grunt.util.recurse(grunt.file.expand("code/*.map"), function(file) {
 			grunt.file.delete(file);
