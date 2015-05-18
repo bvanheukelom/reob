@@ -867,6 +867,4 @@ var mapper;
  * Created by bert on 04.05.15.
  */
 ///<reference path="./references.d.ts"/>
-///<reference path="../meteor/packages/mapper/references.d.ts"/>
-module.exports = mapper;
 //# sourceMappingURL=mapper.js.map

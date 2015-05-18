@@ -3,3 +3,4 @@
 define(["require", "exports"], function (require, exports) {
     module.exports = mapper;
 });
+//# sourceMappingURL=main.js.map
