@@ -169,6 +169,7 @@ module persistence {
                 throw new Error("Insert can not be called on the client. Wrap it into a meteor method.");
         }
 
+
         static resetAll( cb:(error?:any)=>void ){
             var arr = [];
             for( var i in BaseCollection.meteorCollections )

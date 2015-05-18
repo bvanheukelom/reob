@@ -23,7 +23,7 @@ describe("The persistence thing on the server", function () {
         expect(personCollection.getById("t444")).toBeDefined();
         expect(personCollection.getById("t444").phoneNumber instanceof Tests.TestPhoneNumber).toBeTruthy();
     });
-    it("can load objects that have sub objects (in an array) which have a parent reference", function () {
+    it("can load objects that have sub objects (in an array) which have a parent reference ", function () {
         var t1 = new Tests.TestTree(10);
         treeCollection.insert(t1);
         t1.grow();

@@ -109,6 +109,11 @@ module Tests
             this.tree = t;
         }
         @persistence.PersistenceAnnotation.Wrap
+        chooseLeaf(l:TestLeaf)
+        {
+            this.leaf = l;
+        }
+        @persistence.PersistenceAnnotation.Wrap
         addToWood(t:TestTree)
         {
             this.trees.push( t );

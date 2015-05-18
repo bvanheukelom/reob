@@ -347,12 +347,14 @@ module persistence {
                         }
                     });
 
-                    // the object needs to be updated with the result form the update function
-                    if (!serverOnly) {
-                        // also call the method on the current object so that it reflects the update
-                        var result = patchedFunction.apply(this, originalArguments);
-                        return result;
-                    }
+                    // BUG if the method contains a callback it is called twice due to the code below
+                    //sdfasdf
+                    //// the object needs to be updated with the result form the update function
+                    //if (!serverOnly) {
+                    //    // also call the method on the current object so that it reflects the update
+                    //    var result = patchedFunction.apply(this, originalArguments);
+                    //    return result;
+                    //}
                 });
             }
             if( !serverOnly || Meteor.isServer ) {

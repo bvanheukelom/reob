@@ -234,10 +234,6 @@ var persistence;
                             MeteorPersistence.nextCallback = undefined;
                         }
                     });
-                    if (!serverOnly) {
-                        var result = patchedFunction.apply(this, originalArguments);
-                        return result;
-                    }
                 });
             }
             if (!serverOnly || Meteor.isServer) {

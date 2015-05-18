@@ -50,6 +50,9 @@ Tests;
             console.log("choosing tree:", t);
             this.tree = t;
         };
+        TestPerson.prototype.chooseLeaf = function (l) {
+            this.leaf = l;
+        };
         TestPerson.prototype.addToWood = function (t) {
             this.trees.push(t);
         };
@@ -94,6 +97,10 @@ Tests;
             __decorate([
                 persistence.PersistenceAnnotation.Wrap
             ], TestPerson.prototype, "chooseTree", Object.getOwnPropertyDescriptor(TestPerson.prototype, "chooseTree")));
+        Object.defineProperty(TestPerson.prototype, "chooseLeaf",
+            __decorate([
+                persistence.PersistenceAnnotation.Wrap
+            ], TestPerson.prototype, "chooseLeaf", Object.getOwnPropertyDescriptor(TestPerson.prototype, "chooseLeaf")));
         Object.defineProperty(TestPerson.prototype, "addToWood",
             __decorate([
                 persistence.PersistenceAnnotation.Wrap

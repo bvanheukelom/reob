@@ -2,17 +2,17 @@
 describe("The persistence thing", function () {
     var personCollection;
     var treeCollection;
-    beforeAll(function () {
+    beforeAll(function (done) {
         personCollection = new TestPersonCollection();
         treeCollection = new TestTreeCollection();
+        done();
     });
     beforeEach(function (done) {
         console.log("------------------- new test");
         persistence.BaseCollection.resetAll(function (error) {
-            if (!error)
-                done();
-            else
+            if (error)
                 fail(error);
+            done();
         });
     });
     it("knows the difference between root entities and subdocument entities ", function () {
@@ -35,8 +35,18 @@ describe("The persistence thing", function () {
         expect(persistence.PersistenceAnnotation.getPropertyClass(Tests.TestPerson, "tree")).toBe(Tests.TestTree);
         expect(persistence.PersistenceAnnotation.getPropertyClass(Tests.TestPerson, "leaf")).toBe(Tests.TestLeaf);
     });
+    function onlyOnce(f) {
+        var counter = 0;
+        return function () {
+            if (counter > 0) {
+                throw new Error("Function called twice");
+            }
+            counter = 1;
+            f.apply(this, arguments);
+        };
+    }
     it("can do basic inserts", function (done) {
-        treeCollection.newTree(20, function (error, tree) {
+        treeCollection.newTree(20, onlyOnce(function (error, tree) {
             expect(error).toBeFalsy();
             expect(tree).toBeDefined();
             expect(tree.persistencePath).toBeDefined();
@@ -47,14 +57,18 @@ describe("The persistence thing", function () {
             expect(treeCollection.getById(tree.getId()).getId()).toBeDefined();
             expect(treeCollection.getById(tree.getId()).getHeight()).toBe(20);
             done();
-        });
+        }));
     });
     it("can call server functions", function (done) {
-        treeCollection.serverFunction("World", new Tests.TestTree(212), 42, function (e, s) {
+        var c = 0;
+        treeCollection.serverFunction("World", new Tests.TestTree(212), 42, onlyOnce(function (e, s) {
+            c++;
+            if (c > 1)
+                fail("executed more than once");
             expect(s).toBe("Hello World! This is on the server t:true 212 n:42 number");
             expect(e).toBeUndefined();
             done();
-        });
+        }));
     });
     it("can monkey patch functions", function () {
         var f = function f() {
@@ -182,6 +196,29 @@ describe("The persistence thing", function () {
                 tp.chooseTree(t);
                 tp.collectLeaf();
                 expect(tp.leaf).toBeDefined();
+                expect(tp.leaf.getId()).toBe(t.getLeaves()[0].getId());
+                expect(personCollection.getById(tp.getId()).leaf).toBeDefined();
+                expect(personCollection.getById(tp.getId()).leaf.getId()).toBe(t.getLeaves()[0].getId());
+                done();
+            });
+        });
+    });
+    it("can save objects that have subobjects which are one of many elements in a subobject-array of another root object", function (done) {
+        var c = 0;
+        treeCollection.newTree(10, function (err, t1) {
+            c++;
+            if (c > 1)
+                fail();
+            for (var i = 0; i < 10; i++)
+                t1.grow();
+            expect(t1.getLeaves().length).toBe(10);
+            personCollection.newPerson("girl", function (err, tp) {
+                c++;
+                if (c > 2)
+                    fail();
+                expect(t1.getLeaves()[5]).toBeDefined();
+                tp.chooseLeaf(t1.getLeaves()[5]);
+                expect(personCollection.getById(tp.getId()).leaf).toBeDefined();
                 done();
             });
         });
