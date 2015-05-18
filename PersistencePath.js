@@ -1,6 +1,6 @@
 ///<reference path="references.d.ts"/>
-var persistence;
-(function (persistence) {
+var mapper;
+(function (mapper) {
     var PersistencePath = (function () {
         function PersistencePath(className, id) {
             this.path = className;
@@ -57,6 +57,6 @@ var persistence;
         };
         return PersistencePath;
     })();
-    persistence.PersistencePath = PersistencePath;
-})(persistence || (persistence = {}));
+    mapper.PersistencePath = PersistencePath;
+})(mapper || (mapper = {}));
 //# sourceMappingURL=PersistencePath.js.map

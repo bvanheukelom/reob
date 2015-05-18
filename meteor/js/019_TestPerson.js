@@ -66,64 +66,64 @@ Tests;
             this.phoneBook[s] = p;
         };
         __decorate([
-            persistence.Type("TestPhoneNumber")
+            mapper.Type("TestPhoneNumber")
         ], TestPerson.prototype, "phoneNumber");
         __decorate([
-            persistence.ArrayOrMap("TestAddress")
+            mapper.ArrayOrMap("TestAddress")
         ], TestPerson.prototype, "addresses");
         __decorate([
-            persistence.Type("TestTree"),
-            persistence.AsForeignKeys
+            mapper.Type("TestTree"),
+            mapper.AsForeignKeys
         ], TestPerson.prototype, "tree");
         __decorate([
-            persistence.Type("TestLeaf"),
-            persistence.AsForeignKeys
+            mapper.Type("TestLeaf"),
+            mapper.AsForeignKeys
         ], TestPerson.prototype, "leaf");
         __decorate([
-            persistence.ArrayOrMap("TestLeaf"),
-            persistence.AsForeignKeys
+            mapper.ArrayOrMap("TestLeaf"),
+            mapper.AsForeignKeys
         ], TestPerson.prototype, "trees");
         __decorate([
-            persistence.ArrayOrMap("TestPhoneNumber")
+            mapper.ArrayOrMap("TestPhoneNumber")
         ], TestPerson.prototype, "phoneBook");
         __decorate([
-            persistence.ArrayOrMap("TestTree"),
-            persistence.AsForeignKeys
+            mapper.ArrayOrMap("TestTree"),
+            mapper.AsForeignKeys
         ], TestPerson.prototype, "wood");
         __decorate([
-            persistence.ArrayOrMap("TestPerson"),
-            persistence.AsForeignKeys
+            mapper.ArrayOrMap("TestPerson"),
+            mapper.AsForeignKeys
         ], TestPerson.prototype, "family");
         Object.defineProperty(TestPerson.prototype, "addAddress",
             __decorate([
-                persistence.Wrap
+                mapper.Wrap
             ], TestPerson.prototype, "addAddress", Object.getOwnPropertyDescriptor(TestPerson.prototype, "addAddress")));
         Object.defineProperty(TestPerson.prototype, "collectLeaf",
             __decorate([
-                persistence.Wrap
+                mapper.Wrap
             ], TestPerson.prototype, "collectLeaf", Object.getOwnPropertyDescriptor(TestPerson.prototype, "collectLeaf")));
         Object.defineProperty(TestPerson.prototype, "chooseTree",
             __decorate([
-                persistence.Wrap
+                mapper.Wrap
             ], TestPerson.prototype, "chooseTree", Object.getOwnPropertyDescriptor(TestPerson.prototype, "chooseTree")));
         Object.defineProperty(TestPerson.prototype, "chooseLeaf",
             __decorate([
-                persistence.Wrap
+                mapper.Wrap
             ], TestPerson.prototype, "chooseLeaf", Object.getOwnPropertyDescriptor(TestPerson.prototype, "chooseLeaf")));
         Object.defineProperty(TestPerson.prototype, "addToWood",
             __decorate([
-                persistence.Wrap
+                mapper.Wrap
             ], TestPerson.prototype, "addToWood", Object.getOwnPropertyDescriptor(TestPerson.prototype, "addToWood")));
         Object.defineProperty(TestPerson.prototype, "addFamilyRelation",
             __decorate([
-                persistence.Wrap
+                mapper.Wrap
             ], TestPerson.prototype, "addFamilyRelation", Object.getOwnPropertyDescriptor(TestPerson.prototype, "addFamilyRelation")));
         Object.defineProperty(TestPerson.prototype, "addPhoneNumber",
             __decorate([
-                persistence.Wrap
+                mapper.Wrap
             ], TestPerson.prototype, "addPhoneNumber", Object.getOwnPropertyDescriptor(TestPerson.prototype, "addPhoneNumber")));
         TestPerson = __decorate([
-            persistence.Entity(true)
+            mapper.Entity(true)
         ], TestPerson);
         return TestPerson;
     })();

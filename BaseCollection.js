@@ -1,20 +1,20 @@
 ///<reference path="references.d.ts"/>
-var persistence;
-(function (persistence) {
+var mapper;
+(function (mapper) {
     var BaseCollection = (function () {
         function BaseCollection(persistableClass) {
-            this.serializer = new DeSerializer.Serializer(new persistence.MeteorObjectRetriever());
-            persistence.MeteorPersistence.init();
-            var collectionName = persistence.PersistenceAnnotation.getCollectionName(persistableClass);
+            this.serializer = new DeSerializer.Serializer(new mapper.MeteorObjectRetriever());
+            mapper.MeteorPersistence.init();
+            var collectionName = mapper.PersistenceAnnotation.getCollectionName(persistableClass);
             this.name = collectionName;
-            if (!persistence.MeteorPersistence.collections[collectionName]) {
-                persistence.MeteorPersistence.collections[collectionName] = this;
+            if (!mapper.MeteorPersistence.collections[collectionName]) {
+                mapper.MeteorPersistence.collections[collectionName] = this;
             }
             this.meteorCollection = BaseCollection._getMeteorCollection(collectionName);
             this.theClass = persistableClass;
         }
         BaseCollection.getCollection = function (t) {
-            return persistence.MeteorPersistence.collections[persistence.PersistenceAnnotation.getCollectionName(t)];
+            return mapper.MeteorPersistence.collections[mapper.PersistenceAnnotation.getCollectionName(t)];
         };
         BaseCollection._getMeteorCollection = function (name) {
             if (!BaseCollection.meteorCollections[name]) {
@@ -59,7 +59,7 @@ var persistence;
         };
         BaseCollection.prototype.documentToObject = function (doc) {
             var p = this.serializer.toObject(doc, this.theClass);
-            persistence.MeteorPersistence.updatePersistencePaths(p);
+            mapper.MeteorPersistence.updatePersistencePaths(p);
             return p;
         };
         BaseCollection.prototype.update = function (id, updateFunction) {
@@ -74,7 +74,7 @@ var persistence;
                 var currentSerial = document.serial;
                 var object = this.documentToObject(document);
                 var result = updateFunction(object);
-                persistence.MeteorPersistence.updatePersistencePaths(object);
+                mapper.MeteorPersistence.updatePersistencePaths(object);
                 var documentToSave = this.serializer.toDocument(object);
                 documentToSave.serial = currentSerial + 1;
                 console.log("writing document ", documentToSave);
@@ -107,8 +107,8 @@ var persistence;
                         if (typeof p.setId == "function")
                             p.setId(id);
                         else
-                            throw new Error("Unable to set Id after an object of class '" + persistence.className(that.theClass) + "' was inserted into collection '" + that.name + "'. Either only call insert with objects that already have an ID or declare a 'setId' function on the class.");
-                        persistence.MeteorPersistence.updatePersistencePaths(p);
+                            throw new Error("Unable to set Id after an object of class '" + mapper.className(that.theClass) + "' was inserted into collection '" + that.name + "'. Either only call insert with objects that already have an ID or declare a 'setId' function on the class.");
+                        mapper.MeteorPersistence.updatePersistencePaths(p);
                     }
                     else
                         console.log("error while inserting into " + this.name, e);
@@ -152,7 +152,7 @@ var persistence;
         BaseCollection.meteorCollections = {};
         return BaseCollection;
     })();
-    persistence.BaseCollection = BaseCollection;
-})(persistence || (persistence = {}));
-persistence.MeteorPersistence.wrapFunction(persistence.BaseCollection, "resetAll", "resetAll", true, null, new persistence.ConstantObjectRetriever(persistence.BaseCollection));
+    mapper.BaseCollection = BaseCollection;
+})(mapper || (mapper = {}));
+mapper.MeteorPersistence.wrapFunction(mapper.BaseCollection, "resetAll", "resetAll", true, null, new mapper.ConstantObjectRetriever(mapper.BaseCollection));
 //# sourceMappingURL=BaseCollection.js.map

@@ -26,11 +26,11 @@ module DeSerializer{
                 return doc;
             for (var propertyName in doc) {
                 var value = doc[propertyName];
-                var propertyClass = persistence.PersistenceAnnotation.getPropertyClass(f, propertyName);
-                var isStoredAsKeys = persistence.PersistenceAnnotation.isStoredAsForeignKeys(f, propertyName);
+                var propertyClass = mapper.PersistenceAnnotation.getPropertyClass(f, propertyName);
+                var isStoredAsKeys = mapper.PersistenceAnnotation.isStoredAsForeignKeys(f, propertyName);
                 if( propertyClass && !isStoredAsKeys )
                 {
-                    if (persistence.PersistenceAnnotation.isArrayOrMap(f, propertyName)) {
+                    if (mapper.PersistenceAnnotation.isArrayOrMap(f, propertyName)) {
                         var result = Array.isArray(value) ? [] : {};
                         for (var i in value) {
                             var entry = value[i];
@@ -58,8 +58,8 @@ module DeSerializer{
             else
             {
                 var result:Document;
-                var parentClass = persistence.PersistenceAnnotation.getClass(parentObject);
-                if (parentObject && propertyNameOnParentObject && persistence.PersistenceAnnotation.isStoredAsForeignKeys(parentClass, propertyNameOnParentObject)) {
+                var parentClass = mapper.PersistenceAnnotation.getClass(parentObject);
+                if (parentObject && propertyNameOnParentObject && mapper.PersistenceAnnotation.isStoredAsForeignKeys(parentClass, propertyNameOnParentObject)) {
                     return <Document><any>this.objectRetriever.getId(object);
                 }
                 else if (typeof object.toDocument == "function")
@@ -67,7 +67,7 @@ module DeSerializer{
 
                 else
                 {
-                    result = this.createDocument(object, rootClass ? rootClass : persistence.PersistenceAnnotation.getClass(object), parentObject, propertyNameOnParentObject);
+                    result = this.createDocument(object, rootClass ? rootClass : mapper.PersistenceAnnotation.getClass(object), parentObject, propertyNameOnParentObject);
 
                 }
             }
@@ -76,7 +76,7 @@ module DeSerializer{
 
         createDocument(object:any, rootClass?:TypeClass<Persistable>, parentObject?:Persistable, propertyNameOnParentObject?:string):Document {
             var doc:any = {};
-            var objectClass = persistence.PersistenceAnnotation.getClass(object);
+            var objectClass = mapper.PersistenceAnnotation.getClass(object);
             for (var property in object) {
                 var value = object[property];
                 if (property == "id") {
@@ -89,7 +89,7 @@ module DeSerializer{
                         doc[property] = value;
 
                     // array
-                    else if (persistence.PersistenceAnnotation.isArrayOrMap(objectClass, property)) {
+                    else if (mapper.PersistenceAnnotation.isArrayOrMap(objectClass, property)) {
                         var result;
                         if (Array.isArray(object[property]))
                             result = [];
@@ -121,9 +121,9 @@ module DeSerializer{
 
         getClassName(o:Object):string
         {
-            if( typeof o =="object" && persistence.PersistenceAnnotation.getClass( o ))
+            if( typeof o =="object" && mapper.PersistenceAnnotation.getClass( o ))
             {
-                return persistence.className( persistence.PersistenceAnnotation.getClass( o ) );
+                return mapper.className( mapper.PersistenceAnnotation.getClass( o ) );
             }
             else
                 return typeof o;

@@ -8,7 +8,7 @@ describe("The persistence thing on the client ", function () {
     });
     beforeEach(function (done) {
         console.log("------------------- new test");
-        persistence.BaseCollection.resetAll(function (error) {
+        mapper.BaseCollection.resetAll(function (error) {
             if (error)
                 fail(error);
             done();
@@ -19,7 +19,7 @@ describe("The persistence thing on the client ", function () {
         treeCollection.newTree(24, function (err, t) {
             c++;
             expect(c).toBe(1);
-            persistence.MeteorPersistence.withCallback(function () {
+            mapper.MeteorPersistence.withCallback(function () {
                 c++;
                 expect(c).toBe(2);
                 t.grow();
@@ -34,7 +34,7 @@ describe("The persistence thing on the client ", function () {
     });
     it("can return values from a wrapped function", function (done) {
         personCollection.newPerson("Held", function (e, held) {
-            persistence.MeteorPersistence.withCallback(function () {
+            mapper.MeteorPersistence.withCallback(function () {
                 held.addAddress(new Tests.TestAddress("streetsss"));
             }, function (e, a) {
                 expect(a instanceof Tests.TestAddress).toBeTruthy();
@@ -45,7 +45,7 @@ describe("The persistence thing on the client ", function () {
     });
     it("calls registered callbacks that receive results from the server ", function (done) {
         treeCollection.newTree(24, function (err, t1) {
-            persistence.MeteorPersistence.withCallback(function () {
+            mapper.MeteorPersistence.withCallback(function () {
                 var s = t1.grow();
                 expect(s).toBeUndefined();
             }, function callback(error, result) {
@@ -57,13 +57,13 @@ describe("The persistence thing on the client ", function () {
     it("lazy loads objects", function (done) {
         personCollection.newPerson("jake", function (error, jake) {
             treeCollection.newTree(12, function (error, t) {
-                persistence.MeteorPersistence.withCallback(function () {
+                mapper.MeteorPersistence.withCallback(function () {
                     jake.chooseTree(t);
                 }, function () {
                     var loadedJake = personCollection.getById(jake.getId());
                     expect(loadedJake).toBeDefined();
                     expect(loadedJake._tree).toBeDefined();
-                    expect(persistence.MeteorPersistence.needsLazyLoading(loadedJake, "tree")).toBeTruthy();
+                    expect(mapper.MeteorPersistence.needsLazyLoading(loadedJake, "tree")).toBeTruthy();
                     done();
                 });
             });

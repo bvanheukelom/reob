@@ -1,6 +1,6 @@
 ///<reference path="references.d.ts"/>
-persistence;
-(function (persistence) {
+mapper;
+(function (mapper) {
     function Entity(p1) {
         if (typeof p1 == "string") {
             return function (target) {
@@ -28,11 +28,11 @@ persistence;
             PersistencePrivate.entityClasses[className(typeClass)] = typeClass;
         }
     }
-    persistence.Entity = Entity;
+    mapper.Entity = Entity;
     function Wrap(t, functionName, objectDescriptor) {
         Reflect.defineMetadata("persistence:wrap", true, t[functionName]);
     }
-    persistence.Wrap = Wrap;
+    mapper.Wrap = Wrap;
     function ArrayOrMap(typeClassName) {
         return function (targetPrototypeObject, propertyName) {
             console.log("  " + propertyName + " as collection of " + typeClassName);
@@ -40,29 +40,29 @@ persistence;
             PersistenceAnnotation.setPropertyProperty(targetPrototypeObject, propertyName, "arrayOrMap", true);
         };
     }
-    persistence.ArrayOrMap = ArrayOrMap;
+    mapper.ArrayOrMap = ArrayOrMap;
     function AsForeignKeys(targetPrototypeObject, propertyName) {
         return PersistenceAnnotation.setPropertyProperty(targetPrototypeObject, propertyName, "askeys", true);
     }
-    persistence.AsForeignKeys = AsForeignKeys;
+    mapper.AsForeignKeys = AsForeignKeys;
     function AsForeignKey(targetPrototypeObject, propertyName) {
         return AsForeignKeys(targetPrototypeObject, propertyName);
     }
-    persistence.AsForeignKey = AsForeignKey;
+    mapper.AsForeignKey = AsForeignKey;
     function Type(typeClassName) {
         return function (targetPrototypeObject, propertyName) {
             console.log("  " + propertyName + " as " + typeClassName);
             PersistenceAnnotation.setPropertyProperty(targetPrototypeObject, propertyName, "type", typeClassName);
         };
     }
-    persistence.Type = Type;
+    mapper.Type = Type;
     function className(fun) {
         var ret = fun.toString();
         ret = ret.substr('function '.length);
         ret = ret.substr(0, ret.indexOf('('));
         return ret;
     }
-    persistence.className = className;
+    mapper.className = className;
     var PersistenceAnnotation = (function () {
         function PersistenceAnnotation() {
         }
@@ -157,11 +157,11 @@ persistence;
         };
         return PersistenceAnnotation;
     })();
-    persistence.PersistenceAnnotation = PersistenceAnnotation;
+    mapper.PersistenceAnnotation = PersistenceAnnotation;
     var PersistencePrivate = (function () {
         function PersistencePrivate() {
         }
         PersistencePrivate.entityClasses = {};
         return PersistencePrivate;
     })();
-})(persistence || (persistence = {}));
+})(mapper || (mapper = {}));

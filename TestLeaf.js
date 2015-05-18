@@ -28,11 +28,11 @@ var Tests;
             return this.parent;
         };
         __decorate([
-            persistence.Type("TestTree"),
-            persistence.AsForeignKey
+            mapper.Type("TestTree"),
+            mapper.AsForeignKey
         ], TestLeaf.prototype, "parent");
         TestLeaf = __decorate([
-            persistence.Entity
+            mapper.Entity
         ], TestLeaf);
         return TestLeaf;
     })();

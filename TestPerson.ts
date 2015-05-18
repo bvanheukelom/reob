@@ -1,40 +1,40 @@
 ///<reference path="references.d.ts"/>
 module Tests
 {
-    @persistence.Entity(true)
+    @mapper.Entity(true)
     export class TestPerson
     {
         name:string;
         _id:string;
 
-        @persistence.Type("TestPhoneNumber")
+        @mapper.Type("TestPhoneNumber")
         phoneNumber:Tests.TestPhoneNumber;
 
-        @persistence.ArrayOrMap("TestAddress")
+        @mapper.ArrayOrMap("TestAddress")
         private addresses:Array<TestAddress> = [];
 
-        @persistence.Type("TestTree")
-        @persistence.AsForeignKeys
+        @mapper.Type("TestTree")
+        @mapper.AsForeignKeys
         tree:Tests.TestTree;
 
-        @persistence.Type("TestLeaf")
-        @persistence.AsForeignKeys
+        @mapper.Type("TestLeaf")
+        @mapper.AsForeignKeys
         leaf:Tests.TestLeaf;
 
-        @persistence.ArrayOrMap("TestLeaf")
-        @persistence.AsForeignKeys
+        @mapper.ArrayOrMap("TestLeaf")
+        @mapper.AsForeignKeys
         trees:Array<Tests.TestTree> = [];
 
-        @persistence.ArrayOrMap("TestPhoneNumber")
+        @mapper.ArrayOrMap("TestPhoneNumber")
         phoneBook:{ [index:string]: Tests.TestPhoneNumber } = {};
 
-        @persistence.ArrayOrMap("TestTree")
-        @persistence.AsForeignKeys
+        @mapper.ArrayOrMap("TestTree")
+        @mapper.AsForeignKeys
         wood:{ [index:string]: Tests.TestTree } = {};
 
 
-        @persistence.ArrayOrMap("TestPerson")
-        @persistence.AsForeignKeys
+        @mapper.ArrayOrMap("TestPerson")
+        @mapper.AsForeignKeys
         family:{ [index:string]: Tests.TestPerson } = {};
 
 
@@ -55,7 +55,7 @@ module Tests
         }
 
 
-        @persistence.Wrap
+        @mapper.Wrap
         addAddress(a:TestAddress):Tests.TestAddress
         {
             console.log("inside add address:", (a instanceof TestAddress));
@@ -95,25 +95,25 @@ module Tests
         }
 
 
-        @persistence.Wrap
+        @mapper.Wrap
         collectLeaf()
         {
             console.log("collecting leaf:",this.tree);
             this.leaf = this.tree.getLeaves()[0];
         }
 
-        @persistence.Wrap
+        @mapper.Wrap
         chooseTree(t:TestTree)
         {
             console.log("choosing tree:",t);
             this.tree = t;
         }
-        @persistence.Wrap
+        @mapper.Wrap
         chooseLeaf(l:TestLeaf)
         {
             this.leaf = l;
         }
-        @persistence.Wrap
+        @mapper.Wrap
         addToWood(t:TestTree, s?:string )
         {
             this.trees.push( t );
@@ -121,14 +121,14 @@ module Tests
                 this.wood[s] = t;
         }
 
-        @persistence.Wrap
+        @mapper.Wrap
         addFamilyRelation(s:string, p:Tests.TestPerson )
         {
             if( s )
                 this.family[s] = p;
         }
 
-        @persistence.Wrap
+        @mapper.Wrap
         addPhoneNumber(s:string, p:Tests.TestPhoneNumber )
         {
             this.phoneBook[s] = p;

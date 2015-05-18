@@ -20,7 +20,7 @@ Tests;
             return this.street;
         };
         TestAddress = __decorate([
-            persistence.Entity
+            mapper.Entity
         ], TestAddress);
         return TestAddress;
     })();

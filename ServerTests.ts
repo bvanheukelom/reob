@@ -11,7 +11,7 @@ describe("The persistence thing on the server", function(){
 
     beforeEach(function(done){
         console.log("------------------- new test");
-        persistence.BaseCollection.resetAll(function(error){
+        mapper.BaseCollection.resetAll(function(error){
             if (!error)
                 done();
             else

@@ -1,6 +1,6 @@
 ///<reference path="references.d.ts"/>
-persistence;
-(function (persistence) {
+mapper;
+(function (mapper) {
     var MeteorObjectRetriever = (function () {
         function MeteorObjectRetriever() {
         }
@@ -8,9 +8,9 @@ persistence;
             if (object.persistencePath)
                 return object.persistencePath.toString();
             else {
-                var objectClass = persistence.PersistenceAnnotation.getClass(object);
-                if (persistence.PersistenceAnnotation.isRootEntity(objectClass) && object.getId()) {
-                    return new persistence.PersistencePath(persistence.PersistenceAnnotation.getCollectionName(objectClass), object.getId()).toString();
+                var objectClass = mapper.PersistenceAnnotation.getClass(object);
+                if (mapper.PersistenceAnnotation.isRootEntity(objectClass) && object.getId()) {
+                    return new mapper.PersistencePath(mapper.PersistenceAnnotation.getCollectionName(objectClass), object.getId()).toString();
                 }
                 else {
                     throw new Error("Error while 'toString'. Objects that should be stored as foreign keys need to be persisted beforehand or be the root entity of a collection and have an id.");
@@ -20,9 +20,9 @@ persistence;
         MeteorObjectRetriever.prototype.getObject = function (s) {
             if (typeof s != "string")
                 throw new Error("Path needs to be a string");
-            var persistencePath = new persistence.PersistencePath(s);
+            var persistencePath = new mapper.PersistencePath(s);
             var collectionName = persistencePath.getCollectionName();
-            var collection = collectionName ? persistence.MeteorPersistence.collections[collectionName] : undefined;
+            var collection = collectionName ? mapper.MeteorPersistence.collections[collectionName] : undefined;
             if (collection) {
                 var rootValue = collection.getById(persistencePath.getId());
                 var newValue = rootValue ? persistencePath.getSubObject(rootValue) : undefined;
@@ -33,5 +33,5 @@ persistence;
         };
         return MeteorObjectRetriever;
     })();
-    persistence.MeteorObjectRetriever = MeteorObjectRetriever;
-})(persistence || (persistence = {}));
+    mapper.MeteorObjectRetriever = MeteorObjectRetriever;
+})(mapper || (mapper = {}));

@@ -2,13 +2,13 @@
  * Created by bert on 04.05.15.
  */
 ///<reference path="references.d.ts"/>
-module persistence {
+module mapper {
     export interface TypeClass<T> { new(): T ;
     }
 
     export class MeteorPersistence {
         static classes:{[index:string]:{ new(): Persistable ;}} = {};
-        static collections:{[index:string]:persistence.BaseCollection<any>} = {};
+        static collections:{[index:string]:mapper.BaseCollection<any>} = {};
         static wrappedCallInProgress = false;
         static nextCallback;
         private static initialized = false;
@@ -17,7 +17,7 @@ module persistence {
 
         static init() {
             if (!MeteorPersistence.initialized) {
-                persistence.PersistenceAnnotation.getEntityClasses().forEach(function (c:TypeClass<Persistable>) {
+                mapper.PersistenceAnnotation.getEntityClasses().forEach(function (c:TypeClass<Persistable>) {
                     MeteorPersistence.wrapClass(c);
                 });
                 MeteorPersistence.initialized = true;
@@ -26,18 +26,18 @@ module persistence {
 
         // TODO new name
         static objectsClassName(o:any):string {
-            return persistence.className(o.constructor);
+            return mapper.className(o.constructor);
         }
 
         //private static loadPath(s:string):Persistable {
         //    if (typeof s != "string")
         //        throw new Error("Path needs to be a string");
-        //    var persistencePath = new persistence.PersistencePath(s);
-        //    var typeClass:TypeClass<any> = persistence.PersistenceAnnotation.getEntityClassByName( persistencePath.getClassName() );
+        //    var persistencePath = new mapper.PersistencePath(s);
+        //    var typeClass:TypeClass<any> = mapper.PersistenceAnnotation.getEntityClassByName( persistencePath.getClassName() );
         //    if( !typeClass || typeof typeClass != "function" )
         //        throw new Error( "Could not load path. No class found for class name :"+ persistencePath.getClassName()+". Total path:"+s );
-        //    var collectionName = persistence.PersistenceAnnotation.getCollectionName( typeClass );
-        //    var collection:persistence.BaseCollection<Persistable> = collectionName ? MeteorPersistence.collections[collectionName] : undefined;
+        //    var collectionName = mapper.PersistenceAnnotation.getCollectionName( typeClass );
+        //    var collection:mapper.BaseCollection<Persistable> = collectionName ? MeteorPersistence.collections[collectionName] : undefined;
         //    if (collection) {
         //        var rootValue = collection.getById(persistencePath.getId());
         //        var newValue = rootValue ? persistencePath.getSubObject(rootValue) : undefined;
@@ -60,15 +60,15 @@ module persistence {
         }
 
         static wrapClass<T extends Persistable>(c:TypeClass<T>) {
-            var className = persistence.className(c);
+            var className = mapper.className(c);
             console.log("Wrapping transactional functions for class " + className);
             // iterate over all properties of the prototype. this is where the functions are.
             //var that = this;
-            persistence.PersistenceAnnotation.getWrappedFunctionNames(c).forEach(function (functionName) {
+            mapper.PersistenceAnnotation.getWrappedFunctionNames(c).forEach(function (functionName) {
                 var domainObjectFunction = c.prototype[functionName];
                 // this is executed last. it wraps the original function into a collection.update
                 MeteorPersistence.monkeyPatch(c.prototype, functionName, function (originalFunction, ...args:string[]) {
-                    var collection:persistence.BaseCollection<any> = persistence.MeteorPersistence.collections[persistence.PersistenceAnnotation.getCollectionName(c)];
+                    var collection:mapper.BaseCollection<any> = mapper.MeteorPersistence.collections[mapper.PersistenceAnnotation.getCollectionName(c)];
                     if( MeteorPersistence.wrappedCallInProgress || Meteor.isServer )
                     {
                         return collection.update(this.getId(), function (o) {
@@ -194,14 +194,14 @@ module persistence {
         static needsLazyLoading(object:Persistable, propertyName:string) {
             // TODO inheritance
             var oc = PersistenceAnnotation.getClass(object);
-            if( persistence.PersistenceAnnotation.isStoredAsForeignKeys(oc, propertyName ) )
+            if( mapper.PersistenceAnnotation.isStoredAsForeignKeys(oc, propertyName ) )
             {
                 var shadowpropertyDescriptor = Object.getOwnPropertyDescriptor(object, "_" + propertyName);
                 var shadowPropertyIsKeys = false;
                 if (shadowpropertyDescriptor)
                     if (typeof object["_" + propertyName] == "string")
                         shadowPropertyIsKeys = true;
-                    else if (persistence.PersistenceAnnotation.isArrayOrMap(oc, propertyName)) {
+                    else if (mapper.PersistenceAnnotation.isArrayOrMap(oc, propertyName)) {
                         var v = object["_" + propertyName];
                         for( var i in v )
                         {
@@ -243,7 +243,7 @@ module persistence {
             if (PersistenceAnnotation.isRootEntity(objectClass)) {
                 if (!object.persistencePath) {
                     if ( object.getId())
-                        object.persistencePath = new persistence.PersistencePath(PersistenceAnnotation.getCollectionName(objectClass), object.getId())
+                        object.persistencePath = new mapper.PersistencePath(PersistenceAnnotation.getCollectionName(objectClass), object.getId())
                     else
                         throw new Error("Can not set the persistence path of root collection object without id. Class:" + className(objectClass));
                 }
@@ -338,7 +338,7 @@ module persistence {
                         console.log("Returned from meteor method '" + meteorMethodName + "' with result:", result, "_", callback,"_",MeteorPersistence.nextCallback);
                         if (!error) {
                             if (argumentSerializer && result.className) {
-                                result.result = argumentSerializer.toObject(result.result, persistence.PersistenceAnnotation.getEntityClassByName(result.className));
+                                result.result = argumentSerializer.toObject(result.result, mapper.PersistenceAnnotation.getEntityClassByName(result.className));
                                 MeteorPersistence.updatePersistencePaths(result.result);
                             }
 
@@ -368,14 +368,14 @@ module persistence {
                     check(args, Array);
                     check(classNames, Array);
                     console.log("Meteor method invoked: "+meteorMethodName+" id:"+id+" appendCallback:"+appendCallback+" args:", args, " classNames:"+classNames);
-                    persistence.MeteorPersistence.wrappedCallInProgress = true;
+                    mapper.MeteorPersistence.wrappedCallInProgress = true;
                     try {
                         var object = objectRetriever.getObject(id);
                         if( !object )
                             throw new Error("Unable to retrieve object with id: "+id);
                         if (argumentSerializer) {
                             args.forEach(function (o:any, i:number) {
-                                var argumentClass = persistence.PersistenceAnnotation.getEntityClassByName(classNames[i]);
+                                var argumentClass = mapper.PersistenceAnnotation.getEntityClassByName(classNames[i]);
                                 if( argumentClass )
                                 {
                                     if( typeof o =="string" )
@@ -407,7 +407,7 @@ module persistence {
 
                         return resultObj;
                     } finally {
-                        persistence.MeteorPersistence.wrappedCallInProgress = false;
+                        mapper.MeteorPersistence.wrappedCallInProgress = false;
                     }
 
                 };
@@ -445,19 +445,19 @@ module persistence {
 //        if( args.length!=typeNames.length )
 //            throw new Error("array length does not match");
 //
-//        var persistencePath = new persistence.PersistencePath(persistencePathString);
+//        var persistencePath = new mapper.PersistencePath(persistencePathString);
 //        for( var ai = 0; ai<args.length; ai++ )
 //        {
-//            if( persistence.PersistenceAnnotation.getEntityClassByName(typeNames[ai]) )
+//            if( mapper.PersistenceAnnotation.getEntityClassByName(typeNames[ai]) )
 //            {
 //                console.log("deserializing "+typeNames[ai] );
-//                args[ai] = DeSerializer.Serializer.toObject(args[ai], persistence.PersistenceAnnotation.getEntityClassByName(typeNames[ai]) );
+//                args[ai] = DeSerializer.Serializer.toObject(args[ai], mapper.PersistenceAnnotation.getEntityClassByName(typeNames[ai]) );
 //            }
 //        }
-//        var collection:persistence.BaseCollection<any> = persistence.MeteorPersistence.collections[persistencePath.getClassName()];
+//        var collection:mapper.BaseCollection<any> = mapper.MeteorPersistence.collections[persistencePath.getClassName()];
 //        try
 //        {
-//            persistence.MeteorPersistence.wrappedCallInProgress = true;
+//            mapper.MeteorPersistence.wrappedCallInProgress = true;
 //            return collection.update( persistencePath.getId(), function( o ){
 //                var subDocument:any = persistencePath.getSubObject( o );
 //                var fkt = subDocument? subDocument[functionName]:undefined;
@@ -491,7 +491,7 @@ module persistence {
 //        }
 //        finally
 //        {
-//            persistence.MeteorPersistence.wrappedCallInProgress = false;
+//            mapper.MeteorPersistence.wrappedCallInProgress = false;
 //        }
 //    }
 //});

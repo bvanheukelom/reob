@@ -1,6 +1,6 @@
 ///<reference path="references.d.ts"/>
-var persistence;
-(function (persistence) {
+var mapper;
+(function (mapper) {
     var ConstantObjectRetriever = (function () {
         function ConstantObjectRetriever(o) {
             this.value = o;
@@ -13,6 +13,6 @@ var persistence;
         };
         return ConstantObjectRetriever;
     })();
-    persistence.ConstantObjectRetriever = ConstantObjectRetriever;
-})(persistence || (persistence = {}));
+    mapper.ConstantObjectRetriever = ConstantObjectRetriever;
+})(mapper || (mapper = {}));
 //# sourceMappingURL=ConstantObjectRetriever.js.map

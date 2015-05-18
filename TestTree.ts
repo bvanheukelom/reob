@@ -3,20 +3,19 @@
  */
 module Tests
 {
-    @persistence.Entity("TheTreeCollection")
+    @mapper.Entity("TheTreeCollection")
     export class TestTree {
         private _id:string;
         private height:number = 10;
 
-        @persistence.ArrayOrMap("TestLeaf")
+        @mapper.ArrayOrMap("TestLeaf")
         leaves:Array<TestLeaf> = [];
 
         constructor( initialHeight?:number) {
             this.height = initialHeight || 10;
         }
 
-        @persistence.Wrap
-
+        @mapper.Wrap
         grow():string {
             this.height++;
             console.log("Tree is growing to new heights: ", this.height+" on the "+(Meteor.isServer?"server":"client"));
@@ -30,7 +29,7 @@ module Tests
                 return "grown on the server";
         }
 
-        @persistence.Wrap
+        @mapper.Wrap
         wither()
         {
             this.leaves = [];

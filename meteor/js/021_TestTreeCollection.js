@@ -30,15 +30,15 @@ TestTreeCollection = (function (_super) {
         cb(undefined, "Hello " + treeId + "! This is on the " + (Meteor.isServer ? "server" : "client") + " t:" + (t instanceof Tests.TestTree) + " " + t.getHeight() + " n:" + n + " " + (typeof n));
     };
     return TestTreeCollection;
-})(persistence.BaseCollection);
+})(mapper.BaseCollection);
 if (Meteor.isServer) {
     Meteor.publish("trees", function () {
-        return persistence.MeteorPersistence.collections["TheTreeCollection"].getMeteorCollection().find({});
+        return mapper.MeteorPersistence.collections["TheTreeCollection"].getMeteorCollection().find({});
     });
 }
 else {
     Meteor.subscribe("trees");
 }
-persistence.MeteorPersistence.wrapFunction(TestTreeCollection.prototype, "newTree", "newTree", true, new DeSerializer.Serializer(new persistence.MeteorObjectRetriever()), new persistence.ConstantObjectRetriever(new TestTreeCollection()));
-persistence.MeteorPersistence.wrapFunction(TestTreeCollection.prototype, "deleteTree", "deleteTree", true, new DeSerializer.Serializer(new persistence.MeteorObjectRetriever()), new persistence.ConstantObjectRetriever(new TestTreeCollection()));
-persistence.MeteorPersistence.wrapFunction(TestTreeCollection.prototype, "serverFunction", "serverFunction", true, new DeSerializer.Serializer(new persistence.MeteorObjectRetriever()), new persistence.ConstantObjectRetriever(new TestTreeCollection()));
+mapper.MeteorPersistence.wrapFunction(TestTreeCollection.prototype, "newTree", "newTree", true, new DeSerializer.Serializer(new mapper.MeteorObjectRetriever()), new mapper.ConstantObjectRetriever(new TestTreeCollection()));
+mapper.MeteorPersistence.wrapFunction(TestTreeCollection.prototype, "deleteTree", "deleteTree", true, new DeSerializer.Serializer(new mapper.MeteorObjectRetriever()), new mapper.ConstantObjectRetriever(new TestTreeCollection()));
+mapper.MeteorPersistence.wrapFunction(TestTreeCollection.prototype, "serverFunction", "serverFunction", true, new DeSerializer.Serializer(new mapper.MeteorObjectRetriever()), new mapper.ConstantObjectRetriever(new TestTreeCollection()));

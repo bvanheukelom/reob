@@ -3,7 +3,7 @@
  */
 ///<reference path="references.d.ts"/>
 
-class TestTreeCollection extends persistence.BaseCollection<Tests.TestTree> {
+class TestTreeCollection extends mapper.BaseCollection<Tests.TestTree> {
     constructor()
     {
         super(Tests.TestTree);
@@ -30,7 +30,7 @@ class TestTreeCollection extends persistence.BaseCollection<Tests.TestTree> {
 
 if( Meteor.isServer ) {
     Meteor.publish("trees", function(){
-        return persistence.MeteorPersistence.collections["TheTreeCollection"].getMeteorCollection().find({});
+        return mapper.MeteorPersistence.collections["TheTreeCollection"].getMeteorCollection().find({});
     });
 }
 else
@@ -39,6 +39,6 @@ else
 }
 // TODO move to annotation
 
-persistence.MeteorPersistence.wrapFunction(TestTreeCollection.prototype, "newTree", "newTree", true, new DeSerializer.Serializer(new persistence.MeteorObjectRetriever()), new persistence.ConstantObjectRetriever(new TestTreeCollection()) );
-persistence.MeteorPersistence.wrapFunction(TestTreeCollection.prototype, "deleteTree", "deleteTree", true, new DeSerializer.Serializer(new persistence.MeteorObjectRetriever()), new persistence.ConstantObjectRetriever(new TestTreeCollection()) );
-persistence.MeteorPersistence.wrapFunction(TestTreeCollection.prototype, "serverFunction", "serverFunction", true, new DeSerializer.Serializer(new persistence.MeteorObjectRetriever()), new persistence.ConstantObjectRetriever(new TestTreeCollection()) );
+mapper.MeteorPersistence.wrapFunction(TestTreeCollection.prototype, "newTree", "newTree", true, new DeSerializer.Serializer(new mapper.MeteorObjectRetriever()), new mapper.ConstantObjectRetriever(new TestTreeCollection()) );
+mapper.MeteorPersistence.wrapFunction(TestTreeCollection.prototype, "deleteTree", "deleteTree", true, new DeSerializer.Serializer(new mapper.MeteorObjectRetriever()), new mapper.ConstantObjectRetriever(new TestTreeCollection()) );
+mapper.MeteorPersistence.wrapFunction(TestTreeCollection.prototype, "serverFunction", "serverFunction", true, new DeSerializer.Serializer(new mapper.MeteorObjectRetriever()), new mapper.ConstantObjectRetriever(new TestTreeCollection()) );

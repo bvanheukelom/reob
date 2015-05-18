@@ -1,5 +1,5 @@
 ///<reference path="references.d.ts"/>
-module persistence
+module mapper
 {
     export function Entity( p1?:any ):any
     {

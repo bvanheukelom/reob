@@ -1,19 +1,19 @@
 ///<reference path="references.d.ts"/>
-var persistence;
-(function (persistence) {
+var mapper;
+(function (mapper) {
     var MeteorPersistence = (function () {
         function MeteorPersistence() {
         }
         MeteorPersistence.init = function () {
             if (!MeteorPersistence.initialized) {
-                persistence.PersistenceAnnotation.getEntityClasses().forEach(function (c) {
+                mapper.PersistenceAnnotation.getEntityClasses().forEach(function (c) {
                     MeteorPersistence.wrapClass(c);
                 });
                 MeteorPersistence.initialized = true;
             }
         };
         MeteorPersistence.objectsClassName = function (o) {
-            return persistence.className(o.constructor);
+            return mapper.className(o.constructor);
         };
         MeteorPersistence.withCallback = function (p, c) {
             if (Meteor.isClient) {
@@ -24,16 +24,16 @@ var persistence;
                 throw new Error("'withCallback' only works on the client as it is called when the next wrapped meteor call returns");
         };
         MeteorPersistence.wrapClass = function (c) {
-            var className = persistence.className(c);
+            var className = mapper.className(c);
             console.log("Wrapping transactional functions for class " + className);
-            persistence.PersistenceAnnotation.getWrappedFunctionNames(c).forEach(function (functionName) {
+            mapper.PersistenceAnnotation.getWrappedFunctionNames(c).forEach(function (functionName) {
                 var domainObjectFunction = c.prototype[functionName];
                 MeteorPersistence.monkeyPatch(c.prototype, functionName, function (originalFunction) {
                     var args = [];
                     for (var _i = 1; _i < arguments.length; _i++) {
                         args[_i - 1] = arguments[_i];
                     }
-                    var collection = persistence.MeteorPersistence.collections[persistence.PersistenceAnnotation.getCollectionName(c)];
+                    var collection = mapper.MeteorPersistence.collections[mapper.PersistenceAnnotation.getCollectionName(c)];
                     if (MeteorPersistence.wrappedCallInProgress || Meteor.isServer) {
                         return collection.update(this.getId(), function (o) {
                             return originalFunction.apply(o, args);
@@ -55,8 +55,8 @@ var persistence;
                         domainObjectFunction.apply(this, args);
                 });
             });
-            persistence.PersistenceAnnotation.getTypedPropertyNames(c).forEach(function (propertyName) {
-                if (persistence.PersistenceAnnotation.isStoredAsForeignKeys(c, propertyName)) {
+            mapper.PersistenceAnnotation.getTypedPropertyNames(c).forEach(function (propertyName) {
+                if (mapper.PersistenceAnnotation.isStoredAsForeignKeys(c, propertyName)) {
                     var propertyDescriptor = Object.getOwnPropertyDescriptor(c.prototype, propertyName);
                     Object.defineProperty(c.prototype, propertyName, {
                         get: function () {
@@ -103,14 +103,14 @@ var persistence;
             });
         };
         MeteorPersistence.needsLazyLoading = function (object, propertyName) {
-            var oc = persistence.PersistenceAnnotation.getClass(object);
-            if (persistence.PersistenceAnnotation.isStoredAsForeignKeys(oc, propertyName)) {
+            var oc = mapper.PersistenceAnnotation.getClass(object);
+            if (mapper.PersistenceAnnotation.isStoredAsForeignKeys(oc, propertyName)) {
                 var shadowpropertyDescriptor = Object.getOwnPropertyDescriptor(object, "_" + propertyName);
                 var shadowPropertyIsKeys = false;
                 if (shadowpropertyDescriptor)
                     if (typeof object["_" + propertyName] == "string")
                         shadowPropertyIsKeys = true;
-                    else if (persistence.PersistenceAnnotation.isArrayOrMap(oc, propertyName)) {
+                    else if (mapper.PersistenceAnnotation.isArrayOrMap(oc, propertyName)) {
                         var v = object["_" + propertyName];
                         for (var i in v) {
                             if (typeof v[i] == "string")
@@ -138,24 +138,24 @@ var persistence;
                 });
             }
             visited.push(object);
-            var objectClass = persistence.PersistenceAnnotation.getClass(object);
-            if (persistence.PersistenceAnnotation.isRootEntity(objectClass)) {
+            var objectClass = mapper.PersistenceAnnotation.getClass(object);
+            if (mapper.PersistenceAnnotation.isRootEntity(objectClass)) {
                 if (!object.persistencePath) {
                     if (object.getId())
-                        object.persistencePath = new persistence.PersistencePath(persistence.PersistenceAnnotation.getCollectionName(objectClass), object.getId());
+                        object.persistencePath = new mapper.PersistencePath(mapper.PersistenceAnnotation.getCollectionName(objectClass), object.getId());
                     else
-                        throw new Error("Can not set the persistence path of root collection object without id. Class:" + persistence.className(objectClass));
+                        throw new Error("Can not set the persistence path of root collection object without id. Class:" + mapper.className(objectClass));
                 }
             }
             else {
                 if (!object.persistencePath)
-                    throw new Error("Can not set the persistence path of non root collection object. " + persistence.className(objectClass));
+                    throw new Error("Can not set the persistence path of non root collection object. " + mapper.className(objectClass));
             }
-            persistence.PersistenceAnnotation.getTypedPropertyNames(objectClass).forEach(function (typedPropertyName) {
-                if (!persistence.PersistenceAnnotation.isStoredAsForeignKeys(objectClass, typedPropertyName)) {
+            mapper.PersistenceAnnotation.getTypedPropertyNames(objectClass).forEach(function (typedPropertyName) {
+                if (!mapper.PersistenceAnnotation.isStoredAsForeignKeys(objectClass, typedPropertyName)) {
                     var v = object[typedPropertyName];
                     if (v) {
-                        if (persistence.PersistenceAnnotation.isArrayOrMap(objectClass, typedPropertyName)) {
+                        if (mapper.PersistenceAnnotation.isArrayOrMap(objectClass, typedPropertyName)) {
                             for (var i in v) {
                                 var e = v[i];
                                 if (e.getId && e.getId()) {
@@ -164,7 +164,7 @@ var persistence;
                                     MeteorPersistence.updatePersistencePaths(e, visited);
                                 }
                                 else
-                                    throw new Error("An element of the array '" + typedPropertyName + "' stored on the classe " + persistence.className(objectClass) + " does not have an id. Total persistence path so far:" + object.persistencePath.toString());
+                                    throw new Error("An element of the array '" + typedPropertyName + "' stored on the classe " + mapper.className(objectClass) + " does not have an id. Total persistence path so far:" + object.persistencePath.toString());
                             }
                         }
                         else {
@@ -178,7 +178,7 @@ var persistence;
                     if (!MeteorPersistence.needsLazyLoading(object, typedPropertyName)) {
                         var v = object[typedPropertyName];
                         if (v) {
-                            if (persistence.PersistenceAnnotation.isArrayOrMap(objectClass, typedPropertyName)) {
+                            if (mapper.PersistenceAnnotation.isArrayOrMap(objectClass, typedPropertyName)) {
                                 for (var i in v) {
                                     var e = v[i];
                                     if (!e.persistencePath) {
@@ -225,7 +225,7 @@ var persistence;
                         console.log("Returned from meteor method '" + meteorMethodName + "' with result:", result, "_", callback, "_", MeteorPersistence.nextCallback);
                         if (!error) {
                             if (argumentSerializer && result.className) {
-                                result.result = argumentSerializer.toObject(result.result, persistence.PersistenceAnnotation.getEntityClassByName(result.className));
+                                result.result = argumentSerializer.toObject(result.result, mapper.PersistenceAnnotation.getEntityClassByName(result.className));
                                 MeteorPersistence.updatePersistencePaths(result.result);
                             }
                         }
@@ -245,14 +245,14 @@ var persistence;
                     check(args, Array);
                     check(classNames, Array);
                     console.log("Meteor method invoked: " + meteorMethodName + " id:" + id + " appendCallback:" + appendCallback + " args:", args, " classNames:" + classNames);
-                    persistence.MeteorPersistence.wrappedCallInProgress = true;
+                    mapper.MeteorPersistence.wrappedCallInProgress = true;
                     try {
                         var object = objectRetriever.getObject(id);
                         if (!object)
                             throw new Error("Unable to retrieve object with id: " + id);
                         if (argumentSerializer) {
                             args.forEach(function (o, i) {
-                                var argumentClass = persistence.PersistenceAnnotation.getEntityClassByName(classNames[i]);
+                                var argumentClass = mapper.PersistenceAnnotation.getEntityClassByName(classNames[i]);
                                 if (argumentClass) {
                                     if (typeof o == "string")
                                         args[i] = argumentSerializer.objectRetriever.getObject(o);
@@ -280,7 +280,7 @@ var persistence;
                         return resultObj;
                     }
                     finally {
-                        persistence.MeteorPersistence.wrappedCallInProgress = false;
+                        mapper.MeteorPersistence.wrappedCallInProgress = false;
                     }
                 };
                 Meteor.methods(m);
@@ -301,10 +301,10 @@ var persistence;
         MeteorPersistence.collections = {};
         MeteorPersistence.wrappedCallInProgress = false;
         MeteorPersistence.initialized = false;
-        MeteorPersistence.meteorObjectRetriever = new persistence.MeteorObjectRetriever();
+        MeteorPersistence.meteorObjectRetriever = new mapper.MeteorObjectRetriever();
         MeteorPersistence.serializer = new DeSerializer.Serializer(MeteorPersistence.meteorObjectRetriever);
         return MeteorPersistence;
     })();
-    persistence.MeteorPersistence = MeteorPersistence;
-})(persistence || (persistence = {}));
+    mapper.MeteorPersistence = MeteorPersistence;
+})(mapper || (mapper = {}));
 //# sourceMappingURL=MeteorPersistence.js.map

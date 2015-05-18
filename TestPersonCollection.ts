@@ -1,5 +1,5 @@
 ///<reference path="references.d.ts"/>
-class TestPersonCollection extends persistence.BaseCollection<Tests.TestPerson>
+class TestPersonCollection extends mapper.BaseCollection<Tests.TestPerson>
 {
     constructor()
     {
@@ -36,7 +36,7 @@ class TestPersonCollection extends persistence.BaseCollection<Tests.TestPerson>
 
 if( Meteor.isServer ) {
     Meteor.publish("persons", function(){
-        return persistence.MeteorPersistence.collections["TestPerson"].getMeteorCollection().find({});
+        return mapper.MeteorPersistence.collections["TestPerson"].getMeteorCollection().find({});
     });
 }
 else
@@ -44,6 +44,6 @@ else
     Meteor.subscribe("persons");
 }
 
-persistence.MeteorPersistence.wrapFunction(TestPersonCollection.prototype, "removePerson", "removePerson", true, null, new persistence.ConstantObjectRetriever(new TestPersonCollection()) );
-persistence.MeteorPersistence.wrapFunction(TestPersonCollection.prototype, "newPerson", "newPerson", true, new DeSerializer.Serializer(new persistence.MeteorObjectRetriever()), new persistence.ConstantObjectRetriever(new TestPersonCollection()) );
-persistence.MeteorPersistence.wrapFunction(TestPersonCollection.prototype, "haveBaby", "haveBaby", true, new DeSerializer.Serializer(new persistence.MeteorObjectRetriever()), new persistence.ConstantObjectRetriever(new TestPersonCollection()) );
+mapper.MeteorPersistence.wrapFunction(TestPersonCollection.prototype, "removePerson", "removePerson", true, null, new mapper.ConstantObjectRetriever(new TestPersonCollection()) );
+mapper.MeteorPersistence.wrapFunction(TestPersonCollection.prototype, "newPerson", "newPerson", true, new DeSerializer.Serializer(new mapper.MeteorObjectRetriever()), new mapper.ConstantObjectRetriever(new TestPersonCollection()) );
+mapper.MeteorPersistence.wrapFunction(TestPersonCollection.prototype, "haveBaby", "haveBaby", true, new DeSerializer.Serializer(new mapper.MeteorObjectRetriever()), new mapper.ConstantObjectRetriever(new TestPersonCollection()) );

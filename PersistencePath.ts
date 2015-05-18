@@ -1,5 +1,5 @@
 ///<reference path="references.d.ts"/>
-module persistence {
+module mapper {
     export class PersistencePath {
         private path:string;
 

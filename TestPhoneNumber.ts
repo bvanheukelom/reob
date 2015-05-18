@@ -1,6 +1,6 @@
 ///<reference path="references.d.ts"/>
 module Tests {
-@persistence.Entity
+    @mapper.Entity
     export class TestPhoneNumber {
         number:string;
 
@@ -15,7 +15,7 @@ module Tests {
             return this.number;
         }
 
-        @persistence.Wrap
+        @mapper.Wrap
         callNumber( callback:( error:any, answer:string )=>void )
         {
             var that = this;

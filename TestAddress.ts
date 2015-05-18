@@ -5,7 +5,7 @@
 module Tests
 {
 
-    @persistence.Entity
+    @mapper.Entity
     export class TestAddress {
         street:string;
 

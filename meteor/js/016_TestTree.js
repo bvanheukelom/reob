@@ -43,18 +43,18 @@ Tests;
             return this.leaves;
         };
         __decorate([
-            persistence.ArrayOrMap("TestLeaf")
+            mapper.ArrayOrMap("TestLeaf")
         ], TestTree.prototype, "leaves");
         Object.defineProperty(TestTree.prototype, "grow",
             __decorate([
-                persistence.Wrap
+                mapper.Wrap
             ], TestTree.prototype, "grow", Object.getOwnPropertyDescriptor(TestTree.prototype, "grow")));
         Object.defineProperty(TestTree.prototype, "wither",
             __decorate([
-                persistence.Wrap
+                mapper.Wrap
             ], TestTree.prototype, "wither", Object.getOwnPropertyDescriptor(TestTree.prototype, "wither")));
         TestTree = __decorate([
-            persistence.Entity("TheTreeCollection")
+            mapper.Entity("TheTreeCollection")
         ], TestTree);
         return TestTree;
     })();

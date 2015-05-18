@@ -1,5 +1,5 @@
 ///<reference path="references.d.ts"/>
-module persistence {
+module mapper {
 
     export class BaseCollection<T extends Persistable>
     {
@@ -13,8 +13,8 @@ module persistence {
         constructor( persistableClass:TypeClass<T> )
         {
             this.serializer = new DeSerializer.Serializer( new MeteorObjectRetriever() );
-            persistence.MeteorPersistence.init();
-            var collectionName = persistence.PersistenceAnnotation.getCollectionName(persistableClass);
+            mapper.MeteorPersistence.init();
+            var collectionName = mapper.PersistenceAnnotation.getCollectionName(persistableClass);
             this.name = collectionName;
             if( !MeteorPersistence.collections[collectionName] ) {
                 // as it doesnt really matter which base collection is used in meteor-calls, we're just using the first that is created
@@ -26,7 +26,7 @@ module persistence {
 
         static getCollection<P extends Persistable>( t:TypeClass<P> ):BaseCollection<P>
         {
-            return MeteorPersistence.collections[persistence.PersistenceAnnotation.getCollectionName(t)];
+            return MeteorPersistence.collections[mapper.PersistenceAnnotation.getCollectionName(t)];
         }
 
         private static _getMeteorCollection( name?:string )
@@ -163,7 +163,7 @@ module persistence {
                         if( typeof p.setId == "function")
                             p.setId(id);
                         else
-                            throw new Error("Unable to set Id after an object of class '"+persistence.className(that.theClass)+"' was inserted into collection '"+that.name+"'. Either only call insert with objects that already have an ID or declare a 'setId' function on the class.");
+                            throw new Error("Unable to set Id after an object of class '"+mapper.className(that.theClass)+"' was inserted into collection '"+that.name+"'. Either only call insert with objects that already have an ID or declare a 'setId' function on the class.");
                         MeteorPersistence.updatePersistencePaths(p);
                     }
                     else
@@ -215,5 +215,5 @@ module persistence {
 
     }
 }
-persistence.MeteorPersistence.wrapFunction( persistence.BaseCollection, "resetAll", "resetAll", true, null, new persistence.ConstantObjectRetriever(persistence.BaseCollection) );
+mapper.MeteorPersistence.wrapFunction( mapper.BaseCollection, "resetAll", "resetAll", true, null, new mapper.ConstantObjectRetriever(mapper.BaseCollection) );
 
