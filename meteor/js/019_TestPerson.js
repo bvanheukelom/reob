@@ -53,8 +53,17 @@ Tests;
         TestPerson.prototype.chooseLeaf = function (l) {
             this.leaf = l;
         };
-        TestPerson.prototype.addToWood = function (t) {
+        TestPerson.prototype.addToWood = function (t, s) {
             this.trees.push(t);
+            if (s)
+                this.wood[s] = t;
+        };
+        TestPerson.prototype.addFamilyRelation = function (s, p) {
+            if (s)
+                this.family[s] = p;
+        };
+        TestPerson.prototype.addPhoneNumber = function (s, p) {
+            this.phoneBook[s] = p;
         };
         __decorate([
             persistence.PersistenceAnnotation.Type("TestPhoneNumber")
@@ -105,6 +114,14 @@ Tests;
             __decorate([
                 persistence.PersistenceAnnotation.Wrap
             ], TestPerson.prototype, "addToWood", Object.getOwnPropertyDescriptor(TestPerson.prototype, "addToWood")));
+        Object.defineProperty(TestPerson.prototype, "addFamilyRelation",
+            __decorate([
+                persistence.PersistenceAnnotation.Wrap
+            ], TestPerson.prototype, "addFamilyRelation", Object.getOwnPropertyDescriptor(TestPerson.prototype, "addFamilyRelation")));
+        Object.defineProperty(TestPerson.prototype, "addPhoneNumber",
+            __decorate([
+                persistence.PersistenceAnnotation.Wrap
+            ], TestPerson.prototype, "addPhoneNumber", Object.getOwnPropertyDescriptor(TestPerson.prototype, "addPhoneNumber")));
         TestPerson = __decorate([
             persistence.PersistenceAnnotation.Entity(true)
         ], TestPerson);

@@ -114,10 +114,26 @@ module Tests
             this.leaf = l;
         }
         @persistence.PersistenceAnnotation.Wrap
-        addToWood(t:TestTree)
+        addToWood(t:TestTree, s?:string )
         {
             this.trees.push( t );
+            if( s )
+                this.wood[s] = t;
         }
+
+        @persistence.PersistenceAnnotation.Wrap
+        addFamilyRelation(s:string, p:Tests.TestPerson )
+        {
+            if( s )
+                this.family[s] = p;
+        }
+
+        @persistence.PersistenceAnnotation.Wrap
+        addPhoneNumber(s:string, p:Tests.TestPhoneNumber )
+        {
+            this.phoneBook[s] = p;
+        }
+
 
     }
 }

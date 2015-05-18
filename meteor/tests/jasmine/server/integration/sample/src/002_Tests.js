@@ -47,7 +47,7 @@ describe("The persistence thing", function () {
     }
     it("can do basic inserts", function (done) {
         treeCollection.newTree(20, onlyOnce(function (error, tree) {
-            expect(error).toBeFalsy();
+            expect(error).toBeUndefined();
             expect(tree).toBeDefined();
             expect(tree.persistencePath).toBeDefined();
             expect(tree instanceof Tests.TestTree).toBeTruthy();
@@ -177,7 +177,7 @@ describe("The persistence thing", function () {
     });
     it("can save objects that have foreign key properties", function (done) {
         personCollection.newPerson("jake", function (error, jake) {
-            expect(error).toBeUndefined();
+            expect(error).toBeFalsy();
             expect(jake).toBeDefined();
             treeCollection.newTree(12, function (error, t) {
                 jake.chooseTree(t);
@@ -224,6 +224,77 @@ describe("The persistence thing", function () {
                 expect(t1.getLeaves()[5]).toBeDefined();
                 tp.chooseLeaf(t1.getLeaves()[5]);
                 expect(personCollection.getById(tp.getId()).leaf).toBeDefined();
+                done();
+            });
+        });
+    });
+    it("can serialize object in a map", function () {
+        var tp = new Tests.TestPerson("tp");
+        tp.phoneBook["klaus"] = new Tests.TestPhoneNumber("121212");
+        var doc = new DeSerializer.Serializer(new persistence.ConstantObjectRetriever(1)).toDocument(tp);
+        expect(doc).toBeDefined();
+        expect(doc.phoneBook).toBeDefined();
+        expect(doc.phoneBook["klaus"]).toBeDefined();
+        expect(doc.phoneBook["klaus"].number).toBeDefined();
+    });
+    it("can serialize object in a map as foreign key", function (done) {
+        treeCollection.newTree(12, function (e, klaus) {
+            treeCollection.newTree(13, function (e, peter) {
+                personCollection.newPerson("Held", function (e, held) {
+                    held.addToWood(klaus, "xxx");
+                    held.addToWood(peter, "yyy");
+                    held = personCollection.getById(held.getId());
+                    var doc = new DeSerializer.Serializer(new persistence.MeteorObjectRetriever()).toDocument(held);
+                    expect(doc).toBeDefined();
+                    expect(doc.wood).toBeDefined();
+                    expect(doc.wood["xxx"]).toBeDefined();
+                    expect(doc.wood["xxx"]).toBe("TheTreeCollection[" + klaus.getId() + "]");
+                    expect(doc.wood["yyy"]).toBe("TheTreeCollection[" + peter.getId() + "]");
+                    done();
+                });
+            });
+        });
+    });
+    it("can save foreign keys in a map", function (done) {
+        treeCollection.newTree(12, function (e, klaus) {
+            treeCollection.newTree(13, function (e, peter) {
+                personCollection.newPerson("Held", function (e, held) {
+                    held.addToWood(klaus, "klausKey");
+                    held.addToWood(peter, "peterKey");
+                    held = personCollection.getById(held.getId());
+                    expect(held).toBeDefined();
+                    expect(persistence.MeteorPersistence.needsLazyLoading(held, "wood")).toBeTruthy();
+                    expect(held.wood).toBeDefined();
+                    expect(persistence.MeteorPersistence.needsLazyLoading(held, "wood")).toBeFalsy();
+                    expect(typeof held.wood).toBe("object");
+                    expect(held.wood["peterKey"]).toBeDefined();
+                    expect(held.wood["peterKey"] instanceof Tests.TestTree).toBeTruthy();
+                    expect(held.wood["peterKey"].getId()).toBe(peter.getId());
+                    done();
+                });
+            });
+        });
+    });
+    it("can save objects with a dictionary to objects in the same collection", function (done) {
+        personCollection.newPerson("mom", function (e, mom) {
+            personCollection.newPerson("dad", function (e, dad) {
+                personCollection.haveBaby(mom, dad, function (e, kid) {
+                    expect(personCollection.getById(kid.getId()).family["mom"].getId()).toBe(mom.getId());
+                    expect(personCollection.getById(kid.getId()).family["dad"].getId()).toBe(dad.getId());
+                    done();
+                });
+            });
+        });
+    });
+    it("stores something as a foreign key turns undefined after the foreign sub object is deleted", function (done) {
+        treeCollection.newTree(10, function (e, t) {
+            t.grow();
+            personCollection.newPerson("mike", function (e, p) {
+                p.chooseTree(t);
+                p.collectLeaf();
+                expect(personCollection.getById(p.getId()).leaf).toBeDefined();
+                t.wither();
+                expect(personCollection.getById(p.getId()).leaf).toBeUndefined();
                 done();
             });
         });

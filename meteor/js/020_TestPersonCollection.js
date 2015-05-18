@@ -13,15 +13,23 @@ TestPersonCollection = (function (_super) {
     TestPersonCollection.prototype.newPerson = function (n, callback) {
         var p = new Tests.TestPerson();
         p.name = n;
-        try {
-            var id = this.insert(p);
-            if (!this.getById(id))
-                throw new Error("Could not insert person.");
-            callback(undefined, this.getById(id));
-        }
-        catch (e) {
-            callback(e);
-        }
+        var that = this;
+        this.insert(p, function (e, id) {
+            callback(e, id ? that.getById(id) : undefined);
+        });
+    };
+    TestPersonCollection.prototype.haveBaby = function (mom, dad, callback) {
+        console.log("mom: ", mom);
+        console.log("dad: ", dad);
+        var kid = new Tests.TestPerson();
+        kid.name = "child of " + mom.name + " and " + dad.name;
+        kid.family["mom"] = mom;
+        kid.family["dad"] = dad;
+        var that = this;
+        this.insert(kid, function (e, id) {
+            console.log("The baby is inserted into the database");
+            callback(e, id ? that.getById(id) : undefined);
+        });
     };
     return TestPersonCollection;
 })(persistence.BaseCollection);
@@ -34,3 +42,4 @@ else {
     Meteor.subscribe("persons");
 }
 persistence.MeteorPersistence.wrapFunction(TestPersonCollection.prototype, "newPerson", "newPerson", true, new DeSerializer.Serializer(new persistence.MeteorObjectRetriever()), new persistence.ConstantObjectRetriever(new TestPersonCollection()));
+persistence.MeteorPersistence.wrapFunction(TestPersonCollection.prototype, "haveBaby", "haveBaby", true, new DeSerializer.Serializer(new persistence.MeteorObjectRetriever()), new persistence.ConstantObjectRetriever(new TestPersonCollection()));

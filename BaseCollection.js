@@ -93,7 +93,7 @@ var persistence;
             }
             throw new Error("update gave up after 10 attempts to update the object ");
         };
-        BaseCollection.prototype.insert = function (p) {
+        BaseCollection.prototype.insert = function (p, callback) {
             if (Meteor.isServer) {
                 if (typeof p.getId != "function" || !p.getId())
                     p.setId(new Mongo.ObjectID()._str);
@@ -101,13 +101,31 @@ var persistence;
                 doc.serial = 0;
                 console.log("inserting document: ", doc);
                 var that = this;
-                var id = this.meteorCollection.insert(doc);
-                console.log("inserted into '" + that.getName() + "' new id:" + id);
-                if (typeof p.setId == "function")
-                    p.setId(id);
-                else
-                    throw new Error("Unable to set Id after an object of class '" + persistence.PersistenceAnnotation.className(that.theClass) + "' was inserted into collection '" + that.name + "'. Either only call insert with objects that already have an ID or declare a 'setId' function on the class.");
-                persistence.MeteorPersistence.updatePersistencePaths(p);
+                function afterwards(e, id) {
+                    if (!e) {
+                        console.log("inserted into '" + that.getName() + "' new id:" + id);
+                        if (typeof p.setId == "function")
+                            p.setId(id);
+                        else
+                            throw new Error("Unable to set Id after an object of class '" + persistence.PersistenceAnnotation.className(that.theClass) + "' was inserted into collection '" + that.name + "'. Either only call insert with objects that already have an ID or declare a 'setId' function on the class.");
+                        persistence.MeteorPersistence.updatePersistencePaths(p);
+                    }
+                    else
+                        console.log("error while inserting into " + this.name, e);
+                    if (callback)
+                        callback(e, id);
+                }
+                try {
+                    var id = this.meteorCollection.insert(doc, callback ? afterwards : undefined);
+                    if (!callback)
+                        afterwards(undefined, id);
+                    else
+                        return id;
+                }
+                catch (e) {
+                    if (!callback)
+                        afterwards(e);
+                }
                 return id;
             }
             else

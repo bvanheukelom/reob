@@ -57,7 +57,7 @@ describe("The persistence thing", function(){
 
     it("can do basic inserts", function( done ){
         treeCollection.newTree( 20, onlyOnce(function(error, tree:Tests.TestTree){
-            expect( error ).toBeFalsy();
+            expect( error ).toBeUndefined();
             expect( tree ).toBeDefined();
             expect( (<any>tree).persistencePath ).toBeDefined();
             expect( tree instanceof Tests.TestTree).toBeTruthy();
@@ -208,7 +208,7 @@ describe("The persistence thing", function(){
 
     it("can save objects that have foreign key properties", function(done){
         personCollection.newPerson( "jake", function( error:any, jake:Tests.TestPerson ){
-            expect(error).toBeUndefined();
+            expect(error).toBeFalsy();
             expect(jake).toBeDefined();
             treeCollection.newTree(12, function( error, t:Tests.TestTree ){
                 jake.chooseTree(t);
@@ -267,47 +267,58 @@ describe("The persistence thing", function(){
         });
 
     });
-    //
-    //it("can serialize object in a map", function(){
-    //    var tp = new Tests.TestPerson("tp");
-    //    tp.phoneBook["klaus"] = new Tests.TestPhoneNumber("121212");
-    //    var doc:any = DeSerializer.Serializer.toDocument(tp);
-    //
-    //    expect( doc ).toBeDefined();
-    //    expect( doc.phoneBook ).toBeDefined();
-    //    expect( doc.phoneBook["klaus"] ).toBeDefined();
-    //    expect( doc.phoneBook["klaus"].number ).toBeDefined();
-    //});
-    //
-    //it("can serialize object in a map as foreign key", function(){
-    //    var tp = new Tests.TestPerson("tp");
-    //    tp.wood["klaus"] = new Tests.TestTree("t1");
-    //    treeCollection.insert(tp.wood["klaus"]);
-    //    tp.wood["peter"] = new Tests.TestTree("t2");
-    //    treeCollection.insert(tp.wood["peter"]);
-    //    var doc:any = DeSerializer.Serializer.toDocument(tp);
-    //    expect( doc ).toBeDefined();
-    //    expect( doc.wood ).toBeDefined();
-    //    expect( doc.wood["klaus"] ).toBeDefined();
-    //    expect( doc.wood["klaus"] ).toBe("TestTree[t1]");
-    //    expect( doc.wood["peter"] ).toBe("TestTree[t2]");
-    //});
-    //
-    //it("can save foreign keys in a map", function(){
-    //    var tp = new Tests.TestPerson("tp");
-    //    tp.wood["klaus"] = new Tests.TestTree("t1");
-    //    treeCollection.insert(tp.wood["klaus"]);
-    //    tp.wood["peter"] = new Tests.TestTree("t2");
-    //    treeCollection.insert(tp.wood["peter"]);
-    //    expect(tp.wood["peter"] instanceof Tests.TestTree ).toBeTruthy();
-    //    personCollection.insert( tp );
-    //    expect( personCollection.getById("tp") ).toBeDefined();
-    //    expect( personCollection.getById("tp").wood ).toBeDefined();
-    //    expect( typeof personCollection.getById("tp").wood ).toBe("object");
-    //    expect( personCollection.getById("tp").wood["peter"] ).toBeDefined();
-    //    expect( personCollection.getById("tp").wood["peter"] instanceof Tests.TestTree ).toBeTruthy();
-    //    expect( personCollection.getById("tp").wood["peter"].getId() ).toBe("t2");
-    //});
+
+    it("can serialize object in a map", function(){
+        var tp = new Tests.TestPerson("tp");
+        tp.phoneBook["klaus"] = new Tests.TestPhoneNumber("121212");
+        var doc:any = new DeSerializer.Serializer(new persistence.ConstantObjectRetriever(1) ).toDocument(tp);
+
+        expect( doc ).toBeDefined();
+        expect( doc.phoneBook ).toBeDefined();
+        expect( doc.phoneBook["klaus"] ).toBeDefined();
+        expect( doc.phoneBook["klaus"].number ).toBeDefined();
+    });
+
+    it("can serialize object in a map as foreign key", function(done){
+        treeCollection.newTree(12, function(e:any, klaus:Tests.TestTree){
+            treeCollection.newTree(13, function(e:any, peter:Tests.TestTree){
+                personCollection.newPerson("Held", function(e:any, held:Tests.TestPerson){
+                    held.addToWood(klaus,"xxx");
+                    held.addToWood(peter, "yyy");
+                    held = personCollection.getById(held.getId());
+                    var doc:any = new DeSerializer.Serializer(new persistence.MeteorObjectRetriever() ).toDocument(held);
+                    expect( doc ).toBeDefined();
+                    expect( doc.wood ).toBeDefined();
+                    expect( doc.wood["xxx"] ).toBeDefined();
+                    expect( doc.wood["xxx"] ).toBe("TheTreeCollection["+klaus.getId()+"]");
+                    expect( doc.wood["yyy"] ).toBe("TheTreeCollection["+peter.getId()+"]");
+                    done();
+                });
+            });
+        });
+    });
+
+
+    it("can save foreign keys in a map", function(done){
+        treeCollection.newTree(12, function(e:any, klaus:Tests.TestTree){
+            treeCollection.newTree(13, function(e:any, peter:Tests.TestTree){
+                personCollection.newPerson("Held", function(e:any, held:Tests.TestPerson){
+                    held.addToWood(klaus,"klausKey");
+                    held.addToWood(peter, "peterKey");
+                    held = personCollection.getById(held.getId());
+                    expect( held ).toBeDefined();
+                    expect( persistence.MeteorPersistence.needsLazyLoading(held,"wood") ).toBeTruthy();
+                    expect( held.wood ).toBeDefined();
+                    expect( persistence.MeteorPersistence.needsLazyLoading(held,"wood") ).toBeFalsy();
+                    expect( typeof held.wood ).toBe("object");
+                    expect( held.wood["peterKey"] ).toBeDefined();
+                    expect( held.wood["peterKey"] instanceof Tests.TestTree ).toBeTruthy();
+                    expect( held.wood["peterKey"].getId() ).toBe(peter.getId());
+                    done();
+                });
+            });
+        });
+    });
     //
     //it("can save objects keys in a map", function(){
     //    var tp = new Tests.TestPerson("tp");
@@ -325,28 +336,20 @@ describe("The persistence thing", function(){
     //    expect( personCollection.getById("tp").phoneBook["superman"].getNumber() ).toBe("12345");
     //});
     //
-    //it("can save objects with a dictionary to objects in the same collection", function(){
-    //    var kid = new Tests.TestPerson("kid");
-    //    var mom = new Tests.TestPerson("mom");
-    //    var dad = new Tests.TestPerson("dad");
-    //    personCollection.insert(mom);
-    //    personCollection.insert(dad);
-    //    kid.family["mommy"] = mom;
-    //    kid.family["daddy"] = dad;
-    //    personCollection.insert( kid );
-    //    expect( personCollection.getById("kid").family["mommy"].getId() ).toBe("mom");
-    //    expect( personCollection.getById("kid").family["daddy"].getId() ).toBe("dad");
-    //});
+    it("can save objects with a dictionary to objects in the same collection", function(done){
+        personCollection.newPerson("mom", function(e:any, mom:Tests.TestPerson){
+            personCollection.newPerson("dad", function(e:any, dad:Tests.TestPerson) {
+                personCollection.haveBaby(mom, dad, function(e:any, kid:Tests.TestPerson) {
+                    expect( personCollection.getById(kid.getId()).family["mom"].getId() ).toBe(mom.getId());
+                    expect( personCollection.getById(kid.getId()).family["dad"].getId() ).toBe(dad.getId());
+                    done();
+                });
+            });
+        });
+    });
     //
     //
-    //it("can return values from a wrapped function", function(){
-    //    var kid = new Tests.TestPerson("kid");
-    //    personCollection.insert( kid );
-    //    var a = kid.addAddress(new Tests.TestAddress("streetsss"));
-    //
-    //    expect( a instanceof Tests.TestAddress).toBeTruthy();
-    //    expect( a.getStreet() ).toBe("streetsss");
-    //});
+
     //
     //it("stores something as a foreign key turns undefined after the foreign object is deleted", function(){
     //    var t1 = new Tests.TestTree("t1");
@@ -362,124 +365,25 @@ describe("The persistence thing", function(){
     //});
     //
     //
-    //it("stores something as a foreign key turns undefined after the foreign sub object is deleted", function(){
-    //    var t1 = new Tests.TestTree("t1");
-    //    treeCollection.insert( t1 );
-    //    t1.grow();
-    //    var kid = new Tests.TestPerson("kid");
-    //    kid.tree = t1;
-    //    personCollection.insert( kid );
-    //    kid.collectLeaf();
-    //    expect( personCollection.getById("kid").leaf ).toBeDefined();
-    //    t1.wither();
-    //    expect( personCollection.getById("kid").leaf ).toBeUndefined();
-    //});
-    //
-    //xit("can store a subdocument by id. The subducoment is from a different collection. It is stored in a dictionary on a key that is something else than it's id.", function(){
-    //    // the subdocument either needs to have an Id or it is stored by the id in the dictionary.
-    //});
-    //
-    //it("calls registered callbacks that receive results directly from the server ", function(done){
-    //    var t1 = new Tests.TestTree("t1");
-    //    treeCollection.insert( t1 );
-    //    persistence.MeteorPersistence.withCallback(function(){
-    //        var s = t1.grow();
-    //        expect( s ).toBe("grown on the client");
-    //    }, function callback( error, result ){
-    //        expect( result ).toBe("grown on the server");
-    //        done();
-    //    } );
-    //});
-    //
-    //it("sets ids on the server", function(done){
-    //    var t1 = new Tests.TestPerson();
-    //    t1.name = "Klaus";
-    //    personCollection.insert( t1, function(err,p:Tests.TestPerson){
-    //        if( err )
-    //            fail();
-    //        else
-    //        {
-    //            expect(p).toBeDefined();
-    //            setTimeout(function(){
-    //                expect(personCollection.getById(p.getId()).name).toBe("Klaus");
-    //                expect(p.name).toBe("Klaus");
-    //                done();
-    //            },1000);
-    //        }
-    //    } );
-    //});
-    //
-    //it("cannot do two wrapped calls in 'withCallback'", function(done){
-    //    var t1 = new Tests.TestTree("t1");
-    //    treeCollection.insert( t1 );
-    //    var count = 0;
-    //    persistence.MeteorPersistence.withCallback(function(){
-    //        var s = t1.grow();
-    //        var s = t1.grow();
-    //    }, function callback( result, error ){
-    //        count++;
-    //        if( count==2)
-    //            done();
-    //    } );
-    //});
-    //
-    //it("supports wrapped calls whose last parameter is a callback function.", function(done){
-    //    var t1 = new Tests.TestPerson("p1");
-    //    t1.phoneBook["mike"] = new Tests.TestPhoneNumber("12345");
-    //    personCollection.insert(t1);
-    //    var t2 = personCollection.getById("p1");
-    //    t2.phoneBook["mike"].callNumber(function(err:any,  r:string){
-    //        expect(r).toBe("Called:12345");
-    //        done();
-    //    });
-    //});
-    //
-    //it("supports wrapped calls whose last parameter is a callback function and has more parameters.", function(done){
-    //    var t1 = new Tests.TestPerson("p1");
-    //    t1.phoneBook["mike"] = new Tests.TestPhoneNumber("12345");
-    //    personCollection.insert(t1);
-    //    var t2 = personCollection.getById("p1");
-    //    t2.phoneBook["mike"].callNumberFrantically(5, function(err:any,  r:string){
-    //        expect(r).toBe("Called:12345 5 time(s)" );
-    //        done();
-    //    });
-    //});
-    //
+    it("stores something as a foreign key turns undefined after the foreign sub object is deleted", function(done){
+        treeCollection.newTree( 10, function(e:any, t:Tests.TestTree){
+            t.grow();
+            personCollection.newPerson("mike", function(e:any, p:Tests.TestPerson){
+                p.chooseTree(t);
+                p.collectLeaf();
+                expect( personCollection.getById(p.getId()).leaf ).toBeDefined();
+                t.wither();
+                expect( personCollection.getById(p.getId()).leaf ).toBeUndefined();
+                done();
+            });
+        });
+    });
+
     //xit("offers a way to annotate wrapped calls as 'performed on the server'.", function() {
     //});
-    //
-    ////xit("Allows to pass objects to wrapped functions'.", function() {
-    ////});
-    ////
-    ////xit("Allows to pass entities to wrapped functions'.", function() {
-    ////});
-    //
-    //xit("can insert Ids on the server.", function() {
-    //    var t1 = new Tests.TestPerson();
-    //
-    //    personCollection.insert(t1);
-    //});
 
 
 
-// Maps (merge with array, use .Collection("<Entry-ClassName>") annotation for both
 
-// callbacks
-
-// tests
-
-// foreign key arrays with undefined entries
-// subdocument arrays with undefined entries
-// wrapped function results
-// test that something stored as a foreign key (both sub and root) turns undefined after the foreign root is deleted
-
-
-
-// store smart objects in dumb objects ?
-
-    // foreign key arrays with undefined entries
-    // subdocument arrays with undefined entries
-    // wrapped function results
-    // test that something stored as a foreign key (both sub and root) turns undefined after the foreign root is deleted
 
 });

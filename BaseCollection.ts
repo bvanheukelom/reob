@@ -139,7 +139,7 @@ module persistence {
         }
 
 
-        insert( p:T ):string
+        insert( p:T, callback?:(e:any, id?:string)=>void ):string
         {
             if( Meteor.isServer )
             {
@@ -156,13 +156,35 @@ module persistence {
                 doc.serial = 0;
                 console.log( "inserting document: ", doc);
                 var that = this;
-                var id = this.meteorCollection.insert(doc);
-                console.log( "inserted into '"+that.getName()+"' new id:"+id);
-                if( typeof p.setId == "function")
-                    p.setId(id);
-                else
-                    throw new Error("Unable to set Id after an object of class '"+persistence.PersistenceAnnotation.className(that.theClass)+"' was inserted into collection '"+that.name+"'. Either only call insert with objects that already have an ID or declare a 'setId' function on the class.");
-                MeteorPersistence.updatePersistencePaths(p);
+                function afterwards(e:any, id?:string){
+                    if( !e )
+                    {
+                        console.log( "inserted into '"+that.getName()+"' new id:"+id);
+                        if( typeof p.setId == "function")
+                            p.setId(id);
+                        else
+                            throw new Error("Unable to set Id after an object of class '"+persistence.PersistenceAnnotation.className(that.theClass)+"' was inserted into collection '"+that.name+"'. Either only call insert with objects that already have an ID or declare a 'setId' function on the class.");
+                        MeteorPersistence.updatePersistencePaths(p);
+                    }
+                    else
+                        console.log("error while inserting into "+this.name, e);
+                    if( callback )
+                        callback( e,id );
+                }
+
+                try{
+                    var id = this.meteorCollection.insert(doc, callback?afterwards:undefined);
+                    if( !callback )
+                        afterwards(undefined,id);
+                    else
+                        return id;
+
+                }
+                catch( e )
+                {
+                    if( !callback )
+                        afterwards(e);
+                }
                 return id;
             }
             else

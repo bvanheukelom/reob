@@ -379,7 +379,7 @@ module persistence {
                                 if( argumentClass )
                                 {
                                     if( typeof o =="string" )
-                                        args[i] = objectRetriever.getObject(o);
+                                        args[i] = argumentSerializer.objectRetriever.getObject(o);
                                     else
                                         args[i] = argumentSerializer.toObject(o, argumentClass);
                                 }

@@ -5,7 +5,7 @@
 
 module DeSerializer{
     export class Serializer {
-        private objectRetriever:ObjectRetriever;
+        objectRetriever:ObjectRetriever;
 
         constructor(retri:ObjectRetriever){
             this.objectRetriever = retri;
