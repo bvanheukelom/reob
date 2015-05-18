@@ -33,22 +33,6 @@ describe("The persistence thing on the client ", function(){
         });
     });
 
-    it("can call wrapped functions", function(done){
-        treeCollection.newTree(24,function(err:any,t:Tests.TestTree){
-            persistence.MeteorPersistence.wire(t).grow();
-            var wiredTree:< = persistence.MeteorPersistence.wire(t);
-
-
-            persistence.MeteorPersistence.nextCallback = ();
-
-            }, function(){
-                expect(treeCollection.getById(t.getId())).toBeDefined();
-                expect(treeCollection.getById(t.getId()).getLeaves().length).toBe(1);
-                expect(treeCollection.getById(t.getId()).getLeaves()[0] instanceof Tests.TestLeaf).toBeTruthy();
-                done();
-            });
-        });
-    });
 
     it("lazy loads objects", function(done){
         personCollection.newPerson( "jake", function( error:any, jake:Tests.TestPerson ){

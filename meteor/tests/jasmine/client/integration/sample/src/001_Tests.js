@@ -189,16 +189,20 @@ describe("The persistence thing", function () {
         });
     });
     it("can save objects that have subobjects which are subobjects of other root objects", function (done) {
+        var c = 0;
         treeCollection.newTree(10, function (err, t) {
-            expect(t).toBeDefined();
+            c++;
+            expect(c).toBe(1);
             t.grow();
             personCollection.newPerson("girl", function (err, tp) {
+                c++;
+                if (c != 2)
+                    debugger;
+                expect(c).toBe(2);
                 tp.chooseTree(t);
                 tp.collectLeaf();
-                expect(tp.leaf).toBeDefined();
-                expect(tp.leaf.getId()).toBe(t.getLeaves()[0].getId());
                 expect(personCollection.getById(tp.getId()).leaf).toBeDefined();
-                expect(personCollection.getById(tp.getId()).leaf.getId()).toBe(t.getLeaves()[0].getId());
+                expect(personCollection.getById(tp.getId()).leaf.getId() + "!").toBe(treeCollection.getById(t.getId()).getLeaves()[0].getId() + "!");
                 done();
             });
         });
@@ -211,6 +215,7 @@ describe("The persistence thing", function () {
                 fail();
             for (var i = 0; i < 10; i++)
                 t1.grow();
+            t1 = treeCollection.getById(t1.getId());
             expect(t1.getLeaves().length).toBe(10);
             personCollection.newPerson("girl", function (err, tp) {
                 c++;

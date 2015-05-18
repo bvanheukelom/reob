@@ -35,11 +35,9 @@ var persistence;
                     }
                     var collection = persistence.MeteorPersistence.collections[persistence.PersistenceAnnotation.getCollectionName(c)];
                     if (MeteorPersistence.wrappedCallInProgress || Meteor.isServer) {
-                        var r = collection.update(this.getId(), function (o) {
+                        return collection.update(this.getId(), function (o) {
                             return originalFunction.apply(o, args);
                         });
-                        originalFunction.apply(this, args);
-                        return r;
                     }
                     else
                         return originalFunction.apply(this, args);
@@ -209,6 +207,10 @@ var persistence;
                     for (var i in originalArguments) {
                         if (i == originalArguments.length - 1 && typeof originalArguments[i] == "function")
                             callback = originalArguments[i];
+                        else if (originalArguments[i].persistencePath) {
+                            args[i] = originalArguments[i].persistencePath.toString();
+                            classNames[i] = argumentSerializer.getClassName(originalArguments[i]);
+                        }
                         else if (argumentSerializer) {
                             args[i] = argumentSerializer ? argumentSerializer.toDocument(originalArguments[i]) : originalArguments[i];
                             classNames[i] = argumentSerializer.getClassName(originalArguments[i]);
@@ -220,7 +222,7 @@ var persistence;
                     var id = objectRetriever.getId(this);
                     console.log("Meteor call " + propertyName + " with arguments ", originalArguments, " registered callback:" + MeteorPersistence.nextCallback);
                     Meteor.call(meteorMethodName, id, args, classNames, !!callback, function (error, result) {
-                        console.log("Returned from meteor method '" + meteorMethodName + "' with result:", result, MeteorPersistence.nextCallback);
+                        console.log("Returned from meteor method '" + meteorMethodName + "' with result:", result, "_", callback, "_", MeteorPersistence.nextCallback);
                         if (!error) {
                             if (argumentSerializer && result.className) {
                                 result.result = argumentSerializer.toObject(result.result, persistence.PersistenceAnnotation.getEntityClassByName(result.className));
@@ -251,7 +253,12 @@ var persistence;
                         if (argumentSerializer) {
                             args.forEach(function (o, i) {
                                 var argumentClass = persistence.PersistenceAnnotation.getEntityClassByName(classNames[i]);
-                                args[i] = argumentSerializer.toObject(o, argumentClass);
+                                if (argumentClass) {
+                                    if (typeof o == "string")
+                                        args[i] = objectRetriever.getObject(o);
+                                    else
+                                        args[i] = argumentSerializer.toObject(o, argumentClass);
+                                }
                             });
                         }
                         var resultObj = {};
