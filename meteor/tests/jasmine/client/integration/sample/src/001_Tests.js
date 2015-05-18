@@ -286,6 +286,20 @@ describe("The persistence thing", function () {
             });
         });
     });
+    it("stores something as a foreign key turns undefined after the foreign object is deleted", function (done) {
+        personCollection.newPerson("mom", function (e, mom) {
+            personCollection.newPerson("dad", function (e, dad) {
+                personCollection.haveBaby(mom, dad, function (e, kid) {
+                    expect(personCollection.getById(kid.getId()).family["mom"].getId()).toBe(mom.getId());
+                    expect(personCollection.getById(kid.getId()).family["dad"].getId()).toBe(dad.getId());
+                    personCollection.removePerson(mom.getId(), function (e) {
+                        expect(personCollection.getById(kid.getId()).family["mom"]).toBeUndefined();
+                        done();
+                    });
+                });
+            });
+        });
+    });
     it("stores something as a foreign key turns undefined after the foreign sub object is deleted", function (done) {
         treeCollection.newTree(10, function (e, t) {
             t.grow();

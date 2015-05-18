@@ -351,18 +351,20 @@ describe("The persistence thing", function(){
     //
 
     //
-    //it("stores something as a foreign key turns undefined after the foreign object is deleted", function(){
-    //    var t1 = new Tests.TestTree("t1");
-    //    treeCollection.insert( t1 );
-    //    t1.grow();
-    //    var kid = new Tests.TestPerson("kid");
-    //    kid.tree = t1;
-    //    personCollection.insert( kid );
-    //    kid.collectLeaf();
-    //    expect( personCollection.getById("kid").leaf ).toBeDefined();
-    //    treeCollection.remove(t1);
-    //    expect( personCollection.getById("kid").leaf ).toBeUndefined();
-    //});
+    it("stores something as a foreign key turns undefined after the foreign object is deleted", function(done){
+        personCollection.newPerson("mom", function(e:any, mom:Tests.TestPerson){
+            personCollection.newPerson("dad", function(e:any, dad:Tests.TestPerson) {
+                personCollection.haveBaby(mom, dad, function(e:any, kid:Tests.TestPerson) {
+                    expect( personCollection.getById(kid.getId()).family["mom"].getId() ).toBe(mom.getId());
+                    expect( personCollection.getById(kid.getId()).family["dad"].getId() ).toBe(dad.getId());
+                    personCollection.removePerson( mom.getId(), function(e:any) { // how sad
+                        expect( personCollection.getById(kid.getId()).family["mom"] ).toBeUndefined();
+                        done();
+                    });
+                });
+            });
+        });
+    });
     //
     //
     it("stores something as a foreign key turns undefined after the foreign sub object is deleted", function(done){

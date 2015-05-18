@@ -31,6 +31,9 @@ TestPersonCollection = (function (_super) {
             callback(e, id ? that.getById(id) : undefined);
         });
     };
+    TestPersonCollection.prototype.removePerson = function (id, callback) {
+        this.remove(id, callback);
+    };
     return TestPersonCollection;
 })(persistence.BaseCollection);
 if (Meteor.isServer) {
@@ -41,5 +44,6 @@ if (Meteor.isServer) {
 else {
     Meteor.subscribe("persons");
 }
+persistence.MeteorPersistence.wrapFunction(TestPersonCollection.prototype, "removePerson", "removePerson", true, null, new persistence.ConstantObjectRetriever(new TestPersonCollection()));
 persistence.MeteorPersistence.wrapFunction(TestPersonCollection.prototype, "newPerson", "newPerson", true, new DeSerializer.Serializer(new persistence.MeteorObjectRetriever()), new persistence.ConstantObjectRetriever(new TestPersonCollection()));
 persistence.MeteorPersistence.wrapFunction(TestPersonCollection.prototype, "haveBaby", "haveBaby", true, new DeSerializer.Serializer(new persistence.MeteorObjectRetriever()), new persistence.ConstantObjectRetriever(new TestPersonCollection()));

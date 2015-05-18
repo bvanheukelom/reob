@@ -28,6 +28,10 @@ class TestPersonCollection extends persistence.BaseCollection<Tests.TestPerson>
             callback(e, id?that.getById(id):undefined);
         });
     }
+    removePerson(id:string, callback:(err:any)=>void):void
+    {
+        this.remove(id, callback);
+    }
 }
 
 if( Meteor.isServer ) {
@@ -40,5 +44,6 @@ else
     Meteor.subscribe("persons");
 }
 
+persistence.MeteorPersistence.wrapFunction(TestPersonCollection.prototype, "removePerson", "removePerson", true, null, new persistence.ConstantObjectRetriever(new TestPersonCollection()) );
 persistence.MeteorPersistence.wrapFunction(TestPersonCollection.prototype, "newPerson", "newPerson", true, new DeSerializer.Serializer(new persistence.MeteorObjectRetriever()), new persistence.ConstantObjectRetriever(new TestPersonCollection()) );
 persistence.MeteorPersistence.wrapFunction(TestPersonCollection.prototype, "haveBaby", "haveBaby", true, new DeSerializer.Serializer(new persistence.MeteorObjectRetriever()), new persistence.ConstantObjectRetriever(new TestPersonCollection()) );

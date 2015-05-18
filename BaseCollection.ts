@@ -72,7 +72,7 @@ module persistence {
             return this.find({});
         }
 
-        protected remove( id:string, cb:(err:any)=>void )
+        protected remove( id:string, cb?:(err:any)=>void )
         {
             if( Meteor.isServer ) {
                 if (id) {
