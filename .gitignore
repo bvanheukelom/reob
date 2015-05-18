@@ -4,3 +4,5 @@ node_modules
 test_meteor_web/packages/mapper
 code/*.js
 code/*.map
+test_meteor_web/**/*.js
+.baseDir.ts
