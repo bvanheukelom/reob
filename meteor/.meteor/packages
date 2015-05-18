@@ -8,3 +8,4 @@ meteor-platform
 insecure
 velocity:html-reporter
 sanjo:jasmine
+bertundmax:mapper
