@@ -3,7 +3,7 @@
  */
 ///<reference path="./references.d.ts"/>
 module Tests {
-    export class TestTreeCollection extends mapper.BaseCollection<Tests.TestTree> {
+    export class TestTreeCollection extends omm.BaseCollection<Tests.TestTree> {
         constructor() {
             super(Tests.TestTree);
         }
@@ -31,7 +31,7 @@ module Tests {
 
 if( Meteor.isServer ) {
     Meteor.publish("trees", function(){
-        return mapper.MeteorPersistence.collections["TheTreeCollection"].getMeteorCollection().find({});
+        return omm.MeteorPersistence.collections["TheTreeCollection"].getMeteorCollection().find({});
     });
 }
 else
@@ -40,6 +40,6 @@ else
 }
 // TODO move to annotation
 
-mapper.MeteorPersistence.wrapFunction(Tests.TestTreeCollection.prototype, "newTree", "newTree", true, new DeSerializer.Serializer(new mapper.MeteorObjectRetriever()), new mapper.ConstantObjectRetriever(new Tests.TestTreeCollection()) );
-mapper.MeteorPersistence.wrapFunction(Tests.TestTreeCollection.prototype, "deleteTree", "deleteTree", true, new DeSerializer.Serializer(new mapper.MeteorObjectRetriever()), new mapper.ConstantObjectRetriever(new Tests.TestTreeCollection()) );
-mapper.MeteorPersistence.wrapFunction(Tests.TestTreeCollection.prototype, "serverFunction", "serverFunction", true, new DeSerializer.Serializer(new mapper.MeteorObjectRetriever()), new mapper.ConstantObjectRetriever(new Tests.TestTreeCollection()) );
+omm.MeteorPersistence.wrapFunction(Tests.TestTreeCollection.prototype, "newTree", "newTree", true, new omm.Serializer(new omm.MeteorObjectRetriever()), new omm.ConstantObjectRetriever(new Tests.TestTreeCollection()) );
+omm.MeteorPersistence.wrapFunction(Tests.TestTreeCollection.prototype, "deleteTree", "deleteTree", true, new omm.Serializer(new omm.MeteorObjectRetriever()), new omm.ConstantObjectRetriever(new Tests.TestTreeCollection()) );
+omm.MeteorPersistence.wrapFunction(Tests.TestTreeCollection.prototype, "serverFunction", "serverFunction", true, new omm.Serializer(new omm.MeteorObjectRetriever()), new omm.ConstantObjectRetriever(new Tests.TestTreeCollection()) );

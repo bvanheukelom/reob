@@ -1,8 +1,8 @@
 {
-  "name": "mapper-annotations",
+  "name": "omm-annotations",
   "version": "0.0.1",
-  "description": "An object to plain object mapper.",
-  "main": "mapper.js",
+  "description": "Omm.... A relaxed object to meteor/mongo mapper. This package contains just the annotations.",
+  "main": "omm.js",
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1"
   },

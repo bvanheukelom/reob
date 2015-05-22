@@ -5,4 +5,4 @@
 ///<reference path="./TestAddress.ts"/>
 ///<reference path="./TestPersonCollection.ts"/>
 ///<reference path="./TestTreeCollection.ts"/>
-///<reference path="../../../code/references.d.ts"/>
+///<reference path="../../../src/omm.d.ts"/>

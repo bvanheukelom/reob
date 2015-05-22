@@ -5,7 +5,7 @@
 module Tests
 {
 
-    @mapper.Entity
+    @omm.Entity
     export class TestAddress {
         street:string;
 

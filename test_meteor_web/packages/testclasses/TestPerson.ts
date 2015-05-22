@@ -1,40 +1,40 @@
 ///<reference path="./references.d.ts"/>
 module Tests
 {
-    @mapper.Entity(true)
+    @omm.Entity(true)
     export class TestPerson
     {
         name:string;
         _id:string;
 
-        @mapper.Type("TestPhoneNumber")
+        @omm.Type("TestPhoneNumber")
         phoneNumber:Tests.TestPhoneNumber;
 
-        @mapper.ArrayOrMap("TestAddress")
+        @omm.ArrayOrMap("TestAddress")
         private addresses:Array<TestAddress> = [];
 
-        @mapper.Type("TestTree")
-        @mapper.AsForeignKeys
+        @omm.Type("TestTree")
+        @omm.AsForeignKeys
         tree:Tests.TestTree;
 
-        @mapper.Type("TestLeaf")
-        @mapper.AsForeignKeys
+        @omm.Type("TestLeaf")
+        @omm.AsForeignKeys
         leaf:Tests.TestLeaf;
 
-        @mapper.ArrayOrMap("TestLeaf")
-        @mapper.AsForeignKeys
+        @omm.ArrayOrMap("TestLeaf")
+        @omm.AsForeignKeys
         trees:Array<Tests.TestTree> = [];
 
-        @mapper.ArrayOrMap("TestPhoneNumber")
+        @omm.ArrayOrMap("TestPhoneNumber")
         phoneBook:{ [index:string]: Tests.TestPhoneNumber } = {};
 
-        @mapper.ArrayOrMap("TestTree")
-        @mapper.AsForeignKeys
+        @omm.ArrayOrMap("TestTree")
+        @omm.AsForeignKeys
         wood:{ [index:string]: Tests.TestTree } = {};
 
 
-        @mapper.ArrayOrMap("TestPerson")
-        @mapper.AsForeignKeys
+        @omm.ArrayOrMap("TestPerson")
+        @omm.AsForeignKeys
         family:{ [index:string]: Tests.TestPerson } = {};
 
 
@@ -55,7 +55,7 @@ module Tests
         }
 
 
-        @mapper.Wrap
+        @omm.Wrap
         addAddress(a:TestAddress):Tests.TestAddress
         {
             console.log("inside add address:", (a instanceof TestAddress));
@@ -95,25 +95,25 @@ module Tests
         }
 
 
-        @mapper.Wrap
+        @omm.Wrap
         collectLeaf()
         {
             console.log("collecting leaf:",this.tree);
             this.leaf = this.tree.getLeaves()[0];
         }
 
-        @mapper.Wrap
+        @omm.Wrap
         chooseTree(t:TestTree)
         {
             console.log("choosing tree:",t);
             this.tree = t;
         }
-        @mapper.Wrap
+        @omm.Wrap
         chooseLeaf(l:TestLeaf)
         {
             this.leaf = l;
         }
-        @mapper.Wrap
+        @omm.Wrap
         addToWood(t:TestTree, s?:string )
         {
             this.trees.push( t );
@@ -121,14 +121,14 @@ module Tests
                 this.wood[s] = t;
         }
 
-        @mapper.Wrap
+        @omm.Wrap
         addFamilyRelation(s:string, p:Tests.TestPerson )
         {
             if( s )
                 this.family[s] = p;
         }
 
-        @mapper.Wrap
+        @omm.Wrap
         addPhoneNumber(s:string, p:Tests.TestPhoneNumber )
         {
             this.phoneBook[s] = p;

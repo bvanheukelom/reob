@@ -5,14 +5,14 @@
 ///<reference path="./references.d.ts"/>
 module Tests
 {
-    @mapper.Entity
+    @omm.Entity
     export class TestLeaf
     {
         _id:string;
         greenNess:number;
 
-        @mapper.Type("TestTree")
-        @mapper.AsForeignKey
+        @omm.Type("TestTree")
+        @omm.AsForeignKey
         parent:TestTree;
 
         constructor(id?:string, parent?:Tests.TestTree)
