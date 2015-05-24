@@ -15,12 +15,15 @@ module omm{
             var o:any;
             if(typeof doc=="function")
                 throw new Error("Error in 'toObject'. doc is a function.");
-asasas
-            if( typeof f.toObject=="function" ){
-                return f.toObject( doc );
-            } else if (f) {
-                o = Object.create(f.prototype);
-                f.call(o);
+
+            if (f) {
+                if( typeof f.toObject=="function" ) {
+                    //console.log("using the custom toObject function of class "+omm.className(f));
+                    return f.toObject(doc);
+                } else {
+                    o = Object.create(f.prototype);
+                    f.call(o);
+                }
             }
             else if( typeof doc=="object" ) {
                 o = {};

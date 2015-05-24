@@ -70,7 +70,6 @@ describe("The persistence thing on the client ", function(){
             treeCollection.newTree(12, function( error, t:Tests.TestTree ){
                 omm.MeteorPersistence.withCallback(function(){
                     jake.chooseTree(t);
-
                 }, function(){
                     var loadedJake = personCollection.getById(jake.getId());
                     expect(loadedJake).toBeDefined();
