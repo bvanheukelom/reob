@@ -7,6 +7,6 @@
 meteor-platform
 insecure
 velocity:html-reporter
-bertundmax:mapper
+bertundmax:omm
 bertundmax:testclasses
 sanjo:jasmine

@@ -1,8 +1,8 @@
 /**
  * Created by bert on 04.05.15.
  */
-///<reference path="./Document.ts"/>
-///<reference path="./PersistencePath.ts"/>
+///<reference path="../annotations/Document.ts"/>
+///<reference path="../annotations/PersistencePath.ts"/>
 module omm {
     export interface Persistable {
         getId?():string;

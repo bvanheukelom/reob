@@ -5,22 +5,17 @@ module.exports = function (grunt) {
 	grunt.initConfig({
 		watch: {
 			files: ["**/*.ts"],
-			tasks: ["ts","copyCode"]
+			tasks: ["testweb"]
 		},
 		ts: {
 			meteor : {
-				src: ["src/**/*.ts", "!src/annotations/**/*.ts"],
+				src: ["test_meteor_web/packages/omm/**/*.ts"],
 				options:{
-					compiler:"/usr/local/bin/tsc",
-					sourceMap:false,
-					declaration:"build/meteor/omm/omm.d.ts"
-				},
-				outDir:"build/meteor/omm"
+				}
 			},
 			commonjs : {
 				src:  ["src/annotations/**/*.ts","src/annotations.d.ts"],
 				options:{
-					compiler:"/usr/local/bin/tsc",
 					sourceMap:false,
 					declaration:"build/commonjs/omm.d.ts",
 					module:"commonjs"
@@ -30,7 +25,6 @@ module.exports = function (grunt) {
 			amd : {
 				src:  ["src/annotations/**/*.ts"],
 				options:{
-					compiler:"/usr/local/bin/tsc",
 					sourceMap:false,
 					declaration:"build/amd/omm.d.ts",
 					module:"amd"
@@ -38,9 +32,8 @@ module.exports = function (grunt) {
 				out:"build/amd/omm/omm.js"
 			},
 			test : {
-				src: ["test_meteor_web/**/*.ts", "!node_modules/**/*.ts"],
+				src: ["test_meteor_web/packages/testclasses/**/*.ts","test_meteor_web/tests/**/*.ts",],
 				options:{
-					compiler:"/usr/local/bin/tsc"
 				}
 			}
 
@@ -48,10 +41,10 @@ module.exports = function (grunt) {
 	});
 
 	grunt.registerTask('default', ["meteor", "commonjs", "amd", "testweb"]);
-	grunt.registerTask('meteor', ["ts:meteor",  "copyMeteorPackageResources"]);
+	grunt.registerTask('meteor', ["ts:meteor",  "rewrite"]);
 	grunt.registerTask('commonjs', ['ts:commonjs', 'copyCommonJsFiles']);
 	grunt.registerTask('amd', ['ts:amd', 'copyAmdFiles']);
-	grunt.registerTask('testweb', ["meteor", 'ts:test', 'copyFilesToTestMeteorWeb']);
+	grunt.registerTask('testweb', ["ts:meteor", 'ts:test', "rewrite", 'copyFilesToTestMeteorWeb']);
 
 	// NPM TASKS
 	grunt.loadNpmTasks("grunt-ts-1.5");
@@ -105,11 +98,6 @@ module.exports = function (grunt) {
 	grunt.registerTask("copyFilesToTestMeteorWeb", "Copies all necessary files", function () {
 		cp("test_meteor_web/tests/jasmine/Tests.js", "test_meteor_web/tests/jasmine/client/integration/sample/src/Tests.js");
 		cp("test_meteor_web/tests/jasmine/Tests.js", "test_meteor_web/tests/jasmine/server/integration/sample/src/Tests.js");
-		grunt.util.recurse(grunt.file.expand("build/meteor/mapper/*"), function(file){
-			var fileName = file.split('/').pop();
-			console.log(file + " --> " , "build/meteor/mapper/"+fileName );
-			grunt.file.copy(file, "test_meteor_web/packages/mapper/"+fileName);
-		});
 		rewrite("test_meteor_web/packages/testclasses/*.js");
 		rewrite("test_meteor_web/tests/**/*.js");
 	});
@@ -139,13 +127,8 @@ module.exports = function (grunt) {
 	grunt.registerTask("copyAmdFiles", "Copies all necessary files for the amd js package", function () {
 		//grunt.file.copy("commonjs/package.json", "build/amd/package.json");
 	});
-	grunt.registerTask("copyMeteorPackageResources", "Copies all necessary files for the amd js package", function () {
-		grunt.util.recurse(grunt.file.expand("resources/meteor/*"), function(file){
-			var fileName = file.split('/').pop();
-			console.log(file + " --> " , "build/meteor/omm/"+fileName );
-			grunt.file.copy(file, "build/meteor/omm/"+fileName);
-		});
-		rewrite("build/meteor/omm/*.js");
+	grunt.registerTask("rewrite", "Copies all necessary files for the amd js package", function () {
+		rewrite("test_meteor_web/packages/omm/**/*.js");
 	});
 
 };

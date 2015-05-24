@@ -13,8 +13,5 @@
     "grunt-ts-1.5": "^4.0.1",
     "grunt-typescript": "^0.6.2",
     "underscore": "^1.8.3"
-  },
-  "dependencies": {
-    "reflect-metadata": "^0.1.0"
   }
 }

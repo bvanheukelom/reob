@@ -1,7 +1,5 @@
-
+///<reference path="../../../../typings/meteor/meteor.d.ts"/>
 module omm {
-    export interface TypeClass<T> { new(): T ;
-    }
 
     export class MeteorPersistence {
         static classes:{[index:string]:{ new(): Persistable ;}} = {};
@@ -9,11 +7,13 @@ module omm {
         static wrappedCallInProgress = false;
         static nextCallback;
         private static initialized = false;
-        private static meteorObjectRetriever = new omm.MeteorObjectRetriever();
-        private static serializer = new omm.Serializer( MeteorPersistence.meteorObjectRetriever );
+        private static meteorObjectRetriever;
+        private static serializer;
 
         static init() {
             if (!MeteorPersistence.initialized) {
+                MeteorPersistence.meteorObjectRetriever = new omm.MeteorObjectRetriever();
+                MeteorPersistence.serializer = new omm.Serializer( MeteorPersistence.meteorObjectRetriever );
                 omm.PersistenceAnnotation.getEntityClasses().forEach(function (c:TypeClass<Persistable>) {
                     MeteorPersistence.wrapClass(c);
                 });

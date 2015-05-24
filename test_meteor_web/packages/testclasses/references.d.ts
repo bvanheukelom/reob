@@ -5,4 +5,8 @@
 ///<reference path="./TestAddress.ts"/>
 ///<reference path="./TestPersonCollection.ts"/>
 ///<reference path="./TestTreeCollection.ts"/>
-///<reference path="../../../src/omm.d.ts"/>
+///<reference path="../omm/annotations/PersistenceAnnotation.ts"/>
+///<reference path="../omm/annotations/Document.ts"/>
+///<reference path="../omm/omm/MeteorPersistence.ts"/>
+///<reference path="../omm/omm/MeteorObjectRetriever.ts"/>
+///<reference path="../omm/omm/BaseCollection.ts"/>

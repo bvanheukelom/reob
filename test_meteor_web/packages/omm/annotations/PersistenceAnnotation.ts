@@ -1,3 +1,8 @@
+
+/// <reference path="./TypeClass.ts"/>
+
+declare var  Reflect;
+
 module omm
 {
     export function Entity( p1?:any ):any
@@ -5,7 +10,7 @@ module omm
         if( typeof p1=="string")
         {
             return function (target:Function) {
-                var typeClass:omm.TypeClass<omm.Persistable> = <omm.TypeClass<omm.Persistable>>target;
+                var typeClass:omm.TypeClass<Object> = <omm.TypeClass<Object>>target;
                 console.log("Entity(<class>) "+className(typeClass)+" with collection name:"+p1);
                 Reflect.defineMetadata("persistence:collectionName", p1, typeClass);
                 Reflect.defineMetadata("persistence:entity", true, typeClass);
@@ -15,7 +20,7 @@ module omm
         if( typeof p1=="boolean" )
         {
             return function (target:Function) {
-                var typeClass:TypeClass<omm.Persistable> = <omm.TypeClass<omm.Persistable>>target;
+                var typeClass:TypeClass<Object> = <omm.TypeClass<Object>>target;
                 console.log("Entity(true) "+className(typeClass)+" with collection name:", className(typeClass));
                 if( p1 )
                     Reflect.defineMetadata("persistence:collectionName", className(typeClass), typeClass);
@@ -28,7 +33,7 @@ module omm
             //var tc:TypeClass<Persistable> = <TypeClass<Persistable>>p1;
             //var className = PersistenceAnnotation.className(tc);
             //PersistencePrivate.collectionRootClasses.push(tc);
-            var typeClass:TypeClass<Persistable> = <TypeClass<Persistable>>p1;
+            var typeClass:TypeClass<Object> = <TypeClass<Object>>p1;
 
             console.log("Entity() "+className(typeClass));
             //Reflect.defineMetadata("persistence:collectionName", PersistenceAnnotation.className(typeClass), typeClass);
@@ -70,7 +75,7 @@ module omm
     }
 
 
-    export function className(fun:omm.TypeClass<omm.Persistable>):string
+    export function className(fun:omm.TypeClass<Object>):string
     {
         var ret = fun.toString();
         ret = ret.substr('function '.length);
@@ -95,9 +100,9 @@ module omm
             return PersistencePrivate.entityClasses[className];
         }
 
-        public static getCollectionClasses():Array<omm.TypeClass<Persistable>>
+        public static getCollectionClasses():Array<omm.TypeClass<Object>>
         {
-            var result:Array<omm.TypeClass<Persistable>> = [];
+            var result:Array<omm.TypeClass<Object>> = [];
             for( var i in PersistencePrivate.entityClasses )
             {
                 var entityClass = PersistencePrivate.entityClasses[i];
@@ -107,9 +112,9 @@ module omm
             return result;
         }
 
-        public static getEntityClasses():Array<TypeClass<Persistable>>
+        public static getEntityClasses():Array<TypeClass<Object>>
         {
-            var result:Array<TypeClass<Persistable>> = [];
+            var result:Array<TypeClass<Object>> = [];
             for( var i in PersistencePrivate.entityClasses )
             {
                 var entityClass = PersistencePrivate.entityClasses[i];
@@ -140,7 +145,7 @@ module omm
     // ---- typed properties ----
 
 
-        static getPropertyClass(f:Function, propertyName:string):TypeClass<Persistable> {
+        static getPropertyClass(f:Function, propertyName:string):TypeClass<Object> {
             var className = PersistenceAnnotation.getPropertyProperty( f.prototype, propertyName, "type")
             if( !className )
                 return undefined;
@@ -148,7 +153,7 @@ module omm
                 return PersistenceAnnotation.getEntityClassByName(className);
         }
 
-        static getTypedPropertyNames<T extends Persistable>(f:TypeClass<T>):Array<string> {
+        static getTypedPropertyNames<T extends Object>(f:TypeClass<T>):Array<string> {
             var result:Array<string> = [];
             var props = Reflect.getMetadata("persistence:typedproperties",f.prototype);
             for( var i in props )
@@ -194,7 +199,7 @@ module omm
 
         // ---- Wrap ----
 
-        public static getWrappedFunctionNames<T extends Persistable>(f:TypeClass<T>):Array<string>
+        public static getWrappedFunctionNames<T extends Object>(f:TypeClass<T>):Array<string>
         {
             return PersistenceAnnotation.getPropertyNamesByMetaData(f.prototype, "persistence:wrap");
         }
@@ -218,5 +223,5 @@ module omm
 }
 class PersistencePrivate
 {
-    static entityClasses:{[index:string]:omm.TypeClass<omm.Persistable>} = {};
+    static entityClasses:{[index:string]:omm.TypeClass<Object>} = {};
 }

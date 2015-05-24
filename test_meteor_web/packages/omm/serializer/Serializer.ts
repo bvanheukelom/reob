@@ -1,3 +1,8 @@
+///<reference path="../annotations/PersistenceAnnotation.ts"/>
+///<reference path="../annotations/PersistencePath.ts"/>
+///<reference path="../annotations/Document.ts"/>
+///<reference path="../annotations/TypeClass.ts"/>
+
 module omm{
     export class Serializer {
         objectRetriever:ObjectRetriever;
@@ -6,19 +11,24 @@ module omm{
             this.objectRetriever = retri;
         }
 
-        toObject<T extends omm.Persistable>(doc:any, f:omm.TypeClass<T>):T {
+        toObject<T extends omm.Persistable>(doc:Document, f:omm.TypeClass<T>):T {
             var o:any;
             if(typeof doc=="function")
                 throw new Error("Error in 'toObject'. doc is a function.");
-            if (f) {
+asasas
+            if( typeof f.toObject=="function" ){
+                return f.toObject( doc );
+            } else if (f) {
                 o = Object.create(f.prototype);
                 f.call(o);
             }
             else if( typeof doc=="object" ) {
                 o = {};
             }
-            else
-                return doc;
+            else{
+                // todo this should probably throw an error
+                return <T>doc;
+            }
             for (var propertyName in doc) {
                 var value = doc[propertyName];
                 var propertyClass = omm.PersistenceAnnotation.getPropertyClass(f, propertyName);
@@ -48,22 +58,25 @@ module omm{
         }
 
         toDocument(object:omm.Persistable, rootClass?:omm.TypeClass<omm.Persistable>, parentObject?:omm.Persistable, propertyNameOnParentObject?:string):omm.Document {
+            var result:omm.Document;
             if (typeof object == "string" || typeof object == "number" || typeof object == "date" || typeof object == "boolean")
-                return <Document>object;
+                result =  <Document>object;
             else
             {
-                var result:omm.Document;
-                var parentClass = omm.PersistenceAnnotation.getClass(parentObject);
-                if (parentObject && propertyNameOnParentObject && omm.PersistenceAnnotation.isStoredAsForeignKeys(parentClass, propertyNameOnParentObject)) {
-                    return <omm.Document><any>this.objectRetriever.getId(object);
-                }
-                else if (typeof object.toDocument == "function")
-                    result = object.toDocument();
+                var objectClass =  omm.PersistenceAnnotation.getClass(object);
+                if( typeof (<any>objectClass).toDocument == "function" ){
+                    result = (<any>objectClass).toDocument( object );
+                } else {
+                    var parentClass = omm.PersistenceAnnotation.getClass(parentObject);
+                    if (parentObject && propertyNameOnParentObject && omm.PersistenceAnnotation.isStoredAsForeignKeys(parentClass, propertyNameOnParentObject)) {
+                        return <omm.Document><any>this.objectRetriever.getId(object);
+                    }
+                    else if (typeof object.toDocument == "function")
+                        result = object.toDocument();
 
-                else
-                {
-                    result = this.createDocument(object, rootClass ? rootClass : omm.PersistenceAnnotation.getClass(object), parentObject, propertyNameOnParentObject);
-
+                    else {
+                        result = this.createDocument(object, rootClass ? rootClass : omm.PersistenceAnnotation.getClass(object), parentObject, propertyNameOnParentObject);
+                    }
                 }
             }
             return result;

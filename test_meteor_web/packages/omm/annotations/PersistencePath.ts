@@ -23,7 +23,7 @@ module omm {
         }
 
 
-        getSubObject(rootObject:Persistable):Persistable {
+        getSubObject(rootObject:Object):Object {
             var o:any = rootObject;
             if (this.path.indexOf(".") != -1) {
                 this.path.split("].")[1].split(".").forEach(function (entry:string) {
@@ -34,8 +34,8 @@ module omm {
                             var id = p[1];
                             var foundEntry:boolean = false;
                             for (var j in arrayOrMap) {
-                                var arrayEntry:Persistable = arrayOrMap[j];
-                                if (arrayEntry.getId() == id) {
+                                var arrayEntry:Object = arrayOrMap[j];
+                                if ((<any>arrayEntry).getId() == id) {
                                     o = arrayEntry;
                                     foundEntry = true;
                                     break;

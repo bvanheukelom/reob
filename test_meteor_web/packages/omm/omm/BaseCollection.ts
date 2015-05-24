@@ -1,12 +1,12 @@
-/// <reference path="./../annotations/Persistable.ts" />
-/// <reference path="./../annotations/PersistenceAnnotation.ts" />
+/// <reference path="./../serializer/Persistable.ts" />
 /// <reference path="./../serializer/Serializer.ts" />
 /// <reference path="./../serializer/ConstantObjectRetriever.ts" />
 /// <reference path="./MeteorPersistence.ts" />
+/// <reference path="./MeteorObjectRetriever.ts" />
 
 module omm {
 
-    export class BaseCollection<T extends Persistable>
+    export class BaseCollection<T extends omm.Persistable>
     {
         private meteorCollection:any;
         private theClass:TypeClass<T>;
@@ -15,9 +15,9 @@ module omm {
 
         private static meteorCollections:{[index:string]:any} = { };
 
-        constructor( persistableClass:TypeClass<T> )
+        constructor( persistableClass:omm.TypeClass<T> )
         {
-            this.serializer = new omm.Serializer( new MeteorObjectRetriever() );
+            this.serializer = new omm.Serializer( new omm.MeteorObjectRetriever() );
             var collectionName = omm.PersistenceAnnotation.getCollectionName(persistableClass);
             this.name = collectionName;
             if( !MeteorPersistence.collections[collectionName] ) {
@@ -28,7 +28,7 @@ module omm {
             this.theClass = persistableClass;
         }
 
-        static getCollection<P extends Persistable>( t:TypeClass<P> ):BaseCollection<P>
+        static getCollection<P extends omm.Persistable>( t:omm.TypeClass<P> ):BaseCollection<P>
         {
             return MeteorPersistence.collections[omm.PersistenceAnnotation.getCollectionName(t)];
         }
