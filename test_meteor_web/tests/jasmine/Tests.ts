@@ -158,7 +158,7 @@ describe("The persistence thing", function(){
         t1.phoneNumber = new Tests.TestPhoneNumber("12345");
         var doc = new omm.Serializer( new omm.MeteorObjectRetriever() ).toDocument(t1);
         expect(doc._id).toBe("tp1");
-        expect(doc["phoneNumber"]["number"]).toBe("12345");
+        expect(doc["phoneNumber"]["pn"]).toBe("12345");
     });
 
     it("deserializes basic objects", function(){
@@ -276,7 +276,7 @@ describe("The persistence thing", function(){
         expect( doc ).toBeDefined();
         expect( doc.phoneBook ).toBeDefined();
         expect( doc.phoneBook["klaus"] ).toBeDefined();
-        expect( doc.phoneBook["klaus"].number ).toBeDefined();
+        expect( doc.phoneBook["klaus"].pn ).toBeDefined();
     });
 
     it("can serialize object in a map as foreign key", function(done){

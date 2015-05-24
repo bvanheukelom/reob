@@ -4,7 +4,7 @@ module Tests {
     export class TestPhoneNumber {
         number:string;
 
-        constructor(n:string) {
+        constructor(n?:string) {
             this.number = n;
         }
 
@@ -13,6 +13,19 @@ module Tests {
         }
         getId():string {
             return this.number;
+        }
+
+        static toDocument(t:TestPhoneNumber){
+            return {
+                freak:"show",
+                pn:t.number
+            };
+        }
+        static toObject( d:Document ){
+            var dn:any = d;
+            if( !dn || !dn.freak )
+                throw new Error("not freaky enough");
+            return new TestPhoneNumber(dn.pn);
         }
 
         @omm.Wrap

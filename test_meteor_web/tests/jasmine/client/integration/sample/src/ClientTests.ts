@@ -51,6 +51,17 @@ describe("The persistence thing on the client ", function(){
         });
     });
 
+    it("serializes and deserializes classes with a custom toDocument and toObject function properly", function(){
+        var pn = new Tests.TestPhoneNumber("1212");
+        var s = new omm.Serializer(new omm.ConstantObjectRetriever(1));
+        var doc:any = s.toDocument(pn);
+        expect( doc.freak ).toBe("show");
+        expect( doc.pn ).toBe("1212");
+        var ob = s.toObject(doc, Tests.TestPhoneNumber);
+        expect( ob instanceof Tests.TestPhoneNumber ).toBeTruthy();
+
+    });
+
     it("calls registered callbacks that receive results from the server ", function(done){
         treeCollection.newTree(24,function(err:any,t1:Tests.TestTree) {
             omm.MeteorPersistence.withCallback(function () {
