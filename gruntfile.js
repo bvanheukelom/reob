@@ -40,10 +40,7 @@ module.exports = function (grunt) {
 		}
 	});
 
-	grunt.registerTask('default', ["meteor", "commonjs", "amd", "testweb"]);
-	grunt.registerTask('meteor', ["ts:meteor",  "rewrite"]);
-	grunt.registerTask('commonjs', ['ts:commonjs', 'copyCommonJsFiles']);
-	grunt.registerTask('amd', ['ts:amd', 'copyAmdFiles']);
+	grunt.registerTask('default', ["testweb"]);
 	grunt.registerTask('testweb', ["ts:meteor", 'ts:test', "rewrite", 'copyFilesToTestMeteorWeb']);
 
 	// NPM TASKS

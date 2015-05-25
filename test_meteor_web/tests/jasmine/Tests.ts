@@ -142,7 +142,6 @@ describe("The persistence thing", function(){
         expect(t1.getLeaves().length).toBe(1);
     });
 
-
     it("uses persistence paths on subdocuments in arrays", function(){
         var t1:Tests.TestTree = new Tests.TestTree(10);
         t1.setId("tree1");

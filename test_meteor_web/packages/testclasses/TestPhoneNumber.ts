@@ -3,9 +3,11 @@ module Tests {
     @omm.Entity
     export class TestPhoneNumber {
         number:string;
+        timesCalled:number;
 
         constructor(n?:string) {
             this.number = n;
+            this.timesCalled = 0;
         }
 
         getNumber():string {
@@ -29,13 +31,11 @@ module Tests {
         }
 
         @omm.Wrap
-        callNumber( callback:( error:any, answer:string )=>void )
+        callNumber( ):string
         {
-            var that = this;
-            console.log("Calling a phone number : ",callback)
-            setTimeout(function(){
-                callback( undefined, "Called:"+that.number );
-            },300);
+            this.timesCalled++;
+            console.log("Calling a phone number : ",this.number);
+            return "Calling a phone number : "+this.number;
         }
         callNumberFrantically( degreeOfUrgency:number, callback:( error:any, answer:string )=>void )
         {

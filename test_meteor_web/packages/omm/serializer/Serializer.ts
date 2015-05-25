@@ -90,42 +90,39 @@ module omm{
             var objectClass = omm.PersistenceAnnotation.getClass(object);
             for (var property in object) {
                 var value = object[property];
-                if (property == "id") {
-                    doc._id = object.id;
-                }
-                else if (object[property] !== undefined && property != "persistencePath") {
+                if (value !== undefined && property != "persistencePath") {
                     // primitives
+                    if( omm.PersistenceAnnotation.getPropertyClass(objectClass,property) ) {
 
-                    if (typeof value == "string" || typeof value == "number" || typeof value == "date" || typeof value == "boolean")
-                        doc[property] = value;
+                        // array
+                        if (omm.PersistenceAnnotation.isArrayOrMap(objectClass, property)) {
+                            var result;
+                            if (Array.isArray(value))
+                                result = [];
+                            else
+                                result = {};
 
-                    // array
-                    else if (omm.PersistenceAnnotation.isArrayOrMap(objectClass, property)) {
-                        var result;
-                        if (Array.isArray(object[property]))
-                            result = [];
-                        else
-                            result = {};
-
-                        for (var i in value) {
-                            var subObject = value[i];
-                            result[i] = this.toDocument(subObject, rootClass, object, property);
+                            for (var i in value) {
+                                var subObject = value[i];
+                                result[i] = this.toDocument(subObject, rootClass, object, property);
+                            }
+                            doc[property] = result;
                         }
-                        doc[property] = result;
+                        // object
+                        else if (typeof object[property] == 'object') {
+                            doc[property] = this.toDocument(value, rootClass, object, property);
+                        }
+                        else if (typeof value == 'function') {
+                            // not doing eeeeenithing with functions
+                        }
+                        else {
+                            console.error("Unsupported type : ", typeof value);
+                        }
                     }
-
-                    // object
-                    else if (typeof object[property] == 'object') {
-                        doc[property] = this.toDocument(value, rootClass, object, property);
-                    }
-
-                    else if (typeof value == 'function') {
-                        // not doing eeeeenithing with functions
-                    }
-                    else {
-                        console.error("Unsupported type : ", typeof value);
-                    }
+                    else
+                        doc[property] = value;
                 }
+
             }
             return <Document>doc;
         }

@@ -111,8 +111,9 @@ module omm {
                     _id : id
                 });
 
-                if (!document)
-                    return undefined;
+                if (!document){
+                    throw new Error("No document found for id: "+id );
+                }
 
                 var currentSerial = document.serial;
 

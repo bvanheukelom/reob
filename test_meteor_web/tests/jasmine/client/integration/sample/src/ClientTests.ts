@@ -74,6 +74,25 @@ describe("The persistence thing on the client ", function(){
         });
     });
 
+    it("can call wrapped functions on a subobject", function(done){
+        personCollection.newPerson("bert", function(error:any, bert:Tests.TestPerson){
+            expect(error).toBeFalsy();
+            omm.MeteorPersistence.withCallback(function(){
+                bert.addPhoneNumber("max", new Tests.TestPhoneNumber("1234567890"));
+
+            }, function(){
+                expect(personCollection.getById(bert.getId()).phoneBook["max"]).toBeDefined();
+                omm.MeteorPersistence.withCallback(function() {
+                    personCollection.getById(bert.getId()).phoneBook["max"].callNumber();
+                },function(err, result){
+                    expect( result ).toBe("Calling a phone number : 1234567890");
+                    expect(personCollection.getById(bert.getId()).phoneBook["max"]).toBeDefined();
+                    done();
+                });
+            });
+        } );
+    });
+
 
 
     it("lazy loads objects", function(done){

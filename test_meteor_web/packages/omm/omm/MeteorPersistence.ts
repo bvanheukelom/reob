@@ -65,16 +65,28 @@ module omm {
                 var domainObjectFunction = c.prototype[functionName];
                 // this is executed last. it wraps the original function into a collection.update
                 MeteorPersistence.monkeyPatch(c.prototype, functionName, function (originalFunction, ...args:string[]) {
-                    var collection:omm.BaseCollection<any> = omm.MeteorPersistence.collections[omm.PersistenceAnnotation.getCollectionName(c)];
+                    console.log("updating object:",this, "original function :"+originalFunction);
+                    var persistencePath:omm.PersistencePath = this.persistencePath;
+                    var collection:omm.BaseCollection<any> = omm.MeteorPersistence.collections[persistencePath.getCollectionName()];
                     if( MeteorPersistence.wrappedCallInProgress || Meteor.isServer )
                     {
-                        return collection.update(this.getId(), function (o) {
-                            return originalFunction.apply(o, args);
+                        var result = collection.update(persistencePath.getId(), function (o) {
+                            var subObject = persistencePath.getSubObject(o);
+                            var r2 =  originalFunction.apply(subObject, args);
+                            console.log("called original function with result :",r2);
+                            return r2;
                         });
+                        console.log("Result of verified update :"+result );
+                        return result;
 
                     }
                     else
-                        return originalFunction.apply(this, args);
+                    {
+                        var r = originalFunction.apply(this, args);
+                        console.log("Result of simple function call :"+r );
+                        return r
+
+                    }
                 });
                 // this is executed second. a meteor call is made for the objects that need updating
                 MeteorPersistence.wrapFunction(c.prototype, functionName, className+"."+functionName, false, MeteorPersistence.serializer, MeteorPersistence.meteorObjectRetriever )
@@ -88,45 +100,6 @@ module omm {
                         domainObjectFunction.apply(this,args);
                 });
 
-                //var originalFunction:Function = <Function>c.prototype[functionName];
-                //// replace the function with a wrapper function that either does a meteor call or call to the original
-                //console.log("Wrapping transactional functions for class " + className + " function: " + functionName);
-                //var f:any = function meteorCallWrapper() {
-                //    var args = [];
-                //    var callback;
-                //    for( var i in arguments )
-                //    {
-                //        if( i==arguments.length-1 && typeof arguments[i]=="function" )
-                //            callback = arguments[i];
-                //        else
-                //            args[i] = that.serializer.toDocument( arguments[i] );
-                //    }
-                //    // If this is object is part of persistence and no wrapped call is in progress ...
-                //    if( this.persistencePath ) {
-                //        // hello meteor
-                //        console.log("Meteor call " + (<any>arguments).callee.functionName + " with arguments ", arguments, " path:", this.persistencePath+" registered callback:"+MeteorPersistence.nextCallback);
-                //        var typeNames:Array<string> = [];
-                //        for (var ai = 0; ai < args.length; ai++) {
-                //            typeNames.push(MeteorPersistence.objectsClassName(args[ai]));
-                //        }
-                //        Meteor.call("wrappedCall", this.persistencePath.toString(), (<any>arguments).callee.functionName, args, typeNames, !!callback, callback || MeteorPersistence.nextCallback);
-                //    }
-                //    if( callback ) {
-                //        args.push(function (err, result) {
-                //
-                //        });
-                //    }
-                //    // also call the method on the current object so that it reflects the update
-                //    var result = (<any>arguments).callee.originalFunction.apply(this, args);
-                //    MeteorPersistence.updatePersistencePaths(this);
-                //    return result;
-                //};
-                //// this stores the old function on the wrapping one
-                //f.originalFunction = originalFunction;
-                //// this keeps the original method name accessible as the closure somehow cant access a loop iterator
-                //f.functionName = functionName;
-                //// set the wrapping function on the class
-                //c.prototype[functionName] = f;
             });
 
 
@@ -340,11 +313,14 @@ module omm {
                             }
 
                         }
-                        if (callback)
+                        if (callback){
+                            console.log("calling model callback");
                             callback(error, result ? result.result : undefined);
-                        else if (MeteorPersistence.nextCallback) {
-                            MeteorPersistence.nextCallback(error, result ? result.result : undefined);
+                        }else if (MeteorPersistence.nextCallback) {
+                            console.log("calling WithCallback-callback");
+                            var cb = MeteorPersistence.nextCallback;
                             MeteorPersistence.nextCallback = undefined;
+                            cb(error, result ? result.result : undefined);
                         }
                     });
 
@@ -361,10 +337,11 @@ module omm {
             if( !serverOnly || Meteor.isServer ) {
                 var m = {};
                 m[meteorMethodName] = function (id:string, args:any[], classNames:string[], appendCallback:boolean) {
+                    console.log("Meteor method invoked: "+meteorMethodName+" id:"+id+" appendCallback:"+appendCallback+" args:", args, " classNames:"+classNames);
                     check(id, String);
                     check(args, Array);
                     check(classNames, Array);
-                    console.log("Meteor method invoked: "+meteorMethodName+" id:"+id+" appendCallback:"+appendCallback+" args:", args, " classNames:"+classNames);
+                    check(appendCallback, Boolean);
                     omm.MeteorPersistence.wrappedCallInProgress = true;
                     try {
                         var object = objectRetriever.getObject(id);
