@@ -94,6 +94,20 @@ describe("The persistence thing on the client ", function(){
     });
 
 
+    it("does not lazy load objects within the same root object", function(done){
+        personCollection.newPerson("Held", function(e:any, held:Tests.TestPerson){
+            omm.MeteorPersistence.withCallback(function(){
+                held.addAddress( new Tests.TestAddress("streetname", held));
+
+            }, function(){
+                var loadedHeld = personCollection.getById(held.getId());
+                expect(loadedHeld.getAddresses()[0]).toBeDefined();
+                expect(omm.MeteorPersistence.needsLazyLoading(loadedHeld.getAddresses()[0], "person")).toBeFalsy();
+                expect(loadedHeld.getAddresses()[0].person==loadedHeld).toBeTruthy();
+                done();
+            });
+        });
+    });
 
     it("lazy loads objects", function(done){
         personCollection.newPerson( "jake", function( error:any, jake:Tests.TestPerson ){

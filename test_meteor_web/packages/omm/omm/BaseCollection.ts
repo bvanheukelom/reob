@@ -98,6 +98,7 @@ module omm {
         {
             var p:T = this.serializer.toObject<T>(doc, this.theClass);
             MeteorPersistence.updatePersistencePaths(p);
+            this.serializer.objectRetriever.retrieveLocalKeys(p);
             return p;
         }
 

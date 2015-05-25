@@ -6,3 +6,4 @@ code/*.js
 code/*.map
 test_meteor_web/**/*.js
 .baseDir.ts
+*.js.map

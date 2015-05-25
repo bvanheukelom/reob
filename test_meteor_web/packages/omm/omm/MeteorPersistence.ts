@@ -119,12 +119,13 @@ module omm {
                                 v = this["_" + propertyName];
                             if (MeteorPersistence.needsLazyLoading(this, propertyName)) {
                                 if (typeof v == "string") {
+                                    console.log("Lazy loading " + className + "." + propertyName);
                                     v = MeteorPersistence.meteorObjectRetriever.getObject(v);
                                     this[propertyName] = v;
                                 }
                                 else  // TODO this could be improved so that it loads them when they are accessed rather than to load them all at once
                                 {
-                                    //console.log("Lazy loading array/map " + className + "." + propertyName);
+                                    console.log("Lazy loading array/map " + className + "." + propertyName);
                                     for( var i in v )
                                     {
                                         var ele = v[i];
@@ -278,60 +279,53 @@ module omm {
             var originalFunction = object[propertyName];
             if( Meteor.isClient ) {
                 MeteorPersistence.monkeyPatch(object, propertyName, function (patchedFunction:Function, ...originalArguments:any[]) {
-                    var args = [];
-                    var classNames = [];
-                    var callback;
-                    for (var i in originalArguments) {
-                        if (i == originalArguments.length - 1 && typeof originalArguments[i] == "function")
-                            callback = originalArguments[i];
-                        else if( originalArguments[i].persistencePath )
-                        {
-                            args[i] = originalArguments[i].persistencePath.toString();
-                            classNames[i] = argumentSerializer.getClassName(originalArguments[i]);
-                        }
-                        else if (argumentSerializer)
-                        {
-                            args[i] = argumentSerializer ? argumentSerializer.toDocument(originalArguments[i]) : originalArguments[i];
-                            classNames[i] = argumentSerializer.getClassName(originalArguments[i]);
-                        }
-                        else
-                        {
-                            args[i] = originalArguments[i];
-                        }
-                    }
+                    if( MeteorPersistence.wrappedCallInProgress ){
+                        patchedFunction.apply(this,originalArguments);
+                    } else {
 
-                    var id = objectRetriever.getId(this);
-
-                    // If this is object is part of persistence and no wrapped call is in progress ...
-                    console.log("Meteor call " + propertyName + " with arguments ", originalArguments, " registered callback:" + MeteorPersistence.nextCallback);
-                    Meteor.call(meteorMethodName, id, args, classNames, !!callback, function (error, result) {
-                        console.log("Returned from meteor method '" + meteorMethodName + "' with result:", result, "_", callback,"_",MeteorPersistence.nextCallback);
-                        if (!error) {
-                            if (argumentSerializer && result.className) {
-                                result.result = argumentSerializer.toObject(result.result, omm.PersistenceAnnotation.getEntityClassByName(result.className));
-                                MeteorPersistence.updatePersistencePaths(result.result);
+                        var args = [];
+                        var classNames = [];
+                        var callback;
+                        for (var i in originalArguments) {
+                            if (i == originalArguments.length - 1 && typeof originalArguments[i] == "function")
+                                callback = originalArguments[i];
+                            else if (originalArguments[i].persistencePath) {
+                                args[i] = originalArguments[i].persistencePath.toString();
+                                classNames[i] = argumentSerializer.getClassName(originalArguments[i]);
                             }
-
+                            else if (argumentSerializer) {
+                                args[i] = argumentSerializer ? argumentSerializer.toDocument(originalArguments[i]) : originalArguments[i];
+                                classNames[i] = argumentSerializer.getClassName(originalArguments[i]);
+                            }
+                            else {
+                                args[i] = originalArguments[i];
+                            }
                         }
-                        if (callback){
-                            console.log("calling model callback");
-                            callback(error, result ? result.result : undefined);
-                        }else if (MeteorPersistence.nextCallback) {
-                            console.log("calling WithCallback-callback");
-                            var cb = MeteorPersistence.nextCallback;
-                            MeteorPersistence.nextCallback = undefined;
-                            cb(error, result ? result.result : undefined);
-                        }
-                    });
 
-                    // BUG if the method contains a callback it is called twice due to the code below
-                    //sdfasdf
-                    //// the object needs to be updated with the result form the update function
-                    //if (!serverOnly) {
-                    //    // also call the method on the current object so that it reflects the update
-                    //    var result = patchedFunction.apply(this, originalArguments);
-                    //    return result;
-                    //}
+                        var id = objectRetriever.getId(this);
+
+                        // If this is object is part of persistence and no wrapped call is in progress ...
+                        console.log("Meteor call " + propertyName + " with arguments ", originalArguments, " registered callback:" + MeteorPersistence.nextCallback);
+                        Meteor.call(meteorMethodName, id, args, classNames, !!callback, function (error, result) {
+                            console.log("Returned from meteor method '" + meteorMethodName + "' with result:", result, "_", callback, "_", MeteorPersistence.nextCallback);
+                            if (!error) {
+                                if (argumentSerializer && result.className) {
+                                    result.result = argumentSerializer.toObject(result.result, omm.PersistenceAnnotation.getEntityClassByName(result.className));
+                                    MeteorPersistence.updatePersistencePaths(result.result);
+                                }
+
+                            }
+                            if (callback) {
+                                console.log("calling model callback");
+                                callback(error, result ? result.result : undefined);
+                            } else if (MeteorPersistence.nextCallback) {
+                                console.log("calling WithCallback-callback");
+                                var cb = MeteorPersistence.nextCallback;
+                                MeteorPersistence.nextCallback = undefined;
+                                cb(error, result ? result.result : undefined);
+                            }
+                        });
+                    }
                 });
             }
             if( !serverOnly || Meteor.isServer ) {

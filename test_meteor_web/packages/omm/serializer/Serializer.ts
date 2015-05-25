@@ -20,7 +20,9 @@ module omm{
                 if( typeof f.toObject=="function" ) {
                     //console.log("using the custom toObject function of class "+omm.className(f));
                     return f.toObject(doc);
-                } else {
+                } else{
+                    if(doc.className)
+                        f = omm.PersistenceAnnotation.getEntityClassByName(doc.className);
                     o = Object.create(f.prototype);
                     f.call(o);
                 }
@@ -74,11 +76,12 @@ module omm{
                     if (parentObject && propertyNameOnParentObject && omm.PersistenceAnnotation.isStoredAsForeignKeys(parentClass, propertyNameOnParentObject)) {
                         return <omm.Document><any>this.objectRetriever.getId(object);
                     }
-                    else if (typeof object.toDocument == "function")
-                        result = object.toDocument();
-
                     else {
                         result = this.createDocument(object, rootClass ? rootClass : omm.PersistenceAnnotation.getClass(object), parentObject, propertyNameOnParentObject);
+
+                        // if the class of the object does not correspond to the expected type, we add it to the document
+                        if( parentClass && objectClass!=omm.PersistenceAnnotation.getPropertyClass(parentClass, propertyNameOnParentObject))
+                            result.className = omm.className(objectClass);
                     }
                 }
             }
@@ -111,16 +114,17 @@ module omm{
                         // object
                         else if (typeof object[property] == 'object') {
                             doc[property] = this.toDocument(value, rootClass, object, property);
-                        }
-                        else if (typeof value == 'function') {
-                            // not doing eeeeenithing with functions
-                        }
-                        else {
-                            console.error("Unsupported type : ", typeof value);
+                        } else {
+                            throw new Error("Unsupported type : "+ typeof value);
                         }
                     }
-                    else
+                    else if (typeof value == 'function') {
+                        // not doing eeeeenithing with functions
+                    }
+                    else {
                         doc[property] = value;
+                    }
+
                 }
 
             }

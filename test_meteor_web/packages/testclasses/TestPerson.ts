@@ -11,7 +11,7 @@ module Tests
         phoneNumber:Tests.TestPhoneNumber;
 
         @omm.ArrayOrMap("TestAddress")
-        private addresses:Array<TestAddress> = [];
+        addresses:Array<TestAddress> = [];
 
         @omm.Type("TestTree")
         @omm.AsForeignKeys

@@ -380,9 +380,26 @@ describe("The persistence thing", function(){
         });
     });
 
+    it("serializes the classname of unexpected objects", function(){
+        var t:Tests.TestPerson = new Tests.TestPerson("id1", "jake");
+        t.addresses.push( <any>new Tests.TestLeaf("leafId1"));
+        var doc = new omm.Serializer(new omm.ConstantObjectRetriever(1)).toDocument(t);
+        expect(doc["addresses"][0].className).toBe("TestLeaf");
+        expect(doc["addresses"][0]._id).toBe("leafId1");
+    });
+
+    it("deserializes unexpected objects", function(){
+        var t:Tests.TestPerson = new Tests.TestPerson("id1", "jake");
+        t.addresses.push( <any>new Tests.TestLeaf("leafId1"));
+        var s = new omm.Serializer(new omm.ConstantObjectRetriever(1));
+        var doc = s.toDocument(t);
+        var o:any = s.toObject(doc, Tests.TestPerson);
+        expect( o instanceof  Tests.TestPerson).toBeTruthy();
+        expect( o.addresses[0] instanceof Tests.TestLeaf).toBeTruthy();
+    });
+
     //xit("offers a way to annotate wrapped calls as 'performed on the server'.", function() {
     //});
-
 
 
 
