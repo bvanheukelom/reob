@@ -13,6 +13,13 @@ module.exports = function (grunt) {
 				options:{
 				}
 			},
+			dtsfile : {
+				src: ["test_meteor_web/packages/omm/**/*.ts"],
+				options:{
+					declaration:"test_meteor_web/packages/omm/omm.d.ts"
+				},
+				out:"test_meteor_web/packages/omm/omm.js"
+			},
 			commonjs : {
 				src:  ["src/annotations/**/*.ts","src/annotations.d.ts"],
 				options:{

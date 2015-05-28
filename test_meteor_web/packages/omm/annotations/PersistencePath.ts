@@ -22,6 +22,18 @@ module omm {
             return this.path.split("[")[1].split("]")[0];
         }
 
+        forEachPathEntry( iterator:(propertyName:string, index:string|number)=>void ){
+            if (this.path.indexOf(".") != -1)
+                this.path.split("].")[1].split(".").forEach(function(entry:string){
+                    var propertyName = entry;
+                    var index = undefined;
+                    if (entry.indexOf("|") != -1) {
+                        propertyName =  entry.split("|")[0];
+                        index =  entry.split("|")[1];
+                    }
+                    iterator(propertyName, index);
+                });
+        }
 
         getSubObject(rootObject:Object):Object {
             var o:any = rootObject;

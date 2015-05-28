@@ -180,7 +180,7 @@ module omm
             propProps[property] = value;
         }
 
-        private static getPropertyProperty( targetPrototypeObject:Function, propertyName:string, propertyProperty:string ):any
+        static getPropertyProperty( targetPrototypeObject:Function, propertyName:string, propertyProperty:string ):any
         {
             var arr:any = Reflect.getMetadata("persistence:typedproperties", targetPrototypeObject);
             if( arr && arr[propertyName] )
@@ -204,7 +204,7 @@ module omm
             return PersistenceAnnotation.getPropertyNamesByMetaData(f.prototype, "persistence:wrap");
         }
 
-        private static getPropertyNamesByMetaData( o:any, metaData:string )
+        static getPropertyNamesByMetaData( o:any, metaData:string )
         {
             var result:Array<string> = [];
             for( var i in o )

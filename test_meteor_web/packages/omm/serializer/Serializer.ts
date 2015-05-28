@@ -24,7 +24,6 @@ module omm{
                     if(doc.className)
                         f = omm.PersistenceAnnotation.getEntityClassByName(doc.className);
                     o = Object.create(f.prototype);
-                    f.call(o);
                 }
             }
             else if( typeof doc=="object" ) {

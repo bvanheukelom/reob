@@ -5,6 +5,7 @@ module Tests
     export class TestPerson
     {
         name:string;
+        gardenState:number;
         _id:string;
 
         @omm.Type("TestPhoneNumber")
@@ -32,7 +33,6 @@ module Tests
         @omm.AsForeignKeys
         wood:{ [index:string]: Tests.TestTree } = {};
 
-
         @omm.ArrayOrMap("TestPerson")
         @omm.AsForeignKeys
         family:{ [index:string]: Tests.TestPerson } = {};
@@ -40,6 +40,7 @@ module Tests
 
         constructor(id?:string, name?:string)
         {
+            this.gardenState = 10;
             this._id = id;
             this.name = name;
         }
@@ -132,6 +133,14 @@ module Tests
         addPhoneNumber(s:string, p:Tests.TestPhoneNumber )
         {
             this.phoneBook[s] = p;
+        }
+
+        @omm.Wrap
+        tendToGarden(  ):number
+        {
+            this.gardenState++;
+            this.tree.grow();
+            return this.tree.getHeight();
         }
 
 

@@ -127,4 +127,22 @@ describe("The persistence thing on the client ", function(){
         });
     });
 
+    it("doesnt die if a wrapped call calls another wrapped call within a different collection", function(done){
+
+        personCollection.newPerson("mike", function(e:any, p:Tests.TestPerson){
+            treeCollection.newTree( 13, function(e:any, t:Tests.TestTree){
+                omm.MeteorPersistence.withCallback(function(){
+                    p.chooseTree(t);
+                }, function(){
+                    omm.MeteorPersistence.withCallback(function(){
+                        personCollection.getById(p.getId()).tendToGarden();
+                    }, function(err:any, result:number ){
+                        expect(result).toBe(14); // tree grew on the server
+                        expect(treeCollection.getById(t.getId()).getHeight()).toBe(13); // but that "growing" wasnt persited
+                        done();
+                    });
+                });
+            });
+        });
+    });
 });

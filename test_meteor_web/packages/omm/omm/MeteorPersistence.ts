@@ -93,11 +93,11 @@ module omm {
                 //this is executed first. it check if the object is part of the persistence layer and only if it is it calls the functions below
                 MeteorPersistence.monkeyPatch(c.prototype, functionName, function (originalFunction, ...args:string[]) {
 
-                    if( this.persistencePath ) {
+                    if( this.persistencePath && !MeteorPersistence.wrappedCallInProgress ) {
                         originalFunction.apply(this,args);
                     }
                     else
-                        domainObjectFunction.apply(this,args);
+                        return domainObjectFunction.apply(this,args);
                 });
 
             });
