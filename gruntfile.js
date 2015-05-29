@@ -5,7 +5,7 @@ module.exports = function (grunt) {
 	grunt.initConfig({
 		watch: {
 			files: ["**/*.ts"],
-			tasks: ["testweb"]
+			tasks: ["default"]
 		},
 		ts: {
 			meteor : {

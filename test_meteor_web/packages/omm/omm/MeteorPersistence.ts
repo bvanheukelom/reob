@@ -90,7 +90,15 @@ module omm {
 
 
         // todo  make the persistencePath enumerable:false everywhere it is set
-
+        private static getClassName(o:Object):string
+        {
+            if( typeof o =="object" && omm.PersistenceAnnotation.getClass( o ))
+            {
+                return omm.className( omm.PersistenceAnnotation.getClass( o ) );
+            }
+            else
+                return typeof o;
+        }
 
         static wrapFunction( object:any, propertyName:string, meteorMethodName:string, serverOnly:boolean, argumentSerializer:omm.Serializer, objectRetriever:ObjectRetriever ):void
         {
@@ -109,11 +117,11 @@ module omm {
                                 callback = originalArguments[i];
                             else if (originalArguments[i]._serializationPath) {
                                 args[i] = originalArguments[i]._serializationPath.toString();
-                                classNames[i] = argumentSerializer.getClassName(originalArguments[i]);
+                                classNames[i] = MeteorPersistence.getClassName(originalArguments[i]);
                             }
                             else if (argumentSerializer) {
                                 args[i] = argumentSerializer ? argumentSerializer.toDocument(originalArguments[i]) : originalArguments[i];
-                                classNames[i] = argumentSerializer.getClassName(originalArguments[i]);
+                                classNames[i] = MeteorPersistence.getClassName(originalArguments[i]);
                             }
                             else {
                                 args[i] = originalArguments[i];
@@ -166,7 +174,7 @@ module omm {
                                 if( argumentClass )
                                 {
                                     if( typeof o =="string" )
-                                        args[i] = argumentSerializer.objectRetriever.getObject(o);
+                                        args[i] = MeteorPersistence.meteorObjectRetriever.getObject(o);
                                     else
                                         args[i] = argumentSerializer.toObject(o, argumentClass);
                                 }
@@ -188,7 +196,7 @@ module omm {
                             resultObj.result = originalFunction.apply(object, args);
                         }
                         if( argumentSerializer ){
-                            resultObj.className = argumentSerializer.getClassName(resultObj.result);
+                            resultObj.className = MeteorPersistence.getClassName(resultObj.result);
                             if( omm.PersistenceAnnotation.getClass( resultObj.result ) )
                                 resultObj.result = argumentSerializer.toDocument(resultObj.result);
                         }

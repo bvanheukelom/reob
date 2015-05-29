@@ -58,7 +58,6 @@ declare module omm {
     interface ObjectRetriever {
         getId(o: Object): any;
         getObject(s: string): Object;
-        retrieveLocalKeys(o: Object): void;
     }
 }
 declare module omm {
@@ -87,17 +86,18 @@ declare module omm {
 }
 declare module omm {
     class Serializer {
-        objectRetriever: ObjectRetriever;
+        private objectRetriever;
         constructor(retri: ObjectRetriever);
         static init(): void;
-        static installLazyLoaderGetterSetters(c: TypeClass<omm.Persistable>): void;
+        private static installLazyLoaderGetterSetters(c);
         private setSerializationPath(o, pPath);
         static needsLazyLoading(object: Persistable, propertyName: string): boolean;
-        updateSerializationPaths(object: Persistable, visited?: Array<Persistable>): void;
+        _updateSerializationPaths(object: Persistable, visited?: Array<Persistable>): void;
         toObject<T extends omm.Persistable>(doc: Document, f: omm.TypeClass<T>): T;
         private toObjectRecursive<T>(doc, f);
-        toDocument(object: omm.Persistable, rootClass?: omm.TypeClass<omm.Persistable>, parentObject?: omm.Persistable, propertyNameOnParentObject?: string): omm.Document;
-        createDocument(object: any, rootClass?: omm.TypeClass<omm.Persistable>, parentObject?: omm.Persistable, propertyNameOnParentObject?: string): Document;
-        getClassName(o: Object): string;
+        toDocument(object: omm.Persistable): omm.Document;
+        private toDocumentRecursive(object, rootClass?, parentObject?, propertyNameOnParentObject?);
+        private createDocument(object, rootClass?, parentObject?, propertyNameOnParentObject?);
+        private retrieveLocalKeys(o, visited?, rootObject?);
     }
 }

@@ -5,7 +5,7 @@
 
 module omm{
     export class Serializer {
-        objectRetriever:ObjectRetriever;
+        private objectRetriever:ObjectRetriever;
 
         constructor(retri:ObjectRetriever){
             this.objectRetriever = retri;
@@ -17,7 +17,7 @@ module omm{
             });
         }
 
-        static installLazyLoaderGetterSetters(c:TypeClass<omm.Persistable>){
+        private static installLazyLoaderGetterSetters(c:TypeClass<omm.Persistable>){
             PersistenceAnnotation.getTypedPropertyNames(c).forEach(function (propertyName:string) {
                 if (PersistenceAnnotation.isStoredAsForeignKeys(c, propertyName)) {
                     //console.log("On Class " + className + ": creating lazy loader for " + propertyName);
@@ -117,7 +117,8 @@ module omm{
         }
 
 
-        updateSerializationPaths(object:Persistable, visited?:Array<Persistable>):void {
+        // if I could I would make this package protected
+        _updateSerializationPaths(object:Persistable, visited?:Array<Persistable>):void {
             var that = this;
             if (!visited)
                 visited = [];
@@ -149,7 +150,7 @@ module omm{
                                 if (e.getId && e.getId()) {
                                     that.setSerializationPath(e, object._serializationPath.clone());
                                     e._serializationPath.appendArrayOrMapLookup(typedPropertyName, e.getId());
-                                    that.updateSerializationPaths(e, visited);
+                                    that._updateSerializationPaths(e, visited);
                                 }
                                 else
                                     throw new Error("An element of the array '" + typedPropertyName + "' stored on the classe " + className(objectClass) + " does not have an id. Total serialization path so far:" + object._serializationPath.toString());
@@ -159,7 +160,7 @@ module omm{
                             //console.log("updating foreignkey property direct property " + typedPropertyName);
                             that.setSerializationPath( v, object._serializationPath.clone() );
                             v._serializationPath.appendPropertyLookup(typedPropertyName);
-                            that.updateSerializationPaths(v, visited);
+                            that._updateSerializationPaths(v, visited);
                         }
                     }
 
@@ -174,12 +175,12 @@ module omm{
                                     var e = v[i];
                                     if (!e._serializationPath) {
                                         //console.log("non- foreign key array/map entry key:"+i+" value:"+e);
-                                        that.updateSerializationPaths(e, visited);
+                                        that._updateSerializationPaths(e, visited);
                                     }
                                 }
                             }
                             else if (!v._serializationPath)
-                                that.updateSerializationPaths(v, visited);
+                                that._updateSerializationPaths(v, visited);
                         }
                     }
                 }
@@ -188,7 +189,9 @@ module omm{
 
         toObject<T extends omm.Persistable>(doc:Document, f:omm.TypeClass<T>):T {
             var o:T = this.toObjectRecursive(doc,f);
-            this.updateSerializationPaths(o);
+            this._updateSerializationPaths(o);
+            console.log("before retrieving local keys:", o);
+            this.retrieveLocalKeys(o);
             return o;
         }
 
@@ -235,8 +238,10 @@ module omm{
             }
             return o;
         }
-
-        toDocument(object:omm.Persistable, rootClass?:omm.TypeClass<omm.Persistable>, parentObject?:omm.Persistable, propertyNameOnParentObject?:string):omm.Document {
+        toDocument(object:omm.Persistable ):omm.Document {
+            return this.toDocumentRecursive(object);
+        }
+        private toDocumentRecursive(object:omm.Persistable, rootClass?:omm.TypeClass<omm.Persistable>, parentObject?:omm.Persistable, propertyNameOnParentObject?:string):omm.Document {
             var result:omm.Document;
             if (typeof object == "string" || typeof object == "number" || typeof object == "date" || typeof object == "boolean")
                 result =  <Document>object;
@@ -262,7 +267,7 @@ module omm{
             return result;
         }
 
-        createDocument(object:any, rootClass?:omm.TypeClass<omm.Persistable>, parentObject?:omm.Persistable, propertyNameOnParentObject?:string):Document {
+        private createDocument(object:any, rootClass?:omm.TypeClass<omm.Persistable>, parentObject?:omm.Persistable, propertyNameOnParentObject?:string):Document {
             var doc:any = {};
             var objectClass = omm.PersistenceAnnotation.getClass(object);
             for (var property in object) {
@@ -281,13 +286,13 @@ module omm{
 
                             for (var i in value) {
                                 var subObject = value[i];
-                                result[i] = this.toDocument(subObject, rootClass, object, property);
+                                result[i] = this.toDocumentRecursive(subObject, rootClass, object, property);
                             }
                             doc[property] = result;
                         }
                         // object
                         else if (typeof object[property] == 'object') {
-                            doc[property] = this.toDocument(value, rootClass, object, property);
+                            doc[property] = this.toDocumentRecursive(value, rootClass, object, property);
                         } else {
                             throw new Error("Unsupported type : "+ typeof value);
                         }
@@ -305,14 +310,51 @@ module omm{
             return <Document>doc;
         }
 
-        getClassName(o:Object):string
-        {
-            if( typeof o =="object" && omm.PersistenceAnnotation.getClass( o ))
-            {
-                return omm.className( omm.PersistenceAnnotation.getClass( o ) );
+        private retrieveLocalKeys(o:Object, visited?:Array<Object>, rootObject?:omm.Persistable):void {
+            if( !o )
+                return;
+            if( !visited )
+                visited = [];
+            if( visited.indexOf(o)!=-1 )
+                return;
+            visited.push(o);
+            var that = this;
+            if( !rootObject )
+                rootObject = o;
+            var theClass = omm.PersistenceAnnotation.getClass(o);
+            console.log("Retrieving local keys for ",o," class: ", theClass);
+            var spp = rootObject._serializationPath;
+            if( spp ){ // can only retrieve local keys if there is a definition of what "local" means.
+                var that = this;
+                omm.PersistenceAnnotation.getTypedPropertyNames(theClass).forEach( function( properyName:string ){
+                    console.log("Retrieviing local keys for property "+properyName);
+                    var isKeys = omm.PersistenceAnnotation.isStoredAsForeignKeys(theClass, properyName);
+                    var needsLazyLoading = omm.Serializer.needsLazyLoading(o, properyName);
+                    var isArray = omm.PersistenceAnnotation.isArrayOrMap(theClass, properyName );
+                    if( isKeys && needsLazyLoading && !isArray ){
+                        var key:string = o["_"+properyName];
+                        var pp:omm.SerializationPath = new omm.SerializationPath(this.objectRetriever, key);
+                        if( pp.getCollectionName()==spp.getCollectionName() && pp.getId()==spp.getId() ) {
+                            console.log("found a local key :"+properyName);
+                            o[properyName] = pp.getSubObject(rootObject);
+                        }
+                    }
+                    if(!omm.Serializer.needsLazyLoading(o, properyName) )
+                    {
+                        if( isArray )
+                        {
+                            for( var i in o[properyName] ) {
+                                that.retrieveLocalKeys(o[properyName][i], visited, rootObject);
+                            }
+                        }
+                        else
+                            that.retrieveLocalKeys(o[properyName], visited, rootObject);
+                    }
+                } );
             }
-            else
-                return typeof o;
+
+
+
         }
 
     }

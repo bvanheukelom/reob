@@ -35,47 +35,6 @@ module omm {
         }
 
         // sets all references that are within the root object
-        retrieveLocalKeys(o:Object, visited?:Array<Object>, rootObject?:Object):void {
-            if( !o )
-                return;
-            if( !visited )
-                visited = [];
-            if( visited.indexOf(o)!=-1 )
-                return;
-            visited.push(o);
-            var that = this;
-            if( !rootObject )
-                rootObject = o;
-            var theClass = omm.PersistenceAnnotation.getClass(o);
-            console.log("Retrieving local keys for ",o," class: ", theClass);
-            var spp = rootObject["_serializationPath"];
-            var that = this;
-            omm.PersistenceAnnotation.getTypedPropertyNames(theClass).forEach( function( properyName:string ){
-                console.log("Retrieviing local keys for property "+properyName);
-                var isKeys = omm.PersistenceAnnotation.isStoredAsForeignKeys(theClass, properyName);
-                var needsLazyLoading = omm.Serializer.needsLazyLoading(o, properyName);
-                var isArray = omm.PersistenceAnnotation.isArrayOrMap(theClass, properyName );
-                if( isKeys && needsLazyLoading && !isArray ){
-                    var key:string = o["_"+properyName];
-                    var pp:omm.SerializationPath = new omm.SerializationPath(that, key);
-                    if( pp.getCollectionName()==spp.getCollectionName() && pp.getId()==spp.getId() ) {
-                        console.log("found a local key :"+properyName);
-                        o[properyName] = pp.getSubObject(rootObject);
-                    }
-                }
-                if(!omm.Serializer.needsLazyLoading(o, properyName) )
-                {
-                    if( isArray )
-                    {
-                        for( var i in o[properyName] ) {
-                            that.retrieveLocalKeys(o[properyName][i], visited, rootObject);
-                        }
-                    }
-                    else
-                        that.retrieveLocalKeys(o[properyName], visited, rootObject);
-                }
-            } );
 
-        }
     }
 }

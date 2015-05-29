@@ -97,7 +97,6 @@ module omm {
         protected documentToObject( doc:Document ):T
         {
             var p:T = this.serializer.toObject<T>(doc, this.theClass);
-            this.serializer.objectRetriever.retrieveLocalKeys(p);
             return p;
         }
 
@@ -121,7 +120,7 @@ module omm {
                 var object:T = this.documentToObject(document);
                 var result = updateFunction(object);
 
-                this.serializer.updateSerializationPaths(object);
+                this.serializer._updateSerializationPaths(object);
 
                 var documentToSave:Document = this.serializer.toDocument(object);
                 documentToSave.serial = currentSerial+1;
@@ -174,7 +173,7 @@ module omm {
                             p.setId(id);
                         else
                             throw new Error("Unable to set Id after an object of class '"+omm.className(that.theClass)+"' was inserted into collection '"+that.name+"'. Either only call insert with objects that already have an ID or declare a 'setId' function on the class.");
-                        that.serializer.updateSerializationPaths(p);
+                        that.serializer._updateSerializationPaths(p);
                     }
                     else
                         console.log("error while inserting into "+this.name, e);
