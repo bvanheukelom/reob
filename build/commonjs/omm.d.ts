@@ -38,11 +38,11 @@ declare module omm {
         static getWrappedFunctionNames<T extends Object>(f: TypeClass<T>): Array<string>;
         static getPropertyNamesByMetaData(o: any, metaData: string): string[];
     }
-}
-declare class PersistencePrivate {
-    static entityClasses: {
-        [index: string]: omm.TypeClass<Object>;
-    };
+    class _registred {
+        static entityClasses: {
+            [index: string]: omm.TypeClass<Object>;
+        };
+    }
 }
 declare module omm {
     class PersistencePath {

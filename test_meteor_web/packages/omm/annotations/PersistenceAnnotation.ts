@@ -14,7 +14,7 @@ module omm
                 console.log("Entity(<class>) "+className(typeClass)+" with collection name:"+p1);
                 Reflect.defineMetadata("persistence:collectionName", p1, typeClass);
                 Reflect.defineMetadata("persistence:entity", true, typeClass);
-                PersistencePrivate.entityClasses[className(typeClass)]=typeClass;
+                _registred.entityClasses[className(typeClass)]=typeClass;
             }
         }
         if( typeof p1=="boolean" )
@@ -25,7 +25,7 @@ module omm
                 if( p1 )
                     Reflect.defineMetadata("persistence:collectionName", className(typeClass), typeClass);
                 Reflect.defineMetadata("persistence:entity", true, typeClass);
-                PersistencePrivate.entityClasses[className(typeClass)]=typeClass;
+                _registred.entityClasses[className(typeClass)]=typeClass;
             }
         }
         else if( typeof p1=="function" ) // annotated without braces
@@ -38,7 +38,7 @@ module omm
             console.log("Entity() "+className(typeClass));
             //Reflect.defineMetadata("persistence:collectionName", PersistenceAnnotation.className(typeClass), typeClass);
             Reflect.defineMetadata("persistence:entity", true, typeClass);
-            PersistencePrivate.entityClasses[className(typeClass)]=typeClass;
+            _registred.entityClasses[className(typeClass)]=typeClass;
         }
     }
 
@@ -97,15 +97,15 @@ module omm
 
         static getEntityClassByName( className:string ):omm.TypeClass<any>
         {
-            return PersistencePrivate.entityClasses[className];
+            return _registred.entityClasses[className];
         }
 
         public static getCollectionClasses():Array<omm.TypeClass<Object>>
         {
             var result:Array<omm.TypeClass<Object>> = [];
-            for( var i in PersistencePrivate.entityClasses )
+            for( var i in _registred.entityClasses )
             {
-                var entityClass = PersistencePrivate.entityClasses[i];
+                var entityClass = _registred.entityClasses[i];
                 if( PersistenceAnnotation.getCollectionName(entityClass) )
                     result.push(entityClass);
             }
@@ -115,9 +115,9 @@ module omm
         public static getEntityClasses():Array<TypeClass<Object>>
         {
             var result:Array<TypeClass<Object>> = [];
-            for( var i in PersistencePrivate.entityClasses )
+            for( var i in _registred.entityClasses )
             {
-                var entityClass = PersistencePrivate.entityClasses[i];
+                var entityClass = _registred.entityClasses[i];
                 result.push(entityClass);
             }
             return result;
@@ -130,7 +130,7 @@ module omm
             return !!PersistenceAnnotation.getCollectionName(f);
         }
         static isEntity(f:TypeClass<any>):boolean {
-            return !!PersistencePrivate.entityClasses[className(f)];
+            return !!_registred.entityClasses[className(f)];
         }
 
         // ---- Collection ----
@@ -220,8 +220,10 @@ module omm
 
 
     }
-}
-class PersistencePrivate
-{
-    static entityClasses:{[index:string]:omm.TypeClass<Object>} = {};
+
+    // TODO rename and store on omm object
+    export class _registred
+    {
+        static entityClasses:{[index:string]:omm.TypeClass<Object>} = {};
+    }
 }
