@@ -1,13 +1,16 @@
 /**
  * Created by bert on 04.05.15.
  */
-///<reference path="../annotations/Document.ts"/>
-///<reference path="../annotations/PersistencePath.ts"/>
+///<reference path="./Document.ts"/>
+///<reference path="./SerializationPath.ts"/>
 module omm {
+
+    // TODO rename to "Serializable"
+
     export interface Persistable {
         getId?():string;
         setId?(s:string):void;
         toDocument?():omm.Document;
-        persistencePath?:omm.PersistencePath;
+        _serializationPath?:omm.SerializationPath;
     }
 }

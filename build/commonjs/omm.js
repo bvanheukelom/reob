@@ -167,24 +167,46 @@ else if (typeof window != "undefined")
     window._omm_global = i;
 var omm;
 (function (omm) {
-    var PersistencePath = (function () {
-        function PersistencePath(className, id) {
+    var ConstantObjectRetriever = (function () {
+        function ConstantObjectRetriever(o) {
+            this.value = o;
+        }
+        ConstantObjectRetriever.prototype.getId = function (o) {
+            return "constant";
+        };
+        ConstantObjectRetriever.prototype.getObject = function (s) {
+            return this.value;
+        };
+        ConstantObjectRetriever.prototype.retrieveLocalKeys = function (o) {
+        };
+        return ConstantObjectRetriever;
+    })();
+    omm.ConstantObjectRetriever = ConstantObjectRetriever;
+})(omm || (omm = {}));
+var omm;
+(function (omm) {
+    var SerializationPath = (function () {
+        function SerializationPath(objectRetriever, className, id) {
             this.path = className;
+            this.objectRetriever = objectRetriever;
             if (id)
                 this.path += "[" + id + "]";
             if (!this.getId())
                 throw new Error("id is undefined");
         }
-        PersistencePath.prototype.clone = function () {
-            return new PersistencePath(this.path);
+        SerializationPath.prototype.clone = function () {
+            return new SerializationPath(this.objectRetriever, this.path);
         };
-        PersistencePath.prototype.getCollectionName = function () {
+        SerializationPath.prototype.getCollectionName = function () {
             return this.path.split("[")[0];
         };
-        PersistencePath.prototype.getId = function () {
+        SerializationPath.prototype.getObjectRetriever = function () {
+            return this.objectRetriever;
+        };
+        SerializationPath.prototype.getId = function () {
             return this.path.split("[")[1].split("]")[0];
         };
-        PersistencePath.prototype.forEachPathEntry = function (iterator) {
+        SerializationPath.prototype.forEachPathEntry = function (iterator) {
             if (this.path.indexOf(".") != -1)
                 this.path.split("].")[1].split(".").forEach(function (entry) {
                     var propertyName = entry;
@@ -196,7 +218,7 @@ var omm;
                     iterator(propertyName, index);
                 });
         };
-        PersistencePath.prototype.getSubObject = function (rootObject) {
+        SerializationPath.prototype.getSubObject = function (rootObject) {
             var o = rootObject;
             if (this.path.indexOf(".") != -1) {
                 this.path.split("].")[1].split(".").forEach(function (entry) {
@@ -224,89 +246,215 @@ var omm;
             }
             return o;
         };
-        PersistencePath.prototype.appendArrayOrMapLookup = function (name, id) {
+        SerializationPath.prototype.appendArrayOrMapLookup = function (name, id) {
             this.path += "." + name + "|" + id;
         };
-        PersistencePath.prototype.appendPropertyLookup = function (name) {
+        SerializationPath.prototype.appendPropertyLookup = function (name) {
             this.path += "." + name;
         };
-        PersistencePath.prototype.toString = function () {
+        SerializationPath.prototype.toString = function () {
             return this.path;
         };
-        return PersistencePath;
+        return SerializationPath;
     })();
-    omm.PersistencePath = PersistencePath;
+    omm.SerializationPath = SerializationPath;
 })(omm || (omm = {}));
-var omm;
-(function (omm) {
-    var ConstantObjectRetriever = (function () {
-        function ConstantObjectRetriever(o) {
-            this.value = o;
-        }
-        ConstantObjectRetriever.prototype.getId = function (o) {
-            return "constant";
-        };
-        ConstantObjectRetriever.prototype.getObject = function (s) {
-            return this.value;
-        };
-        ConstantObjectRetriever.prototype.retrieveLocalKeys = function (o) {
-        };
-        return ConstantObjectRetriever;
-    })();
-    omm.ConstantObjectRetriever = ConstantObjectRetriever;
-})(omm || (omm = {}));
-///<reference path="../annotations/Document.ts"/>
-///<reference path="../annotations/PersistencePath.ts"/>
+///<reference path="./Document.ts"/>
+///<reference path="./SerializationPath.ts"/>
 ///<reference path="../annotations/PersistenceAnnotation.ts"/>
-///<reference path="../annotations/PersistencePath.ts"/>
-///<reference path="../annotations/Document.ts"/>
 ///<reference path="../annotations/TypeClass.ts"/>
+///<reference path="./SerializationPath.ts"/>
+///<reference path="./Document.ts"/>
 var omm;
 (function (omm) {
     var Serializer = (function () {
         function Serializer(retri) {
             this.objectRetriever = retri;
         }
+        Serializer.init = function () {
+            omm.PersistenceAnnotation.getEntityClasses().forEach(function (c) {
+                Serializer.installLazyLoaderGetterSetters(c);
+            });
+        };
+        Serializer.installLazyLoaderGetterSetters = function (c) {
+            omm.PersistenceAnnotation.getTypedPropertyNames(c).forEach(function (propertyName) {
+                if (omm.PersistenceAnnotation.isStoredAsForeignKeys(c, propertyName)) {
+                    var propertyDescriptor = Object.getOwnPropertyDescriptor(c.prototype, propertyName);
+                    Object.defineProperty(c.prototype, propertyName, {
+                        get: function () {
+                            var v;
+                            if (propertyDescriptor && propertyDescriptor.get)
+                                v = propertyDescriptor.get.apply(this);
+                            else
+                                v = this["_" + propertyName];
+                            if (Serializer.needsLazyLoading(this, propertyName)) {
+                                var objectRetriever = this._serializationPath.getObjectRetriever();
+                                if (typeof v == "string") {
+                                    console.log("Lazy loading " + omm.className + "." + propertyName);
+                                    v = objectRetriever.getObject(v);
+                                    this[propertyName] = v;
+                                }
+                                else {
+                                    console.log("Lazy loading array/map " + omm.className + "." + propertyName);
+                                    for (var i in v) {
+                                        var ele = v[i];
+                                        v[i] = objectRetriever.getObject(ele);
+                                    }
+                                }
+                            }
+                            return v;
+                        },
+                        set: function (v) {
+                            //console.log("Monkey patched setter " + propertyName + " v:" + v);
+                            if (propertyDescriptor && propertyDescriptor.set)
+                                propertyDescriptor.set.apply(this, arguments);
+                            else {
+                                if (!Object.getOwnPropertyDescriptor(this, "_" + propertyName)) {
+                                    Object.defineProperty(this, "_" + propertyName, {
+                                        configurable: false,
+                                        enumerable: false,
+                                        writable: true
+                                    });
+                                }
+                                this["_" + propertyName] = v;
+                            }
+                        },
+                        configurable: propertyDescriptor ? propertyDescriptor.configurable : true,
+                        enumerable: propertyDescriptor ? propertyDescriptor.enumerable : true
+                    });
+                }
+                else
+                    console.log("On Class " + omm.className + ": no lazy loader for " + propertyName);
+            });
+        };
+        Serializer.prototype.setSerializationPath = function (o, pPath) {
+            if (!Object.getOwnPropertyDescriptor(o, "_serializationPath")) {
+                Object.defineProperty(this, "_serializationPath", {
+                    configurable: false,
+                    enumerable: false,
+                    writable: true
+                });
+            }
+            o._serializationPath = pPath;
+        };
+        Serializer.needsLazyLoading = function (object, propertyName) {
+            var oc = omm.PersistenceAnnotation.getClass(object);
+            if (omm.PersistenceAnnotation.isStoredAsForeignKeys(oc, propertyName)) {
+                var shadowpropertyDescriptor = Object.getOwnPropertyDescriptor(object, "_" + propertyName);
+                var shadowPropertyIsKeys = false;
+                if (shadowpropertyDescriptor)
+                    if (typeof object["_" + propertyName] == "string")
+                        shadowPropertyIsKeys = true;
+                    else if (omm.PersistenceAnnotation.isArrayOrMap(oc, propertyName)) {
+                        var v = object["_" + propertyName];
+                        for (var i in v) {
+                            if (typeof v[i] == "string")
+                                shadowPropertyIsKeys = true;
+                            break;
+                        }
+                    }
+                return shadowPropertyIsKeys;
+            }
+            else
+                return false;
+        };
+        Serializer.prototype.updateSerializationPaths = function (object, visited) {
+            var that = this;
+            if (!visited)
+                visited = [];
+            if (visited.indexOf(object) != -1)
+                return;
+            if (!object || typeof object != "object")
+                return;
+            visited.push(object);
+            var objectClass = omm.PersistenceAnnotation.getClass(object);
+            if (omm.PersistenceAnnotation.isRootEntity(objectClass)) {
+                if (!object._serializationPath) {
+                    if (object.getId())
+                        this.setSerializationPath(object, new omm.SerializationPath(this.objectRetriever, omm.PersistenceAnnotation.getCollectionName(objectClass), object.getId()));
+                }
+            }
+            if (!object._serializationPath)
+                return;
+            omm.PersistenceAnnotation.getTypedPropertyNames(objectClass).forEach(function (typedPropertyName) {
+                if (!omm.PersistenceAnnotation.isStoredAsForeignKeys(objectClass, typedPropertyName)) {
+                    var v = object[typedPropertyName];
+                    if (v) {
+                        if (omm.PersistenceAnnotation.isArrayOrMap(objectClass, typedPropertyName)) {
+                            for (var i in v) {
+                                var e = v[i];
+                                if (e.getId && e.getId()) {
+                                    that.setSerializationPath(e, object._serializationPath.clone());
+                                    e._serializationPath.appendArrayOrMapLookup(typedPropertyName, e.getId());
+                                    that.updateSerializationPaths(e, visited);
+                                }
+                                else
+                                    throw new Error("An element of the array '" + typedPropertyName + "' stored on the classe " + omm.className(objectClass) + " does not have an id. Total serialization path so far:" + object._serializationPath.toString());
+                            }
+                        }
+                        else {
+                            that.setSerializationPath(v, object._serializationPath.clone());
+                            v._serializationPath.appendPropertyLookup(typedPropertyName);
+                            that.updateSerializationPaths(v, visited);
+                        }
+                    }
+                }
+                else {
+                    if (!Serializer.needsLazyLoading(object, typedPropertyName)) {
+                        var v = object[typedPropertyName];
+                        if (v) {
+                            if (omm.PersistenceAnnotation.isArrayOrMap(objectClass, typedPropertyName)) {
+                                for (var i in v) {
+                                    var e = v[i];
+                                    if (!e._serializationPath) {
+                                        that.updateSerializationPaths(e, visited);
+                                    }
+                                }
+                            }
+                            else if (!v._serializationPath)
+                                that.updateSerializationPaths(v, visited);
+                        }
+                    }
+                }
+            });
+        };
         Serializer.prototype.toObject = function (doc, f) {
+            var o = this.toObjectRecursive(doc, f);
+            this.updateSerializationPaths(o);
+            return o;
+        };
+        Serializer.prototype.toObjectRecursive = function (doc, f) {
             var o;
             if (typeof doc == "function")
                 throw new Error("Error in 'toObject'. doc is a function.");
-            if (f) {
-                if (typeof f.toObject == "function") {
-                    return f.toObject(doc);
-                }
-                else {
-                    if (doc.className)
-                        f = omm.PersistenceAnnotation.getEntityClassByName(doc.className);
-                    o = Object.create(f.prototype);
-                }
-            }
-            else if (typeof doc == "object") {
-                o = {};
+            if (typeof f["toObject"] == "function") {
+                o = f["toObject"](doc);
             }
             else {
-                return doc;
-            }
-            for (var propertyName in doc) {
-                var value = doc[propertyName];
-                var propertyClass = omm.PersistenceAnnotation.getPropertyClass(f, propertyName);
-                var isStoredAsKeys = omm.PersistenceAnnotation.isStoredAsForeignKeys(f, propertyName);
-                if (propertyClass && !isStoredAsKeys) {
-                    if (omm.PersistenceAnnotation.isArrayOrMap(f, propertyName)) {
-                        var result = Array.isArray(value) ? [] : {};
-                        for (var i in value) {
-                            var entry = value[i];
-                            entry = this.toObject(entry, propertyClass);
-                            result[i] = entry;
+                if (doc.className)
+                    f = omm.PersistenceAnnotation.getEntityClassByName(doc.className);
+                o = Object.create(f.prototype);
+                for (var propertyName in doc) {
+                    var value = doc[propertyName];
+                    var propertyClass = omm.PersistenceAnnotation.getPropertyClass(f, propertyName);
+                    var isStoredAsKeys = omm.PersistenceAnnotation.isStoredAsForeignKeys(f, propertyName);
+                    if (propertyClass && !isStoredAsKeys) {
+                        if (omm.PersistenceAnnotation.isArrayOrMap(f, propertyName)) {
+                            var result = Array.isArray(value) ? [] : {};
+                            for (var i in value) {
+                                var entry = value[i];
+                                entry = this.toObjectRecursive(entry, propertyClass);
+                                result[i] = entry;
+                            }
+                            o[propertyName] = result;
                         }
-                        o[propertyName] = result;
+                        else {
+                            o[propertyName] = this.toObjectRecursive(value, propertyClass);
+                        }
                     }
                     else {
-                        o[propertyName] = this.toObject(value, propertyClass);
+                        o[propertyName] = value;
                     }
-                }
-                else {
-                    o[propertyName] = value;
                 }
             }
             return o;
@@ -339,7 +487,7 @@ var omm;
             var objectClass = omm.PersistenceAnnotation.getClass(object);
             for (var property in object) {
                 var value = object[property];
-                if (value !== undefined && property != "persistencePath") {
+                if (value !== undefined && property != "_serializationPath") {
                     if (omm.PersistenceAnnotation.getPropertyClass(objectClass, property)) {
                         if (omm.PersistenceAnnotation.isArrayOrMap(objectClass, property)) {
                             var result;

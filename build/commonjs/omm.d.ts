@@ -1,15 +1,6 @@
 declare module omm {
-    interface Document {
-        _id?: string;
-        serial?: number;
-        className?: string;
-    }
-}
-declare module omm {
     interface TypeClass<T> {
         new (...some: any[]): T;
-        toDocument?(o: T): Document;
-        toObject?(doc: Document): T;
     }
 }
 declare var Reflect: any;
@@ -48,26 +39,19 @@ interface IOmmGlobal {
     };
 }
 declare module omm {
-    class PersistencePath {
-        private path;
-        constructor(className: string, id?: string);
-        clone(): PersistencePath;
-        getCollectionName(): string;
-        getId(): string;
-        forEachPathEntry(iterator: (propertyName: string, index: string | number) => void): void;
-        getSubObject(rootObject: Object): Object;
-        appendArrayOrMapLookup(name: string, id: string): void;
-        appendPropertyLookup(name: string): void;
-        toString(): string;
-    }
-}
-declare module omm {
     class ConstantObjectRetriever implements ObjectRetriever {
         private value;
         constructor(o: Object);
         getId(o: Object): string;
         getObject(s: string): Object;
         retrieveLocalKeys(o: Object): void;
+    }
+}
+declare module omm {
+    interface Document {
+        _id?: string;
+        serial?: number;
+        className?: string;
     }
 }
 declare module omm {
@@ -78,18 +62,40 @@ declare module omm {
     }
 }
 declare module omm {
+    class SerializationPath {
+        private path;
+        private objectRetriever;
+        constructor(objectRetriever: omm.ObjectRetriever, className: string, id?: string);
+        clone(): SerializationPath;
+        getCollectionName(): string;
+        getObjectRetriever(): omm.ObjectRetriever;
+        getId(): string;
+        forEachPathEntry(iterator: (propertyName: string, index: string | number) => void): void;
+        getSubObject(rootObject: Object): Object;
+        appendArrayOrMapLookup(name: string, id: string): void;
+        appendPropertyLookup(name: string): void;
+        toString(): string;
+    }
+}
+declare module omm {
     interface Persistable {
         getId?(): string;
         setId?(s: string): void;
         toDocument?(): omm.Document;
-        persistencePath?: omm.PersistencePath;
+        _serializationPath?: omm.SerializationPath;
     }
 }
 declare module omm {
     class Serializer {
         objectRetriever: ObjectRetriever;
         constructor(retri: ObjectRetriever);
+        static init(): void;
+        static installLazyLoaderGetterSetters(c: TypeClass<omm.Persistable>): void;
+        private setSerializationPath(o, pPath);
+        static needsLazyLoading(object: Persistable, propertyName: string): boolean;
+        updateSerializationPaths(object: Persistable, visited?: Array<Persistable>): void;
         toObject<T extends omm.Persistable>(doc: Document, f: omm.TypeClass<T>): T;
+        private toObjectRecursive<T>(doc, f);
         toDocument(object: omm.Persistable, rootClass?: omm.TypeClass<omm.Persistable>, parentObject?: omm.Persistable, propertyNameOnParentObject?: string): omm.Document;
         createDocument(object: any, rootClass?: omm.TypeClass<omm.Persistable>, parentObject?: omm.Persistable, propertyNameOnParentObject?: string): Document;
         getClassName(o: Object): string;

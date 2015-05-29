@@ -1,21 +1,28 @@
 
 module omm {
-    export class PersistencePath {
+    // TODO rename to "Path" or "SerializerPath". This has nothing to do with persistence.
+    export class SerializationPath {
         private path:string;
+        private objectRetriever:omm.ObjectRetriever;
 
-        constructor(className:string, id?:string) {
+        constructor(objectRetriever:omm.ObjectRetriever, className:string, id?:string) {
             this.path = className;
+            this.objectRetriever = objectRetriever;
             if (id) this.path += "[" + id + "]";
             if (!this.getId())
                 throw new Error("id is undefined");
         }
 
-        clone():PersistencePath {
-            return new PersistencePath(this.path);
+        clone():SerializationPath {
+            return new SerializationPath(this.objectRetriever,this.path);
         }
 
         getCollectionName():string {
             return this.path.split("[")[0];
+        }
+
+        getObjectRetriever():omm.ObjectRetriever {
+            return this.objectRetriever;
         }
 
         getId():string {

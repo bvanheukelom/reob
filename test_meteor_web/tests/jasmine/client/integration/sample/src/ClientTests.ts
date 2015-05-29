@@ -18,6 +18,7 @@ describe("The persistence thing on the client ", function(){
         });
     });
 
+
     it("can call wrapped functions", function(done){
         var c = 0;
         treeCollection.newTree(24,function(err:any,t:Tests.TestTree){
@@ -102,7 +103,7 @@ describe("The persistence thing on the client ", function(){
             }, function(){
                 var loadedHeld = personCollection.getById(held.getId());
                 expect(loadedHeld.getAddresses()[0]).toBeDefined();
-                expect(omm.MeteorPersistence.needsLazyLoading(loadedHeld.getAddresses()[0], "person")).toBeFalsy();
+                expect(omm.Serializer.needsLazyLoading(loadedHeld.getAddresses()[0], "person")).toBeFalsy();
                 expect(loadedHeld.getAddresses()[0].person==loadedHeld).toBeTruthy();
                 done();
             });
@@ -118,7 +119,7 @@ describe("The persistence thing on the client ", function(){
                     var loadedJake = personCollection.getById(jake.getId());
                     expect(loadedJake).toBeDefined();
                     expect((<any>loadedJake)._tree).toBeDefined();
-                    expect(omm.MeteorPersistence.needsLazyLoading(loadedJake, "tree") ).toBeTruthy();
+                    expect(omm.Serializer.needsLazyLoading(loadedJake, "tree") ).toBeTruthy();
                     //loadedJake.tree;
                     //expect(mapper.MeteorPersistence.needsLazyLoading(loadedJake, "tree") ).toBeFalsy();
                     done();

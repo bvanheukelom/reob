@@ -59,7 +59,7 @@ describe("The persistence thing", function(){
         treeCollection.newTree( 20, onlyOnce(function(error, tree:Tests.TestTree){
             expect( error ).toBeUndefined();
             expect( tree ).toBeDefined();
-            expect( (<any>tree).persistencePath ).toBeDefined();
+            expect( (<any>tree)._serializationPath ).toBeDefined();
             expect( tree instanceof Tests.TestTree).toBeTruthy();
             expect( tree.getId()).toBeDefined();
             expect( tree.getHeight()).toBe(20);
@@ -103,7 +103,7 @@ describe("The persistence thing", function(){
 
     it("uses persistence paths to return undefined for non existent subobjects ", function(){
         var t1:Tests.TestTree = new Tests.TestTree(10);
-        var pp:omm.PersistencePath = new omm.PersistencePath("TestTree", "tree1");
+        var pp:omm.SerializationPath = new omm.SerializationPath( new omm.ConstantObjectRetriever(1), "TestTree", "tree1");
         pp.appendArrayOrMapLookup("leaves", "nonexistentLeaf");
         expect( pp.getSubObject(t1) ).toBeUndefined();
     });
@@ -123,17 +123,17 @@ describe("The persistence thing", function(){
         var t1:Tests.TestTree = new Tests.TestTree(123);
         t1.setId("tree1");
         t1.grow();
-        omm.MeteorPersistence.updatePersistencePaths(t1);
-        expect(t1["persistencePath"]).toBeDefined();
-        expect(t1["persistencePath"].toString()).toBe("TheTreeCollection[tree1]");
+        new omm.Serializer(new omm.MeteorObjectRetriever() ).updateSerializationPaths(t1);
+        expect(t1["_serializationPath"]).toBeDefined();
+        expect(t1["_serializationPath"].toString()).toBe("TheTreeCollection[tree1]");
     });
 
     it("uses persistence paths on sub documents", function(){
         var tp:Tests.TestPerson = new Tests.TestPerson("tp1");
         tp.phoneNumber = new Tests.TestPhoneNumber("12345");
-        omm.MeteorPersistence.updatePersistencePaths(tp);
-        expect(tp.phoneNumber["persistencePath"]).toBeDefined();
-        expect(tp.phoneNumber["persistencePath"].toString()).toBe("TestPerson[tp1].phoneNumber");
+        new omm.Serializer(new omm.MeteorObjectRetriever() ).updateSerializationPaths(tp);
+        expect(tp.phoneNumber["_serializationPath"]).toBeDefined();
+        expect(tp.phoneNumber["_serializationPath"].toString()).toBe("TestPerson[tp1].phoneNumber");
     });
 
     it("can call wrapped functions that are not part of a collection", function(){
@@ -146,10 +146,10 @@ describe("The persistence thing", function(){
         var t1:Tests.TestTree = new Tests.TestTree(10);
         t1.setId("tree1");
         t1.grow();
-        omm.MeteorPersistence.updatePersistencePaths(t1);
+        new omm.Serializer(new omm.MeteorObjectRetriever() ).updateSerializationPaths(t1);
         expect(t1.getLeaves().length).toBe(1);
-        expect(t1.getLeaves()[0]["persistencePath"]).toBeDefined();
-        expect(t1.getLeaves()[0]["persistencePath"].toString()).toBe("TheTreeCollection[tree1].leaves|leaf11");
+        expect(t1.getLeaves()[0]["_serializationPath"]).toBeDefined();
+        expect(t1.getLeaves()[0]["_serializationPath"].toString()).toBe("TheTreeCollection[tree1].leaves|leaf11");
     });
 
     it("serializes basic objects", function(){
@@ -193,7 +193,7 @@ describe("The persistence thing", function(){
         t1.setId("dfdf");
         var tp:Tests.TestPerson = new Tests.TestPerson("tp");
         tp.tree = t1;
-        omm.MeteorPersistence.updatePersistencePaths(tp);
+        new omm.Serializer(new omm.MeteorObjectRetriever() ).updateSerializationPaths(tp);
     });
 
     it("can serialize objects that have foreign key properties", function(){
@@ -306,9 +306,9 @@ describe("The persistence thing", function(){
                     held.addToWood(peter, "peterKey");
                     held = personCollection.getById(held.getId());
                     expect( held ).toBeDefined();
-                    expect( omm.MeteorPersistence.needsLazyLoading(held,"wood") ).toBeTruthy();
+                    expect( omm.Serializer.needsLazyLoading( held,"wood") ).toBeTruthy();
                     expect( held.wood ).toBeDefined();
-                    expect( omm.MeteorPersistence.needsLazyLoading(held,"wood") ).toBeFalsy();
+                    expect( omm.Serializer.needsLazyLoading( held,"wood") ).toBeFalsy();
                     expect( typeof held.wood ).toBe("object");
                     expect( held.wood["peterKey"] ).toBeDefined();
                     expect( held.wood["peterKey"] instanceof Tests.TestTree ).toBeTruthy();
