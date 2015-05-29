@@ -8,7 +8,7 @@ var omm;
                 console.log("Entity(<class>) " + className(typeClass) + " with collection name:" + p1);
                 Reflect.defineMetadata("persistence:collectionName", p1, typeClass);
                 Reflect.defineMetadata("persistence:entity", true, typeClass);
-                _registred.entityClasses[className(typeClass)] = typeClass;
+                _omm_global.entityClasses[className(typeClass)] = typeClass;
             };
         }
         if (typeof p1 == "boolean") {
@@ -18,14 +18,14 @@ var omm;
                 if (p1)
                     Reflect.defineMetadata("persistence:collectionName", className(typeClass), typeClass);
                 Reflect.defineMetadata("persistence:entity", true, typeClass);
-                _registred.entityClasses[className(typeClass)] = typeClass;
+                _omm_global.entityClasses[className(typeClass)] = typeClass;
             };
         }
         else if (typeof p1 == "function") {
             var typeClass = p1;
             console.log("Entity() " + className(typeClass));
             Reflect.defineMetadata("persistence:entity", true, typeClass);
-            _registred.entityClasses[className(typeClass)] = typeClass;
+            _omm_global.entityClasses[className(typeClass)] = typeClass;
         }
     }
     omm.Entity = Entity;
@@ -73,12 +73,12 @@ var omm;
                 return undefined;
         };
         PersistenceAnnotation.getEntityClassByName = function (className) {
-            return _registred.entityClasses[className];
+            return _omm_global.entityClasses[className];
         };
         PersistenceAnnotation.getCollectionClasses = function () {
             var result = [];
-            for (var i in _registred.entityClasses) {
-                var entityClass = _registred.entityClasses[i];
+            for (var i in _omm_global.entityClasses) {
+                var entityClass = _omm_global.entityClasses[i];
                 if (PersistenceAnnotation.getCollectionName(entityClass))
                     result.push(entityClass);
             }
@@ -86,8 +86,8 @@ var omm;
         };
         PersistenceAnnotation.getEntityClasses = function () {
             var result = [];
-            for (var i in _registred.entityClasses) {
-                var entityClass = _registred.entityClasses[i];
+            for (var i in _omm_global.entityClasses) {
+                var entityClass = _omm_global.entityClasses[i];
                 result.push(entityClass);
             }
             return result;
@@ -99,7 +99,7 @@ var omm;
             return !!PersistenceAnnotation.getCollectionName(f);
         };
         PersistenceAnnotation.isEntity = function (f) {
-            return !!_registred.entityClasses[className(f)];
+            return !!_omm_global.entityClasses[className(f)];
         };
         PersistenceAnnotation.isArrayOrMap = function (typeClass, propertyName) {
             return PersistenceAnnotation.getPropertyProperty(typeClass.prototype, propertyName, "arrayOrMap") == true;
@@ -158,14 +158,13 @@ var omm;
         return PersistenceAnnotation;
     })();
     omm.PersistenceAnnotation = PersistenceAnnotation;
-    var _registred = (function () {
-        function _registred() {
-        }
-        _registred.entityClasses = {};
-        return _registred;
-    })();
-    omm._registred = _registred;
 })(omm || (omm = {}));
+var i = { entityClasses: {} };
+_omm_global = i;
+if (typeof global != "undefined")
+    global._omm_global = i;
+else if (typeof window != "undefined")
+    window._omm_global = i;
 var omm;
 (function (omm) {
     var PersistencePath = (function () {

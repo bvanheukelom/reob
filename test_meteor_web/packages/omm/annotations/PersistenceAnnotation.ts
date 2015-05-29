@@ -14,7 +14,7 @@ module omm
                 console.log("Entity(<class>) "+className(typeClass)+" with collection name:"+p1);
                 Reflect.defineMetadata("persistence:collectionName", p1, typeClass);
                 Reflect.defineMetadata("persistence:entity", true, typeClass);
-                _registred.entityClasses[className(typeClass)]=typeClass;
+                _omm_global.entityClasses[className(typeClass)]=typeClass;
             }
         }
         if( typeof p1=="boolean" )
@@ -25,7 +25,7 @@ module omm
                 if( p1 )
                     Reflect.defineMetadata("persistence:collectionName", className(typeClass), typeClass);
                 Reflect.defineMetadata("persistence:entity", true, typeClass);
-                _registred.entityClasses[className(typeClass)]=typeClass;
+                _omm_global.entityClasses[className(typeClass)]=typeClass;
             }
         }
         else if( typeof p1=="function" ) // annotated without braces
@@ -38,7 +38,7 @@ module omm
             console.log("Entity() "+className(typeClass));
             //Reflect.defineMetadata("persistence:collectionName", PersistenceAnnotation.className(typeClass), typeClass);
             Reflect.defineMetadata("persistence:entity", true, typeClass);
-            _registred.entityClasses[className(typeClass)]=typeClass;
+            _omm_global.entityClasses[className(typeClass)]=typeClass;
         }
     }
 
@@ -97,15 +97,15 @@ module omm
 
         static getEntityClassByName( className:string ):omm.TypeClass<any>
         {
-            return _registred.entityClasses[className];
+            return _omm_global.entityClasses[className];
         }
 
         public static getCollectionClasses():Array<omm.TypeClass<Object>>
         {
             var result:Array<omm.TypeClass<Object>> = [];
-            for( var i in _registred.entityClasses )
+            for( var i in _omm_global.entityClasses )
             {
-                var entityClass = _registred.entityClasses[i];
+                var entityClass = _omm_global.entityClasses[i];
                 if( PersistenceAnnotation.getCollectionName(entityClass) )
                     result.push(entityClass);
             }
@@ -115,9 +115,9 @@ module omm
         public static getEntityClasses():Array<TypeClass<Object>>
         {
             var result:Array<TypeClass<Object>> = [];
-            for( var i in _registred.entityClasses )
+            for( var i in _omm_global.entityClasses )
             {
-                var entityClass = _registred.entityClasses[i];
+                var entityClass = _omm_global.entityClasses[i];
                 result.push(entityClass);
             }
             return result;
@@ -130,7 +130,7 @@ module omm
             return !!PersistenceAnnotation.getCollectionName(f);
         }
         static isEntity(f:TypeClass<any>):boolean {
-            return !!_registred.entityClasses[className(f)];
+            return !!_omm_global.entityClasses[className(f)];
         }
 
         // ---- Collection ----
@@ -222,8 +222,16 @@ module omm
     }
 
     // TODO rename and store on omm object
-    export class _registred
-    {
-        static entityClasses:{[index:string]:omm.TypeClass<Object>} = {};
-    }
 }
+
+declare var _omm_global:IOmmGlobal;
+declare var global;
+var i:IOmmGlobal = { entityClasses:{} };
+_omm_global = i;
+interface IOmmGlobal {
+    entityClasses:{[index:string]:omm.TypeClass<Object>};
+}
+if( typeof global!="undefined" )
+    global._omm_global = i;
+else if( typeof window !="undefined" )
+    (<any>window)._omm_global = i;

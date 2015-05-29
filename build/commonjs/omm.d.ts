@@ -38,11 +38,14 @@ declare module omm {
         static getWrappedFunctionNames<T extends Object>(f: TypeClass<T>): Array<string>;
         static getPropertyNamesByMetaData(o: any, metaData: string): string[];
     }
-    class _registred {
-        static entityClasses: {
-            [index: string]: omm.TypeClass<Object>;
-        };
-    }
+}
+declare var _omm_global: IOmmGlobal;
+declare var global: any;
+declare var i: IOmmGlobal;
+interface IOmmGlobal {
+    entityClasses: {
+        [index: string]: omm.TypeClass<Object>;
+    };
 }
 declare module omm {
     class PersistencePath {
