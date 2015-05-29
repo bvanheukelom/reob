@@ -47,7 +47,7 @@ module.exports = function (grunt) {
 		}
 	});
 
-	grunt.registerTask('default', ["testweb"]);
+	grunt.registerTask('default', ["testweb", "commonjs"]);
 	grunt.registerTask('testweb', ["ts:meteor", 'ts:test', "rewrite", 'copyFilesToTestMeteorWeb']);
 	grunt.registerTask('commonjs', ["ts:commonjs", 'copyCommonJsFiles']);
 
@@ -124,7 +124,7 @@ module.exports = function (grunt) {
 
 	grunt.registerTask("copyCommonJsFiles", "Copies all necessary files for the common js package", function () {
 		grunt.file.copy("build/commonjs/omm.js", "build/commonjs/omm.js", {process:function(content){
-			return content+"\nmodule.export=omm;\n";
+			return content+"\nmodule.exports = omm;\n";
 		}});
 	});
 

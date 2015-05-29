@@ -381,4 +381,4 @@ var omm;
     omm.Serializer = Serializer;
 })(omm || (omm = {}));
 
-module.export=omm;
+module.exports = omm;
