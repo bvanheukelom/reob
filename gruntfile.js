@@ -21,13 +21,13 @@ module.exports = function (grunt) {
 				out:"test_meteor_web/packages/omm/omm.js"
 			},
 			commonjs : {
-				src:  ["src/annotations/**/*.ts","src/annotations.d.ts"],
+				src:  ["test_meteor_web/packages/omm/annotations/**/*.ts","test_meteor_web/packages/omm/serializer/**/*.ts"],
 				options:{
 					sourceMap:false,
 					declaration:"build/commonjs/omm.d.ts",
 					module:"commonjs"
 				},
-				out:"build/commonjs/omm/omm.js"
+				out:"build/commonjs/omm.js"
 			},
 			amd : {
 				src:  ["src/annotations/**/*.ts"],
@@ -49,6 +49,7 @@ module.exports = function (grunt) {
 
 	grunt.registerTask('default', ["testweb"]);
 	grunt.registerTask('testweb', ["ts:meteor", 'ts:test', "rewrite", 'copyFilesToTestMeteorWeb']);
+	grunt.registerTask('commonjs', ["ts:commonjs", 'copyCommonJsFiles']);
 
 	// NPM TASKS
 	grunt.loadNpmTasks("grunt-ts-1.5");
@@ -122,9 +123,8 @@ module.exports = function (grunt) {
 	});
 
 	grunt.registerTask("copyCommonJsFiles", "Copies all necessary files for the common js package", function () {
-		grunt.file.copy("resources/commonjs/package.json", "build/commonjs/omm/package.json");
-		grunt.file.copy("build/commonjs/omm/omm.js", "build/commonjs/omm/omm.js", {process:function(content){
-			return content+grunt.file.read("resources/commonjs/append.js");
+		grunt.file.copy("build/commonjs/omm.js", "build/commonjs/omm.js", {process:function(content){
+			return content+"\nmodule.export=omm;\n";
 		}});
 	});
 
