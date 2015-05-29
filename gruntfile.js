@@ -29,6 +29,15 @@ module.exports = function (grunt) {
 				},
 				out:"build/commonjs/omm.js"
 			},
+			declaration : {
+				src:  ["test_meteor_web/packages/omm/**/*.ts"],
+				options:{
+					sourceMap:false,
+					declaration:"build/declaration/omm.d.ts",
+					module:"commonjs"
+				},
+				out:"build/declaration/omm.js"
+			},
 			amd : {
 				src:  ["src/annotations/**/*.ts"],
 				options:{
@@ -47,9 +56,10 @@ module.exports = function (grunt) {
 		}
 	});
 
-	grunt.registerTask('default', ["testweb", "commonjs"]);
+	grunt.registerTask('default', ["testweb", "commonjs", "declaration"]);
 	grunt.registerTask('testweb', ["ts:meteor", 'ts:test', "rewrite", 'copyFilesToTestMeteorWeb']);
 	grunt.registerTask('commonjs', ["ts:commonjs", 'copyCommonJsFiles']);
+	grunt.registerTask('declaration', ["ts:declaration", 'copyDeclarationFiles']);
 
 	// NPM TASKS
 	grunt.loadNpmTasks("grunt-ts-1.5");
@@ -98,7 +108,24 @@ module.exports = function (grunt) {
 			}
 		});
 	};
+	function appendStringRequireModuleNameAndRemoveReferences( filename, moduleName ){
+		grunt.file.copy( filename,filename, {process:function(content){
+			var returnContent = "";
+			var splitArray = content.split("\n");
+			for (var i = 0; i < splitArray.length; i++) {
+				if (splitArray[i].indexOf("///") != 0 )
+				{
+					returnContent += splitArray[i]+"\n";
+				}
+			}
+			returnContent+="declare module '"+moduleName+"' {\n";
+			returnContent+="\texport="+moduleName+";\n";
+			returnContent+="}\n";
 
+			return returnContent;
+		}
+		});
+	}
 	// CUSTOM TASKS
 	grunt.registerTask("copyFilesToTestMeteorWeb", "Copies all necessary files", function () {
 		cp("test_meteor_web/tests/jasmine/Tests.js", "test_meteor_web/tests/jasmine/client/integration/sample/src/Tests.js");
@@ -126,6 +153,11 @@ module.exports = function (grunt) {
 		grunt.file.copy("build/commonjs/omm.js", "build/commonjs/omm.js", {process:function(content){
 			return content+"\nmodule.exports = omm;\n";
 		}});
+	});
+
+	grunt.registerTask("copyDeclarationFiles", "Copies all necessary files for the common js package", function () {
+		grunt.file.delete("build/declaration/omm.js")
+		appendStringRequireModuleNameAndRemoveReferences("build/declaration/omm.d.ts", "omm");
 	});
 
 	grunt.registerTask("copyAmdFiles", "Copies all necessary files for the amd js package", function () {
