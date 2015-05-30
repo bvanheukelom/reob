@@ -534,12 +534,10 @@ var omm;
             if (!rootObject)
                 rootObject = o;
             var theClass = omm.PersistenceAnnotation.getClass(o);
-            console.log("Retrieving local keys for ", o, " class: ", theClass);
             var spp = rootObject._serializationPath;
             if (spp) {
                 var that = this;
                 omm.PersistenceAnnotation.getTypedPropertyNames(theClass).forEach(function (properyName) {
-                    console.log("Retrieviing local keys for property " + properyName);
                     var isKeys = omm.PersistenceAnnotation.isStoredAsForeignKeys(theClass, properyName);
                     var needsLazyLoading = omm.Serializer.needsLazyLoading(o, properyName);
                     var isArray = omm.PersistenceAnnotation.isArrayOrMap(theClass, properyName);
@@ -547,7 +545,6 @@ var omm;
                         var key = o["_" + properyName];
                         var pp = new omm.SerializationPath(this.objectRetriever, key);
                         if (pp.getCollectionName() == spp.getCollectionName() && pp.getId() == spp.getId()) {
-                            console.log("found a local key :" + properyName);
                             o[properyName] = pp.getSubObject(rootObject);
                         }
                     }
