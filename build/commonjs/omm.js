@@ -421,7 +421,6 @@ var omm;
         Serializer.prototype.toObject = function (doc, f) {
             var o = this.toObjectRecursive(doc, f);
             this._updateSerializationPaths(o);
-            console.log("before retrieving local keys:", o);
             this.retrieveLocalKeys(o);
             return o;
         };

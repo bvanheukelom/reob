@@ -190,7 +190,7 @@ module omm{
         toObject<T extends omm.Persistable>(doc:Document, f:omm.TypeClass<T>):T {
             var o:T = this.toObjectRecursive(doc,f);
             this._updateSerializationPaths(o);
-            console.log("before retrieving local keys:", o);
+            //console.log("before retrieving local keys:", o);
             this.retrieveLocalKeys(o);
             return o;
         }
