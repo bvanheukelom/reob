@@ -5,6 +5,9 @@ declare module omm {
 }
 declare var Reflect: any;
 declare module omm {
+    var entityClasses: {
+        [index: string]: omm.TypeClass<Object>;
+    };
     function Entity(p1?: any): any;
     function Wrap(t: Function, functionName: string, objectDescriptor: any): void;
     function ArrayOrMap(typeClassName: string): (targetPrototypeObject: Function, propertyName: string) => void;
@@ -29,14 +32,6 @@ declare module omm {
         static getWrappedFunctionNames<T extends Object>(f: TypeClass<T>): Array<string>;
         static getPropertyNamesByMetaData(o: any, metaData: string): string[];
     }
-}
-declare var _omm_global: IOmmGlobal;
-declare var global: any;
-declare var i: IOmmGlobal;
-interface IOmmGlobal {
-    entityClasses: {
-        [index: string]: omm.TypeClass<Object>;
-    };
 }
 declare module omm {
     interface Document {
