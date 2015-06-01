@@ -1,7 +1,8 @@
 /// <reference path="./TypeClass.ts"/>
+/// <reference path="../../../../typings/node/node.d.ts"/>
 var omm;
 (function (omm) {
-    omm.entityClasses = {};
+    omm.entityClasses;
     function Entity(p1) {
         if (typeof p1 == "string") {
             return function (target) {
@@ -160,6 +161,18 @@ var omm;
     })();
     omm.PersistenceAnnotation = PersistenceAnnotation;
 })(omm || (omm = {}));
+if (typeof global != "undefined") {
+    if (!global["entityClasses"])
+        global["entityClasses"] = {};
+    omm.entityClasses = global["entityClasses"];
+}
+else if (typeof window != "undefined") {
+    if (!window["entityClasses"])
+        window["entityClasses"] = {};
+    omm.entityClasses = window["entityClasses"];
+}
+else
+    omm.entityClasses = {};
 var omm;
 (function (omm) {
     var ConstantObjectRetriever = (function () {

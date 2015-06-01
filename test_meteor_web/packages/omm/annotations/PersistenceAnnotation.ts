@@ -1,11 +1,12 @@
 
 /// <reference path="./TypeClass.ts"/>
+/// <reference path="../../../../typings/node/node.d.ts"/>
 
 declare var  Reflect;
 
 module omm
 {
-    export var entityClasses:{[index:string]:omm.TypeClass<Object>} = {};
+    export var entityClasses:{[index:string]:omm.TypeClass<Object>};
 
 
     export function Entity( p1?:any ):any
@@ -226,3 +227,13 @@ module omm
     // TODO rename and store on omm object
 }
 
+if( typeof global!="undefined" ){
+    if(!global["entityClasses"])
+        global["entityClasses"] = {};
+    omm.entityClasses = global["entityClasses"];
+} else if( typeof window !="undefined" ){
+    if(!window["entityClasses"])
+        window["entityClasses"] = {};
+    omm.entityClasses = window["entityClasses"];
+} else
+    omm.entityClasses = {};
