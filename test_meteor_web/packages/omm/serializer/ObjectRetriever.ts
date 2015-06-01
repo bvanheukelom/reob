@@ -1,7 +1,8 @@
 module omm{
-    export interface ObjectRetriever{
+    export interface ObjectRetriever {
         getId(o:Object);
-        getObject(s:string):Object;
-        prepareForToDocument (o:Object);
+        getObject(value:string, parentObject?:Object, propertyName?:string ):Object;
+        preToDocument(o:Object);
+        postToObject(o:Object);
     }
 }

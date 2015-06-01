@@ -24,7 +24,7 @@ declare module omm {
         static isRootEntity(f: TypeClass<any>): boolean;
         static isEntity(f: TypeClass<any>): boolean;
         static isArrayOrMap(typeClass: Function, propertyName: string): boolean;
-        static getPropertyClass(f: Function, propertyName: string): TypeClass<Object>;
+        static getPropertyClass(f: Function, propertyName: string): TypeClass<any>;
         static getTypedPropertyNames<T extends Object>(f: TypeClass<T>): Array<string>;
         static setPropertyProperty(targetPrototypeObject: Function, propertyName: string, property: string, value: any): void;
         static getPropertyProperty(targetPrototypeObject: Function, propertyName: string, propertyProperty: string): any;
@@ -41,14 +41,17 @@ declare module omm {
     }
 }
 declare module omm {
-    class SerializationPath {
+    interface Persistable {
+        getId?(): string;
+        setId?(s: string): void;
+        _objectRetriever?: omm.ObjectRetriever;
+    }
+}
+declare module omm {
+    class SubObjectPath {
         private path;
-        private objectRetriever;
-        constructor(objectRetriever: omm.ObjectRetriever, className: string, id?: string);
-        clone(): SerializationPath;
-        getCollectionName(): string;
-        getObjectRetriever(): omm.ObjectRetriever;
-        getId(): string;
+        constructor(s?: string);
+        clone(): SubObjectPath;
         forEachPathEntry(iterator: (propertyName: string, index: string | number) => void): void;
         getSubObject(rootObject: Object): Object;
         appendArrayOrMapLookup(name: string, id: string): void;
@@ -57,28 +60,19 @@ declare module omm {
     }
 }
 declare module omm {
-    interface Persistable {
-        getId?(): string;
-        setId?(s: string): void;
-        toDocument?(): omm.Document;
-        _serializationPath?: omm.SerializationPath;
-    }
-}
-declare module omm {
     class Serializer {
         private objectRetriever;
         constructor(retri: ObjectRetriever);
         static init(): void;
         private static installLazyLoaderGetterSetters(c);
-        private setSerializationPath(o, pPath);
+        static forEachTypedObject(object: omm.Persistable, cb: (path: omm.SubObjectPath, object: omm.Persistable) => void): void;
+        static forEachTypedObjectRecursive(rootObject: omm.Persistable, object: omm.Persistable, path: omm.SubObjectPath, visited: Array<Persistable>, cb: (path: omm.SubObjectPath, object: omm.Persistable) => void): void;
         static needsLazyLoading(object: Persistable, propertyName: string): boolean;
-        _updateSerializationPaths(object: Persistable, visited?: Array<Persistable>): void;
         toObject<T extends omm.Persistable>(doc: Document, f: omm.TypeClass<T>): T;
         private toObjectRecursive<T>(doc, f);
         toDocument(object: omm.Persistable): omm.Document;
         private toDocumentRecursive(object, rootClass?, parentObject?, propertyNameOnParentObject?);
         private createDocument(object, rootClass?, parentObject?, propertyNameOnParentObject?);
-        private retrieveLocalKeys(o, visited?, rootObject?);
     }
 }
 declare module omm {
@@ -87,7 +81,8 @@ declare module omm {
         constructor(o: Object);
         getId(o: Object): string;
         getObject(s: string): Object;
-        retrieveLocalKeys(o: Object): void;
+        preToDocument(o: Object): void;
+        postToObject(o: Object): void;
     }
 }
 declare module omm {
@@ -117,13 +112,39 @@ declare module omm {
 declare module omm {
     interface ObjectRetriever {
         getId(o: Object): any;
-        getObject(s: string): Object;
+        getObject(value: string, parentObject?: Object, propertyName?: string): Object;
+        preToDocument(o: Object): any;
+        postToObject(o: Object): any;
     }
 }
 declare module omm {
+    class SerializationPath {
+        private path;
+        private objectRetriever;
+        constructor(objectRetriever: omm.ObjectRetriever, className: string, id?: string);
+        clone(): SerializationPath;
+        getCollectionName(): string;
+        getObjectRetriever(): omm.ObjectRetriever;
+        getId(): string;
+        forEachPathEntry(iterator: (propertyName: string, index: string | number) => void): void;
+        getSubObject(rootObject: Object): Object;
+        appendArrayOrMapLookup(name: string, id: string): void;
+        appendPropertyLookup(name: string): void;
+        toString(): string;
+    }
+}
+declare module omm {
+    interface MeteorPersistable extends omm.Persistable {
+        _serializationPath?: omm.SerializationPath;
+    }
     class MeteorObjectRetriever implements omm.ObjectRetriever {
-        getId(object: Persistable): string;
+        getId(object: MeteorPersistable): string;
         getObject(s: string): Object;
+        preToDocument(o: Object): void;
+        postToObject(o: Object): void;
+        private setSerializationPath(o, pPath);
+        updateSerializationPaths(object: MeteorPersistable, visited?: Array<Persistable>): void;
+        retrieveLocalKeys(o: omm.MeteorPersistable, visited?: Array<Object>, rootObject?: omm.MeteorPersistable): void;
     }
 }
 declare module omm {
@@ -132,6 +153,7 @@ declare module omm {
         private theClass;
         private name;
         private serializer;
+        private objectRetriever;
         private static meteorCollections;
         constructor(persistableClass: omm.TypeClass<T>);
         static getCollection<P extends omm.Persistable>(t: omm.TypeClass<P>): BaseCollection<P>;
@@ -146,6 +168,16 @@ declare module omm {
         update(id: string, updateFunction: (o: T) => void): void;
         insert(p: T, callback?: (e: any, id?: string) => void): string;
         static resetAll(cb: (error?: any) => void): void;
+    }
+}
+declare module omm {
+    class LocalObjectRetriever implements omm.ObjectRetriever {
+        constructor();
+        private setQuietProperty(obj, propertyName, value);
+        getId(o: Object): string;
+        getObject(s: string, parentObject?: Object, propertyName?: string): Object;
+        preToDocument(o: Object): void;
+        postToObject(o: Object): void;
     }
 }
 

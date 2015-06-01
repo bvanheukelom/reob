@@ -14,7 +14,7 @@ module omm {
         getObject(s:string):Object {
             return this.value;
         }
-        prepareForToDocument (o:Object){
-        }
+        preToDocument(o:Object){}
+        postToObject(o:Object){}
     }
 }

@@ -123,7 +123,7 @@ describe("The persistence thing", function(){
         var t1:Tests.TestTree = new Tests.TestTree(123);
         t1.setId("tree1");
         t1.grow();
-        new omm.Serializer(new omm.MeteorObjectRetriever() )._updateSerializationPaths(t1);
+        new omm.MeteorObjectRetriever().updateSerializationPaths(t1);
         expect(t1["_serializationPath"]).toBeDefined();
         expect(t1["_serializationPath"].toString()).toBe("TheTreeCollection[tree1]");
     });
@@ -131,7 +131,7 @@ describe("The persistence thing", function(){
     it("uses persistence paths on sub documents", function(){
         var tp:Tests.TestPerson = new Tests.TestPerson("tp1");
         tp.phoneNumber = new Tests.TestPhoneNumber("12345");
-        new omm.Serializer(new omm.MeteorObjectRetriever() )._updateSerializationPaths(tp);
+        new omm.MeteorObjectRetriever().updateSerializationPaths(tp);
         expect(tp.phoneNumber["_serializationPath"]).toBeDefined();
         expect(tp.phoneNumber["_serializationPath"].toString()).toBe("TestPerson[tp1].phoneNumber");
     });
@@ -146,7 +146,8 @@ describe("The persistence thing", function(){
         var t1:Tests.TestTree = new Tests.TestTree(10);
         t1.setId("tree1");
         t1.grow();
-        new omm.Serializer(new omm.MeteorObjectRetriever() )._updateSerializationPaths(t1);
+        new omm.MeteorObjectRetriever().updateSerializationPaths(t1);
+
         expect(t1.getLeaves().length).toBe(1);
         expect(t1.getLeaves()[0]["_serializationPath"]).toBeDefined();
         expect(t1.getLeaves()[0]["_serializationPath"].toString()).toBe("TheTreeCollection[tree1].leaves|leaf11");
@@ -193,7 +194,7 @@ describe("The persistence thing", function(){
         t1.setId("dfdf");
         var tp:Tests.TestPerson = new Tests.TestPerson("tp");
         tp.tree = t1;
-        new omm.Serializer(new omm.MeteorObjectRetriever() )._updateSerializationPaths(tp);
+        new omm.MeteorObjectRetriever().updateSerializationPaths(tp);
     });
 
     it("can serialize objects that have foreign key properties", function(){
@@ -398,11 +399,58 @@ describe("The persistence thing", function(){
         expect( o.addresses[0] instanceof Tests.TestLeaf).toBeTruthy();
     });
 
-    //xit("offers a way to annotate wrapped calls as 'performed on the server'.", function() {
-    //});
+    it("deserializes local objects", function(){
+        var car = new Tests.TestCar();
+        car.brand = "VW";
+        car.wheel = new Tests.TestWheel();
+        car.wheel.car = car;
+        car.wheel.radius = 10;
+        var s  = new omm.Serializer( new omm.LocalObjectRetriever() );
+        var doc:any = s.toDocument(car);
+        expect( doc ).toBeDefined();
+        expect( doc.brand ).toBe("VW");
+        expect( doc.wheel.radius ).toBe(10);
+        expect( doc instanceof Tests.TestCar ).toBeFalsy();
+    });
 
+    it("serializes local objects", function(){
+        var car = new Tests.TestCar();
+        car.brand = "VW";
+        car.wheel = new Tests.TestWheel();
+        car.wheel.car = car;
+        car.wheel.radius = 10;
+        var s  = new omm.Serializer( new omm.LocalObjectRetriever() );
+        var doc:any = s.toDocument(car);
+        var otherCar = s.toObject(doc, Tests.TestCar);
+        expect( otherCar ).toBeDefined();
+        expect( otherCar.brand ).toBe("VW");
+        expect( otherCar.wheel.radius ).toBe(10);
+        expect( otherCar instanceof Tests.TestCar ).toBeTruthy();
 
+    });
 
-    // write test that verifies that once a
+    it("deserializes local objects with arrays", function(){
+        var car = new Tests.TestCar();
+        car.wheels.push( new Tests.TestWheel() );
+        car.wheels.push( new Tests.TestWheel() );
+        car.wheels.push( new Tests.TestWheel() );
+        car.wheels.push( new Tests.TestWheel() );
+        var s  = new omm.Serializer( new omm.LocalObjectRetriever() );
+        var doc:any = s.toDocument(car);
+        expect( doc ).toBeDefined();
+        expect( doc.wheels ).toBeDefined();
+        expect( doc.wheels.length ).toBe(4);
+    });
+
+    it("serializes local objects with arrays", function(){
+        var s  = new omm.Serializer( new omm.LocalObjectRetriever() );
+        var otherCar:Tests.TestCar = s.toObject( {brand:"Monster", wheels:[{},{},{},{radius:12}]}, Tests.TestCar);
+        expect( otherCar ).toBeDefined();
+        expect( otherCar.brand ).toBe("Monster");
+        expect( otherCar.wheels[3].radius ).toBe(12);
+        expect( otherCar.wheels[2].radius ).toBeUndefined();
+        expect( otherCar.wheels[2] instanceof Tests.TestWheel ).toBeTruthy();
+        expect( otherCar instanceof Tests.TestCar ).toBeTruthy();
+    });
 
 });

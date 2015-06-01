@@ -10,7 +10,7 @@ module omm {
     export interface Persistable {
         getId?():string;
         setId?(s:string):void;
-        _objectRetriever:omm.ObjectRetriever
+        _objectRetriever?:omm.ObjectRetriever
         //toDocument?():omm.Document;
     }
 }

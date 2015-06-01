@@ -19,6 +19,8 @@ Package.onUse(function(api) {
 	api.addFiles('TestPerson.js');
 	api.addFiles('TestPersonCollection.js');
 	api.addFiles('TestPhoneNumber.js');
+	api.addFiles('TestCar.js');
+	api.addFiles('TestWheel.js');
 	api.addFiles('TestTree.js');
 	api.addFiles('TestTreeCollection.js');
 	api.export('Tests', 'server');

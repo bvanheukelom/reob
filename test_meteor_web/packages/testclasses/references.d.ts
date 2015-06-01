@@ -5,8 +5,11 @@
 ///<reference path="./TestAddress.ts"/>
 ///<reference path="./TestPersonCollection.ts"/>
 ///<reference path="./TestTreeCollection.ts"/>
+///<reference path="./TestCar.ts"/>
+///<reference path="./TestWheel.ts"/>
 ///<reference path="../omm/annotations/PersistenceAnnotation.ts"/>
 ///<reference path="../omm/serializer/Document.ts"/>
 ///<reference path="../omm/omm/MeteorPersistence.ts"/>
 ///<reference path="../omm/omm/MeteorObjectRetriever.ts"/>
 ///<reference path="../omm/omm/BaseCollection.ts"/>
+///<reference path="../omm/serializer/LocalObjectRetriever.ts"/>

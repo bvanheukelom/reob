@@ -185,94 +185,76 @@ var omm;
         ConstantObjectRetriever.prototype.getObject = function (s) {
             return this.value;
         };
-        ConstantObjectRetriever.prototype.retrieveLocalKeys = function (o) {
-        };
+        ConstantObjectRetriever.prototype.preToDocument = function (o) { };
+        ConstantObjectRetriever.prototype.postToObject = function (o) { };
         return ConstantObjectRetriever;
     })();
     omm.ConstantObjectRetriever = ConstantObjectRetriever;
 })(omm || (omm = {}));
 var omm;
 (function (omm) {
-    var SerializationPath = (function () {
-        function SerializationPath(objectRetriever, className, id) {
-            this.path = className;
-            this.objectRetriever = objectRetriever;
-            if (id)
-                this.path += "[" + id + "]";
-            if (!this.getId())
-                throw new Error("id is undefined");
+    var SubObjectPath = (function () {
+        function SubObjectPath(s) {
+            this.path = s || "";
         }
-        SerializationPath.prototype.clone = function () {
-            return new SerializationPath(this.objectRetriever, this.path);
+        SubObjectPath.prototype.clone = function () {
+            return new SubObjectPath(this.path);
         };
-        SerializationPath.prototype.getCollectionName = function () {
-            return this.path.split("[")[0];
-        };
-        SerializationPath.prototype.getObjectRetriever = function () {
-            return this.objectRetriever;
-        };
-        SerializationPath.prototype.getId = function () {
-            return this.path.split("[")[1].split("]")[0];
-        };
-        SerializationPath.prototype.forEachPathEntry = function (iterator) {
-            if (this.path.indexOf(".") != -1)
-                this.path.split("].")[1].split(".").forEach(function (entry) {
+        SubObjectPath.prototype.forEachPathEntry = function (iterator) {
+            if (this.path.length > 0)
+                this.path.split(".").forEach(function (entry) {
                     var propertyName = entry;
-                    var index = undefined;
+                    var id = undefined;
                     if (entry.indexOf("|") != -1) {
                         propertyName = entry.split("|")[0];
-                        index = entry.split("|")[1];
+                        id = entry.split("|")[1];
                     }
-                    iterator(propertyName, index);
+                    iterator(propertyName, id);
                 });
         };
-        SerializationPath.prototype.getSubObject = function (rootObject) {
+        SubObjectPath.prototype.getSubObject = function (rootObject) {
             var o = rootObject;
-            if (this.path.indexOf(".") != -1) {
-                this.path.split("].")[1].split(".").forEach(function (entry) {
-                    if (o) {
-                        if (entry.indexOf("|") != -1) {
-                            var p = entry.split("|");
-                            var arrayOrMap = o[p[0]];
-                            var id = p[1];
-                            var foundEntry = false;
-                            for (var j in arrayOrMap) {
-                                var arrayEntry = arrayOrMap[j];
-                                if (arrayEntry.getId() == id) {
-                                    o = arrayEntry;
-                                    foundEntry = true;
-                                    break;
-                                }
+            this.forEachPathEntry(function (propertyName, id) {
+                if (typeof o != "undefined") {
+                    o = o[propertyName];
+                    if (typeof o != "undefined" && typeof id != "undefined") {
+                        var foundEntry = false;
+                        for (var j in o) {
+                            var arrayEntry = o[j];
+                            if (arrayEntry.getId() == id) {
+                                o = arrayEntry;
+                                foundEntry = true;
+                                break;
                             }
-                            if (!foundEntry)
-                                o = undefined;
                         }
-                        else
-                            o = o[entry];
+                        if (!foundEntry)
+                            o = undefined;
                     }
-                });
-            }
+                }
+            });
             return o;
         };
-        SerializationPath.prototype.appendArrayOrMapLookup = function (name, id) {
-            this.path += "." + name + "|" + id;
+        SubObjectPath.prototype.appendArrayOrMapLookup = function (name, id) {
+            if (this.path.length > 0)
+                this.path += ".";
+            this.path += name + "|" + id;
         };
-        SerializationPath.prototype.appendPropertyLookup = function (name) {
-            this.path += "." + name;
+        SubObjectPath.prototype.appendPropertyLookup = function (name) {
+            if (this.path.length > 0)
+                this.path += ".";
+            this.path += name;
         };
-        SerializationPath.prototype.toString = function () {
+        SubObjectPath.prototype.toString = function () {
             return this.path;
         };
-        return SerializationPath;
+        return SubObjectPath;
     })();
-    omm.SerializationPath = SerializationPath;
+    omm.SubObjectPath = SubObjectPath;
 })(omm || (omm = {}));
-///<reference path="./Document.ts"/>
-///<reference path="./SerializationPath.ts"/>
 ///<reference path="../annotations/PersistenceAnnotation.ts"/>
 ///<reference path="../annotations/TypeClass.ts"/>
-///<reference path="./SerializationPath.ts"/>
 ///<reference path="./Document.ts"/>
+///<reference path="./SubObjectPath.ts"/>
 var omm;
 (function (omm) {
     var Serializer = (function () {
@@ -290,23 +272,24 @@ var omm;
                     var propertyDescriptor = Object.getOwnPropertyDescriptor(c.prototype, propertyName);
                     Object.defineProperty(c.prototype, propertyName, {
                         get: function () {
+                            console.log("Monkey patched getter " + propertyName);
                             var v;
                             if (propertyDescriptor && propertyDescriptor.get)
                                 v = propertyDescriptor.get.apply(this);
                             else
                                 v = this["_" + propertyName];
                             if (Serializer.needsLazyLoading(this, propertyName)) {
-                                var objectRetriever = this._serializationPath.getObjectRetriever();
+                                var objectRetriever = this._objectRetriever;
                                 if (typeof v == "string") {
                                     console.log("Lazy loading " + omm.className + "." + propertyName);
-                                    v = objectRetriever.getObject(v);
+                                    v = objectRetriever.getObject(v, this, propertyName);
                                     this[propertyName] = v;
                                 }
                                 else {
                                     console.log("Lazy loading array/map " + omm.className + "." + propertyName);
                                     for (var i in v) {
                                         var ele = v[i];
-                                        v[i] = objectRetriever.getObject(ele);
+                                        v[i] = objectRetriever.getObject(ele, this, propertyName);
                                     }
                                 }
                             }
@@ -335,15 +318,45 @@ var omm;
                     console.log("On Class " + omm.className + ": no lazy loader for " + propertyName);
             });
         };
-        Serializer.prototype.setSerializationPath = function (o, pPath) {
-            if (!Object.getOwnPropertyDescriptor(o, "_serializationPath")) {
-                Object.defineProperty(this, "_serializationPath", {
-                    configurable: false,
-                    enumerable: false,
-                    writable: true
-                });
-            }
-            o._serializationPath = pPath;
+        Serializer.forEachTypedObject = function (object, cb) {
+            this.forEachTypedObjectRecursive(object, object, new omm.SubObjectPath(), [], cb);
+        };
+        Serializer.forEachTypedObjectRecursive = function (rootObject, object, path, visited, cb) {
+            var that = this;
+            if (visited.indexOf(object) != -1)
+                return;
+            if (!object || typeof object != "object")
+                return;
+            visited.push(object);
+            cb(path, object);
+            var objectClass = omm.PersistenceAnnotation.getClass(object);
+            omm.PersistenceAnnotation.getTypedPropertyNames(objectClass).forEach(function (typedPropertyName) {
+                if (!omm.PersistenceAnnotation.isStoredAsForeignKeys(objectClass, typedPropertyName)) {
+                    var v = object[typedPropertyName];
+                    if (v) {
+                        if (omm.PersistenceAnnotation.isArrayOrMap(objectClass, typedPropertyName)) {
+                            for (var i in v) {
+                                var e = v[i];
+                                var subObjectPath = path.clone();
+                                if (e.getId && e.getId()) {
+                                    subObjectPath.appendArrayOrMapLookup(typedPropertyName, e.getId());
+                                }
+                                else {
+                                    subObjectPath.appendArrayOrMapLookup(typedPropertyName, i);
+                                }
+                                cb(subObjectPath, e);
+                                that.forEachTypedObjectRecursive(rootObject, e, subObjectPath, visited, cb);
+                            }
+                        }
+                        else {
+                            var subObjectPath = path.clone();
+                            subObjectPath.appendPropertyLookup(typedPropertyName);
+                            cb(subObjectPath, v);
+                            that.forEachTypedObjectRecursive(rootObject, v, subObjectPath, visited, cb);
+                        }
+                    }
+                }
+            });
         };
         Serializer.needsLazyLoading = function (object, propertyName) {
             var oc = omm.PersistenceAnnotation.getClass(object);
@@ -366,70 +379,9 @@ var omm;
             else
                 return false;
         };
-        Serializer.prototype._updateSerializationPaths = function (object, visited) {
-            var that = this;
-            if (!visited)
-                visited = [];
-            if (visited.indexOf(object) != -1)
-                return;
-            if (!object || typeof object != "object")
-                return;
-            visited.push(object);
-            var objectClass = omm.PersistenceAnnotation.getClass(object);
-            if (omm.PersistenceAnnotation.isRootEntity(objectClass)) {
-                if (!object._serializationPath) {
-                    if (object.getId())
-                        this.setSerializationPath(object, new omm.SerializationPath(this.objectRetriever, omm.PersistenceAnnotation.getCollectionName(objectClass), object.getId()));
-                }
-            }
-            if (!object._serializationPath)
-                return;
-            omm.PersistenceAnnotation.getTypedPropertyNames(objectClass).forEach(function (typedPropertyName) {
-                if (!omm.PersistenceAnnotation.isStoredAsForeignKeys(objectClass, typedPropertyName)) {
-                    var v = object[typedPropertyName];
-                    if (v) {
-                        if (omm.PersistenceAnnotation.isArrayOrMap(objectClass, typedPropertyName)) {
-                            for (var i in v) {
-                                var e = v[i];
-                                if (e.getId && e.getId()) {
-                                    that.setSerializationPath(e, object._serializationPath.clone());
-                                    e._serializationPath.appendArrayOrMapLookup(typedPropertyName, e.getId());
-                                    that._updateSerializationPaths(e, visited);
-                                }
-                                else
-                                    throw new Error("An element of the array '" + typedPropertyName + "' stored on the classe " + omm.className(objectClass) + " does not have an id. Total serialization path so far:" + object._serializationPath.toString());
-                            }
-                        }
-                        else {
-                            that.setSerializationPath(v, object._serializationPath.clone());
-                            v._serializationPath.appendPropertyLookup(typedPropertyName);
-                            that._updateSerializationPaths(v, visited);
-                        }
-                    }
-                }
-                else {
-                    if (!Serializer.needsLazyLoading(object, typedPropertyName)) {
-                        var v = object[typedPropertyName];
-                        if (v) {
-                            if (omm.PersistenceAnnotation.isArrayOrMap(objectClass, typedPropertyName)) {
-                                for (var i in v) {
-                                    var e = v[i];
-                                    if (!e._serializationPath) {
-                                        that._updateSerializationPaths(e, visited);
-                                    }
-                                }
-                            }
-                            else if (!v._serializationPath)
-                                that._updateSerializationPaths(v, visited);
-                        }
-                    }
-                }
-            });
-        };
         Serializer.prototype.toObject = function (doc, f) {
             var o = this.toObjectRecursive(doc, f);
-            this._updateSerializationPaths(o);
-            this.retrieveLocalKeys(o);
+            this.objectRetriever.postToObject(o);
             return o;
         };
         Serializer.prototype.toObjectRecursive = function (doc, f) {
@@ -466,9 +418,11 @@ var omm;
                     }
                 }
             }
+            o.objectRetriever = this.objectRetriever;
             return o;
         };
         Serializer.prototype.toDocument = function (object) {
+            this.objectRetriever.preToDocument(object);
             return this.toDocumentRecursive(object);
         };
         Serializer.prototype.toDocumentRecursive = function (object, rootClass, parentObject, propertyNameOnParentObject) {
@@ -529,47 +483,58 @@ var omm;
             }
             return doc;
         };
-        Serializer.prototype.retrieveLocalKeys = function (o, visited, rootObject) {
-            if (!o)
-                return;
-            if (!visited)
-                visited = [];
-            if (visited.indexOf(o) != -1)
-                return;
-            visited.push(o);
-            var that = this;
-            if (!rootObject)
-                rootObject = o;
-            var theClass = omm.PersistenceAnnotation.getClass(o);
-            var spp = rootObject._serializationPath;
-            if (spp) {
-                var that = this;
-                omm.PersistenceAnnotation.getTypedPropertyNames(theClass).forEach(function (properyName) {
-                    var isKeys = omm.PersistenceAnnotation.isStoredAsForeignKeys(theClass, properyName);
-                    var needsLazyLoading = omm.Serializer.needsLazyLoading(o, properyName);
-                    var isArray = omm.PersistenceAnnotation.isArrayOrMap(theClass, properyName);
-                    if (isKeys && needsLazyLoading && !isArray) {
-                        var key = o["_" + properyName];
-                        var pp = new omm.SerializationPath(this.objectRetriever, key);
-                        if (pp.getCollectionName() == spp.getCollectionName() && pp.getId() == spp.getId()) {
-                            o[properyName] = pp.getSubObject(rootObject);
-                        }
-                    }
-                    if (!omm.Serializer.needsLazyLoading(o, properyName)) {
-                        if (isArray) {
-                            for (var i in o[properyName]) {
-                                that.retrieveLocalKeys(o[properyName][i], visited, rootObject);
-                            }
-                        }
-                        else
-                            that.retrieveLocalKeys(o[properyName], visited, rootObject);
-                    }
-                });
-            }
-        };
         return Serializer;
     })();
     omm.Serializer = Serializer;
+})(omm || (omm = {}));
+/**
+ * Created by bert on 04.05.15.
+ */
+///<reference path="./Document.ts"/>
+///<reference path="../annotations/PersistenceAnnotation.ts"/>
+///<reference path="../annotations/TypeClass.ts"/>
+///<reference path="./Document.ts"/>
+///<reference path="./Serializer.ts"/>
+///<reference path="./ObjectRetriever.ts"/>
+///<reference path="./Persistable.ts"/>
+var omm;
+(function (omm) {
+    var LocalObjectRetriever = (function () {
+        function LocalObjectRetriever() {
+        }
+        LocalObjectRetriever.prototype.setQuietProperty = function (obj, propertyName, value) {
+            if (!Object.getOwnPropertyDescriptor(obj, propertyName)) {
+                Object.defineProperty(obj, propertyName, {
+                    configurable: false,
+                    enumerable: false,
+                    writable: true
+                });
+            }
+            obj[propertyName] = value;
+        };
+        LocalObjectRetriever.prototype.getId = function (o) {
+            var p = o["localPath"];
+            return p;
+        };
+        LocalObjectRetriever.prototype.getObject = function (s, parentObject, propertyName) {
+            var subObjectPath = new omm.SubObjectPath(s);
+            return subObjectPath.getSubObject(parentObject["rootObject"]);
+        };
+        LocalObjectRetriever.prototype.preToDocument = function (o) {
+            var that = this;
+            omm.Serializer.forEachTypedObject(o, function (path, subO) {
+                that.setQuietProperty(subO, "localPath", path.toString());
+            });
+        };
+        LocalObjectRetriever.prototype.postToObject = function (o) {
+            var that = this;
+            omm.Serializer.forEachTypedObject(o, function (path, o) {
+                that.setQuietProperty(o, "rootObject", o);
+            });
+        };
+        return LocalObjectRetriever;
+    })();
+    omm.LocalObjectRetriever = LocalObjectRetriever;
 })(omm || (omm = {}));
 
 module.exports = omm;

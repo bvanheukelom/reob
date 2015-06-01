@@ -18,14 +18,19 @@ Package.onUse(function(api) {
 	api.addFiles('serializer/Document.js');
 	api.addFiles('annotations/PersistenceAnnotation.js');
 	api.addFiles('annotations/TypeClass.js');
+
 	api.addFiles('serializer/ConstantObjectRetriever.js');
+	api.addFiles('serializer/Document.js');
+	api.addFiles('serializer/LocalObjectRetriever.js');
 	api.addFiles('serializer/ObjectRetriever.js');
 	api.addFiles('serializer/Persistable.js');
 	api.addFiles('serializer/Serializer.js');
-	api.addFiles('omm/SerializationPath.js');
-	api.addFiles('omm/MeteorObjectRetriever.js');
+	api.addFiles('serializer/SubObjectPath.js');
+
 	api.addFiles('omm/MeteorPersistence.js');
 	api.addFiles('omm/BaseCollection.js');
+	api.addFiles('omm/MeteorObjectRetriever.js');
+	api.addFiles('omm/SerializationPath.js');
 	api.export('Reflect', 'client');
 	api.export('Reflect', 'server');
 	api.export('omm', 'client');

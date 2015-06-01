@@ -177,7 +177,7 @@ module omm {
                             p.setId(id);
                         else
                             throw new Error("Unable to set Id after an object of class '"+omm.className(that.theClass)+"' was inserted into collection '"+that.name+"'. Either only call insert with objects that already have an ID or declare a 'setId' function on the class.");
-                        that.objectRetriever.updateSerializationPaths(p);
+                        that.objectRetriever.postToObject(p); // kind of the same thing?
                     }
                     else
                         console.log("error while inserting into "+this.name, e);

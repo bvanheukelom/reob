@@ -4,7 +4,6 @@
 module omm {
     export interface MeteorPersistable extends omm.Persistable{
         _serializationPath?:omm.SerializationPath;
-
     }
 
     export class MeteorObjectRetriever implements omm.ObjectRetriever {
@@ -40,8 +39,13 @@ module omm {
                 throw new Error("No collection found to retrieve object. Key:" + s);
         }
 
-        prepareForToDocument( o:Object ){
+        preToDocument( o:Object ){
             // noop
+        }
+
+        postToObject( o:Object ){
+            this.updateSerializationPaths(o);
+            this.retrieveLocalKeys(o);
         }
 
         private setSerializationPath( o:omm.MeteorPersistable, pPath:omm.SerializationPath ){
@@ -53,6 +57,7 @@ module omm {
                 });
             }
             o._serializationPath = pPath
+            o._objectRetriever = this;
         }
 
         // if I could I would make this package protected
@@ -75,6 +80,8 @@ module omm {
             }
             if (!object._serializationPath)
                 return; // we're done here
+
+
             PersistenceAnnotation.getTypedPropertyNames(objectClass).forEach(function (typedPropertyName:string) {
                 if (!PersistenceAnnotation.isStoredAsForeignKeys(objectClass, typedPropertyName)) {
                     //console.log("updating foreignkey property " + typedPropertyName);

@@ -1,6 +1,7 @@
 ///<reference path="../annotations/PersistenceAnnotation.ts"/>
 ///<reference path="../annotations/TypeClass.ts"/>
 ///<reference path="./Document.ts"/>
+///<reference path="./SubObjectPath.ts"/>
 
 module omm{
     export class Serializer {
@@ -25,7 +26,7 @@ module omm{
                     Object.defineProperty(c.prototype, propertyName, {
                         get: function ():any {
                             // TODO this doesnt work for subdocuments
-                            //console.log("Monkey patched getter "+propertyName);
+                            console.log("Monkey patched getter "+propertyName);
                             var v:any;
                             if (propertyDescriptor && propertyDescriptor.get)
                                 v = propertyDescriptor.get.apply(this);
@@ -35,7 +36,7 @@ module omm{
                                 var objectRetriever:omm.ObjectRetriever = (<omm.Persistable>this)._objectRetriever;
                                 if (typeof v == "string") {
                                     console.log("Lazy loading " + className + "." + propertyName);
-                                    v = objectRetriever.getObject(v);
+                                    v = objectRetriever.getObject(v, this, propertyName );
                                     this[propertyName] = v;
                                 }
                                 else  // TODO this could be improved so that it loads them when they are accessed rather than to load them all at once
@@ -44,7 +45,7 @@ module omm{
                                     for( var i in v )
                                     {
                                         var ele = v[i];
-                                        v[i] = objectRetriever.getObject(ele);
+                                        v[i] = objectRetriever.getObject(ele, this, propertyName );
                                     }
                                 }
                             }
@@ -74,6 +75,72 @@ module omm{
                 else
                     console.log("On Class " + className + ": no lazy loader for " + propertyName);
 
+            });
+        }
+
+        static forEachTypedObject(object:omm.Persistable, cb:(path:omm.SubObjectPath, object:omm.Persistable)=>void ){
+            this.forEachTypedObjectRecursive(object,object, new omm.SubObjectPath(), [], cb);
+
+        }
+
+        static  forEachTypedObjectRecursive(rootObject:omm.Persistable, object:omm.Persistable, path:omm.SubObjectPath, visited:Array<Persistable>,cb:(path:omm.SubObjectPath, object:omm.Persistable)=>void):void {
+            var that = this;
+            if (visited.indexOf(object) != -1)
+                return;
+            if (!object || typeof object != "object")
+                return;
+            visited.push(object);
+
+            cb(path, object);
+            var objectClass = omm.PersistenceAnnotation.getClass(object);
+            PersistenceAnnotation.getTypedPropertyNames(objectClass).forEach(function (typedPropertyName:string) {
+                if (!PersistenceAnnotation.isStoredAsForeignKeys(objectClass, typedPropertyName)) {
+                    //console.log("updating foreignkey property " + typedPropertyName);
+                    var v:Persistable = object[typedPropertyName];
+                    if (v) {
+                        if (PersistenceAnnotation.isArrayOrMap(objectClass, typedPropertyName)) {
+                            //console.log("updating foreignkey property " + typedPropertyName + " is array");
+                            for (var i in v) {
+                                var e = v[i];
+                                //console.log("updating persistnece path for isArrayOrMap " + typedPropertyName + "  key:" + i + " value:", e, "object: ", object);
+                                var subObjectPath = path.clone();
+                                if (e.getId && e.getId()) {
+                                    subObjectPath.appendArrayOrMapLookup(typedPropertyName, e.getId());
+                                } else {
+                                    subObjectPath.appendArrayOrMapLookup(typedPropertyName, i);
+                                }
+                                cb(subObjectPath, e);
+                                that.forEachTypedObjectRecursive(rootObject, e, subObjectPath, visited, cb);
+                            }
+                        }
+                        else {
+                            var subObjectPath = path.clone();
+                            subObjectPath.appendPropertyLookup(typedPropertyName);
+                            cb(subObjectPath, v);
+                            that.forEachTypedObjectRecursive(rootObject, v, subObjectPath, visited, cb);
+                        }
+                    }
+
+                }
+                //else {
+                //    //console.log( "foreign key "+typedPropertyName );
+                //    if (!Serializer.needsLazyLoading(object, typedPropertyName)) {
+                //        var v:MeteorPersistable = object[typedPropertyName];
+                //        if (v) {
+                //            if (PersistenceAnnotation.isArrayOrMap(objectClass, typedPropertyName)) {
+                //                for (var i in v) {
+                //                    var e = v[i];
+                //                    if (!e._serializationPath) {
+                //                        //console.log("non- foreign key array/map entry key:"+i+" value:"+e);
+                //                        that.updateSerializationPaths(e, visited);
+                //                    }
+                //                }
+                //            }
+                //            else if (!v._serializationPath)
+                //                that.updateSerializationPaths(v, visited);
+                //        }
+                //    }
+                //}
             });
         }
 
@@ -109,7 +176,7 @@ module omm{
 
         toObject<T extends omm.Persistable>(doc:Document, f:omm.TypeClass<T>):T {
             var o:T = this.toObjectRecursive(doc,f);
-
+            this.objectRetriever.postToObject(o);
             return o;
         }
 
@@ -159,7 +226,7 @@ module omm{
         }
 
         toDocument(object:omm.Persistable ):omm.Document {
-            this.objectRetriever.prepareForToDocument( object );
+            this.objectRetriever.preToDocument( object );
             return this.toDocumentRecursive(object);
         }
 
