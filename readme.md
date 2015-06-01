@@ -31,3 +31,10 @@ Todo:
 		add "isLocal" function to the objectRetriever and write tests for a different kind of key format
 
 		OR remove getId function and only pass collection name and id to the getObject function (the latter is a good idea anyways)
+
+		Currently multiple entities with the same name cause omm to break. Can this be fixed?
+
+		redefine the interface between the objectRetriever and the Serializer. The object retriever is currently too
+		tightly coupled to the omm.SerializationPath and this needs to be clarified.
+
+		Is the persistence path intrinsic to the serializer ?

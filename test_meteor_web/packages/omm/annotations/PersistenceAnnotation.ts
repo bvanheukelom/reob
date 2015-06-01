@@ -148,7 +148,7 @@ module omm
     // ---- typed properties ----
 
 
-        static getPropertyClass(f:Function, propertyName:string):TypeClass<Object> {
+        static getPropertyClass(f:Function, propertyName:string):TypeClass<any> {
             var className = PersistenceAnnotation.getPropertyProperty( f.prototype, propertyName, "type")
             if( !className )
                 return undefined;

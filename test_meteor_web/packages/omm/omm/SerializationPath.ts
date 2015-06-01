@@ -3,6 +3,8 @@ module omm {
     // TODO rename to "Path" or "SerializerPath". This has nothing to do with persistence.
     export class SerializationPath {
         private path:string;
+
+        // this is used when lazy loading properties
         private objectRetriever:omm.ObjectRetriever;
 
         constructor(objectRetriever:omm.ObjectRetriever, className:string, id?:string) {

@@ -21,8 +21,8 @@ Package.onUse(function(api) {
 	api.addFiles('serializer/ConstantObjectRetriever.js');
 	api.addFiles('serializer/ObjectRetriever.js');
 	api.addFiles('serializer/Persistable.js');
-	api.addFiles('serializer/SerializationPath.js');
 	api.addFiles('serializer/Serializer.js');
+	api.addFiles('omm/SerializationPath.js');
 	api.addFiles('omm/MeteorObjectRetriever.js');
 	api.addFiles('omm/MeteorPersistence.js');
 	api.addFiles('omm/BaseCollection.js');

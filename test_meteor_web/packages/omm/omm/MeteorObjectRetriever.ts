@@ -1,8 +1,14 @@
 /// <reference path="./../serializer/ObjectRetriever.ts" />
+///<reference path="./SerializationPath.ts"/>
 
 module omm {
+    export interface MeteorPersistable extends omm.Persistable{
+        _serializationPath?:omm.SerializationPath;
+
+    }
+
     export class MeteorObjectRetriever implements omm.ObjectRetriever {
-        getId(object:Persistable):string {
+        getId(object:MeteorPersistable):string {
             if (object._serializationPath)
                 return object._serializationPath.toString();
             else {
@@ -33,6 +39,140 @@ module omm {
             else
                 throw new Error("No collection found to retrieve object. Key:" + s);
         }
+
+        prepareForToDocument( o:Object ){
+            // noop
+        }
+
+        private setSerializationPath( o:omm.MeteorPersistable, pPath:omm.SerializationPath ){
+            if (!Object.getOwnPropertyDescriptor(o, "_serializationPath")) {
+                Object.defineProperty(this, "_serializationPath", {
+                    configurable: false,
+                    enumerable: false,
+                    writable: true
+                });
+            }
+            o._serializationPath = pPath
+        }
+
+        // if I could I would make this package protected
+        updateSerializationPaths(object:MeteorPersistable, visited?:Array<Persistable>):void {
+            var that = this;
+            if (!visited)
+                visited = [];
+            if (visited.indexOf(object) != -1)
+                return;
+            if( !object || typeof object!="object" )
+                return;
+
+            visited.push(object);
+            var objectClass = PersistenceAnnotation.getClass(object);
+            if (PersistenceAnnotation.isRootEntity(objectClass)) {
+                if (!object._serializationPath) {
+                    if ( object.getId())
+                        this.setSerializationPath( object, new omm.SerializationPath(this, PersistenceAnnotation.getCollectionName(objectClass), object.getId()) );
+                }
+            }
+            if (!object._serializationPath)
+                return; // we're done here
+            PersistenceAnnotation.getTypedPropertyNames(objectClass).forEach(function (typedPropertyName:string) {
+                if (!PersistenceAnnotation.isStoredAsForeignKeys(objectClass, typedPropertyName)) {
+                    //console.log("updating foreignkey property " + typedPropertyName);
+                    var v:MeteorPersistable = object[typedPropertyName];
+                    if (v) {
+                        if (PersistenceAnnotation.isArrayOrMap(objectClass, typedPropertyName)) {
+                            //console.log("updating foreignkey property " + typedPropertyName + " is array");
+                            for (var i in v) {
+                                var e = v[i];
+                                //console.log("updating persistnece path for isArrayOrMap " + typedPropertyName + "  key:" + i + " value:", e, "object: ", object);
+                                if (e.getId && e.getId()) {
+                                    that.setSerializationPath(e, object._serializationPath.clone());
+                                    e._serializationPath.appendArrayOrMapLookup(typedPropertyName, e.getId());
+                                    that.updateSerializationPaths(e, visited);
+                                }
+                                else
+                                    throw new Error("An element of the array '" + typedPropertyName + "' stored on the classe " + className(objectClass) + " does not have an id. Total serialization path so far:" + object._serializationPath.toString());
+                            }
+                        }
+                        else {
+                            //console.log("updating foreignkey property direct property " + typedPropertyName);
+                            that.setSerializationPath( v, object._serializationPath.clone() );
+                            v._serializationPath.appendPropertyLookup(typedPropertyName);
+                            that.updateSerializationPaths(v, visited);
+                        }
+                    }
+
+                }
+                else {
+                    //console.log( "foreign key "+typedPropertyName );
+                    if (!Serializer.needsLazyLoading(object, typedPropertyName)) {
+                        var v:MeteorPersistable = object[typedPropertyName];
+                        if (v) {
+                            if (PersistenceAnnotation.isArrayOrMap(objectClass, typedPropertyName)) {
+                                for (var i in v) {
+                                    var e = v[i];
+                                    if (!e._serializationPath) {
+                                        //console.log("non- foreign key array/map entry key:"+i+" value:"+e);
+                                        that.updateSerializationPaths(e, visited);
+                                    }
+                                }
+                            }
+                            else if (!v._serializationPath)
+                                that.updateSerializationPaths(v, visited);
+                        }
+                    }
+                }
+            });
+        }
+
+
+        retrieveLocalKeys(o:omm.MeteorPersistable, visited?:Array<Object>, rootObject?:omm.MeteorPersistable):void {
+            if( !o )
+                return;
+            if( !visited )
+                visited = [];
+            if( visited.indexOf(o)!=-1 )
+                return;
+            visited.push(o);
+            var that = this;
+            if( !rootObject )
+                rootObject = o;
+            var theClass = omm.PersistenceAnnotation.getClass(o);
+            //console.log("Retrieving local keys for ",o," class: ", theClass);
+            var spp = rootObject._serializationPath;
+            if( spp ){ // can only retrieve local keys if there is a definition of what "local" means.
+                var that = this;
+                omm.PersistenceAnnotation.getTypedPropertyNames(theClass).forEach( function( properyName:string ){
+                    //console.log("Retrieviing local keys for property "+properyName);
+                    var isKeys = omm.PersistenceAnnotation.isStoredAsForeignKeys(theClass, properyName);
+                    var needsLazyLoading = omm.Serializer.needsLazyLoading(o, properyName);
+                    var isArray = omm.PersistenceAnnotation.isArrayOrMap(theClass, properyName );
+                    if( isKeys && needsLazyLoading && !isArray ){
+                        var key:string = o["_"+properyName];
+
+                        // this is where it is determined if an object is local
+                        var pp:omm.SerializationPath = new omm.SerializationPath(this, key);
+                        if( pp.getCollectionName()==spp.getCollectionName() && pp.getId()==spp.getId() ) {
+                            //console.log("found a local key :"+properyName);
+                            o[properyName] = pp.getSubObject(rootObject);
+                        }
+                    }
+                    // TODO support arrays
+                    if(!omm.Serializer.needsLazyLoading(o, properyName) )
+                    {
+                        if( isArray )
+                        {
+                            for( var i in o[properyName] ) {
+                                that.retrieveLocalKeys(o[properyName][i], visited, rootObject);
+                            }
+                        }
+                        else
+                            that.retrieveLocalKeys(o[properyName], visited, rootObject);
+                    }
+                } );
+            }
+        }
+
 
         // sets all references that are within the root object
 

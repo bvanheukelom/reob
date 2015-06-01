@@ -14,8 +14,7 @@ module omm {
         getObject(s:string):Object {
             return this.value;
         }
-        retrieveLocalKeys(o:Object):void{
-
+        prepareForToDocument (o:Object){
         }
     }
 }

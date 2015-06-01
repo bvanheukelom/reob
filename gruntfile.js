@@ -48,7 +48,7 @@ module.exports = function (grunt) {
 				out:"build/amd/omm/omm.js"
 			},
 			test : {
-				src: ["test_meteor_web/packages/testclasses/**/*.ts","test_meteor_web/tests/**/*.ts",],
+				src: ["test_meteor_web/packages/testclasses/**/*.ts"],
 				options:{
 				}
 			}
