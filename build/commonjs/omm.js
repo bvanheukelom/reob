@@ -418,7 +418,7 @@ var omm;
                     }
                 }
             }
-            o.objectRetriever = this.objectRetriever;
+            o._objectRetriever = this.objectRetriever;
             return o;
         };
         Serializer.prototype.toDocument = function (object) {

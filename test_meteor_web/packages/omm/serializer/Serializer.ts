@@ -130,21 +130,24 @@ module omm{
                 //            if (PersistenceAnnotation.isArrayOrMap(objectClass, typedPropertyName)) {
                 //                for (var i in v) {
                 //                    var e = v[i];
-                //                    if (!e._serializationPath) {
-                //                        //console.log("non- foreign key array/map entry key:"+i+" value:"+e);
-                //                        that.updateSerializationPaths(e, visited);
+                //                    var subObjectPath = path.clone();
+                //                    if (e.getId && e.getId()) {
+                //                        subObjectPath.appendArrayOrMapLookup(typedPropertyName, e.getId());
+                //                    } else {
+                //                        subObjectPath.appendArrayOrMapLookup(typedPropertyName, i);
                 //                    }
+                //                    cb(subObjectPath, v);
                 //                }
                 //            }
                 //            else if (!v._serializationPath)
                 //                that.updateSerializationPaths(v, visited);
                 //        }
+                //    }else{
+                //
                 //    }
                 //}
             });
         }
-
-
 
         static needsLazyLoading(object:Persistable, propertyName:string) {
             // TODO inheritance
@@ -181,7 +184,7 @@ module omm{
         }
 
         private toObjectRecursive<T extends omm.Persistable>(doc:Document, f:omm.TypeClass<T>):T {
-            var o:any;
+            var o:T;
             if(typeof doc=="function")
                 throw new Error("Error in 'toObject'. doc is a function.");
 
@@ -221,7 +224,7 @@ module omm{
                     }
                 }
             }
-            o.objectRetriever = this.objectRetriever;
+            o._objectRetriever = this.objectRetriever;
             return o;
         }
 
