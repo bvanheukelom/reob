@@ -264,7 +264,7 @@ module omm{
             var objectClass = omm.PersistenceAnnotation.getClass(object);
             for (var property in object) {
                 var value = object[property];
-                if (value !== undefined && property != "_serializationPath") {
+                if (value !== undefined && property != "_objectRetriever") {
                     // primitives
                     if( omm.PersistenceAnnotation.getPropertyClass(objectClass,property) ) {
 

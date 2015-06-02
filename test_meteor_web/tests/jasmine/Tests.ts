@@ -453,4 +453,7 @@ describe("The persistence thing", function(){
         expect( otherCar instanceof Tests.TestCar ).toBeTruthy();
     });
 
+
+    // write test that 'null' values for objects and properties can be serialized and deserialized
+
 });
