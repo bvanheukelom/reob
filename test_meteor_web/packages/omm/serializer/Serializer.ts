@@ -149,6 +149,16 @@ module omm{
                 //}
             });
         }
+        static  setNonEnumerablePropertyProperty( obj:Object, propertyName:string, value:any ):void{
+            if (!Object.getOwnPropertyDescriptor(obj, propertyName)) {
+                Object.defineProperty(obj, propertyName, {
+                    configurable: false,
+                    enumerable: false,
+                    writable: true
+                });
+            }
+            obj[propertyName] = value;
+        }
 
         static needsLazyLoading(object:Persistable, propertyName:string) {
             // TODO inheritance
@@ -265,7 +275,7 @@ module omm{
             var objectClass = omm.PersistenceAnnotation.getClass(object);
             for (var property in object) {
                 var value = object[property];
-                if (value !== undefined && property != "_objectRetriever") {
+                if (value !== undefined && !omm.PersistenceAnnotation.isIgnored(objectClass, property)) {
                     // primitives
                     if( omm.PersistenceAnnotation.getPropertyClass(objectClass,property) ) {
 

@@ -13,6 +13,7 @@ declare module omm {
     function Wrap(t: Function, functionName: string, objectDescriptor: any): void;
     function ArrayOrMap(typeClassName: string): (targetPrototypeObject: Function, propertyName: string) => void;
     function AsForeignKeys(targetPrototypeObject: Function, propertyName: string): void;
+    function Ignore(targetPrototypeObject: Function, propertyName: string): void;
     function AsForeignKey(targetPrototypeObject: Function, propertyName: string): void;
     function Type(typeClassName: string): (targetPrototypeObject: Function, propertyName: string) => void;
     function className(fun: omm.TypeClass<Object>): string;
@@ -30,6 +31,7 @@ declare module omm {
         static setPropertyProperty(targetPrototypeObject: Function, propertyName: string, property: string, value: any): void;
         static getPropertyProperty(targetPrototypeObject: Function, propertyName: string, propertyProperty: string): any;
         static isStoredAsForeignKeys(typeClass: Function, propertyName: string): boolean;
+        static isIgnored(typeClass: Function, propertyName: string): boolean;
         static getWrappedFunctionNames<T extends Object>(f: TypeClass<T>): Array<string>;
         static getPropertyNamesByMetaData(o: any, metaData: string): string[];
     }
@@ -71,6 +73,7 @@ declare module omm {
         private static installLazyLoaderGetterSetters(c);
         static forEachTypedObject(object: omm.Persistable, cb: (path: omm.SubObjectPath, object: omm.Persistable) => void): void;
         static forEachTypedObjectRecursive(rootObject: omm.Persistable, object: omm.Persistable, path: omm.SubObjectPath, visited: Array<Persistable>, cb: (path: omm.SubObjectPath, object: omm.Persistable) => void): void;
+        static setNonEnumerablePropertyProperty(obj: Object, propertyName: string, value: any): void;
         static needsLazyLoading(object: Persistable, propertyName: string): boolean;
         toObject<T extends omm.Persistable>(doc: Document, f: omm.TypeClass<T>): T;
         private toObjectRecursive<T>(doc, f);

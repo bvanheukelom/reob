@@ -64,6 +64,10 @@ module omm
     {
         return PersistenceAnnotation.setPropertyProperty(targetPrototypeObject, propertyName, "askeys", true);
     }
+    export function Ignore( targetPrototypeObject:Function, propertyName:string  )
+    {
+        return PersistenceAnnotation.setPropertyProperty(targetPrototypeObject, propertyName, "ignore", true);
+    }
 
     // for grammar reasons
     export function AsForeignKey( targetPrototypeObject:Function, propertyName:string  )
@@ -197,6 +201,11 @@ module omm
         static isStoredAsForeignKeys( typeClass:Function, propertyName:string ):boolean
         {
             return PersistenceAnnotation.getPropertyProperty(typeClass.prototype, propertyName, "askeys");
+        }
+
+        static isIgnored( typeClass:Function, propertyName:string ):boolean
+        {
+            return PersistenceAnnotation.getPropertyProperty(typeClass.prototype, propertyName, "ignore");
         }
 
 

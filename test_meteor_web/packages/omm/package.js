@@ -1,6 +1,6 @@
 Package.describe({
   name: 'bertundmax:omm',
-  version: '0.0.3',
+  version: '0.0.4',
   // Brief, one-line summary of the package.
   summary: 'Object meteor mapper. Maps between rich objects and documents.',
   // URL to the Git repository containing the source code for this package.

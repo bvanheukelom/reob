@@ -12,5 +12,8 @@ module Tests{
 
         brand:string;
 
+        @omm.Ignore
+        temperature:string;
+
     }
 }

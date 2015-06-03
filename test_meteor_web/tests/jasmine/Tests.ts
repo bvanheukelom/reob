@@ -411,6 +411,10 @@ describe("The persistence thing", function(){
         expect( doc.brand ).toBe("VW");
         expect( doc.wheel.radius ).toBe(10);
         expect( doc instanceof Tests.TestCar ).toBeFalsy();
+        // also there are no underscrored properties in there
+        for( var propertyName in car ){
+            expect( ["wheel", "wheels", "brand"].indexOf(propertyName)!=-1 ).toBeTruthy();
+        }
     });
 
     it("serializes local objects", function(){
@@ -427,6 +431,21 @@ describe("The persistence thing", function(){
         expect( otherCar.wheel.radius ).toBe(10);
         expect( otherCar instanceof Tests.TestCar ).toBeTruthy();
 
+    });
+
+    it("doesnt serialize ignored properties", function(){
+        var car = new Tests.TestCar();
+        car.brand = "VW";
+        car.temperature ="hot";
+        var s  = new omm.Serializer( new omm.LocalObjectRetriever() );
+        var doc:any = s.toDocument(car);
+        expect( doc.brand ).toBe("VW");
+        expect( doc.temperature ).toBeUndefined();
+    });
+
+    it("marks properties as ignored", function(){
+        debugger
+        expect( omm.PersistenceAnnotation.isIgnored(Tests.TestCar,"temperature")).toBeTruthy();
     });
 
     it("deserializes local objects with arrays", function(){

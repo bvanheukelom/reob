@@ -7,7 +7,6 @@ var omm;
         if (typeof p1 == "string") {
             return function (target) {
                 var typeClass = target;
-                console.log("Entity(<class>) " + className(typeClass) + " with collection name:" + p1);
                 Reflect.defineMetadata("persistence:collectionName", p1, typeClass);
                 Reflect.defineMetadata("persistence:entity", true, typeClass);
                 omm.entityClasses[className(typeClass)] = typeClass;
@@ -16,7 +15,6 @@ var omm;
         if (typeof p1 == "boolean") {
             return function (target) {
                 var typeClass = target;
-                console.log("Entity(true) " + className(typeClass) + " with collection name:", className(typeClass));
                 if (p1)
                     Reflect.defineMetadata("persistence:collectionName", className(typeClass), typeClass);
                 Reflect.defineMetadata("persistence:entity", true, typeClass);
@@ -25,7 +23,6 @@ var omm;
         }
         else if (typeof p1 == "function") {
             var typeClass = p1;
-            console.log("Entity() " + className(typeClass));
             Reflect.defineMetadata("persistence:entity", true, typeClass);
             omm.entityClasses[className(typeClass)] = typeClass;
         }
@@ -37,7 +34,6 @@ var omm;
     omm.Wrap = Wrap;
     function ArrayOrMap(typeClassName) {
         return function (targetPrototypeObject, propertyName) {
-            console.log("  " + propertyName + " as collection of " + typeClassName);
             PersistenceAnnotation.setPropertyProperty(targetPrototypeObject, propertyName, "type", typeClassName);
             PersistenceAnnotation.setPropertyProperty(targetPrototypeObject, propertyName, "arrayOrMap", true);
         };
@@ -47,13 +43,16 @@ var omm;
         return PersistenceAnnotation.setPropertyProperty(targetPrototypeObject, propertyName, "askeys", true);
     }
     omm.AsForeignKeys = AsForeignKeys;
+    function Ignore(targetPrototypeObject, propertyName) {
+        return PersistenceAnnotation.setPropertyProperty(targetPrototypeObject, propertyName, "ignore", true);
+    }
+    omm.Ignore = Ignore;
     function AsForeignKey(targetPrototypeObject, propertyName) {
         return AsForeignKeys(targetPrototypeObject, propertyName);
     }
     omm.AsForeignKey = AsForeignKey;
     function Type(typeClassName) {
         return function (targetPrototypeObject, propertyName) {
-            console.log("  " + propertyName + " as " + typeClassName);
             PersistenceAnnotation.setPropertyProperty(targetPrototypeObject, propertyName, "type", typeClassName);
         };
     }
@@ -144,6 +143,9 @@ var omm;
         };
         PersistenceAnnotation.isStoredAsForeignKeys = function (typeClass, propertyName) {
             return PersistenceAnnotation.getPropertyProperty(typeClass.prototype, propertyName, "askeys");
+        };
+        PersistenceAnnotation.isIgnored = function (typeClass, propertyName) {
+            return PersistenceAnnotation.getPropertyProperty(typeClass.prototype, propertyName, "ignore");
         };
         PersistenceAnnotation.getWrappedFunctionNames = function (f) {
             return PersistenceAnnotation.getPropertyNamesByMetaData(f.prototype, "persistence:wrap");
@@ -355,6 +357,16 @@ var omm;
                 }
             });
         };
+        Serializer.setNonEnumerablePropertyProperty = function (obj, propertyName, value) {
+            if (!Object.getOwnPropertyDescriptor(obj, propertyName)) {
+                Object.defineProperty(obj, propertyName, {
+                    configurable: false,
+                    enumerable: false,
+                    writable: true
+                });
+            }
+            obj[propertyName] = value;
+        };
         Serializer.needsLazyLoading = function (object, propertyName) {
             var oc = omm.PersistenceAnnotation.getClass(object);
             if (omm.PersistenceAnnotation.isStoredAsForeignKeys(oc, propertyName)) {
@@ -450,7 +462,7 @@ var omm;
             var objectClass = omm.PersistenceAnnotation.getClass(object);
             for (var property in object) {
                 var value = object[property];
-                if (value !== undefined && property != "_objectRetriever") {
+                if (value !== undefined && !omm.PersistenceAnnotation.isIgnored(objectClass, property)) {
                     if (omm.PersistenceAnnotation.getPropertyClass(objectClass, property)) {
                         if (omm.PersistenceAnnotation.isArrayOrMap(objectClass, property)) {
                             var result;
