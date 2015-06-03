@@ -427,7 +427,7 @@ var omm;
                     }
                 }
             }
-            o._objectRetriever = this.objectRetriever;
+            omm.Serializer.setNonEnumerablePropertyProperty(o, "_objectRetriever", this.objectRetriever);
             return o;
         };
         Serializer.prototype.toDocument = function (object) {

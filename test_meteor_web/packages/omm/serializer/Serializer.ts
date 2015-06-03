@@ -235,7 +235,8 @@ module omm{
                     }
                 }
             }
-            o._objectRetriever = this.objectRetriever;
+            omm.Serializer.setNonEnumerablePropertyProperty(o, "_objectRetriever", this.objectRetriever);
+            //o._objectRetriever = this.objectRetriever;
             return o;
         }
 

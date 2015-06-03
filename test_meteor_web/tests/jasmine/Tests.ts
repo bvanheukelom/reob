@@ -406,13 +406,17 @@ describe("The persistence thing", function(){
         car.wheel.car = car;
         car.wheel.radius = 10;
         var s  = new omm.Serializer( new omm.LocalObjectRetriever() );
-        var doc:any = s.toDocument(car);
+        var document:any = s.toDocument(car);
+        var otherCar = s.toObject(document, Tests.TestCar);
+        var doc:any = s.toDocument(otherCar);
+
         expect( doc ).toBeDefined();
         expect( doc.brand ).toBe("VW");
         expect( doc.wheel.radius ).toBe(10);
         expect( doc instanceof Tests.TestCar ).toBeFalsy();
-        // also there are no underscrored properties in there
-        for( var propertyName in car ){
+
+        // also there are no added properties in there
+        for( var propertyName in otherCar ){
             expect( ["wheel", "wheels", "brand"].indexOf(propertyName)!=-1 ).toBeTruthy();
         }
     });
