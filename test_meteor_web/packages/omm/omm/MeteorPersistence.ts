@@ -41,14 +41,14 @@ module omm {
 
         static wrapClass<T extends Persistable>(c:TypeClass<T>) {
             var className = omm.className(c);
-            console.log("Wrapping transactional functions for class " + className);
+            //console.log("Wrapping transactional functions for class " + className);
             // iterate over all properties of the prototype. this is where the functions are.
             //var that = this;
             omm.PersistenceAnnotation.getWrappedFunctionNames(c).forEach(function (functionName) {
                 var domainObjectFunction = c.prototype[functionName];
                 // this is executed last. it wraps the original function into a collection.update
                 MeteorPersistence.monkeyPatch(c.prototype, functionName, function (originalFunction, ...args:string[]) {
-                    console.log("updating object:",this, "original function :"+originalFunction);
+                    //console.log("updating object:",this, "original function :"+originalFunction);
                     var _serializationPath:omm.SerializationPath = this._serializationPath;
                     var collection:omm.BaseCollection<any> = omm.MeteorPersistence.collections[_serializationPath.getCollectionName()];
                     if( MeteorPersistence.wrappedCallInProgress || Meteor.isServer )
@@ -56,17 +56,17 @@ module omm {
                         var result = collection.update(_serializationPath.getId(), function (o) {
                             var subObject = _serializationPath.getSubObject(o);
                             var r2 =  originalFunction.apply(subObject, args);
-                            console.log("called original function with result :",r2);
+                            //console.log("called original function with result :",r2);
                             return r2;
                         });
-                        console.log("Result of verified update :"+result );
+                        //console.log("Result of verified update :"+result );
                         return result;
 
                     }
                     else
                     {
                         var r = originalFunction.apply(this, args);
-                        console.log("Result of simple function call :"+r );
+                        //console.log("Result of simple function call :"+r );
                         return r
 
                     }
@@ -131,9 +131,9 @@ module omm {
                         var id = objectRetriever.getId(this);
 
                         // If this is object is part of persistence and no wrapped call is in progress ...
-                        console.log("Meteor call " + propertyName + " with arguments ", originalArguments, " registered callback:" + MeteorPersistence.nextCallback);
+                        //console.log("Meteor call " + propertyName + " with arguments ", originalArguments, " registered callback:" + MeteorPersistence.nextCallback);
                         Meteor.call(meteorMethodName, id, args, classNames, !!callback, function (error, result) {
-                            console.log("Returned from meteor method '" + meteorMethodName + "' with result:", result, "_", callback, "_", MeteorPersistence.nextCallback);
+                            //console.log("Returned from meteor method '" + meteorMethodName + "' with result:", result, "_", callback, "_", MeteorPersistence.nextCallback);
                             if (!error) {
                                 if (argumentSerializer && result.className) {
                                     var resultClass = omm.PersistenceAnnotation.getEntityClassByName(result.className);
@@ -143,10 +143,10 @@ module omm {
 
                             }
                             if (callback) {
-                                console.log("calling model callback");
+                                //console.log("calling model callback");
                                 callback(error, result ? result.result : undefined);
                             } else if (MeteorPersistence.nextCallback) {
-                                console.log("calling WithCallback-callback");
+                                //console.log("calling WithCallback-callback");
                                 var cb = MeteorPersistence.nextCallback;
                                 MeteorPersistence.nextCallback = undefined;
                                 cb(error, result ? result.result : undefined);
@@ -158,7 +158,7 @@ module omm {
             if( !serverOnly || Meteor.isServer ) {
                 var m = {};
                 m[meteorMethodName] = function (id:string, args:any[], classNames:string[], appendCallback:boolean) {
-                    console.log("Meteor method invoked: "+meteorMethodName+" id:"+id+" appendCallback:"+appendCallback+" args:", args, " classNames:"+classNames);
+                    //console.log("Meteor method invoked: "+meteorMethodName+" id:"+id+" appendCallback:"+appendCallback+" args:", args, " classNames:"+classNames);
                     check(id, String);
                     check(args, Array);
                     check(classNames, Array);
@@ -184,7 +184,7 @@ module omm {
 
                         var resultObj:any = {};
                         if (appendCallback) {
-                            console.log(" Meteor method call. Calling function with callback on ", object);
+                            //console.log(" Meteor method call. Calling function with callback on ", object);
                             var syncFunction = Meteor.wrapAsync(function (cb) {
                                 args.push(cb);
                                 originalFunction.apply(object, args);
@@ -192,7 +192,7 @@ module omm {
                             resultObj.result = syncFunction();
                         }
                         else {
-                            console.log("Meteor method call. Calling function without callback");
+                            //console.log("Meteor method call. Calling function without callback");
                             resultObj.result = originalFunction.apply(object, args);
                         }
                         if( argumentSerializer ){
@@ -201,7 +201,7 @@ module omm {
                                 resultObj.result = argumentSerializer.toDocument(resultObj.result);
                         }
 
-                        console.log("Returning from meteor method '"+meteorMethodName+"' with result:", resultObj);
+                        //console.log("Returning from meteor method '"+meteorMethodName+"' with result:", resultObj);
 
                         return resultObj;
                     } finally {

@@ -130,7 +130,7 @@ module omm {
                 documentToSave.serial = currentSerial+1;
 
                 // update the collection
-                console.log("writing document ", documentToSave);
+                //console.log("writing document ", documentToSave);
                 var updatedDocumentCount = this.meteorCollection.update({
                     _id:id,
                     serial:currentSerial
@@ -144,7 +144,7 @@ module omm {
                     throw new Meteor.Error( "verifiedUpdate should only update one document");
                 else
                 {
-                    console.log("rerunning verified update ");
+                    //console.log("rerunning verified update ");
                     // we need to do this again
                 }
             }
@@ -167,20 +167,21 @@ module omm {
                 //    doc._id = ;
 
                 doc.serial = 0;
-                console.log( "inserting document: ", doc);
+                //console.log( "inserting document: ", doc);
                 var that = this;
                 function afterwards(e:any, id?:string){
                     if( !e )
                     {
-                        console.log( "inserted into '"+that.getName()+"' new id:"+id);
+                        //console.log( "inserted into '"+that.getName()+"' new id:"+id);
                         if( typeof p.setId == "function")
                             p.setId(id);
                         else
                             throw new Error("Unable to set Id after an object of class '"+omm.className(that.theClass)+"' was inserted into collection '"+that.name+"'. Either only call insert with objects that already have an ID or declare a 'setId' function on the class.");
                         that.objectRetriever.postToObject(p); // kind of the same thing?
                     }
-                    else
-                        console.log("error while inserting into "+this.name, e);
+                    else{
+                        //console.log("error while inserting into "+this.name, e);
+                    }
                     if( callback )
                         callback( e,id );
                 }

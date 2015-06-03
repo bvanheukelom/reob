@@ -15,7 +15,7 @@ module omm
         {
             return function (target:Function) {
                 var typeClass:omm.TypeClass<Object> = <omm.TypeClass<Object>>target;
-                console.log("Entity(<class>) "+className(typeClass)+" with collection name:"+p1);
+                //console.log("Entity(<class>) "+className(typeClass)+" with collection name:"+p1);
                 Reflect.defineMetadata("persistence:collectionName", p1, typeClass);
                 Reflect.defineMetadata("persistence:entity", true, typeClass);
                 omm.entityClasses[className(typeClass)]=typeClass;
@@ -25,7 +25,7 @@ module omm
         {
             return function (target:Function) {
                 var typeClass:TypeClass<Object> = <omm.TypeClass<Object>>target;
-                console.log("Entity(true) "+className(typeClass)+" with collection name:", className(typeClass));
+                //console.log("Entity(true) "+className(typeClass)+" with collection name:", className(typeClass));
                 if( p1 )
                     Reflect.defineMetadata("persistence:collectionName", className(typeClass), typeClass);
                 Reflect.defineMetadata("persistence:entity", true, typeClass);
@@ -39,7 +39,7 @@ module omm
             //PersistencePrivate.collectionRootClasses.push(tc);
             var typeClass:TypeClass<Object> = <TypeClass<Object>>p1;
 
-            console.log("Entity() "+className(typeClass));
+            //console.log("Entity() "+className(typeClass));
             //Reflect.defineMetadata("persistence:collectionName", PersistenceAnnotation.className(typeClass), typeClass);
             Reflect.defineMetadata("persistence:entity", true, typeClass);
             omm.entityClasses[className(typeClass)]=typeClass;
@@ -54,7 +54,7 @@ module omm
     export function ArrayOrMap( typeClassName:string )
     {
         return function (targetPrototypeObject: Function, propertyName:string) {
-            console.log("  "+propertyName+" as collection of "+typeClassName);
+            //console.log("  "+propertyName+" as collection of "+typeClassName);
             PersistenceAnnotation.setPropertyProperty( targetPrototypeObject, propertyName, "type", typeClassName);
             PersistenceAnnotation.setPropertyProperty( targetPrototypeObject, propertyName, "arrayOrMap", true);
         };
@@ -73,7 +73,7 @@ module omm
 
     export function Type(typeClassName:string) {
         return function (targetPrototypeObject: Function, propertyName:string) {
-            console.log("  "+propertyName+" as "+typeClassName);
+            //console.log("  "+propertyName+" as "+typeClassName);
             PersistenceAnnotation.setPropertyProperty( targetPrototypeObject, propertyName, "type", typeClassName);
         };
     }

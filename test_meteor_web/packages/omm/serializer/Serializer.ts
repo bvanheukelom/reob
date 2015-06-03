@@ -26,7 +26,7 @@ module omm{
                     Object.defineProperty(c.prototype, propertyName, {
                         get: function ():any {
                             // TODO this doesnt work for subdocuments
-                            console.log("Monkey patched getter "+propertyName);
+                            //console.log("Monkey patched getter "+propertyName);
                             var v:any;
                             if (propertyDescriptor && propertyDescriptor.get)
                                 v = propertyDescriptor.get.apply(this);
@@ -35,13 +35,13 @@ module omm{
                             if (Serializer.needsLazyLoading(this, propertyName)) {
                                 var objectRetriever:omm.ObjectRetriever = (<omm.Persistable>this)._objectRetriever;
                                 if (typeof v == "string") {
-                                    console.log("Lazy loading " + className + "." + propertyName);
+                                    //console.log("Lazy loading " + className + "." + propertyName);
                                     v = objectRetriever.getObject(v, this, propertyName );
                                     this[propertyName] = v;
                                 }
                                 else  // TODO this could be improved so that it loads them when they are accessed rather than to load them all at once
                                 {
-                                    console.log("Lazy loading array/map " + className + "." + propertyName);
+                                    //console.log("Lazy loading array/map " + className + "." + propertyName);
                                     for( var i in v )
                                     {
                                         var ele = v[i];
@@ -72,8 +72,9 @@ module omm{
                         enumerable: propertyDescriptor ? propertyDescriptor.enumerable : true
                     });
                 }
-                else
-                    console.log("On Class " + className + ": no lazy loader for " + propertyName);
+                else{
+                    //console.log("On Class " + className + ": no lazy loader for " + propertyName);
+                }
 
             });
         }

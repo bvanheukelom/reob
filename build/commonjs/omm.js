@@ -272,7 +272,6 @@ var omm;
                     var propertyDescriptor = Object.getOwnPropertyDescriptor(c.prototype, propertyName);
                     Object.defineProperty(c.prototype, propertyName, {
                         get: function () {
-                            console.log("Monkey patched getter " + propertyName);
                             var v;
                             if (propertyDescriptor && propertyDescriptor.get)
                                 v = propertyDescriptor.get.apply(this);
@@ -281,12 +280,10 @@ var omm;
                             if (Serializer.needsLazyLoading(this, propertyName)) {
                                 var objectRetriever = this._objectRetriever;
                                 if (typeof v == "string") {
-                                    console.log("Lazy loading " + omm.className + "." + propertyName);
                                     v = objectRetriever.getObject(v, this, propertyName);
                                     this[propertyName] = v;
                                 }
                                 else {
-                                    console.log("Lazy loading array/map " + omm.className + "." + propertyName);
                                     for (var i in v) {
                                         var ele = v[i];
                                         v[i] = objectRetriever.getObject(ele, this, propertyName);
@@ -314,8 +311,8 @@ var omm;
                         enumerable: propertyDescriptor ? propertyDescriptor.enumerable : true
                     });
                 }
-                else
-                    console.log("On Class " + omm.className + ": no lazy loader for " + propertyName);
+                else {
+                }
             });
         };
         Serializer.forEachTypedObject = function (object, cb) {
@@ -453,7 +450,7 @@ var omm;
             var objectClass = omm.PersistenceAnnotation.getClass(object);
             for (var property in object) {
                 var value = object[property];
-                if (value !== undefined && property != "_serializationPath") {
+                if (value !== undefined && property != "_objectRetriever") {
                     if (omm.PersistenceAnnotation.getPropertyClass(objectClass, property)) {
                         if (omm.PersistenceAnnotation.isArrayOrMap(objectClass, property)) {
                             var result;
