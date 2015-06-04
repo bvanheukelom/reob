@@ -417,6 +417,7 @@ describe("The persistence thing", function(){
 
         // also there are no added properties in there
         for( var propertyName in otherCar ){
+            debugger;
             expect( ["wheel", "wheels", "brand"].indexOf(propertyName)!=-1 ).toBeTruthy();
         }
     });

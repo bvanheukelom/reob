@@ -2,12 +2,38 @@
 /// <reference path="./TypeClass.ts"/>
 /// <reference path="../../../../typings/node/node.d.ts"/>
 
-declare var  Reflect;
-
 module omm
 {
     export var entityClasses:{[index:string]:omm.TypeClass<Object>};
+    export function setNonEnumerableProperty( obj:Object, propertyName:string, value:any ):void{
+        if (!Object.getOwnPropertyDescriptor(obj, propertyName)) {
+            Object.defineProperty(obj, propertyName, {
+                configurable: false,
+                enumerable: false,
+                writable: true
+            });
+        }
+        obj[propertyName] = value;
+    }
 
+    function defineMetadata( propertyName, value, cls ){
+        var _ommAnnotations = cls._ommAnnotations;
+        if( !_ommAnnotations ){
+            _ommAnnotations = {}
+            omm.setNonEnumerableProperty( cls, "_ommAnnotations", _ommAnnotations);
+        }
+        _ommAnnotations[propertyName] = value;
+    }
+
+    function getMetadata( propertyName, cls ){
+        var _ommAnnotations = cls._ommAnnotations;
+        if( _ommAnnotations ){
+            return _ommAnnotations[propertyName];
+        }
+        else{
+            return undefined;
+        }
+    }
 
     export function Entity( p1?:any ):any
     {
@@ -16,8 +42,8 @@ module omm
             return function (target:Function) {
                 var typeClass:omm.TypeClass<Object> = <omm.TypeClass<Object>>target;
                 //console.log("Entity(<class>) "+className(typeClass)+" with collection name:"+p1);
-                Reflect.defineMetadata("persistence:collectionName", p1, typeClass);
-                Reflect.defineMetadata("persistence:entity", true, typeClass);
+                defineMetadata("persistence:collectionName", p1, typeClass);
+                defineMetadata("persistence:entity", true, typeClass);
                 omm.entityClasses[className(typeClass)]=typeClass;
             }
         }
@@ -27,8 +53,8 @@ module omm
                 var typeClass:TypeClass<Object> = <omm.TypeClass<Object>>target;
                 //console.log("Entity(true) "+className(typeClass)+" with collection name:", className(typeClass));
                 if( p1 )
-                    Reflect.defineMetadata("persistence:collectionName", className(typeClass), typeClass);
-                Reflect.defineMetadata("persistence:entity", true, typeClass);
+                    defineMetadata("persistence:collectionName", className(typeClass), typeClass);
+                defineMetadata("persistence:entity", true, typeClass);
                 omm.entityClasses[className(typeClass)]=typeClass;
             }
         }
@@ -40,15 +66,15 @@ module omm
             var typeClass:TypeClass<Object> = <TypeClass<Object>>p1;
 
             //console.log("Entity() "+className(typeClass));
-            //Reflect.defineMetadata("persistence:collectionName", PersistenceAnnotation.className(typeClass), typeClass);
-            Reflect.defineMetadata("persistence:entity", true, typeClass);
+            //defineMetadata("persistence:collectionName", PersistenceAnnotation.className(typeClass), typeClass);
+            defineMetadata("persistence:entity", true, typeClass);
             omm.entityClasses[className(typeClass)]=typeClass;
         }
     }
 
     export function Wrap( t:Function, functionName:string, objectDescriptor:any )
     {
-        Reflect.defineMetadata("persistence:wrap", true, (<any>t)[functionName] );
+        defineMetadata("persistence:wrap", true, (<any>t)[functionName] );
     }
 
     export function ArrayOrMap( typeClassName:string )
@@ -132,7 +158,7 @@ module omm
         }
 
         static getCollectionName(f:TypeClass<any>):string {
-            return Reflect.getMetadata("persistence:collectionName", f);
+            return getMetadata("persistence:collectionName", f);
         }
         static isRootEntity(f:TypeClass<any>):boolean {
             return !!PersistenceAnnotation.getCollectionName(f);
@@ -162,7 +188,7 @@ module omm
 
         static getTypedPropertyNames<T extends Object>(f:TypeClass<T>):Array<string> {
             var result:Array<string> = [];
-            var props = Reflect.getMetadata("persistence:typedproperties",f.prototype);
+            var props = getMetadata("persistence:typedproperties",f.prototype);
             for( var i in props )
             {
                 if( PersistenceAnnotation.getPropertyClass(f, i) )
@@ -172,10 +198,10 @@ module omm
         }
 
         static setPropertyProperty( targetPrototypeObject:Function, propertyName:string, property:string, value:any  ):void {
-            var arr:any = Reflect.getMetadata("persistence:typedproperties", targetPrototypeObject);
+            var arr:any = getMetadata("persistence:typedproperties", targetPrototypeObject);
             if( !arr ) {
                 arr = {};
-                Reflect.defineMetadata("persistence:typedproperties", arr, targetPrototypeObject );
+                defineMetadata("persistence:typedproperties", arr, targetPrototypeObject );
             }
             var propProps = arr[propertyName];
 
@@ -189,7 +215,7 @@ module omm
 
         static getPropertyProperty( targetPrototypeObject:Function, propertyName:string, propertyProperty:string ):any
         {
-            var arr:any = Reflect.getMetadata("persistence:typedproperties", targetPrototypeObject);
+            var arr:any = getMetadata("persistence:typedproperties", targetPrototypeObject);
             if( arr && arr[propertyName] )
             {
                 return arr[propertyName][propertyProperty];
@@ -222,8 +248,8 @@ module omm
             for( var i in o )
             {
                 var value = o[i];
-                //console.log("Cave man style debugging 1",i, value,Reflect.getMetadata("persistence:wrap", value) );
-                if( typeof value =="function" && Reflect.getMetadata(metaData, value) )
+                //console.log("Cave man style debugging 1",i, value,getMetadata("persistence:wrap", value) );
+                if( typeof value =="function" && getMetadata(metaData, value) )
                     result.push(i);
             }
             return result;

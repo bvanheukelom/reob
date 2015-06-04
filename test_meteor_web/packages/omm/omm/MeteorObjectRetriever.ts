@@ -49,8 +49,8 @@ module omm {
         }
 
         private setSerializationPath( o:omm.MeteorPersistable, pPath:omm.SerializationPath ){
-            omm.Serializer.setNonEnumerablePropertyProperty(o, "_serializationPath", pPath);
-            omm.Serializer.setNonEnumerablePropertyProperty(o, "_objectRetriever", this);
+            omm.setNonEnumerableProperty(o, "_serializationPath", pPath);
+            omm.setNonEnumerableProperty(o, "_objectRetriever", this);
         }
 
         // if I could I would make this package protected

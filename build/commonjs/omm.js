@@ -3,12 +3,40 @@
 var omm;
 (function (omm) {
     omm.entityClasses;
+    function setNonEnumerableProperty(obj, propertyName, value) {
+        if (!Object.getOwnPropertyDescriptor(obj, propertyName)) {
+            Object.defineProperty(obj, propertyName, {
+                configurable: false,
+                enumerable: false,
+                writable: true
+            });
+        }
+        obj[propertyName] = value;
+    }
+    omm.setNonEnumerableProperty = setNonEnumerableProperty;
+    function defineMetadata(propertyName, value, cls) {
+        var _ommAnnotations = cls._ommAnnotations;
+        if (!_ommAnnotations) {
+            _ommAnnotations = {};
+            omm.setNonEnumerableProperty(cls, "_ommAnnotations", _ommAnnotations);
+        }
+        _ommAnnotations[propertyName] = value;
+    }
+    function getMetadata(propertyName, cls) {
+        var _ommAnnotations = cls._ommAnnotations;
+        if (_ommAnnotations) {
+            return _ommAnnotations[propertyName];
+        }
+        else {
+            return undefined;
+        }
+    }
     function Entity(p1) {
         if (typeof p1 == "string") {
             return function (target) {
                 var typeClass = target;
-                Reflect.defineMetadata("persistence:collectionName", p1, typeClass);
-                Reflect.defineMetadata("persistence:entity", true, typeClass);
+                defineMetadata("persistence:collectionName", p1, typeClass);
+                defineMetadata("persistence:entity", true, typeClass);
                 omm.entityClasses[className(typeClass)] = typeClass;
             };
         }
@@ -16,20 +44,20 @@ var omm;
             return function (target) {
                 var typeClass = target;
                 if (p1)
-                    Reflect.defineMetadata("persistence:collectionName", className(typeClass), typeClass);
-                Reflect.defineMetadata("persistence:entity", true, typeClass);
+                    defineMetadata("persistence:collectionName", className(typeClass), typeClass);
+                defineMetadata("persistence:entity", true, typeClass);
                 omm.entityClasses[className(typeClass)] = typeClass;
             };
         }
         else if (typeof p1 == "function") {
             var typeClass = p1;
-            Reflect.defineMetadata("persistence:entity", true, typeClass);
+            defineMetadata("persistence:entity", true, typeClass);
             omm.entityClasses[className(typeClass)] = typeClass;
         }
     }
     omm.Entity = Entity;
     function Wrap(t, functionName, objectDescriptor) {
-        Reflect.defineMetadata("persistence:wrap", true, t[functionName]);
+        defineMetadata("persistence:wrap", true, t[functionName]);
     }
     omm.Wrap = Wrap;
     function ArrayOrMap(typeClassName) {
@@ -94,7 +122,7 @@ var omm;
             return result;
         };
         PersistenceAnnotation.getCollectionName = function (f) {
-            return Reflect.getMetadata("persistence:collectionName", f);
+            return getMetadata("persistence:collectionName", f);
         };
         PersistenceAnnotation.isRootEntity = function (f) {
             return !!PersistenceAnnotation.getCollectionName(f);
@@ -114,7 +142,7 @@ var omm;
         };
         PersistenceAnnotation.getTypedPropertyNames = function (f) {
             var result = [];
-            var props = Reflect.getMetadata("persistence:typedproperties", f.prototype);
+            var props = getMetadata("persistence:typedproperties", f.prototype);
             for (var i in props) {
                 if (PersistenceAnnotation.getPropertyClass(f, i))
                     result.push(i);
@@ -122,10 +150,10 @@ var omm;
             return result;
         };
         PersistenceAnnotation.setPropertyProperty = function (targetPrototypeObject, propertyName, property, value) {
-            var arr = Reflect.getMetadata("persistence:typedproperties", targetPrototypeObject);
+            var arr = getMetadata("persistence:typedproperties", targetPrototypeObject);
             if (!arr) {
                 arr = {};
-                Reflect.defineMetadata("persistence:typedproperties", arr, targetPrototypeObject);
+                defineMetadata("persistence:typedproperties", arr, targetPrototypeObject);
             }
             var propProps = arr[propertyName];
             if (!propProps) {
@@ -135,7 +163,7 @@ var omm;
             propProps[property] = value;
         };
         PersistenceAnnotation.getPropertyProperty = function (targetPrototypeObject, propertyName, propertyProperty) {
-            var arr = Reflect.getMetadata("persistence:typedproperties", targetPrototypeObject);
+            var arr = getMetadata("persistence:typedproperties", targetPrototypeObject);
             if (arr && arr[propertyName]) {
                 return arr[propertyName][propertyProperty];
             }
@@ -154,7 +182,7 @@ var omm;
             var result = [];
             for (var i in o) {
                 var value = o[i];
-                if (typeof value == "function" && Reflect.getMetadata(metaData, value))
+                if (typeof value == "function" && getMetadata(metaData, value))
                     result.push(i);
             }
             return result;
@@ -357,16 +385,6 @@ var omm;
                 }
             });
         };
-        Serializer.setNonEnumerablePropertyProperty = function (obj, propertyName, value) {
-            if (!Object.getOwnPropertyDescriptor(obj, propertyName)) {
-                Object.defineProperty(obj, propertyName, {
-                    configurable: false,
-                    enumerable: false,
-                    writable: true
-                });
-            }
-            obj[propertyName] = value;
-        };
         Serializer.needsLazyLoading = function (object, propertyName) {
             var oc = omm.PersistenceAnnotation.getClass(object);
             if (omm.PersistenceAnnotation.isStoredAsForeignKeys(oc, propertyName)) {
@@ -395,6 +413,8 @@ var omm;
         };
         Serializer.prototype.toObjectRecursive = function (doc, f) {
             var o;
+            if (!doc)
+                return doc;
             if (typeof doc == "function")
                 throw new Error("Error in 'toObject'. doc is a function.");
             if (typeof f["toObject"] == "function") {
@@ -427,7 +447,7 @@ var omm;
                     }
                 }
             }
-            omm.Serializer.setNonEnumerablePropertyProperty(o, "_objectRetriever", this.objectRetriever);
+            omm.setNonEnumerableProperty(o, "_objectRetriever", this.objectRetriever);
             return o;
         };
         Serializer.prototype.toDocument = function (object) {

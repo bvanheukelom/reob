@@ -14,7 +14,6 @@ Package.describe({
 
 Package.onUse(function(api) {
     api.versionsFrom('1.0'); // ??
-    api.addFiles('Reflect.js');
 	api.addFiles('serializer/Document.js');
 	api.addFiles('annotations/PersistenceAnnotation.js');
 	api.addFiles('annotations/TypeClass.js');
@@ -31,10 +30,9 @@ Package.onUse(function(api) {
 	api.addFiles('omm/BaseCollection.js');
 	api.addFiles('omm/MeteorObjectRetriever.js');
 	api.addFiles('omm/SerializationPath.js');
-	api.export('Reflect', 'client');
-	api.export('Reflect', 'server');
 	api.export('omm', 'client');
 	api.export('omm', 'server');
+
 });
 
 

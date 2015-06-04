@@ -149,16 +149,7 @@ module omm{
                 //}
             });
         }
-        static  setNonEnumerablePropertyProperty( obj:Object, propertyName:string, value:any ):void{
-            if (!Object.getOwnPropertyDescriptor(obj, propertyName)) {
-                Object.defineProperty(obj, propertyName, {
-                    configurable: false,
-                    enumerable: false,
-                    writable: true
-                });
-            }
-            obj[propertyName] = value;
-        }
+
 
         static needsLazyLoading(object:Persistable, propertyName:string) {
             // TODO inheritance
@@ -196,6 +187,8 @@ module omm{
 
         private toObjectRecursive<T extends omm.Persistable>(doc:Document, f:omm.TypeClass<T>):T {
             var o:T;
+            if( !doc )
+                return <T>doc;
             if(typeof doc=="function")
                 throw new Error("Error in 'toObject'. doc is a function.");
 
@@ -235,7 +228,7 @@ module omm{
                     }
                 }
             }
-            omm.Serializer.setNonEnumerablePropertyProperty(o, "_objectRetriever", this.objectRetriever);
+            omm.setNonEnumerableProperty(o, "_objectRetriever", this.objectRetriever);
             //o._objectRetriever = this.objectRetriever;
             return o;
         }

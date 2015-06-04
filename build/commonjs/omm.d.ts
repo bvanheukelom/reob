@@ -4,11 +4,11 @@ declare module omm {
         new (...some: any[]): T;
     }
 }
-declare var Reflect: any;
 declare module omm {
     var entityClasses: {
         [index: string]: omm.TypeClass<Object>;
     };
+    function setNonEnumerableProperty(obj: Object, propertyName: string, value: any): void;
     function Entity(p1?: any): any;
     function Wrap(t: Function, functionName: string, objectDescriptor: any): void;
     function ArrayOrMap(typeClassName: string): (targetPrototypeObject: Function, propertyName: string) => void;
@@ -73,7 +73,6 @@ declare module omm {
         private static installLazyLoaderGetterSetters(c);
         static forEachTypedObject(object: omm.Persistable, cb: (path: omm.SubObjectPath, object: omm.Persistable) => void): void;
         static forEachTypedObjectRecursive(rootObject: omm.Persistable, object: omm.Persistable, path: omm.SubObjectPath, visited: Array<Persistable>, cb: (path: omm.SubObjectPath, object: omm.Persistable) => void): void;
-        static setNonEnumerablePropertyProperty(obj: Object, propertyName: string, value: any): void;
         static needsLazyLoading(object: Persistable, propertyName: string): boolean;
         toObject<T extends omm.Persistable>(doc: Document, f: omm.TypeClass<T>): T;
         private toObjectRecursive<T>(doc, f);
