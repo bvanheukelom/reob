@@ -18,7 +18,7 @@ module omm
 
     // it seems that the local variable that "reflect" uses is prone to the same difficulties when it gets loaded
     // multiple times. This is why it's been removed until it is supported by the Runtime directly.
-    function defineMetadata( propertyName, value, cls ){
+    export function defineMetadata( propertyName, value, cls ){
         var _ommAnnotations = cls._ommAnnotations;
         if( !_ommAnnotations ){
             _ommAnnotations = {};
@@ -27,7 +27,7 @@ module omm
         _ommAnnotations[propertyName] = value;
     }
 
-    function getMetadata( propertyName, cls ){
+    export function getMetadata( propertyName, cls ){
         var _ommAnnotations = cls._ommAnnotations;
         if( _ommAnnotations ){
             return _ommAnnotations[propertyName];

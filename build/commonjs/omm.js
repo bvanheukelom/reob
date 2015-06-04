@@ -22,6 +22,7 @@ var omm;
         }
         _ommAnnotations[propertyName] = value;
     }
+    omm.defineMetadata = defineMetadata;
     function getMetadata(propertyName, cls) {
         var _ommAnnotations = cls._ommAnnotations;
         if (_ommAnnotations) {
@@ -31,6 +32,7 @@ var omm;
             return undefined;
         }
     }
+    omm.getMetadata = getMetadata;
     function Entity(p1) {
         if (typeof p1 == "string") {
             return function (target) {

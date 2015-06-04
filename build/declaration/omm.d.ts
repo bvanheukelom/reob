@@ -8,6 +8,8 @@ declare module omm {
         [index: string]: omm.TypeClass<Object>;
     };
     function setNonEnumerableProperty(obj: Object, propertyName: string, value: any): void;
+    function defineMetadata(propertyName: any, value: any, cls: any): void;
+    function getMetadata(propertyName: any, cls: any): any;
     function Entity(p1?: any): any;
     function Wrap(t: Function, functionName: string, objectDescriptor: any): void;
     function ArrayOrMap(typeClassName: string): (targetPrototypeObject: Function, propertyName: string) => void;
