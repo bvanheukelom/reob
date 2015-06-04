@@ -423,7 +423,7 @@ var omm;
             else {
                 if (doc.className)
                     f = omm.PersistenceAnnotation.getEntityClassByName(doc.className);
-                o = Object.create(f.prototype);
+                o = new f();
                 for (var propertyName in doc) {
                     var value = doc[propertyName];
                     var propertyClass = omm.PersistenceAnnotation.getPropertyClass(f, propertyName);

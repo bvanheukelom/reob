@@ -178,7 +178,6 @@ module omm{
 
         }
 
-
         toObject<T extends omm.Persistable>(doc:Document, f:omm.TypeClass<T>):T {
             var o:T = this.toObjectRecursive(doc,f);
             this.objectRetriever.postToObject(o);
@@ -201,7 +200,7 @@ module omm{
                     f = omm.PersistenceAnnotation.getEntityClassByName(doc.className);
 
                 // instantiate the new object
-                o = Object.create(f.prototype);
+                o = new f();
 
                 // iterate over all properties
                 for (var propertyName in doc) {

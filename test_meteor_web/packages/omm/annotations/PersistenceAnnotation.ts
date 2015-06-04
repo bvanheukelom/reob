@@ -16,10 +16,12 @@ module omm
         obj[propertyName] = value;
     }
 
+    // it seems that the local variable that "reflect" uses is prone to the same difficulties when it gets loaded
+    // multiple times. This is why it's been removed until it is supported by the Runtime directly.
     function defineMetadata( propertyName, value, cls ){
         var _ommAnnotations = cls._ommAnnotations;
         if( !_ommAnnotations ){
-            _ommAnnotations = {}
+            _ommAnnotations = {};
             omm.setNonEnumerableProperty( cls, "_ommAnnotations", _ommAnnotations);
         }
         _ommAnnotations[propertyName] = value;
