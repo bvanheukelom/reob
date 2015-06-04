@@ -1,6 +1,6 @@
 declare module omm {
     interface TypeClass<T> {
-        new (...some: any[]): T;
+        new (): T;
     }
 }
 declare module omm {
