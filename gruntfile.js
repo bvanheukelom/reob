@@ -4,7 +4,7 @@ module.exports = function (grunt) {
 
 	grunt.initConfig({
 		watch: {
-			files: ["**/*.ts"],
+			files: ["test_meteor_web/**/*.ts",],
 			tasks: ["default"]
 		},
 		ts: {

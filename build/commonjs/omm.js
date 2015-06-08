@@ -15,19 +15,16 @@ var omm;
     }
     omm.setNonEnumerableProperty = setNonEnumerableProperty;
     function defineMetadata(propertyName, value, cls) {
-        var _ommAnnotations = cls._ommAnnotations;
-        if (!_ommAnnotations) {
-            _ommAnnotations = {};
-            omm.setNonEnumerableProperty(cls, "_ommAnnotations", _ommAnnotations);
+        if (!cls.hasOwnProperty("_ommAnnotations")) {
+            omm.setNonEnumerableProperty(cls, "_ommAnnotations", {});
         }
+        var _ommAnnotations = cls._ommAnnotations;
         _ommAnnotations[propertyName] = value;
     }
     omm.defineMetadata = defineMetadata;
     function getMetadata(propertyName, cls) {
-        var _ommAnnotations = cls._ommAnnotations;
-        if (_ommAnnotations) {
-            return _ommAnnotations[propertyName];
-        }
+        if (cls.hasOwnProperty("_ommAnnotations"))
+            return cls["_ommAnnotations"][propertyName];
         else {
             return undefined;
         }
@@ -64,17 +61,17 @@ var omm;
     omm.Wrap = Wrap;
     function ArrayOrMap(typeClassName) {
         return function (targetPrototypeObject, propertyName) {
-            PersistenceAnnotation.setPropertyProperty(targetPrototypeObject, propertyName, "type", typeClassName);
-            PersistenceAnnotation.setPropertyProperty(targetPrototypeObject, propertyName, "arrayOrMap", true);
+            PersistenceAnnotation.setPropertyProperty(targetPrototypeObject.constructor, propertyName, "type", typeClassName);
+            PersistenceAnnotation.setPropertyProperty(targetPrototypeObject.constructor, propertyName, "arrayOrMap", true);
         };
     }
     omm.ArrayOrMap = ArrayOrMap;
     function AsForeignKeys(targetPrototypeObject, propertyName) {
-        return PersistenceAnnotation.setPropertyProperty(targetPrototypeObject, propertyName, "askeys", true);
+        return PersistenceAnnotation.setPropertyProperty(targetPrototypeObject.constructor, propertyName, "askeys", true);
     }
     omm.AsForeignKeys = AsForeignKeys;
     function Ignore(targetPrototypeObject, propertyName) {
-        return PersistenceAnnotation.setPropertyProperty(targetPrototypeObject, propertyName, "ignore", true);
+        return PersistenceAnnotation.setPropertyProperty(targetPrototypeObject.constructor, propertyName, "ignore", true);
     }
     omm.Ignore = Ignore;
     function AsForeignKey(targetPrototypeObject, propertyName) {
@@ -83,7 +80,7 @@ var omm;
     omm.AsForeignKey = AsForeignKey;
     function Type(typeClassName) {
         return function (targetPrototypeObject, propertyName) {
-            PersistenceAnnotation.setPropertyProperty(targetPrototypeObject, propertyName, "type", typeClassName);
+            PersistenceAnnotation.setPropertyProperty(targetPrototypeObject.constructor, propertyName, "type", typeClassName);
         };
     }
     omm.Type = Type;
@@ -133,29 +130,34 @@ var omm;
             return !!omm.entityClasses[className(f)];
         };
         PersistenceAnnotation.isArrayOrMap = function (typeClass, propertyName) {
-            return PersistenceAnnotation.getPropertyProperty(typeClass.prototype, propertyName, "arrayOrMap") == true;
+            return PersistenceAnnotation.getPropertyProperty(typeClass, propertyName, "arrayOrMap") == true;
         };
         PersistenceAnnotation.getPropertyClass = function (f, propertyName) {
-            var className = PersistenceAnnotation.getPropertyProperty(f.prototype, propertyName, "type");
-            if (!className)
-                return undefined;
-            else
-                return PersistenceAnnotation.getEntityClassByName(className);
+            while (f != Object) {
+                var className = PersistenceAnnotation.getPropertyProperty(f, propertyName, "type");
+                if (className)
+                    return PersistenceAnnotation.getEntityClassByName(className);
+                f = omm.PersistenceAnnotation.getParentClass(f);
+            }
+            return undefined;
         };
         PersistenceAnnotation.getTypedPropertyNames = function (f) {
             var result = [];
-            var props = getMetadata("persistence:typedproperties", f.prototype);
-            for (var i in props) {
-                if (PersistenceAnnotation.getPropertyClass(f, i))
-                    result.push(i);
+            while (f != Object) {
+                var props = getMetadata("persistence:typedproperties", f);
+                for (var i in props) {
+                    if (PersistenceAnnotation.getPropertyClass(f, i))
+                        result.push(i);
+                }
+                f = omm.PersistenceAnnotation.getParentClass(f);
             }
             return result;
         };
-        PersistenceAnnotation.setPropertyProperty = function (targetPrototypeObject, propertyName, property, value) {
-            var arr = getMetadata("persistence:typedproperties", targetPrototypeObject);
+        PersistenceAnnotation.setPropertyProperty = function (cls, propertyName, property, value) {
+            var arr = getMetadata("persistence:typedproperties", cls);
             if (!arr) {
                 arr = {};
-                defineMetadata("persistence:typedproperties", arr, targetPrototypeObject);
+                defineMetadata("persistence:typedproperties", arr, cls);
             }
             var propProps = arr[propertyName];
             if (!propProps) {
@@ -164,18 +166,21 @@ var omm;
             }
             propProps[property] = value;
         };
-        PersistenceAnnotation.getPropertyProperty = function (targetPrototypeObject, propertyName, propertyProperty) {
-            var arr = getMetadata("persistence:typedproperties", targetPrototypeObject);
+        PersistenceAnnotation.getPropertyProperty = function (cls, propertyName, propertyProperty) {
+            var arr = getMetadata("persistence:typedproperties", cls);
             if (arr && arr[propertyName]) {
                 return arr[propertyName][propertyProperty];
             }
             return undefined;
         };
+        PersistenceAnnotation.getParentClass = function (t) {
+            return Object.getPrototypeOf(t.prototype).constructor;
+        };
         PersistenceAnnotation.isStoredAsForeignKeys = function (typeClass, propertyName) {
-            return PersistenceAnnotation.getPropertyProperty(typeClass.prototype, propertyName, "askeys");
+            return PersistenceAnnotation.getPropertyProperty(typeClass, propertyName, "askeys");
         };
         PersistenceAnnotation.isIgnored = function (typeClass, propertyName) {
-            return PersistenceAnnotation.getPropertyProperty(typeClass.prototype, propertyName, "ignore");
+            return PersistenceAnnotation.getPropertyProperty(typeClass, propertyName, "ignore");
         };
         PersistenceAnnotation.getWrappedFunctionNames = function (f) {
             return PersistenceAnnotation.getPropertyNamesByMetaData(f.prototype, "persistence:wrap");

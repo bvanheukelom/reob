@@ -19,19 +19,16 @@ module omm
     // it seems that the local variable that "reflect" uses is prone to the same difficulties when it gets loaded
     // multiple times. This is why it's been removed until it is supported by the Runtime directly.
     export function defineMetadata( propertyName, value, cls ){
-        var _ommAnnotations = cls._ommAnnotations;
-        if( !_ommAnnotations ){
-            _ommAnnotations = {};
-            omm.setNonEnumerableProperty( cls, "_ommAnnotations", _ommAnnotations);
+        if( !cls.hasOwnProperty("_ommAnnotations") ){
+            omm.setNonEnumerableProperty( cls, "_ommAnnotations", {});
         }
+        var _ommAnnotations = cls._ommAnnotations;
         _ommAnnotations[propertyName] = value;
     }
 
     export function getMetadata( propertyName, cls ){
-        var _ommAnnotations = cls._ommAnnotations;
-        if( _ommAnnotations ){
-            return _ommAnnotations[propertyName];
-        }
+        if( cls.hasOwnProperty("_ommAnnotations") )
+            return cls["_ommAnnotations"][propertyName];
         else{
             return undefined;
         }
@@ -81,20 +78,20 @@ module omm
 
     export function ArrayOrMap( typeClassName:string )
     {
-        return function (targetPrototypeObject: Function, propertyName:string) {
+        return function (targetPrototypeObject: any, propertyName:string) {
             //console.log("  "+propertyName+" as collection of "+typeClassName);
-            PersistenceAnnotation.setPropertyProperty( targetPrototypeObject, propertyName, "type", typeClassName);
-            PersistenceAnnotation.setPropertyProperty( targetPrototypeObject, propertyName, "arrayOrMap", true);
+            PersistenceAnnotation.setPropertyProperty( targetPrototypeObject.constructor, propertyName, "type", typeClassName);
+            PersistenceAnnotation.setPropertyProperty( targetPrototypeObject.constructor, propertyName, "arrayOrMap", true);
         };
     }
 
-    export function AsForeignKeys( targetPrototypeObject:Function, propertyName:string  )
+    export function AsForeignKeys( targetPrototypeObject:any, propertyName:string  )
     {
-        return PersistenceAnnotation.setPropertyProperty(targetPrototypeObject, propertyName, "askeys", true);
+        return PersistenceAnnotation.setPropertyProperty(targetPrototypeObject.constructor, propertyName, "askeys", true);
     }
-    export function Ignore( targetPrototypeObject:Function, propertyName:string  )
+    export function Ignore( targetPrototypeObject:any, propertyName:string  )
     {
-        return PersistenceAnnotation.setPropertyProperty(targetPrototypeObject, propertyName, "ignore", true);
+        return PersistenceAnnotation.setPropertyProperty(targetPrototypeObject.constructor, propertyName, "ignore", true);
     }
 
     // for grammar reasons
@@ -104,9 +101,9 @@ module omm
     }
 
     export function Type(typeClassName:string) {
-        return function (targetPrototypeObject: Function, propertyName:string) {
+        return function (targetPrototypeObject: any, propertyName:string) {
             //console.log("  "+propertyName+" as "+typeClassName);
-            PersistenceAnnotation.setPropertyProperty( targetPrototypeObject, propertyName, "type", typeClassName);
+            PersistenceAnnotation.setPropertyProperty( targetPrototypeObject.constructor, propertyName, "type", typeClassName);
         };
     }
 
@@ -172,68 +169,73 @@ module omm
         // ---- Collection ----
 
 
-        static isArrayOrMap( typeClass:Function, propertyName:string ):boolean
+        static isArrayOrMap( typeClass:TypeClass<any>, propertyName:string ):boolean
         {
-            return PersistenceAnnotation.getPropertyProperty( typeClass.prototype, propertyName, "arrayOrMap")==true;
+            return PersistenceAnnotation.getPropertyProperty( typeClass, propertyName, "arrayOrMap")==true;
         }
 
-    // ---- typed properties ----
+        // ---- typed properties ----
 
-
-        static getPropertyClass(f:Function, propertyName:string):TypeClass<any> {
-            var className = PersistenceAnnotation.getPropertyProperty( f.prototype, propertyName, "type")
-            if( !className )
-                return undefined;
-            else
-                return PersistenceAnnotation.getEntityClassByName(className);
+        static getPropertyClass(f:TypeClass<any>, propertyName:string):TypeClass<any> {
+            while (f != <any>Object){
+                var className = PersistenceAnnotation.getPropertyProperty(f, propertyName, "type")
+                if (className)
+                    return PersistenceAnnotation.getEntityClassByName(className);
+                f = omm.PersistenceAnnotation.getParentClass(f);
+            }
+            return undefined
         }
 
         static getTypedPropertyNames<T extends Object>(f:TypeClass<T>):Array<string> {
             var result:Array<string> = [];
-            var props = getMetadata("persistence:typedproperties",f.prototype);
-            for( var i in props )
-            {
-                if( PersistenceAnnotation.getPropertyClass(f, i) )
-                    result.push(i);
+            while( f!=<any>Object ) {
+                var props = getMetadata("persistence:typedproperties", f);
+                for (var i in props) {
+                    if (PersistenceAnnotation.getPropertyClass(f, i))
+                        result.push(i);
+                }
+                f = omm.PersistenceAnnotation.getParentClass(f);
             }
             return result;
         }
 
-        static setPropertyProperty( targetPrototypeObject:Function, propertyName:string, property:string, value:any  ):void {
-            var arr:any = getMetadata("persistence:typedproperties", targetPrototypeObject);
+        static setPropertyProperty( cls:TypeClass<any>, propertyName:string, property:string, value:any  ):void {
+            var arr:any = getMetadata("persistence:typedproperties", cls);
             if( !arr ) {
                 arr = {};
-                defineMetadata("persistence:typedproperties", arr, targetPrototypeObject );
+                defineMetadata("persistence:typedproperties", arr, cls );
             }
             var propProps = arr[propertyName];
 
-            if( !propProps )
-            {
+            if( !propProps ) {
                 propProps = {};
                 arr[propertyName] = propProps;
             }
             propProps[property] = value;
         }
 
-        static getPropertyProperty( targetPrototypeObject:Function, propertyName:string, propertyProperty:string ):any
-        {
-            var arr:any = getMetadata("persistence:typedproperties", targetPrototypeObject);
-            if( arr && arr[propertyName] )
-            {
+        private static getPropertyProperty( cls:TypeClass<any>, propertyName:string, propertyProperty:string ):any {
+            var arr:any = getMetadata("persistence:typedproperties", cls);
+            if( arr && arr[propertyName] ) {
                 return arr[propertyName][propertyProperty];
             }
             return undefined;
         }
-        // ---- AsForeignKeys ----
 
-        static isStoredAsForeignKeys( typeClass:Function, propertyName:string ):boolean
-        {
-            return PersistenceAnnotation.getPropertyProperty(typeClass.prototype, propertyName, "askeys");
+        static getParentClass( t:TypeClass<any> ):TypeClass<any> {
+            return Object.getPrototypeOf(t.prototype).constructor;
         }
 
-        static isIgnored( typeClass:Function, propertyName:string ):boolean
+
+        // ---- AsForeignKeys ----
+
+        static isStoredAsForeignKeys( typeClass:TypeClass<any>, propertyName:string ):boolean {
+            return PersistenceAnnotation.getPropertyProperty(typeClass, propertyName, "askeys");
+        }
+
+        static isIgnored( typeClass:TypeClass<any>, propertyName:string ):boolean
         {
-            return PersistenceAnnotation.getPropertyProperty(typeClass.prototype, propertyName, "ignore");
+            return PersistenceAnnotation.getPropertyProperty(typeClass, propertyName, "ignore");
         }
 
 

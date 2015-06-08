@@ -7,6 +7,9 @@
 ///<reference path="./TestTreeCollection.ts"/>
 ///<reference path="./TestCar.ts"/>
 ///<reference path="./TestWheel.ts"/>
+///<reference path="./TestInheritanceChild.ts"/>
+///<reference path="./TestInheritanceParent.ts"/>
+///<reference path="./TestInheritanceOther.ts"/>
 ///<reference path="../omm/annotations/PersistenceAnnotation.ts"/>
 ///<reference path="../omm/serializer/Document.ts"/>
 ///<reference path="../omm/omm/MeteorPersistence.ts"/>

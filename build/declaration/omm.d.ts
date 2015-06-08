@@ -12,11 +12,11 @@ declare module omm {
     function getMetadata(propertyName: any, cls: any): any;
     function Entity(p1?: any): any;
     function Wrap(t: Function, functionName: string, objectDescriptor: any): void;
-    function ArrayOrMap(typeClassName: string): (targetPrototypeObject: Function, propertyName: string) => void;
-    function AsForeignKeys(targetPrototypeObject: Function, propertyName: string): void;
-    function Ignore(targetPrototypeObject: Function, propertyName: string): void;
+    function ArrayOrMap(typeClassName: string): (targetPrototypeObject: any, propertyName: string) => void;
+    function AsForeignKeys(targetPrototypeObject: any, propertyName: string): void;
+    function Ignore(targetPrototypeObject: any, propertyName: string): void;
     function AsForeignKey(targetPrototypeObject: Function, propertyName: string): void;
-    function Type(typeClassName: string): (targetPrototypeObject: Function, propertyName: string) => void;
+    function Type(typeClassName: string): (targetPrototypeObject: any, propertyName: string) => void;
     function className(fun: omm.TypeClass<Object>): string;
     class PersistenceAnnotation {
         static getClass<T extends Object>(o: T): omm.TypeClass<T>;
@@ -26,13 +26,14 @@ declare module omm {
         static getCollectionName(f: TypeClass<any>): string;
         static isRootEntity(f: TypeClass<any>): boolean;
         static isEntity(f: TypeClass<any>): boolean;
-        static isArrayOrMap(typeClass: Function, propertyName: string): boolean;
-        static getPropertyClass(f: Function, propertyName: string): TypeClass<any>;
+        static isArrayOrMap(typeClass: TypeClass<any>, propertyName: string): boolean;
+        static getPropertyClass(f: TypeClass<any>, propertyName: string): TypeClass<any>;
         static getTypedPropertyNames<T extends Object>(f: TypeClass<T>): Array<string>;
-        static setPropertyProperty(targetPrototypeObject: Function, propertyName: string, property: string, value: any): void;
-        static getPropertyProperty(targetPrototypeObject: Function, propertyName: string, propertyProperty: string): any;
-        static isStoredAsForeignKeys(typeClass: Function, propertyName: string): boolean;
-        static isIgnored(typeClass: Function, propertyName: string): boolean;
+        static setPropertyProperty(cls: TypeClass<any>, propertyName: string, property: string, value: any): void;
+        private static getPropertyProperty(cls, propertyName, propertyProperty);
+        static getParentClass(t: TypeClass<any>): TypeClass<any>;
+        static isStoredAsForeignKeys(typeClass: TypeClass<any>, propertyName: string): boolean;
+        static isIgnored(typeClass: TypeClass<any>, propertyName: string): boolean;
         static getWrappedFunctionNames<T extends Object>(f: TypeClass<T>): Array<string>;
         static getPropertyNamesByMetaData(o: any, metaData: string): string[];
     }

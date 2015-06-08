@@ -22,6 +22,9 @@ Package.onUse(function(api) {
 	api.addFiles('TestCar.js');
 	api.addFiles('TestWheel.js');
 	api.addFiles('TestTree.js');
+	api.addFiles('TestInheritanceOther.js');
+	api.addFiles('TestInheritanceParent.js');
+	api.addFiles('TestInheritanceChild.js');
 	api.addFiles('TestTreeCollection.js');
 	api.export('Tests', 'server');
 	api.export('Tests', 'client');

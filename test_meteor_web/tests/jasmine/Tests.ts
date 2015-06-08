@@ -268,10 +268,22 @@ describe("The persistence thing", function(){
 
     });
 
+
+    it("serializes objects to plain objects", function(){
+        var tp = new Tests.TestPerson("tp");
+        tp.tree = new Tests.TestTree(12);
+        var serializer = new omm.Serializer(new omm.ConstantObjectRetriever(1) );
+        var doc:any = serializer.toDocument(tp);
+
+        expect( doc.tree instanceof Tests.TestTree ).toBeFalsy();
+    });
+
+
     it("can serialize object in a map", function(){
         var tp = new Tests.TestPerson("tp");
         tp.phoneBook["klaus"] = new Tests.TestPhoneNumber("121212");
-        var doc:any = new omm.Serializer(new omm.ConstantObjectRetriever(1) ).toDocument(tp);
+        var serializer = new omm.Serializer(new omm.ConstantObjectRetriever(1) );
+        var doc:any = serializer.toDocument(tp);
 
         expect( doc ).toBeDefined();
         expect( doc.phoneBook ).toBeDefined();
@@ -417,7 +429,6 @@ describe("The persistence thing", function(){
 
         // also there are no added properties in there
         for( var propertyName in otherCar ){
-            debugger;
             expect( ["wheel", "wheels", "brand"].indexOf(propertyName)!=-1 ).toBeTruthy();
         }
     });
@@ -449,7 +460,6 @@ describe("The persistence thing", function(){
     });
 
     it("marks properties as ignored", function(){
-        debugger
         expect( omm.PersistenceAnnotation.isIgnored(Tests.TestCar,"temperature")).toBeTruthy();
     });
 
@@ -477,6 +487,45 @@ describe("The persistence thing", function(){
         expect( otherCar instanceof Tests.TestCar ).toBeTruthy();
     });
 
+    it("properties of child objects have no type on the parent object", function(){
+        expect( omm.PersistenceAnnotation.getPropertyClass( Tests.TestInheritanceParent, "childOther") ).toBeUndefined();
+    });
+
+    it("properties of child objects have a type on the child object", function(){
+        expect( omm.PersistenceAnnotation.getPropertyClass( Tests.TestInheritanceChild, "childOther") ).toBe(Tests.TestInheritanceOther);
+    });
+
+    it("properties of the parent class have a type on the child class", function(){
+        expect( omm.PersistenceAnnotation.getPropertyClass( Tests.TestInheritanceChild, "parentOther") ).toBe(Tests.TestInheritanceOther);
+    });
+
+    it("serializes local objects with inheritance", function(){
+        var s  = new omm.Serializer( new omm.LocalObjectRetriever() );
+        var child:Tests.TestInheritanceChild = new Tests.TestInheritanceChild();
+        child.childOther = new Tests.TestInheritanceOther();
+        child.childOther.name = "Otter";
+        child.childOther.otherness = 42;
+        child.parentOther = new Tests.TestInheritanceOther();
+        child.parentOther.name = "Groundhog";
+        child.parentOther.otherness = 84;
+        var doc = s.toDocument(child);
+        var child2 = s.toObject(doc, Tests.TestInheritanceChild);
+        expect( child2.parentOther instanceof Tests.TestInheritanceOther ).toBeTruthy();
+        expect( !(child2.childOther instanceof Tests.TestInheritanceOther) ).toBeFalsy();
+        expect( child.getChildThing()).toBe("Otter 42 Groundhog 84");
+    });
+
+    it("serializes local parent objects with inheritance", function(){
+        var s  = new omm.Serializer( new omm.LocalObjectRetriever() );
+        var parent:Tests.TestInheritanceParent = new Tests.TestInheritanceParent();
+        parent.parentOther = new Tests.TestInheritanceOther();
+        parent.parentOther.name = "Groundhog";
+        parent.parentOther.otherness = 84;
+        var doc:any = s.toDocument(parent);
+        var parent2 = s.toObject(doc, Tests.TestInheritanceParent);
+        expect( parent2.parentOther instanceof Tests.TestInheritanceOther ).toBeTruthy();
+        expect( doc.parentOther instanceof Tests.TestInheritanceOther ).toBeFalsy();
+    });
 
     // write test that 'null' values for objects and properties can be serialized and deserialized
 
