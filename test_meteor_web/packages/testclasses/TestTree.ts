@@ -6,7 +6,11 @@ module Tests
         private height:number = 10;
 
         @omm.ArrayOrMap("TestLeaf")
-        leaves:Array<TestLeaf> = [];
+            leaves:Array<TestLeaf> = [];
+
+        @omm.Type("TestAddress")
+        @omm.AsForeignKey
+        address:Tests.TestAddress; // this cant be stored as the address doesnt have a foreign key
 
         constructor( initialHeight?:number) {
             this.height = initialHeight || 10;

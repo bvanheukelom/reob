@@ -84,14 +84,13 @@ module omm {
                             //console.log("updating foreignkey property " + typedPropertyName + " is array");
                             for (var i in v) {
                                 var e = v[i];
+                                var index = i;
+                                if( e.getId && e.getId() )
+                                    index = e.getId();
                                 //console.log("updating persistnece path for isArrayOrMap " + typedPropertyName + "  key:" + i + " value:", e, "object: ", object);
-                                if (e.getId && e.getId()) {
-                                    that.setSerializationPath(e, object._serializationPath.clone());
-                                    e._serializationPath.appendArrayOrMapLookup(typedPropertyName, e.getId());
-                                    that.updateSerializationPaths(e, visited);
-                                }
-                                else
-                                    throw new Error("An element of the array '" + typedPropertyName + "' stored on the classe " + className(objectClass) + " does not have an id. Total serialization path so far:" + object._serializationPath.toString());
+                                that.setSerializationPath(e, object._serializationPath.clone());
+                                e._serializationPath.appendArrayOrMapLookup(typedPropertyName, index);
+                                that.updateSerializationPaths(e, visited);
                             }
                         }
                         else {

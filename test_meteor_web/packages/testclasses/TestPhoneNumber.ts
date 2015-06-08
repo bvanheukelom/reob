@@ -13,9 +13,7 @@ module Tests {
         getNumber():string {
             return this.number;
         }
-        getId():string {
-            return this.number;
-        }
+
 
         static toDocument(t:TestPhoneNumber){
             return {

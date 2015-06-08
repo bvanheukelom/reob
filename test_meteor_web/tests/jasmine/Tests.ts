@@ -549,6 +549,23 @@ describe("The persistence thing", function(){
         expect( typeof doc.person ).toBe("string");
     });
 
+    it("deserializes objects of different classes in an array", function(){
+        var s  = new omm.Serializer( new omm.MeteorObjectRetriever() );
+        var person:Tests.TestPerson = new Tests.TestPerson('p1','pete');
+        var child:Tests.TestInheritanceChild = new Tests.TestInheritanceChild();
+        var wheel:Tests.TestWheel = new Tests.TestWheel();
+        var car:Tests.TestCar = new Tests.TestCar();
+        person.addresses.push(<any>child);
+        person.addresses.push(<any>wheel);
+        person.addresses.push(<any>car);
+        var doc:any = s.toDocument(person);
+        var person2 = s.toObject(doc, Tests.TestPerson);
+
+        expect( person2.addresses[0] instanceof Tests.TestInheritanceChild).toBeTruthy();
+        expect( person2.addresses[1] instanceof Tests.TestWheel).toBeTruthy();
+        expect( person2.addresses[2] instanceof Tests.TestCar).toBeTruthy();
+    });
+
     // write test that 'null' values for objects and properties can be serialized and deserialized
 
 });

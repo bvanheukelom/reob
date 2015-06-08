@@ -56,14 +56,20 @@ module omm {
                             var foundEntry:boolean = false;
                             for (var j in arrayOrMap) {
                                 var arrayEntry:Object = arrayOrMap[j];
-                                if ((<any>arrayEntry).getId() == id) {
+                                if ((<any>arrayEntry).getId && (<any>arrayEntry).getId() == id) {
                                     o = arrayEntry;
                                     foundEntry = true;
                                     break;
                                 }
                             }
-                            if (!foundEntry)
-                                o = undefined;
+                            if (!foundEntry) {
+                                if( arrayOrMap[id] )
+                                    o = arrayOrMap[id];
+                                else
+                                    o = undefined;
+
+                            }
+
                         }
                         else
                             o = o[entry];

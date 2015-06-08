@@ -76,5 +76,18 @@ describe("The persistence thing on the server", function(){
         expect( personCollection.getById("p1").trees[1].getId()).toBe(t2.getId());
     });
 
-
+    it("can store objects as foreign keys that are an arrayOrMap entry and do not have an id", function(){
+        var m = new Tests.TestPerson("id1");
+        m.addresses.push(new Tests.TestAddress("jockeh str.1"));
+        personCollection.insert(m);
+        var tree = new Tests.TestTree(347);
+        tree.address = m.getAddresses()[0];
+        var serializer = new omm.Serializer(new omm.MeteorObjectRetriever());
+        var doc:any = serializer.toDocument(tree);
+        expect(doc.address).toBe('TestPerson[id1].addresses|0');
+        treeCollection.insert(tree);
+        var t2 = treeCollection.getById(tree.getId());
+        expect(t2.address instanceof Tests.TestAddress).toBeTruthy();
+        expect(t2.address.getStreet()).toBe("jockeh str.1");
+    });
 });

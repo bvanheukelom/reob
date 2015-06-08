@@ -27,7 +27,7 @@ declare module omm {
         static getCollectionName(f: TypeClass<any>): string;
         static isRootEntity(f: TypeClass<any>): boolean;
         static isEntity(f: TypeClass<any>): boolean;
-        static isArrayOrMap(typeClass: TypeClass<any>, propertyName: string): boolean;
+        static isArrayOrMap(f: TypeClass<any>, propertyName: string): boolean;
         static getPropertyClass(f: TypeClass<any>, propertyName: string): TypeClass<any>;
         static getTypedPropertyNames<T extends Object>(f: TypeClass<T>): Array<string>;
         static setPropertyProperty(cls: TypeClass<any>, propertyName: string, property: string, value: any): void;

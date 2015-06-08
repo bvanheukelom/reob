@@ -129,8 +129,13 @@ var omm;
         PersistenceAnnotation.isEntity = function (f) {
             return !!omm.entityClasses[className(f)];
         };
-        PersistenceAnnotation.isArrayOrMap = function (typeClass, propertyName) {
-            return PersistenceAnnotation.getPropertyProperty(typeClass, propertyName, "arrayOrMap") == true;
+        PersistenceAnnotation.isArrayOrMap = function (f, propertyName) {
+            while (f != Object) {
+                if (PersistenceAnnotation.getPropertyProperty(f, propertyName, "arrayOrMap"))
+                    return true;
+                f = omm.PersistenceAnnotation.getParentClass(f);
+            }
+            return false;
         };
         PersistenceAnnotation.getPropertyClass = function (f, propertyName) {
             while (f != Object) {

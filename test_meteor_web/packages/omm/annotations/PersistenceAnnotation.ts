@@ -170,9 +170,14 @@ module omm
         // ---- Collection ----
 
 
-        static isArrayOrMap( typeClass:TypeClass<any>, propertyName:string ):boolean
-        {
-            return PersistenceAnnotation.getPropertyProperty( typeClass, propertyName, "arrayOrMap")==true;
+        static isArrayOrMap( f:TypeClass<any>, propertyName:string ):boolean{
+            while(f!=Object){
+                if( PersistenceAnnotation.getPropertyProperty(f, propertyName, "arrayOrMap") )
+                    return true;
+                f = omm.PersistenceAnnotation.getParentClass(f);
+
+            }
+            return false;
         }
 
         // ---- typed properties ----
