@@ -1,6 +1,6 @@
 Package.describe({
   name: 'bertundmax:omm',
-  version: '0.0.6',
+  version: '0.0.7',
   // Brief, one-line summary of the package.
   summary: 'Object meteor mapper. Maps between rich objects and documents.',
   // URL to the Git repository containing the source code for this package.
@@ -30,9 +30,9 @@ Package.onUse(function(api) {
 	api.addFiles('omm/BaseCollection.js');
 	api.addFiles('omm/MeteorObjectRetriever.js');
 	api.addFiles('omm/SerializationPath.js');
+
 	api.export('omm', 'client');
 	api.export('omm', 'server');
-
 });
 
 

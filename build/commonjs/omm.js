@@ -176,11 +176,21 @@ var omm;
         PersistenceAnnotation.getParentClass = function (t) {
             return Object.getPrototypeOf(t.prototype).constructor;
         };
-        PersistenceAnnotation.isStoredAsForeignKeys = function (typeClass, propertyName) {
-            return PersistenceAnnotation.getPropertyProperty(typeClass, propertyName, "askeys");
+        PersistenceAnnotation.isStoredAsForeignKeys = function (f, propertyName) {
+            while (f != Object) {
+                if (PersistenceAnnotation.getPropertyProperty(f, propertyName, "askeys"))
+                    return true;
+                f = omm.PersistenceAnnotation.getParentClass(f);
+            }
+            return false;
         };
-        PersistenceAnnotation.isIgnored = function (typeClass, propertyName) {
-            return PersistenceAnnotation.getPropertyProperty(typeClass, propertyName, "ignore");
+        PersistenceAnnotation.isIgnored = function (f, propertyName) {
+            while (f != Object) {
+                if (PersistenceAnnotation.getPropertyProperty(f, propertyName, "ignore"))
+                    return true;
+                f = omm.PersistenceAnnotation.getParentClass(f);
+            }
+            return false;
         };
         PersistenceAnnotation.getWrappedFunctionNames = function (f) {
             return PersistenceAnnotation.getPropertyNamesByMetaData(f.prototype, "persistence:wrap");

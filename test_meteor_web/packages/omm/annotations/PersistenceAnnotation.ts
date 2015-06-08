@@ -89,6 +89,7 @@ module omm
     {
         return PersistenceAnnotation.setPropertyProperty(targetPrototypeObject.constructor, propertyName, "askeys", true);
     }
+
     export function Ignore( targetPrototypeObject:any, propertyName:string  )
     {
         return PersistenceAnnotation.setPropertyProperty(targetPrototypeObject.constructor, propertyName, "ignore", true);
@@ -229,13 +230,26 @@ module omm
 
         // ---- AsForeignKeys ----
 
-        static isStoredAsForeignKeys( typeClass:TypeClass<any>, propertyName:string ):boolean {
-            return PersistenceAnnotation.getPropertyProperty(typeClass, propertyName, "askeys");
+        static isStoredAsForeignKeys( f:TypeClass<any>, propertyName:string ):boolean {
+            while(f!=Object){
+                if( PersistenceAnnotation.getPropertyProperty(f, propertyName, "askeys") )
+                    return true;
+                f = omm.PersistenceAnnotation.getParentClass(f);
+
+            }
+            return false;
         }
 
-        static isIgnored( typeClass:TypeClass<any>, propertyName:string ):boolean
+        static isIgnored( f:TypeClass<any>, propertyName:string ):boolean
         {
-            return PersistenceAnnotation.getPropertyProperty(typeClass, propertyName, "ignore");
+            //return PersistenceAnnotation.getPropertyProperty(typeClass, propertyName, "ignore");
+            while(f!=Object){
+                if( PersistenceAnnotation.getPropertyProperty(f, propertyName, "ignore") )
+                    return true;
+                f = omm.PersistenceAnnotation.getParentClass(f);
+
+            }
+            return false;
         }
 
 

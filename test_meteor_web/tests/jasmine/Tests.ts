@@ -527,6 +527,28 @@ describe("The persistence thing", function(){
         expect( doc.parentOther instanceof Tests.TestInheritanceOther ).toBeFalsy();
     });
 
+    it("ignores properties that need to be ignored on parent properties", function(){
+        var s  = new omm.Serializer( new omm.LocalObjectRetriever() );
+        var child:Tests.TestInheritanceChild = new Tests.TestInheritanceChild();
+        child.ignoredOther = new Tests.TestInheritanceOther();
+        child.ignoredOther.name = "I need to be ignored";
+        child.parentOther = new Tests.TestInheritanceOther();
+        child.parentOther.name = "Groundhog";
+        child.parentOther.otherness = 84;
+        var doc:any = s.toDocument(child);
+        var child2 = s.toObject(doc, Tests.TestInheritanceChild);
+        expect( doc.ignoredOther ).toBeUndefined();
+        expect( child2.ignoredOther ).toBeUndefined();
+    });
+
+    it("stores properties as keys that need to be stores as key on parent properties", function(){
+        var s  = new omm.Serializer( new omm.MeteorObjectRetriever() );
+        var child:Tests.TestInheritanceChild = new Tests.TestInheritanceChild();
+        child.person = new Tests.TestPerson('p1','pete');
+        var doc:any = s.toDocument(child);
+        expect( typeof doc.person ).toBe("string");
+    });
+
     // write test that 'null' values for objects and properties can be serialized and deserialized
 
 });

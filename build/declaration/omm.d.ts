@@ -32,8 +32,8 @@ declare module omm {
         static setPropertyProperty(cls: TypeClass<any>, propertyName: string, property: string, value: any): void;
         private static getPropertyProperty(cls, propertyName, propertyProperty);
         static getParentClass(t: TypeClass<any>): TypeClass<any>;
-        static isStoredAsForeignKeys(typeClass: TypeClass<any>, propertyName: string): boolean;
-        static isIgnored(typeClass: TypeClass<any>, propertyName: string): boolean;
+        static isStoredAsForeignKeys(f: TypeClass<any>, propertyName: string): boolean;
+        static isIgnored(f: TypeClass<any>, propertyName: string): boolean;
         static getWrappedFunctionNames<T extends Object>(f: TypeClass<T>): Array<string>;
         static getPropertyNamesByMetaData(o: any, metaData: string): string[];
     }
