@@ -36,6 +36,10 @@ var omm;
         omm.entityClasses[className(typeClass)] = typeClass;
     }
     omm.Entity = Entity;
+    function addEntity(cls) {
+        omm.Entity(cls);
+    }
+    omm.addEntity = addEntity;
     function getDefaultCollectionName(t) {
         return omm.className(t);
     }
@@ -102,6 +106,26 @@ var omm;
         };
     }
     omm.Type = Type;
+    function propertyType(t, propertyName, typeClassName) {
+        omm.Type(typeClassName)(t.prototype, propertyName);
+    }
+    omm.propertyType = propertyType;
+    function propertyArrayType(t, propertyName, typeClassName) {
+        omm.ArrayType(typeClassName)(t.prototype, propertyName);
+    }
+    omm.propertyArrayType = propertyArrayType;
+    function propertyDictionaryType(t, propertyName, typeClassName) {
+        omm.DictionaryType(typeClassName)(t.prototype, propertyName);
+    }
+    omm.propertyDictionaryType = propertyDictionaryType;
+    function asForeignKey(t, propertyName) {
+        omm.AsForeignKey(t.prototype, propertyName);
+    }
+    omm.asForeignKey = asForeignKey;
+    function ignoreProperty(t, propertyName) {
+        omm.Ignore(t.prototype, propertyName);
+    }
+    omm.ignoreProperty = ignoreProperty;
     function className(fun) {
         var ret = fun.toString();
         ret = ret.substr('function '.length);

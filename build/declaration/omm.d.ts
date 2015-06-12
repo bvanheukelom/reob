@@ -11,6 +11,7 @@ declare module omm {
     function defineMetadata(propertyName: any, value: any, cls: any): void;
     function getMetadata(propertyName: any, cls: any): any;
     function Entity(p1: Function): any;
+    function addEntity(cls: TypeClass<Object>): void;
     function getDefaultCollectionName(t: omm.TypeClass<any>): string;
     function addCollectionRoot(t: omm.TypeClass<any>, collectionName: string): void;
     function Wrap(t: Function, functionName: string, objectDescriptor: any): void;
@@ -23,6 +24,11 @@ declare module omm {
     function DocumentName(name: string): (targetPrototypeObject: any, propertyName: string) => void;
     function AsForeignKey(targetPrototypeObject: Function, propertyName: string): void;
     function Type(typeClassName: string): (targetPrototypeObject: any, propertyName: string) => void;
+    function propertyType(t: TypeClass<Object>, propertyName: string, typeClassName: string): void;
+    function propertyArrayType(t: TypeClass<Object>, propertyName: string, typeClassName: string): void;
+    function propertyDictionaryType(t: TypeClass<Object>, propertyName: string, typeClassName: string): void;
+    function asForeignKey(t: TypeClass<Object>, propertyName: string): void;
+    function ignoreProperty(t: TypeClass<Object>, propertyName: string): void;
     function className(fun: omm.TypeClass<Object>): string;
     class PersistenceAnnotation {
         static getClass<T extends Object>(o: T): omm.TypeClass<T>;

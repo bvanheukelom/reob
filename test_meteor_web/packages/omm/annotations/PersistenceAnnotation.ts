@@ -41,6 +41,10 @@ module omm
         omm.entityClasses[className(typeClass)]=typeClass;
     }
 
+    export function addEntity( cls:TypeClass<Object>){
+        omm.Entity(cls);
+    }
+
     export function getDefaultCollectionName(t:omm.TypeClass<any>):string{
         return omm.className(t);
     }
@@ -85,6 +89,7 @@ module omm
         PersistenceAnnotation.setPropertyProperty(targetPrototypeObject.constructor, propertyName, "ignore", true);
     }
 
+
     export function DocumentName( name:string ) {
         return function(targetPrototypeObject:any, propertyName:string ) {
             var objNames:any = getMetadata("objectNames", targetPrototypeObject);
@@ -116,6 +121,22 @@ module omm
         };
     }
 
+    // plain js api
+    export function propertyType( t:TypeClass<Object>, propertyName:string, typeClassName:string ){
+        omm.Type(typeClassName)(t.prototype, propertyName);
+    }
+    export function propertyArrayType( t:TypeClass<Object>, propertyName:string, typeClassName:string ){
+        omm.ArrayType(typeClassName)(t.prototype, propertyName);
+    }
+    export function propertyDictionaryType( t:TypeClass<Object>, propertyName:string, typeClassName:string ){
+        omm.DictionaryType(typeClassName)(t.prototype, propertyName);
+    }
+    export function asForeignKey( t:TypeClass<Object>, propertyName:string ){
+        omm.AsForeignKey(t.prototype, propertyName);
+    }
+    export function ignoreProperty( t:TypeClass<Object>, propertyName:string ){
+        omm.Ignore(t.prototype, propertyName);
+    }
 
     export function className(fun:omm.TypeClass<Object>):string
     {
