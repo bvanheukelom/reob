@@ -9,6 +9,7 @@ module Tests
     export class TestLeaf
     {
         _id:string;
+        @omm.DocumentName("greenIndex")
         greenNess:number;
 
         @omm.Type("TestTree")

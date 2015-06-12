@@ -29,7 +29,7 @@ module omm {
             //if (!typeClass || typeof typeClass != "function")
             //    throw new Error("Could not load path. No class found for class name :" + persistencePath.getClassName() + ". Key:" + s);
             var collectionName = sPath.getCollectionName();
-            var collection:omm.BaseCollection<Persistable> = collectionName ? omm.MeteorPersistence.collections[collectionName] : undefined;
+            var collection:omm.Collection<Persistable> = collectionName ? omm.MeteorPersistence.collections[collectionName] : undefined;
             if (collection) {
                 var rootValue = collection.getById(sPath.getId());
                 var newValue = rootValue ? sPath.getSubObject(rootValue) : undefined;

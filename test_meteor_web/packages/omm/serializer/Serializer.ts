@@ -205,10 +205,13 @@ module omm{
                 // iterate over all properties
                 for (var propertyName in doc) {
                     var value = doc[propertyName];
-                    var propertyClass = omm.PersistenceAnnotation.getPropertyClass(f, propertyName);
-                    var isStoredAsKeys = omm.PersistenceAnnotation.isStoredAsForeignKeys(f, propertyName);
+                    var objectNameOfTheProperty:string = omm.PersistenceAnnotation.getObjectPropertyName(f, propertyName);
+                    if(!objectNameOfTheProperty)
+                        objectNameOfTheProperty = propertyName;
+                    var propertyClass = omm.PersistenceAnnotation.getPropertyClass(f, objectNameOfTheProperty);
+                    var isStoredAsKeys = omm.PersistenceAnnotation.isStoredAsForeignKeys(f, objectNameOfTheProperty);
                     if (propertyClass && !isStoredAsKeys) {
-                        if (omm.PersistenceAnnotation.isArrayOrMap(f, propertyName)) {
+                        if (omm.PersistenceAnnotation.isArrayOrMap(f, objectNameOfTheProperty)) {
                             var result = Array.isArray(value) ? [] : {};
                             for (var i in value) {
                                 var entry:omm.Document = value[i];
@@ -216,14 +219,14 @@ module omm{
                                 result[i] = entry;
                             }
                             // this can only happen once because if the property is accessed the "lazy load" already kicks in
-                            o[propertyName] = result;
+                            o[objectNameOfTheProperty] = result;
                         }
                         else {
-                            o[propertyName] = this.toObjectRecursive(value, propertyClass);
+                            o[objectNameOfTheProperty] = this.toObjectRecursive(value, propertyClass);
                         }
                     }
                     else {
-                        o[propertyName] = value;
+                        o[objectNameOfTheProperty] = value;
                     }
                 }
             }
@@ -268,6 +271,9 @@ module omm{
             var objectClass = omm.PersistenceAnnotation.getClass(object);
             for (var property in object) {
                 var value = object[property];
+                var documentNameOfTheProperty:string = omm.PersistenceAnnotation.getDocumentPropertyName(objectClass,property);
+                if( !documentNameOfTheProperty )
+                    documentNameOfTheProperty = property;
                 if (value !== undefined && !omm.PersistenceAnnotation.isIgnored(objectClass, property)) {
                     // primitives
                     if( omm.PersistenceAnnotation.getPropertyClass(objectClass,property) ) {
@@ -284,11 +290,11 @@ module omm{
                                 var subObject = value[i];
                                 result[i] = this.toDocumentRecursive(subObject, rootClass, object, property);
                             }
-                            doc[property] = result;
+                            doc[documentNameOfTheProperty] = result;
                         }
                         // object
                         else if (typeof object[property] == 'object') {
-                            doc[property] = this.toDocumentRecursive(value, rootClass, object, property);
+                            doc[documentNameOfTheProperty] = this.toDocumentRecursive(value, rootClass, object, property);
                         } else {
                             throw new Error("Unsupported type : "+ typeof value);
                         }
@@ -297,7 +303,7 @@ module omm{
                         // not doing eeeeenithing with functions
                     }
                     else {
-                        doc[property] = value;
+                        doc[documentNameOfTheProperty] = value;
                     }
 
                 }

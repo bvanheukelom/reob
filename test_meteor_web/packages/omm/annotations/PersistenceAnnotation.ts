@@ -34,41 +34,19 @@ module omm
         }
     }
 
-    export function Entity( p1?:any ):any
+    export function Entity( p1:Function ):any
     {
-        if( typeof p1=="string")
-        {
-            return function (target:Function) {
-                var typeClass:omm.TypeClass<Object> = <omm.TypeClass<Object>>target;
-                //console.log("Entity(<class>) "+className(typeClass)+" with collection name:"+p1);
-                defineMetadata("persistence:collectionName", p1, typeClass);
-                defineMetadata("persistence:entity", true, typeClass);
-                omm.entityClasses[className(typeClass)]=typeClass;
-            }
-        }
-        if( typeof p1=="boolean" )
-        {
-            return function (target:Function) {
-                var typeClass:TypeClass<Object> = <omm.TypeClass<Object>>target;
-                //console.log("Entity(true) "+className(typeClass)+" with collection name:", className(typeClass));
-                if( p1 )
-                    defineMetadata("persistence:collectionName", className(typeClass), typeClass);
-                defineMetadata("persistence:entity", true, typeClass);
-                omm.entityClasses[className(typeClass)]=typeClass;
-            }
-        }
-        else if( typeof p1=="function" ) // annotated without braces
-        {
-            //var tc:TypeClass<Persistable> = <TypeClass<Persistable>>p1;
-            //var className = PersistenceAnnotation.className(tc);
-            //PersistencePrivate.collectionRootClasses.push(tc);
-            var typeClass:TypeClass<Object> = <TypeClass<Object>>p1;
+        var typeClass:TypeClass<Object> = <TypeClass<Object>>p1;
+        defineMetadata("persistence:entity", true, typeClass);
+        omm.entityClasses[className(typeClass)]=typeClass;
+    }
 
-            //console.log("Entity() "+className(typeClass));
-            //defineMetadata("persistence:collectionName", PersistenceAnnotation.className(typeClass), typeClass);
-            defineMetadata("persistence:entity", true, typeClass);
-            omm.entityClasses[className(typeClass)]=typeClass;
-        }
+    export function getDefaultCollectionName(t:omm.TypeClass<any>):string{
+        return omm.className(t);
+    }
+
+    export function addCollectionRoot( t:omm.TypeClass<any>, collectionName:string ){
+        defineMetadata("persistence:collectionName", collectionName, t);
     }
 
     export function Wrap( t:Function, functionName:string, objectDescriptor:any )
@@ -85,6 +63,14 @@ module omm
         };
     }
 
+    export function ArrayType( typeClassName:string ) {
+        return omm.ArrayOrMap(typeClassName);
+    }
+
+    export function DictionaryType( typeClassName:string ) {
+        return omm.ArrayOrMap(typeClassName);
+    }
+
     export function AsForeignKeys( targetPrototypeObject:any, propertyName:string  )
     {
         return PersistenceAnnotation.setPropertyProperty(targetPrototypeObject.constructor, propertyName, "askeys", true);
@@ -92,8 +78,26 @@ module omm
 
     export function Ignore( targetPrototypeObject:any, propertyName:string  )
     {
-        return PersistenceAnnotation.setPropertyProperty(targetPrototypeObject.constructor, propertyName, "ignore", true);
+        PersistenceAnnotation.setPropertyProperty(targetPrototypeObject.constructor, propertyName, "ignore", true);
     }
+
+    export function DocumentName( name:string ) {
+        return function(targetPrototypeObject:any, propertyName:string ) {
+            var objNames:any = getMetadata("objectNames", targetPrototypeObject);
+            if( !objNames ) {
+                objNames = {};
+                defineMetadata("objectNames", objNames, targetPrototypeObject );
+            }
+            var documentNames:any = getMetadata("documentNames", targetPrototypeObject);
+            if( !documentNames ) {
+                documentNames = {};
+                defineMetadata("documentNames", documentNames, targetPrototypeObject );
+            }
+            objNames[name] = propertyName;
+            documentNames[propertyName] = name;
+        }
+    }
+
 
     // for grammar reasons
     export function AsForeignKey( targetPrototypeObject:Function, propertyName:string  )
@@ -160,15 +164,24 @@ module omm
         static getCollectionName(f:TypeClass<any>):string {
             return getMetadata("persistence:collectionName", f);
         }
+
         static isRootEntity(f:TypeClass<any>):boolean {
             return !!PersistenceAnnotation.getCollectionName(f);
         }
+
         static isEntity(f:TypeClass<any>):boolean {
             return !!omm.entityClasses[className(f)];
         }
 
-        // ---- Collection ----
+        static getDocumentPropertyName( typeClass:TypeClass<any>,  objectPropertyName:string ):string {
+            var documentNames = getMetadata("documentNames", typeClass.prototype);
+            return documentNames?documentNames[objectPropertyName]:undefined;
+        }
 
+        static getObjectPropertyName( typeClass:TypeClass<any>,  documentPropertyName:string ):string {
+            var objectNames = getMetadata("objectNames", typeClass.prototype);
+            return objectNames?objectNames[documentPropertyName]:undefined;
+        }
 
         static isArrayOrMap( f:TypeClass<any>, propertyName:string ):boolean{
             while(f!=Object){

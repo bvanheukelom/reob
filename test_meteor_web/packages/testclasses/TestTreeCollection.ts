@@ -3,9 +3,9 @@
  */
 ///<reference path="./references.d.ts"/>
 module Tests {
-    export class TestTreeCollection extends omm.BaseCollection<Tests.TestTree> {
+    export class TestTreeCollection extends omm.Collection<Tests.TestTree> {
         constructor() {
-            super(Tests.TestTree);
+            super(Tests.TestTree,"TheTreeCollection");
         }
 
         newTree(initialHeight:number, callback:(err:any, tree?:Tests.TestTree)=>void):void {

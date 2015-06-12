@@ -1,6 +1,6 @@
 ///<reference path="./references.d.ts"/>
 module Tests {
-    export class TestPersonCollection extends omm.BaseCollection<Tests.TestPerson> {
+    export class TestPersonCollection extends omm.Collection<Tests.TestPerson> {
         constructor() {
             super(Tests.TestPerson);
         }

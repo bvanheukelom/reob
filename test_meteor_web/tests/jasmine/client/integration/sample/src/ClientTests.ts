@@ -11,7 +11,7 @@ describe("The persistence thing on the client ", function(){
 
     beforeEach(function(done){
         console.log("------------------- new test");
-        omm.BaseCollection.resetAll(function(error){
+        omm.Collection.resetAll(function(error){
             if (error)
                 fail(error);
             done();

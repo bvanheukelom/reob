@@ -27,7 +27,7 @@ Package.onUse(function(api) {
 	api.addFiles('serializer/SubObjectPath.js');
 
 	api.addFiles('omm/MeteorPersistence.js');
-	api.addFiles('omm/BaseCollection.js');
+	api.addFiles('omm/Collection.js');
 	api.addFiles('omm/MeteorObjectRetriever.js');
 	api.addFiles('omm/SerializationPath.js');
 

@@ -3,7 +3,7 @@ module omm {
 
     export class MeteorPersistence {
         static classes:{[index:string]:{ new(): Persistable ;}} = {};
-        static collections:{[index:string]:omm.BaseCollection<any>} = {};
+        static collections:{[index:string]:omm.Collection<any>} = {};
         static wrappedCallInProgress = false;
         static nextCallback;
         private static initialized = false;
@@ -50,7 +50,7 @@ module omm {
                 MeteorPersistence.monkeyPatch(c.prototype, functionName, function (originalFunction, ...args:string[]) {
                     //console.log("updating object:",this, "original function :"+originalFunction);
                     var _serializationPath:omm.SerializationPath = this._serializationPath;
-                    var collection:omm.BaseCollection<any> = omm.MeteorPersistence.collections[_serializationPath.getCollectionName()];
+                    var collection:omm.Collection<any> = omm.MeteorPersistence.collections[_serializationPath.getCollectionName()];
                     if( MeteorPersistence.wrappedCallInProgress || Meteor.isServer )
                     {
                         var result = collection.update(_serializationPath.getId(), function (o) {

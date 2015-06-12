@@ -6,7 +6,7 @@
 
 module omm {
 
-    export class BaseCollection<T extends omm.Persistable>
+    export class Collection<T extends omm.Persistable>
     {
         private meteorCollection:any;
         private theClass:TypeClass<T>;
@@ -16,37 +16,40 @@ module omm {
 
         private static meteorCollections:{[index:string]:any} = { };
 
-        constructor( persistableClass:omm.TypeClass<T> )
+        constructor( persistableClass:omm.TypeClass<T>, collectionName?:string )
         {
             this.objectRetriever = new omm.MeteorObjectRetriever();
             this.serializer = new omm.Serializer( this.objectRetriever );
-            var collectionName = omm.PersistenceAnnotation.getCollectionName(persistableClass);
+            //var collectionName = omm.PersistenceAnnotation.getCollectionName(persistableClass);
+            if( !collectionName )
+                collectionName = omm.getDefaultCollectionName(persistableClass);
+            omm.addCollectionRoot(persistableClass, collectionName);
             this.name = collectionName;
             if( !MeteorPersistence.collections[collectionName] ) {
                 // as it doesnt really matter which base collection is used in meteor-calls, we're just using the first that is created
                 MeteorPersistence.collections[collectionName] = this;
             }
-            this.meteorCollection = BaseCollection._getMeteorCollection(collectionName);
+            this.meteorCollection = Collection._getMeteorCollection(collectionName);
             this.theClass = persistableClass;
         }
 
-        static getCollection<P extends omm.Persistable>( t:omm.TypeClass<P> ):BaseCollection<P>
+        static getCollection<P extends omm.Persistable>( t:omm.TypeClass<P> ):Collection<P>
         {
             return MeteorPersistence.collections[omm.PersistenceAnnotation.getCollectionName(t)];
         }
 
         private static _getMeteorCollection( name?:string )
         {
-            if( !BaseCollection.meteorCollections[name] )
+            if( !Collection.meteorCollections[name] )
             {
                 if( name!="users")
                 {
-                    BaseCollection.meteorCollections[name] = new (<any>Meteor).Collection( name );
+                    Collection.meteorCollections[name] = new (<any>Meteor).Collection( name );
                 }
                 else
-                    BaseCollection.meteorCollections[name] = Meteor.users;
+                    Collection.meteorCollections[name] = Meteor.users;
             }
-            return BaseCollection.meteorCollections[name];
+            return Collection.meteorCollections[name];
         }
 
         getName():string
@@ -208,8 +211,8 @@ module omm {
 
         static resetAll( cb:(error?:any)=>void ){
             var arr = [];
-            for( var i in BaseCollection.meteorCollections )
-                arr.push(BaseCollection.meteorCollections[i]);
+            for( var i in Collection.meteorCollections )
+                arr.push(Collection.meteorCollections[i]);
             if( arr.length>0 ){
                 for( var j in arr )
                 {
@@ -229,5 +232,5 @@ module omm {
 
     }
 }
-omm.MeteorPersistence.wrapFunction( omm.BaseCollection, "resetAll", "resetAll", true, null, new omm.ConstantObjectRetriever(omm.BaseCollection) );
+omm.MeteorPersistence.wrapFunction( omm.Collection, "resetAll", "resetAll", true, null, new omm.ConstantObjectRetriever(omm.Collection) );
 

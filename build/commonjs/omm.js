@@ -31,30 +31,19 @@ var omm;
     }
     omm.getMetadata = getMetadata;
     function Entity(p1) {
-        if (typeof p1 == "string") {
-            return function (target) {
-                var typeClass = target;
-                defineMetadata("persistence:collectionName", p1, typeClass);
-                defineMetadata("persistence:entity", true, typeClass);
-                omm.entityClasses[className(typeClass)] = typeClass;
-            };
-        }
-        if (typeof p1 == "boolean") {
-            return function (target) {
-                var typeClass = target;
-                if (p1)
-                    defineMetadata("persistence:collectionName", className(typeClass), typeClass);
-                defineMetadata("persistence:entity", true, typeClass);
-                omm.entityClasses[className(typeClass)] = typeClass;
-            };
-        }
-        else if (typeof p1 == "function") {
-            var typeClass = p1;
-            defineMetadata("persistence:entity", true, typeClass);
-            omm.entityClasses[className(typeClass)] = typeClass;
-        }
+        var typeClass = p1;
+        defineMetadata("persistence:entity", true, typeClass);
+        omm.entityClasses[className(typeClass)] = typeClass;
     }
     omm.Entity = Entity;
+    function getDefaultCollectionName(t) {
+        return omm.className(t);
+    }
+    omm.getDefaultCollectionName = getDefaultCollectionName;
+    function addCollectionRoot(t, collectionName) {
+        defineMetadata("persistence:collectionName", collectionName, t);
+    }
+    omm.addCollectionRoot = addCollectionRoot;
     function Wrap(t, functionName, objectDescriptor) {
         defineMetadata("persistence:wrap", true, t[functionName]);
     }
@@ -66,14 +55,39 @@ var omm;
         };
     }
     omm.ArrayOrMap = ArrayOrMap;
+    function ArrayType(typeClassName) {
+        return omm.ArrayOrMap(typeClassName);
+    }
+    omm.ArrayType = ArrayType;
+    function DictionaryType(typeClassName) {
+        return omm.ArrayOrMap(typeClassName);
+    }
+    omm.DictionaryType = DictionaryType;
     function AsForeignKeys(targetPrototypeObject, propertyName) {
         return PersistenceAnnotation.setPropertyProperty(targetPrototypeObject.constructor, propertyName, "askeys", true);
     }
     omm.AsForeignKeys = AsForeignKeys;
     function Ignore(targetPrototypeObject, propertyName) {
-        return PersistenceAnnotation.setPropertyProperty(targetPrototypeObject.constructor, propertyName, "ignore", true);
+        PersistenceAnnotation.setPropertyProperty(targetPrototypeObject.constructor, propertyName, "ignore", true);
     }
     omm.Ignore = Ignore;
+    function DocumentName(name) {
+        return function (targetPrototypeObject, propertyName) {
+            var objNames = getMetadata("objectNames", targetPrototypeObject);
+            if (!objNames) {
+                objNames = {};
+                defineMetadata("objectNames", objNames, targetPrototypeObject);
+            }
+            var documentNames = getMetadata("documentNames", targetPrototypeObject);
+            if (!documentNames) {
+                documentNames = {};
+                defineMetadata("documentNames", documentNames, targetPrototypeObject);
+            }
+            objNames[name] = propertyName;
+            documentNames[propertyName] = name;
+        };
+    }
+    omm.DocumentName = DocumentName;
     function AsForeignKey(targetPrototypeObject, propertyName) {
         return AsForeignKeys(targetPrototypeObject, propertyName);
     }
@@ -128,6 +142,14 @@ var omm;
         };
         PersistenceAnnotation.isEntity = function (f) {
             return !!omm.entityClasses[className(f)];
+        };
+        PersistenceAnnotation.getDocumentPropertyName = function (typeClass, objectPropertyName) {
+            var documentNames = getMetadata("documentNames", typeClass.prototype);
+            return documentNames ? documentNames[objectPropertyName] : undefined;
+        };
+        PersistenceAnnotation.getObjectPropertyName = function (typeClass, documentPropertyName) {
+            var objectNames = getMetadata("objectNames", typeClass.prototype);
+            return objectNames ? objectNames[documentPropertyName] : undefined;
         };
         PersistenceAnnotation.isArrayOrMap = function (f, propertyName) {
             while (f != Object) {
@@ -448,24 +470,27 @@ var omm;
                 o = new f();
                 for (var propertyName in doc) {
                     var value = doc[propertyName];
-                    var propertyClass = omm.PersistenceAnnotation.getPropertyClass(f, propertyName);
-                    var isStoredAsKeys = omm.PersistenceAnnotation.isStoredAsForeignKeys(f, propertyName);
+                    var objectNameOfTheProperty = omm.PersistenceAnnotation.getObjectPropertyName(f, propertyName);
+                    if (!objectNameOfTheProperty)
+                        objectNameOfTheProperty = propertyName;
+                    var propertyClass = omm.PersistenceAnnotation.getPropertyClass(f, objectNameOfTheProperty);
+                    var isStoredAsKeys = omm.PersistenceAnnotation.isStoredAsForeignKeys(f, objectNameOfTheProperty);
                     if (propertyClass && !isStoredAsKeys) {
-                        if (omm.PersistenceAnnotation.isArrayOrMap(f, propertyName)) {
+                        if (omm.PersistenceAnnotation.isArrayOrMap(f, objectNameOfTheProperty)) {
                             var result = Array.isArray(value) ? [] : {};
                             for (var i in value) {
                                 var entry = value[i];
                                 entry = this.toObjectRecursive(entry, propertyClass);
                                 result[i] = entry;
                             }
-                            o[propertyName] = result;
+                            o[objectNameOfTheProperty] = result;
                         }
                         else {
-                            o[propertyName] = this.toObjectRecursive(value, propertyClass);
+                            o[objectNameOfTheProperty] = this.toObjectRecursive(value, propertyClass);
                         }
                     }
                     else {
-                        o[propertyName] = value;
+                        o[objectNameOfTheProperty] = value;
                     }
                 }
             }
@@ -504,6 +529,9 @@ var omm;
             var objectClass = omm.PersistenceAnnotation.getClass(object);
             for (var property in object) {
                 var value = object[property];
+                var documentNameOfTheProperty = omm.PersistenceAnnotation.getDocumentPropertyName(objectClass, property);
+                if (!documentNameOfTheProperty)
+                    documentNameOfTheProperty = property;
                 if (value !== undefined && !omm.PersistenceAnnotation.isIgnored(objectClass, property)) {
                     if (omm.PersistenceAnnotation.getPropertyClass(objectClass, property)) {
                         if (omm.PersistenceAnnotation.isArrayOrMap(objectClass, property)) {
@@ -516,10 +544,10 @@ var omm;
                                 var subObject = value[i];
                                 result[i] = this.toDocumentRecursive(subObject, rootClass, object, property);
                             }
-                            doc[property] = result;
+                            doc[documentNameOfTheProperty] = result;
                         }
                         else if (typeof object[property] == 'object') {
-                            doc[property] = this.toDocumentRecursive(value, rootClass, object, property);
+                            doc[documentNameOfTheProperty] = this.toDocumentRecursive(value, rootClass, object, property);
                         }
                         else {
                             throw new Error("Unsupported type : " + typeof value);
@@ -528,7 +556,7 @@ var omm;
                     else if (typeof value == 'function') {
                     }
                     else {
-                        doc[property] = value;
+                        doc[documentNameOfTheProperty] = value;
                     }
                 }
             }

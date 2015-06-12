@@ -11,11 +11,16 @@ declare module omm {
     function setNonEnumerableProperty(obj: Object, propertyName: string, value: any): void;
     function defineMetadata(propertyName: any, value: any, cls: any): void;
     function getMetadata(propertyName: any, cls: any): any;
-    function Entity(p1?: any): any;
+    function Entity(p1: Function): any;
+    function getDefaultCollectionName(t: omm.TypeClass<any>): string;
+    function addCollectionRoot(t: omm.TypeClass<any>, collectionName: string): void;
     function Wrap(t: Function, functionName: string, objectDescriptor: any): void;
     function ArrayOrMap(typeClassName: string): (targetPrototypeObject: any, propertyName: string) => void;
+    function ArrayType(typeClassName: string): (targetPrototypeObject: any, propertyName: string) => void;
+    function DictionaryType(typeClassName: string): (targetPrototypeObject: any, propertyName: string) => void;
     function AsForeignKeys(targetPrototypeObject: any, propertyName: string): void;
     function Ignore(targetPrototypeObject: any, propertyName: string): void;
+    function DocumentName(name: string): (targetPrototypeObject: any, propertyName: string) => void;
     function AsForeignKey(targetPrototypeObject: Function, propertyName: string): void;
     function Type(typeClassName: string): (targetPrototypeObject: any, propertyName: string) => void;
     function className(fun: omm.TypeClass<Object>): string;
@@ -27,6 +32,8 @@ declare module omm {
         static getCollectionName(f: TypeClass<any>): string;
         static isRootEntity(f: TypeClass<any>): boolean;
         static isEntity(f: TypeClass<any>): boolean;
+        static getDocumentPropertyName(typeClass: TypeClass<any>, objectPropertyName: string): string;
+        static getObjectPropertyName(typeClass: TypeClass<any>, documentPropertyName: string): string;
         static isArrayOrMap(f: TypeClass<any>, propertyName: string): boolean;
         static getPropertyClass(f: TypeClass<any>, propertyName: string): TypeClass<any>;
         static getTypedPropertyNames<T extends Object>(f: TypeClass<T>): Array<string>;

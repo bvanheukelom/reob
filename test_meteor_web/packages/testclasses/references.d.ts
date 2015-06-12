@@ -14,5 +14,5 @@
 ///<reference path="../omm/serializer/Document.ts"/>
 ///<reference path="../omm/omm/MeteorPersistence.ts"/>
 ///<reference path="../omm/omm/MeteorObjectRetriever.ts"/>
-///<reference path="../omm/omm/BaseCollection.ts"/>
+///<reference path="../omm/omm/Collection.ts"/>
 ///<reference path="../omm/serializer/LocalObjectRetriever.ts"/>

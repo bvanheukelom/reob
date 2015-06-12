@@ -11,7 +11,7 @@ describe("The persistence thing", function(){
 
     beforeEach(function(done){
         console.log("------------------- new test");
-        omm.BaseCollection.resetAll(function(error){
+        omm.Collection.resetAll(function(error){
             if (error)
                 fail(error);
             done();
@@ -40,6 +40,11 @@ describe("The persistence thing", function(){
     it( "knows types ", function(){
         expect( omm.PersistenceAnnotation.getPropertyClass(Tests.TestPerson, "tree") ).toBe(Tests.TestTree);
         expect( omm.PersistenceAnnotation.getPropertyClass(Tests.TestPerson, "leaf") ).toBe(Tests.TestLeaf);
+    });
+
+    it( "knows document names ", function(){
+        expect( omm.PersistenceAnnotation.getDocumentPropertyName(Tests.TestLeaf, "greenNess") ).toBe("greenIndex");
+        expect( omm.PersistenceAnnotation.getObjectPropertyName(Tests.TestLeaf, "greenIndex") ).toBe("greenNess");
     });
 
 
@@ -177,11 +182,23 @@ describe("The persistence thing", function(){
         var t1:Tests.TestTree = new Tests.TestTree(123);
         t1.setId("t1");
         t1.grow();
+        debugger;
+
         var doc = serializer.toDocument(t1);
         var t1:Tests.TestTree = serializer.toObject(doc, Tests.TestTree);
         expect(t1.getId()).toBe("t1");
         expect(t1.getLeaves()[0] instanceof Tests.TestLeaf).toBeTruthy();
     });
+
+    it("deserializes objects that have document names", function(){
+        var serializer:omm.Serializer = new omm.Serializer( new omm.MeteorObjectRetriever() );
+        var t1:Tests.TestTree = new Tests.TestTree(123);
+        t1.setId("t1");
+        t1.grow();
+        var doc:any = serializer.toDocument(t1);
+        expect(doc.thoseGreenThings[0].greenIndex ).toBe(t1.getLeaves()[0].greenNess);
+    });
+
 
     it("reoves all", function(){
         expect(true).toBeTruthy();

@@ -1,7 +1,7 @@
 ///<reference path="./references.d.ts"/>
 module Tests
 {
-    @omm.Entity(true)
+    @omm.Entity
     export class TestPerson
     {
         name:string;

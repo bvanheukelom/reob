@@ -1,12 +1,13 @@
 module Tests
 {
-    @omm.Entity("TheTreeCollection")
+    @omm.Entity//("TheTreeCollection")
     export class TestTree {
         private _id:string;
         private height:number = 10;
 
-        @omm.ArrayOrMap("TestLeaf")
-            leaves:Array<TestLeaf> = [];
+        @omm.ArrayType("TestLeaf")
+        @omm.DocumentName('thoseGreenThings')
+        leaves:Array<TestLeaf> = [];
 
         @omm.Type("TestAddress")
         @omm.AsForeignKey

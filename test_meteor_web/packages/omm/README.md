@@ -1,5 +1,15 @@
 
-Store and retrieve objects (not documents) from a mongo/meteor database.
+Omm is a meteor package that helps to separate persistence from the domain objects.
+
+Here is a code sample:
+
+
+
+
+Store and retrieve objects (not documents) from meteor using a mongo database.
+
+
+
 
 Annotate type information on the class via descriptive functions (ES6 annotations).
 

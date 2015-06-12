@@ -11,7 +11,7 @@ describe("The persistence thing on the server", function(){
 
     beforeEach(function(done){
         console.log("------------------- new test");
-        omm.BaseCollection.resetAll(function(error){
+        omm.Collection.resetAll(function(error){
             if (!error)
                 done();
             else
