@@ -22,7 +22,6 @@ Package.onUse(function(api) {
 	api.addFiles('serializer/Document.js');
 	api.addFiles('serializer/LocalObjectRetriever.js');
 	api.addFiles('serializer/ObjectRetriever.js');
-	api.addFiles('serializer/Persistable.js');
 	api.addFiles('serializer/Serializer.js');
 	api.addFiles('serializer/SubObjectPath.js');
 

@@ -32,8 +32,8 @@ describe("The persistence thing on the server", function(){
         var t1:Tests.TestTree = new Tests.TestTree(10);
         treeCollection.insert(t1);
         t1.grow();
-        expect(treeCollection.getById(t1.getId())).toBeDefined();
-        expect(treeCollection.getById(t1.getId()).getLeaves()[0] instanceof Tests.TestLeaf).toBeTruthy();
+        expect(treeCollection.getById(t1.treeId)).toBeDefined();
+        expect(treeCollection.getById(t1.treeId).getLeaves()[0] instanceof Tests.TestLeaf).toBeTruthy();
 
     });
 
@@ -41,17 +41,17 @@ describe("The persistence thing on the server", function(){
         var t1:Tests.TestTree = new Tests.TestTree(10);
         t1.grow();
         treeCollection.insert(t1);
-        expect(treeCollection.getById(t1.getId())).toBeDefined();
-        expect(treeCollection.getById(t1.getId()).getLeaves()[0] instanceof Tests.TestLeaf).toBeTruthy();
+        expect(treeCollection.getById(t1.treeId)).toBeDefined();
+        expect(treeCollection.getById(t1.treeId).getLeaves()[0] instanceof Tests.TestLeaf).toBeTruthy();
 
     });
 
     it("can call wrapped functions", function(done){
         treeCollection.newTree(24,function(err:any,t:Tests.TestTree){
             t.grow();
-            expect(treeCollection.getById(t.getId())).toBeDefined();
-            expect(treeCollection.getById(t.getId()).getLeaves().length).toBe(1);
-            expect(treeCollection.getById(t.getId()).getLeaves()[0] instanceof Tests.TestLeaf).toBeTruthy();
+            expect(treeCollection.getById(t.treeId)).toBeDefined();
+            expect(treeCollection.getById(t.treeId).getLeaves().length).toBe(1);
+            expect(treeCollection.getById(t.treeId).getLeaves()[0] instanceof Tests.TestLeaf).toBeTruthy();
             done();
         });
     });
@@ -73,7 +73,7 @@ describe("The persistence thing on the server", function(){
 
         expect(personCollection.getById("p1").trees).toBeDefined();
         expect(Array.isArray( personCollection.getById("p1").trees )).toBeTruthy();
-        expect( personCollection.getById("p1").trees[1].getId()).toBe(t2.getId());
+        expect( personCollection.getById("p1").trees[1].treeId).toBe(t2.treeId);
     });
 
     it("can store objects as foreign keys that are an arrayOrMap entry and do not have an id", function(){
@@ -86,7 +86,7 @@ describe("The persistence thing on the server", function(){
         var doc:any = serializer.toDocument(tree);
         expect(doc.address).toBe('TestPerson[id1].addresses|0');
         treeCollection.insert(tree);
-        var t2 = treeCollection.getById(tree.getId());
+        var t2 = treeCollection.getById(tree.treeId);
         expect(t2.address instanceof Tests.TestAddress).toBeTruthy();
         expect(t2.address.getStreet()).toBe("jockeh str.1");
     });

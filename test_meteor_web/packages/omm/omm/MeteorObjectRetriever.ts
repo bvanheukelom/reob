@@ -2,7 +2,7 @@
 ///<reference path="./SerializationPath.ts"/>
 
 module omm {
-    export interface MeteorPersistable extends omm.Persistable{
+    export interface MeteorPersistable {
         _serializationPath?:omm.SerializationPath;
     }
 
@@ -12,8 +12,10 @@ module omm {
                 return object._serializationPath.toString();
             else {
                 var objectClass = omm.PersistenceAnnotation.getClass(object);
-                if (omm.PersistenceAnnotation.isRootEntity(objectClass) && object.getId()) {
-                    return new omm.SerializationPath(this, omm.PersistenceAnnotation.getCollectionName(objectClass), object.getId()).toString();
+                var idPropertyName = omm.PersistenceAnnotation.getIdPropertyName(objectClass);
+                var id = object[idPropertyName];
+                if (omm.PersistenceAnnotation.isRootEntity(objectClass) && id) {
+                    return new omm.SerializationPath(this, omm.PersistenceAnnotation.getCollectionName(objectClass), id).toString();
                 }
                 else {
                     throw new Error("Error while 'toString'. Objects that should be stored as foreign keys need to be persisted beforehand or be the root entity of a collection and have an id.");
@@ -29,7 +31,7 @@ module omm {
             //if (!typeClass || typeof typeClass != "function")
             //    throw new Error("Could not load path. No class found for class name :" + persistencePath.getClassName() + ". Key:" + s);
             var collectionName = sPath.getCollectionName();
-            var collection:omm.Collection<Persistable> = collectionName ? omm.MeteorPersistence.collections[collectionName] : undefined;
+            var collection:omm.Collection<Object> = collectionName ? omm.MeteorPersistence.collections[collectionName] : undefined;
             if (collection) {
                 var rootValue = collection.getById(sPath.getId());
                 var newValue = rootValue ? sPath.getSubObject(rootValue) : undefined;
@@ -54,7 +56,7 @@ module omm {
         }
 
         // if I could I would make this package protected
-        updateSerializationPaths(object:MeteorPersistable, visited?:Array<Persistable>):void {
+        updateSerializationPaths(object:MeteorPersistable, visited?:Array<Object>):void {
             var that = this;
             if (!visited)
                 visited = [];
@@ -67,8 +69,10 @@ module omm {
             var objectClass = PersistenceAnnotation.getClass(object);
             if (PersistenceAnnotation.isRootEntity(objectClass)) {
                 if (!object._serializationPath) {
-                    if ( object.getId())
-                        this.setSerializationPath( object, new omm.SerializationPath(this, PersistenceAnnotation.getCollectionName(objectClass), object.getId()) );
+                    var idPropertyName = omm.PersistenceAnnotation.getIdPropertyName(objectClass);
+                    var id = object[idPropertyName];
+                    if ( id )
+                        this.setSerializationPath( object, new omm.SerializationPath(this, PersistenceAnnotation.getCollectionName(objectClass), id) );
                 }
             }
             if (!object._serializationPath)

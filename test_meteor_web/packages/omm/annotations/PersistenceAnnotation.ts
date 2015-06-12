@@ -76,6 +76,10 @@ module omm
         return PersistenceAnnotation.setPropertyProperty(targetPrototypeObject.constructor, propertyName, "askeys", true);
     }
 
+    export function Id( targetPrototypeObject:any, propertyName:string  ) {
+        omm.DocumentName("_id")(targetPrototypeObject, propertyName);
+    }
+
     export function Ignore( targetPrototypeObject:any, propertyName:string  )
     {
         PersistenceAnnotation.setPropertyProperty(targetPrototypeObject.constructor, propertyName, "ignore", true);
@@ -243,6 +247,11 @@ module omm
 
         static getParentClass( t:TypeClass<any> ):TypeClass<any> {
             return Object.getPrototypeOf(t.prototype).constructor;
+        }
+
+
+        static getIdPropertyName(t:TypeClass<any>):string{
+            return  omm.PersistenceAnnotation.getObjectPropertyName( t, "_id" ) || "_id";
         }
 
 

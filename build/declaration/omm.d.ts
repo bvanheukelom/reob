@@ -18,6 +18,7 @@ declare module omm {
     function ArrayType(typeClassName: string): (targetPrototypeObject: any, propertyName: string) => void;
     function DictionaryType(typeClassName: string): (targetPrototypeObject: any, propertyName: string) => void;
     function AsForeignKeys(targetPrototypeObject: any, propertyName: string): void;
+    function Id(targetPrototypeObject: any, propertyName: string): void;
     function Ignore(targetPrototypeObject: any, propertyName: string): void;
     function DocumentName(name: string): (targetPrototypeObject: any, propertyName: string) => void;
     function AsForeignKey(targetPrototypeObject: Function, propertyName: string): void;
@@ -39,6 +40,7 @@ declare module omm {
         static setPropertyProperty(cls: TypeClass<any>, propertyName: string, property: string, value: any): void;
         private static getPropertyProperty(cls, propertyName, propertyProperty);
         static getParentClass(t: TypeClass<any>): TypeClass<any>;
+        static getIdPropertyName(t: TypeClass<any>): string;
         static isStoredAsForeignKeys(f: TypeClass<any>, propertyName: string): boolean;
         static isIgnored(f: TypeClass<any>, propertyName: string): boolean;
         static getWrappedFunctionNames<T extends Object>(f: TypeClass<T>): Array<string>;
@@ -50,13 +52,6 @@ declare module omm {
         _id?: string;
         serial?: number;
         className?: string;
-    }
-}
-declare module omm {
-    interface Persistable {
-        getId?(): string;
-        setId?(s: string): void;
-        _objectRetriever?: omm.ObjectRetriever;
     }
 }
 declare module omm {
@@ -77,12 +72,12 @@ declare module omm {
         constructor(retri: ObjectRetriever);
         static init(): void;
         private static installLazyLoaderGetterSetters(c);
-        static forEachTypedObject(object: omm.Persistable, cb: (path: omm.SubObjectPath, object: omm.Persistable) => void): void;
-        static forEachTypedObjectRecursive(rootObject: omm.Persistable, object: omm.Persistable, path: omm.SubObjectPath, visited: Array<Persistable>, cb: (path: omm.SubObjectPath, object: omm.Persistable) => void): void;
-        static needsLazyLoading(object: Persistable, propertyName: string): boolean;
-        toObject<T extends omm.Persistable>(doc: Document, f: omm.TypeClass<T>): T;
+        static forEachTypedObject(object: Object, cb: (path: omm.SubObjectPath, object: Object) => void): void;
+        static forEachTypedObjectRecursive(rootObject: Object, object: Object, path: omm.SubObjectPath, visited: Array<Object>, cb: (path: omm.SubObjectPath, object: Object) => void): void;
+        static needsLazyLoading(object: Object, propertyName: string): boolean;
+        toObject<T extends Object>(doc: Document, f: omm.TypeClass<T>): T;
         private toObjectRecursive<T>(doc, f);
-        toDocument(object: omm.Persistable): omm.Document;
+        toDocument(object: Object): omm.Document;
         private toDocumentRecursive(object, rootClass?, parentObject?, propertyNameOnParentObject?);
         private createDocument(object, rootClass?, parentObject?, propertyNameOnParentObject?);
     }
@@ -101,7 +96,7 @@ declare module omm {
     class MeteorPersistence {
         static classes: {
             [index: string]: {
-                new (): Persistable;
+                new (): Object;
             };
         };
         static collections: {
@@ -115,7 +110,7 @@ declare module omm {
         static init(): void;
         static objectsClassName(o: any): string;
         static withCallback(p: Function, c: (error: any, result: any) => void): void;
-        static wrapClass<T extends Persistable>(c: TypeClass<T>): void;
+        static wrapClass<T extends Object>(c: TypeClass<T>): void;
         private static getClassName(o);
         static wrapFunction(object: any, propertyName: string, meteorMethodName: string, serverOnly: boolean, argumentSerializer: omm.Serializer, objectRetriever: ObjectRetriever): void;
         static monkeyPatch(object: any, functionName: string, patchFunction: (original: Function, ...arg: any[]) => any): void;
@@ -146,7 +141,7 @@ declare module omm {
     }
 }
 declare module omm {
-    interface MeteorPersistable extends omm.Persistable {
+    interface MeteorPersistable {
         _serializationPath?: omm.SerializationPath;
     }
     class MeteorObjectRetriever implements omm.ObjectRetriever {
@@ -155,12 +150,12 @@ declare module omm {
         preToDocument(o: Object): void;
         postToObject(o: Object): void;
         private setSerializationPath(o, pPath);
-        updateSerializationPaths(object: MeteorPersistable, visited?: Array<Persistable>): void;
+        updateSerializationPaths(object: MeteorPersistable, visited?: Array<Object>): void;
         retrieveLocalKeys(o: omm.MeteorPersistable, visited?: Array<Object>, rootObject?: omm.MeteorPersistable): void;
     }
 }
 declare module omm {
-    class Collection<T extends omm.Persistable> {
+    class Collection<T extends Object> {
         private meteorCollection;
         private theClass;
         private name;
@@ -168,7 +163,7 @@ declare module omm {
         private objectRetriever;
         private static meteorCollections;
         constructor(persistableClass: omm.TypeClass<T>, collectionName?: string);
-        static getCollection<P extends omm.Persistable>(t: omm.TypeClass<P>): Collection<P>;
+        static getCollection<P extends Object>(t: omm.TypeClass<P>): Collection<P>;
         private static _getMeteorCollection(name?);
         getName(): string;
         getMeteorCollection(): any;

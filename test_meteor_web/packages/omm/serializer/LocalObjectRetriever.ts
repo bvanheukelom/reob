@@ -3,7 +3,6 @@
 ///<reference path="./Document.ts"/>
 ///<reference path="./Serializer.ts"/>
 ///<reference path="./ObjectRetriever.ts"/>
-///<reference path="./Persistable.ts"/>
 
 module omm{
     export class LocalObjectRetriever implements omm.ObjectRetriever{
@@ -33,14 +32,14 @@ module omm{
 
         preToDocument(o:Object){
             var that = this;
-            omm.Serializer.forEachTypedObject(o, function(path:omm.SubObjectPath, subO:omm.Persistable){
+            omm.Serializer.forEachTypedObject(o, function(path:omm.SubObjectPath, subO:Object){
                 that.setQuietProperty(subO,"localPath",path.toString());
             });
         }
 
         postToObject(o:Object){
             var that = this;
-            omm.Serializer.forEachTypedObject(o, function(path:omm.SubObjectPath, o:omm.Persistable){
+            omm.Serializer.forEachTypedObject(o, function(path:omm.SubObjectPath, o:Object){
                 that.setQuietProperty(o,"rootObject",o);
             });
         }

@@ -2,7 +2,8 @@ module Tests
 {
     @omm.Entity//("TheTreeCollection")
     export class TestTree {
-        private _id:string;
+        @omm.Id
+        treeId:string;
         private height:number = 10;
 
         @omm.ArrayType("TestLeaf")
@@ -35,15 +36,6 @@ module Tests
         wither()
         {
             this.leaves = [];
-        }
-
-        getId():string {
-            return this._id;
-        }
-        setId(i:string)
-        {
-            console.log("Setting tree id:"+i)
-            this._id = i;
         }
 
         getHeight():number {

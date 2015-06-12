@@ -2,7 +2,7 @@
 module omm {
 
     export class MeteorPersistence {
-        static classes:{[index:string]:{ new(): Persistable ;}} = {};
+        static classes:{[index:string]:{ new(): Object ;}} = {};
         static collections:{[index:string]:omm.Collection<any>} = {};
         static wrappedCallInProgress = false;
         static nextCallback;
@@ -15,7 +15,7 @@ module omm {
                 MeteorPersistence.meteorObjectRetriever = new omm.MeteorObjectRetriever();
                 MeteorPersistence.serializer = new omm.Serializer( MeteorPersistence.meteorObjectRetriever );
                 Serializer.init();
-                omm.PersistenceAnnotation.getEntityClasses().forEach(function (c:TypeClass<Persistable>) {
+                omm.PersistenceAnnotation.getEntityClasses().forEach(function (c:TypeClass<Object>) {
                     MeteorPersistence.wrapClass(c);
                 });
                 MeteorPersistence.initialized = true;
@@ -39,7 +39,7 @@ module omm {
                 throw new Error("'withCallback' only works on the client as it is called when the next wrapped meteor call returns" );
         }
 
-        static wrapClass<T extends Persistable>(c:TypeClass<T>) {
+        static wrapClass<T extends Object>(c:TypeClass<T>) {
             var className = omm.className(c);
             //console.log("Wrapping transactional functions for class " + className);
             // iterate over all properties of the prototype. this is where the functions are.

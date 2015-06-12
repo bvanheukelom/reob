@@ -67,6 +67,10 @@ var omm;
         return PersistenceAnnotation.setPropertyProperty(targetPrototypeObject.constructor, propertyName, "askeys", true);
     }
     omm.AsForeignKeys = AsForeignKeys;
+    function Id(targetPrototypeObject, propertyName) {
+        omm.DocumentName("_id")(targetPrototypeObject, propertyName);
+    }
+    omm.Id = Id;
     function Ignore(targetPrototypeObject, propertyName) {
         PersistenceAnnotation.setPropertyProperty(targetPrototypeObject.constructor, propertyName, "ignore", true);
     }
@@ -202,6 +206,9 @@ var omm;
         };
         PersistenceAnnotation.getParentClass = function (t) {
             return Object.getPrototypeOf(t.prototype).constructor;
+        };
+        PersistenceAnnotation.getIdPropertyName = function (t) {
+            return omm.PersistenceAnnotation.getObjectPropertyName(t, "_id") || "_id";
         };
         PersistenceAnnotation.isStoredAsForeignKeys = function (f, propertyName) {
             while (f != Object) {
@@ -352,7 +359,7 @@ var omm;
                             else
                                 v = this["_" + propertyName];
                             if (Serializer.needsLazyLoading(this, propertyName)) {
-                                var objectRetriever = this._objectRetriever;
+                                var objectRetriever = this["_objectRetriever"];
                                 if (typeof v == "string") {
                                     v = objectRetriever.getObject(v, this, propertyName);
                                     this[propertyName] = v;
@@ -566,16 +573,11 @@ var omm;
     })();
     omm.Serializer = Serializer;
 })(omm || (omm = {}));
-/**
- * Created by bert on 04.05.15.
- */
-///<reference path="./Document.ts"/>
 ///<reference path="../annotations/PersistenceAnnotation.ts"/>
 ///<reference path="../annotations/TypeClass.ts"/>
 ///<reference path="./Document.ts"/>
 ///<reference path="./Serializer.ts"/>
 ///<reference path="./ObjectRetriever.ts"/>
-///<reference path="./Persistable.ts"/>
 var omm;
 (function (omm) {
     var LocalObjectRetriever = (function () {

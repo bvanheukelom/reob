@@ -66,11 +66,11 @@ describe("The persistence thing", function(){
             expect( tree ).toBeDefined();
             expect( (<any>tree)._serializationPath ).toBeDefined();
             expect( tree instanceof Tests.TestTree).toBeTruthy();
-            expect( tree.getId()).toBeDefined();
+            expect( tree.treeId ).toBeDefined();
             expect( tree.getHeight()).toBe(20);
-            expect( treeCollection.getById(tree.getId())).toBeDefined();
-            expect( treeCollection.getById(tree.getId()).getId()).toBeDefined();
-            expect( treeCollection.getById(tree.getId()).getHeight()).toBe(20);
+            expect( treeCollection.getById(tree.treeId)).toBeDefined();
+            expect( treeCollection.getById(tree.treeId).treeId).toBeDefined();
+            expect( treeCollection.getById(tree.treeId).getHeight()).toBe(20);
             done();
         }));
     });
@@ -116,9 +116,9 @@ describe("The persistence thing", function(){
     it("can do basic removes", function(done){
         treeCollection.newTree(20,function(err, t:Tests.TestTree){
 
-            expect( treeCollection.getById(t.getId())).toBeDefined();
-            treeCollection.deleteTree(t.getId(), function(err){
-                expect( treeCollection.getById(t.getId())).toBeUndefined();
+            expect( treeCollection.getById(t.treeId)).toBeDefined();
+            treeCollection.deleteTree(t.treeId, function(err){
+                expect( treeCollection.getById(t.treeId)).toBeUndefined();
                 done();
             });
         });
@@ -126,7 +126,7 @@ describe("The persistence thing", function(){
     //
     it("uses persistence paths on root documents", function(){
         var t1:Tests.TestTree = new Tests.TestTree(123);
-        t1.setId("tree1");
+        t1.treeId = "tree1";
         t1.grow();
         new omm.MeteorObjectRetriever().updateSerializationPaths(t1);
         expect(t1["_serializationPath"]).toBeDefined();
@@ -149,7 +149,7 @@ describe("The persistence thing", function(){
 
     it("uses persistence paths on subdocuments in arrays", function(){
         var t1:Tests.TestTree = new Tests.TestTree(10);
-        t1.setId("tree1");
+        t1.treeId = "tree1";
         t1.grow();
         new omm.MeteorObjectRetriever().updateSerializationPaths(t1);
 
@@ -180,20 +180,20 @@ describe("The persistence thing", function(){
     it("deserializes objects that have subobjects", function(){
         var serializer:omm.Serializer = new omm.Serializer( new omm.MeteorObjectRetriever() );
         var t1:Tests.TestTree = new Tests.TestTree(123);
-        t1.setId("t1");
+        t1.treeId = "t1";
         t1.grow();
         debugger;
 
         var doc = serializer.toDocument(t1);
         var t1:Tests.TestTree = serializer.toObject(doc, Tests.TestTree);
-        expect(t1.getId()).toBe("t1");
+        expect(t1.treeId).toBe("t1");
         expect(t1.getLeaves()[0] instanceof Tests.TestLeaf).toBeTruthy();
     });
 
     it("deserializes objects that have document names", function(){
         var serializer:omm.Serializer = new omm.Serializer( new omm.MeteorObjectRetriever() );
         var t1:Tests.TestTree = new Tests.TestTree(123);
-        t1.setId("t1");
+        t1.treeId="t1";
         t1.grow();
         var doc:any = serializer.toDocument(t1);
         expect(doc.thoseGreenThings[0].greenIndex ).toBe(t1.getLeaves()[0].greenNess);
@@ -208,7 +208,7 @@ describe("The persistence thing", function(){
 
     it("can use persistence paths on objects that have foreign key properties", function(){
         var t1:Tests.TestTree = new Tests.TestTree(12);
-        t1.setId("dfdf");
+        t1.treeId = "dfdf";
         var tp:Tests.TestPerson = new Tests.TestPerson("tp");
         tp.tree = t1;
         new omm.MeteorObjectRetriever().updateSerializationPaths(tp);
@@ -216,7 +216,7 @@ describe("The persistence thing", function(){
 
     it("can serialize objects that have foreign key properties", function(){
         var t1:Tests.TestTree = new Tests.TestTree(122);
-        t1.setId( "tree1" );
+        t1.treeId = "tree1" ;
         var tp:Tests.TestPerson = new Tests.TestPerson("tp");
         tp.tree = t1;
         var doc = new omm.Serializer( new omm.MeteorObjectRetriever() ).toDocument(tp);
@@ -253,7 +253,7 @@ describe("The persistence thing", function(){
                 tp.chooseTree(t);
                 tp.collectLeaf();
                 expect(personCollection.getById(tp.getId()).leaf).toBeDefined();
-                expect(personCollection.getById(tp.getId()).leaf.getId()+"!").toBe(treeCollection.getById(t.getId()).getLeaves()[0].getId()+"!");
+                expect(personCollection.getById(tp.getId()).leaf.getId()+"!").toBe(treeCollection.getById(t.treeId).getLeaves()[0].getId()+"!");
                 done();
             });
         });
@@ -268,7 +268,7 @@ describe("The persistence thing", function(){
             //expect(t1).toBeDefined();
             for (var i = 0; i < 10; i++)
                 t1.grow();
-            t1 = treeCollection.getById(t1.getId());
+            t1 = treeCollection.getById(t1.treeId);
             expect( t1.getLeaves().length).toBe(10);
             personCollection.newPerson("girl", function (err, tp:Tests.TestPerson) {
                 c++;
@@ -319,8 +319,8 @@ describe("The persistence thing", function(){
                     expect( doc ).toBeDefined();
                     expect( doc.wood ).toBeDefined();
                     expect( doc.wood["xxx"] ).toBeDefined();
-                    expect( doc.wood["xxx"] ).toBe("TheTreeCollection["+klaus.getId()+"]");
-                    expect( doc.wood["yyy"] ).toBe("TheTreeCollection["+peter.getId()+"]");
+                    expect( doc.wood["xxx"] ).toBe("TheTreeCollection["+klaus.treeId+"]");
+                    expect( doc.wood["yyy"] ).toBe("TheTreeCollection["+peter.treeId+"]");
                     done();
                 });
             });
@@ -342,7 +342,7 @@ describe("The persistence thing", function(){
                     expect( typeof held.wood ).toBe("object");
                     expect( held.wood["peterKey"] ).toBeDefined();
                     expect( held.wood["peterKey"] instanceof Tests.TestTree ).toBeTruthy();
-                    expect( held.wood["peterKey"].getId() ).toBe(peter.getId());
+                    expect( held.wood["peterKey"].treeId ).toBe(peter.treeId);
                     done();
                 });
             });

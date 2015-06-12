@@ -33,8 +33,8 @@ describe("The persistence thing on the client ", function(){
                 c++;
                 expect(c).toBe(3);
                 //expect(treeCollection.getById(t.getId())).toBeDefined();
-                expect(treeCollection.getById(t.getId()).getLeaves().length).toBe(1);
-                expect(treeCollection.getById(t.getId()).getLeaves()[0] instanceof Tests.TestLeaf).toBeTruthy();
+                expect(treeCollection.getById(t.treeId).getLeaves().length).toBe(1);
+                expect(treeCollection.getById(t.treeId).getLeaves()[0] instanceof Tests.TestLeaf).toBeTruthy();
                 done();
             });
         });
@@ -139,7 +139,7 @@ describe("The persistence thing on the client ", function(){
                         personCollection.getById(p.getId()).tendToGarden();
                     }, function(err:any, result:number ){
                         expect(result).toBe(14); // tree grew on the server
-                        expect(treeCollection.getById(t.getId()).getHeight()).toBe(13); // but that "growing" wasnt persited
+                        expect(treeCollection.getById(t.treeId).getHeight()).toBe(13); // but that "growing" wasnt persited
                         done();
                     });
                 });

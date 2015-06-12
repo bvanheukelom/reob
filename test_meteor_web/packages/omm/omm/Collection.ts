@@ -1,4 +1,3 @@
-/// <reference path="./../serializer/Persistable.ts" />
 /// <reference path="./../serializer/Serializer.ts" />
 /// <reference path="./../serializer/ConstantObjectRetriever.ts" />
 /// <reference path="./MeteorPersistence.ts" />
@@ -6,7 +5,7 @@
 
 module omm {
 
-    export class Collection<T extends omm.Persistable>
+    export class Collection<T extends Object>
     {
         private meteorCollection:any;
         private theClass:TypeClass<T>;
@@ -33,7 +32,7 @@ module omm {
             this.theClass = persistableClass;
         }
 
-        static getCollection<P extends omm.Persistable>( t:omm.TypeClass<P> ):Collection<P>
+        static getCollection<P extends Object>( t:omm.TypeClass<P> ):Collection<P>
         {
             return MeteorPersistence.collections[omm.PersistenceAnnotation.getCollectionName(t)];
         }
@@ -161,8 +160,9 @@ module omm {
             {
 
                 // TODO make sure that this is unique
-                if( typeof p.getId!="function" || !p.getId() )
-                    p.setId(new (<any>Mongo.ObjectID)()._str);
+                var idPropertyName = omm.PersistenceAnnotation.getIdPropertyName(this.theClass);
+                if( !p[idPropertyName] )
+                    p[idPropertyName] = new (<any>Mongo.ObjectID)()._str;
                 var doc : Document = this.serializer.toDocument( p );
                 //if( typeof p.getId=="function" && p.getId() )
                 //    doc._id = p.getId();
@@ -176,10 +176,7 @@ module omm {
                     if( !e )
                     {
                         //console.log( "inserted into '"+that.getName()+"' new id:"+id);
-                        if( typeof p.setId == "function")
-                            p.setId(id);
-                        else
-                            throw new Error("Unable to set Id after an object of class '"+omm.className(that.theClass)+"' was inserted into collection '"+that.name+"'. Either only call insert with objects that already have an ID or declare a 'setId' function on the class.");
+                        p[idPropertyName] = id;
                         that.objectRetriever.postToObject(p); // kind of the same thing?
                     }
                     else{

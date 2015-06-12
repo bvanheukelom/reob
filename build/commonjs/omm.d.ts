@@ -19,6 +19,7 @@ declare module omm {
     function ArrayType(typeClassName: string): (targetPrototypeObject: any, propertyName: string) => void;
     function DictionaryType(typeClassName: string): (targetPrototypeObject: any, propertyName: string) => void;
     function AsForeignKeys(targetPrototypeObject: any, propertyName: string): void;
+    function Id(targetPrototypeObject: any, propertyName: string): void;
     function Ignore(targetPrototypeObject: any, propertyName: string): void;
     function DocumentName(name: string): (targetPrototypeObject: any, propertyName: string) => void;
     function AsForeignKey(targetPrototypeObject: Function, propertyName: string): void;
@@ -40,6 +41,7 @@ declare module omm {
         static setPropertyProperty(cls: TypeClass<any>, propertyName: string, property: string, value: any): void;
         private static getPropertyProperty(cls, propertyName, propertyProperty);
         static getParentClass(t: TypeClass<any>): TypeClass<any>;
+        static getIdPropertyName(t: TypeClass<any>): string;
         static isStoredAsForeignKeys(f: TypeClass<any>, propertyName: string): boolean;
         static isIgnored(f: TypeClass<any>, propertyName: string): boolean;
         static getWrappedFunctionNames<T extends Object>(f: TypeClass<T>): Array<string>;
@@ -81,12 +83,12 @@ declare module omm {
         constructor(retri: ObjectRetriever);
         static init(): void;
         private static installLazyLoaderGetterSetters(c);
-        static forEachTypedObject(object: omm.Persistable, cb: (path: omm.SubObjectPath, object: omm.Persistable) => void): void;
-        static forEachTypedObjectRecursive(rootObject: omm.Persistable, object: omm.Persistable, path: omm.SubObjectPath, visited: Array<Persistable>, cb: (path: omm.SubObjectPath, object: omm.Persistable) => void): void;
-        static needsLazyLoading(object: Persistable, propertyName: string): boolean;
-        toObject<T extends omm.Persistable>(doc: Document, f: omm.TypeClass<T>): T;
+        static forEachTypedObject(object: Object, cb: (path: omm.SubObjectPath, object: Object) => void): void;
+        static forEachTypedObjectRecursive(rootObject: Object, object: Object, path: omm.SubObjectPath, visited: Array<Object>, cb: (path: omm.SubObjectPath, object: Object) => void): void;
+        static needsLazyLoading(object: Object, propertyName: string): boolean;
+        toObject<T extends Object>(doc: Document, f: omm.TypeClass<T>): T;
         private toObjectRecursive<T>(doc, f);
-        toDocument(object: omm.Persistable): omm.Document;
+        toDocument(object: Object): omm.Document;
         private toDocumentRecursive(object, rootClass?, parentObject?, propertyNameOnParentObject?);
         private createDocument(object, rootClass?, parentObject?, propertyNameOnParentObject?);
     }
@@ -97,13 +99,6 @@ declare module omm {
         getObject(value: string, parentObject?: Object, propertyName?: string): Object;
         preToDocument(o: Object): any;
         postToObject(o: Object): any;
-    }
-}
-declare module omm {
-    interface Persistable {
-        getId?(): string;
-        setId?(s: string): void;
-        _objectRetriever?: omm.ObjectRetriever;
     }
 }
 declare module omm {
