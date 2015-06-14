@@ -16,6 +16,7 @@ declare module omm {
     function getDefaultCollectionName(t: omm.TypeClass<any>): string;
     function addCollectionRoot(t: omm.TypeClass<any>, collectionName: string): void;
     function Wrap(t: Function, functionName: string, objectDescriptor: any): void;
+    function MeteorMethod(p1: any, fName?: string): (t: Function, functionName: string, objectDescriptor: any) => void;
     function ArrayOrMap(typeClassName: string): (targetPrototypeObject: any, propertyName: string) => void;
     function ArrayType(typeClassName: string): (targetPrototypeObject: any, propertyName: string) => void;
     function DictionaryType(typeClassName: string): (targetPrototypeObject: any, propertyName: string) => void;
@@ -51,6 +52,8 @@ declare module omm {
         static isStoredAsForeignKeys(f: TypeClass<any>, propertyName: string): boolean;
         static isIgnored(f: TypeClass<any>, propertyName: string): boolean;
         static getWrappedFunctionNames<T extends Object>(f: TypeClass<T>): Array<string>;
+        static getMethodOptions(cls: TypeClass<any>, functionName: string): any;
+        static getMethodFunctionNames<T extends Object>(f: TypeClass<T>): Array<string>;
         static getPropertyNamesByMetaData(o: any, metaData: string): string[];
     }
 }

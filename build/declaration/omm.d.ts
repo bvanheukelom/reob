@@ -15,6 +15,7 @@ declare module omm {
     function getDefaultCollectionName(t: omm.TypeClass<any>): string;
     function addCollectionRoot(t: omm.TypeClass<any>, collectionName: string): void;
     function Wrap(t: Function, functionName: string, objectDescriptor: any): void;
+    function MeteorMethod(p1: any, fName?: string): (t: Function, functionName: string, objectDescriptor: any) => void;
     function ArrayOrMap(typeClassName: string): (targetPrototypeObject: any, propertyName: string) => void;
     function ArrayType(typeClassName: string): (targetPrototypeObject: any, propertyName: string) => void;
     function DictionaryType(typeClassName: string): (targetPrototypeObject: any, propertyName: string) => void;
@@ -50,6 +51,8 @@ declare module omm {
         static isStoredAsForeignKeys(f: TypeClass<any>, propertyName: string): boolean;
         static isIgnored(f: TypeClass<any>, propertyName: string): boolean;
         static getWrappedFunctionNames<T extends Object>(f: TypeClass<T>): Array<string>;
+        static getMethodOptions(cls: TypeClass<any>, functionName: string): any;
+        static getMethodFunctionNames<T extends Object>(f: TypeClass<T>): Array<string>;
         static getPropertyNamesByMetaData(o: any, metaData: string): string[];
     }
 }
@@ -99,6 +102,11 @@ declare module omm {
     }
 }
 declare module omm {
+    class CallHelper<T extends Object> {
+        object: T;
+        callback: (error: any, result?: any) => void;
+        constructor(o: any, cb?: (error: any, result?: any) => void);
+    }
     class MeteorPersistence {
         static classes: {
             [index: string]: {
@@ -116,6 +124,7 @@ declare module omm {
         static init(): void;
         static objectsClassName(o: any): string;
         static withCallback(p: Function, c: (error: any, result: any) => void): void;
+        static createMeteor: any;
         static wrapClass<T extends Object>(c: TypeClass<T>): void;
         private static getClassName(o);
         static wrapFunction(object: any, propertyName: string, meteorMethodName: string, serverOnly: boolean, argumentSerializer: omm.Serializer, objectRetriever: ObjectRetriever): void;

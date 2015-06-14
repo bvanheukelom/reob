@@ -1,6 +1,15 @@
 ///<reference path="../../../../typings/meteor/meteor.d.ts"/>
 module omm {
 
+    export class CallHelper<T extends Object>{
+        object:T;
+        callback:(error:any, result?:any)=>void;
+        constructor( o, cb?:(error:any, result?:any)=>void ){
+            this.object = o;
+            this.callback = cb;
+        }
+    }
+
     export class MeteorPersistence {
         static classes:{[index:string]:{ new(): Object ;}} = {};
         static collections:{[index:string]:omm.Collection<any>} = {};
@@ -39,11 +48,71 @@ module omm {
                 throw new Error("'withCallback' only works on the client as it is called when the next wrapped meteor call returns" );
         }
 
+        static createMeteorMethod(meteorMethodName:string, originalFunction:Function ){
+            var m = {};
+            m[meteorMethodName] = function (id:string, args:any[], classNames:string[], appendCallback:boolean) {
+                //console.log("Meteor method invoked: "+meteorMethodName+" id:"+id+" appendCallback:"+appendCallback+" args:", args, " classNames:"+classNames);
+                check(id, String);
+                check(args, Array);
+                check(classNames, Array);
+                check(appendCallback, Boolean);
+                omm.MeteorPersistence.wrappedCallInProgress = true;
+                try {
+                    var object = objectRetriever.getObject(id);
+                    if( !object )
+                        throw new Error("Unable to retrieve object with id: "+id);
+                    if (argumentSerializer) {
+                        args.forEach(function (o:any, i:number) {
+                            var argumentClass = omm.PersistenceAnnotation.getEntityClassByName(classNames[i]);
+                            if( argumentClass )
+                            {
+                                if( typeof o =="string" )
+                                    args[i] = MeteorPersistence.meteorObjectRetriever.getObject(o);
+                                else
+                                    args[i] = argumentSerializer.toObject(o, argumentClass);
+                            }
+
+                        });
+                    }
+
+                    var resultObj:any = {};
+                    if (appendCallback) {
+                        //console.log(" Meteor method call. Calling function with callback on ", object);
+                        var syncFunction = Meteor.wrapAsync(function (cb) {
+                            args.push(cb);
+                            originalFunction.apply(object, args);
+                        });
+                        resultObj.result = syncFunction();
+                    }
+                    else {
+                        //console.log("Meteor method call. Calling function without callback");
+                        resultObj.result = originalFunction.apply(object, args);
+                    }
+                    if( argumentSerializer ){
+                        resultObj.className = MeteorPersistence.getClassName(resultObj.result);
+                        if( omm.PersistenceAnnotation.getClass( resultObj.result ) )
+                            resultObj.result = argumentSerializer.toDocument(resultObj.result);
+                    }
+
+                    //console.log("Returning from meteor method '"+meteorMethodName+"' with result:", resultObj);
+
+                    return resultObj;
+                } finally {
+                    omm.MeteorPersistence.wrappedCallInProgress = false;
+                }
+
+            };
+            Meteor.methods(m);
+        }
+
         static wrapClass<T extends Object>(c:TypeClass<T>) {
             var className = omm.className(c);
             //console.log("Wrapping transactional functions for class " + className);
             // iterate over all properties of the prototype. this is where the functions are.
             //var that = this;
+            omm.PersistenceAnnotation.getMethodFunctionNames(c).forEach(function(meteorMethodName:string){
+
+            });
             omm.PersistenceAnnotation.getWrappedFunctionNames(c).forEach(function (functionName) {
                 var domainObjectFunction = c.prototype[functionName];
                 // this is executed last. it wraps the original function into a collection.update

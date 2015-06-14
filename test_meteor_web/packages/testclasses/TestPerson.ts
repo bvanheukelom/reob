@@ -57,6 +57,7 @@ module Tests
 
 
         @omm.Wrap
+        @omm.MeteorMethod
         addAddress(a:TestAddress):Tests.TestAddress
         {
             console.log("inside add address:", (a instanceof TestAddress));

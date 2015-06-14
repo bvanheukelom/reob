@@ -58,6 +58,22 @@ module omm
         defineMetadata("persistence:wrap", true, (<any>t)[functionName] );
     }
 
+    export function MeteorMethod( p1:any, fName?:string )
+    {
+        var options = {};
+        if( fName ){
+            debugger;
+            PersistenceAnnotation.setPropertyProperty(p1, fName, "method", options);
+        }
+        else{
+            return function (t:Function, functionName:string, objectDescriptor:any) {
+                options = p1;
+                debugger;
+                PersistenceAnnotation.setPropertyProperty(<any>t, functionName, "method", options);
+            };
+        }
+    }
+
     export function ArrayOrMap( typeClassName:string )
     {
         return function (targetPrototypeObject: any, propertyName:string) {
@@ -66,6 +82,7 @@ module omm
             PersistenceAnnotation.setPropertyProperty( targetPrototypeObject.constructor, propertyName, "arrayOrMap", true);
         };
     }
+
 
     export function ArrayType( typeClassName:string ) {
         return omm.ArrayOrMap(typeClassName);
@@ -306,6 +323,24 @@ module omm
         public static getWrappedFunctionNames<T extends Object>(f:TypeClass<T>):Array<string>
         {
             return PersistenceAnnotation.getPropertyNamesByMetaData(f.prototype, "persistence:wrap");
+        }
+
+        public static getMethodOptions( cls:TypeClass<any>, functionName:string ):any{
+            return PersistenceAnnotation.getPropertyProperty(cls.prototype, functionName, "method");
+        }
+
+        public static getMethodFunctionNames<T extends Object>(f:TypeClass<T>):Array<string>
+        {
+            var result:Array<string> = [];
+            //while( f!=<any>Object ) {
+                var props = getMetadata("persistence:typedproperties", f.prototype);
+                for (var i in props) {
+                    if (PersistenceAnnotation.getMethodOptions(f, i))
+                        result.push(i);
+                }
+            //    f = omm.PersistenceAnnotation.getParentClass(f);
+            //}
+            return result;
         }
 
         static getPropertyNamesByMetaData( o:any, metaData:string )

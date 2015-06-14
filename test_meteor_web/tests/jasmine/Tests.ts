@@ -25,6 +25,12 @@ describe("The persistence thing", function(){
         expect( omm.PersistenceAnnotation.isRootEntity(Tests.TestLeaf) ).toBeFalsy();
     });
 
+    it( "knows meteor method annotations ", function(){
+        var methodNames = omm.PersistenceAnnotation.getMethodFunctionNames(Tests.TestPerson)
+        expect( methodNames[0] ).toBe("addAddress");
+        expect( methodNames.length ).toBe(1);
+    });
+
     it( "knows the name of collections", function(){
         expect( personCollection.getName() ).toBe("TestPerson");
         expect( treeCollection.getName() ).toBe("TheTreeCollection");
@@ -182,7 +188,6 @@ describe("The persistence thing", function(){
         var t1:Tests.TestTree = new Tests.TestTree(123);
         t1.treeId = "t1";
         t1.grow();
-        debugger;
 
         var doc = serializer.toDocument(t1);
         var t1:Tests.TestTree = serializer.toObject(doc, Tests.TestTree);

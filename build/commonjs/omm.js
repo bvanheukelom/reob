@@ -52,6 +52,21 @@ var omm;
         defineMetadata("persistence:wrap", true, t[functionName]);
     }
     omm.Wrap = Wrap;
+    function MeteorMethod(p1, fName) {
+        var options = {};
+        if (fName) {
+            debugger;
+            PersistenceAnnotation.setPropertyProperty(p1, fName, "method", options);
+        }
+        else {
+            return function (t, functionName, objectDescriptor) {
+                options = p1;
+                debugger;
+                PersistenceAnnotation.setPropertyProperty(t, functionName, "method", options);
+            };
+        }
+    }
+    omm.MeteorMethod = MeteorMethod;
     function ArrayOrMap(typeClassName) {
         return function (targetPrototypeObject, propertyName) {
             PersistenceAnnotation.setPropertyProperty(targetPrototypeObject.constructor, propertyName, "type", typeClassName);
@@ -252,6 +267,18 @@ var omm;
         };
         PersistenceAnnotation.getWrappedFunctionNames = function (f) {
             return PersistenceAnnotation.getPropertyNamesByMetaData(f.prototype, "persistence:wrap");
+        };
+        PersistenceAnnotation.getMethodOptions = function (cls, functionName) {
+            return PersistenceAnnotation.getPropertyProperty(cls.prototype, functionName, "method");
+        };
+        PersistenceAnnotation.getMethodFunctionNames = function (f) {
+            var result = [];
+            var props = getMetadata("persistence:typedproperties", f.prototype);
+            for (var i in props) {
+                if (PersistenceAnnotation.getMethodOptions(f, i))
+                    result.push(i);
+            }
+            return result;
         };
         PersistenceAnnotation.getPropertyNamesByMetaData = function (o, metaData) {
             var result = [];
