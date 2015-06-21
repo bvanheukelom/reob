@@ -147,7 +147,6 @@ declare module omm {
         static serializer: omm.Serializer;
         static init(): void;
         static objectsClassName(o: any): string;
-        static withCallback(p: Function, c: (error: any, result: any) => void): void;
         static createMeteorMethod(options: IMethodOptions): void;
         static wrapClass<T extends Object>(c: TypeClass<T>): void;
         private static getClassName(o);

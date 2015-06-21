@@ -7,7 +7,7 @@ module Tests {
         constructor() {
             super(Tests.TestTree,"TheTreeCollection");
         }
-
+        @omm.MeteorMethod({object:'TestTreeCollection', replaceWithCall:true, parameterTypes:["number","callback"]})
         newTree(initialHeight:number, callback:(err:any, tree?:Tests.TestTree)=>void):void {
             var t:Tests.TestTree = new Tests.TestTree(initialHeight);
             try {
@@ -18,10 +18,12 @@ module Tests {
             }
         }
 
+        @omm.MeteorMethod({object:'TestTreeCollection', replaceWithCall:true, parameterTypes:["string","callback"]})
         deleteTree(treeId:string, cb:(err:any)=>void) {
             this.remove(treeId, cb);
         }
 
+        @omm.MeteorMethod({object:'TestTreeCollection', replaceWithCall:true, parameterTypes:[ "string", "TestTree", "number", "callback" ]})
         serverFunction(treeId:string, t:Tests.TestTree, n:number, cb:(e:any, r:string)=>void) {
             cb(undefined, "Hello " + treeId + "! This is on the " + (Meteor.isServer ? "server" : "client") + " t:" + (t instanceof Tests.TestTree) + " " + t.getHeight() + " n:" + n + " " + (typeof n));
         }
@@ -38,8 +40,5 @@ else
 {
     Meteor.subscribe("trees");
 }
-// TODO move to annotation
 
-omm.MeteorPersistence.wrapFunction(Tests.TestTreeCollection.prototype, "newTree", "newTree", true, new omm.Serializer(new omm.MeteorObjectRetriever()), new omm.ConstantObjectRetriever(new Tests.TestTreeCollection()) );
-omm.MeteorPersistence.wrapFunction(Tests.TestTreeCollection.prototype, "deleteTree", "deleteTree", true, new omm.Serializer(new omm.MeteorObjectRetriever()), new omm.ConstantObjectRetriever(new Tests.TestTreeCollection()) );
-omm.MeteorPersistence.wrapFunction(Tests.TestTreeCollection.prototype, "serverFunction", "serverFunction", true, new omm.Serializer(new omm.MeteorObjectRetriever()), new omm.ConstantObjectRetriever(new Tests.TestTreeCollection()) );
+omm.registerObject('TestTreeCollection', new Tests.TestTreeCollection());

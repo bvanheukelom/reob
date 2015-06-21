@@ -68,10 +68,10 @@ module omm {
     export function Wrap( t:Function, functionName:string, objectDescriptor:any ) {
         //omm.CollectionUpdate(t,functionName,objectDescriptor);
         //omm.MeteorMethod(t,functionName,objectDescriptor);
-        defineMetadata("persistence:wrap", true, (<any>t)[functionName] );
+        //defineMetadata("persistence:wrap", true, (<any>t)[functionName] );
+        omm.CollectionUpdate(t,functionName);
+        omm.MeteorMethod({replaceWithCall:true})(t,functionName,objectDescriptor);
     }
-
-
 
     export function CollectionUpdate( p1:any, fName?:string )
     {

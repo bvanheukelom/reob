@@ -140,16 +140,16 @@ module omm {
         }
 
 
-        static withCallback(p:Function,c:(error:any, result:any)=>void)
-        {
-            if( Meteor.isClient )
-            {
-                MeteorPersistence.nextCallback = c;
-                p();
-            }
-            else
-                throw new Error("'withCallback' only works on the client as it is called when the next wrapped meteor call returns" );
-        }
+        //static withCallback(p:Function,c:(error:any, result:any)=>void)
+        //{
+        //    if( Meteor.isClient )
+        //    {
+        //        MeteorPersistence.nextCallback = c;
+        //        p();
+        //    }
+        //    else
+        //        throw new Error("'withCallback' only works on the client as it is called when the next wrapped meteor call returns" );
+        //}
 
         static createMeteorMethod(options:IMethodOptions){
             var meteorMethodName:string = options.name;
@@ -164,39 +164,56 @@ module omm {
                 omm.MeteorPersistence.wrappedCallInProgress = true;
                 try {
                     var object;
-                    if( !isStatic && !staticObject ) {
-                        if( args.length==0 )
-                            throw new Error( "An omm crated meteor method requires an id if no static object is given" );
-                        var id:string = args[0];
-                        args.splice(0,1);
-                        if( typeof id != "string" )
-                            throw new Error('Error calling meteor method '+meteorMethodName+': Id is not of type string.');
-                        if( options.parentObject && options.parentObject.constructor ) {
-                            var className = omm.className(<any>options.parentObject.constructor);
-                            if (omm.PersistenceAnnotation.getEntityClassByName(className) && id.indexOf("[") == -1)
-                                id = className + "[" + id + "]";
+                    if( !isStatic ) {
+                        if (!staticObject) {
+                            if (args.length == 0)
+                                throw new Error("An omm crated meteor method requires an id if no static object is given");
+                            var id:string = args[0];
+                            if (typeof id != "string")
+                                throw new Error('Error calling meteor method ' + meteorMethodName + ': Id is not of type string.');
+                            if (options.parentObject && options.parentObject.constructor) {
+                                var className = omm.className(<any>options.parentObject.constructor);
+                                if (omm.PersistenceAnnotation.getEntityClassByName(className) && id.indexOf("[") == -1)
+                                    id = className + "[" + id + "]";
+                            }
+                            object = omm.MeteorPersistence.meteorObjectRetriever.getObject(id);
+                            args.splice(0, 1);
+                        } else {
+                            if (typeof staticObject == "string")
+                                object = omm.getRegisteredObject(<string>staticObject);
+                            else
+                                object = staticObject;
                         }
-                        object = omm.MeteorPersistence.meteorObjectRetriever.getObject(id);
-                    } else {
-                        if( typeof staticObject=="string")
-                            object = omm.getRegisteredObject( <string>staticObject );
-                        else
-                            object = staticObject;
+                        if (!object)
+                            throw new Error("Unable to retrieve object by id: " + id);
                     }
-                    if (!object)
-                        throw new Error("Unable to retrieve object by id: " + id);
 
+                    var callbackIndex=-1;
                     for( var i=0; i<args.length; i++ ){
                         if( parameterClassNames && parameterClassNames.length>i ){
-                            if( omm.PersistenceAnnotation.getEntityClassByName(parameterClassNames[i]) ) {
+                            var cls = omm.PersistenceAnnotation.getEntityClassByName(parameterClassNames[i]);
+                            if( cls ) {
                                 if (typeof args[i] == "string")
                                     args[i] = omm.MeteorPersistence.meteorObjectRetriever.getObject(args[i]);
                                 else if (typeof args[i] == "object")
-                                    args[i] = omm.MeteorPersistence.serializer.toObject(parameterClassNames[i]);
-                            }
+                                    args[i] = omm.MeteorPersistence.serializer.toObject(args[i],cls);
+                            }else if( parameterClassNames[i]=="callback" )
+                                callbackIndex = i;
                         }
                     }
-                    var result = originalFunction.apply(object, args);
+
+                    // CALLING THE ORIGINAL FUNCTION
+                    var result;
+                    if( callbackIndex!=-1 ){
+                        var syncFunction = Meteor.wrapAsync(function (cb) {
+                            args[callbackIndex] = cb;
+                            originalFunction.apply(object, args);
+                        });
+                        result = syncFunction();
+                    }else{
+                        result = originalFunction.apply(object, args);
+                    }
+
                     var doc:any = omm.MeteorPersistence.serializer.toDocument(result);
                     var t:TypeClass<Object> = omm.PersistenceAnnotation.getClass(result);
                     if( t && omm.className(t) && omm.PersistenceAnnotation.getEntityClassByName(omm.className(t)) )
@@ -207,9 +224,42 @@ module omm {
                 }
             };
             Meteor.methods(m);
+            if( options.replaceWithCall ) {
+                omm.MeteorPersistence.monkeyPatch(options.parentObject, options.functionName, function (originalFunction, ...a:any[]) {
+                    if( !omm.MeteorPersistence.updateInProgress &&  (this._serializationPath || options.isStatic || (options.object && typeof options.object == "string") ) ) {
+                        var args = [];
+                        args.push(options.name);
+                        if(!options.isStatic && !options.object ){
+                            var id = omm.MeteorPersistence.meteorObjectRetriever.getId(this);
+                            if (id)
+                                args.push(id);
+                        }
+
+                        var callbackIndex=-1;
+                        var cb:Function;
+                        for( var i=0; i<a.length; i++ ){
+                            if( parameterClassNames && parameterClassNames.length>i ){
+                                if( parameterClassNames[i]=="callback" ){
+                                    callbackIndex = 1;
+                                    cb = a[i];
+                                    a[i] = "OMM_CALLBACK_PLACEHOLDER";
+                                }
+                            }
+                        }
+                        a.push(function (error, result) {
+                            if (cb)
+                                cb(error, result);
+                        });
+                        args = args.concat(a);
+                        omm.call.apply(undefined, args);
+                    }
+                    else{
+                        // in this case we pretend we're not there
+                        originalFunction.apply(this, a);
+                    }
+                });
+            }
         }
-
-
 
         static wrapClass<T extends Object>(c:TypeClass<T>) {
 

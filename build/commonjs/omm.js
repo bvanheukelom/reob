@@ -51,7 +51,8 @@ var omm;
     }
     omm.addCollectionRoot = addCollectionRoot;
     function Wrap(t, functionName, objectDescriptor) {
-        defineMetadata("persistence:wrap", true, t[functionName]);
+        omm.CollectionUpdate(t, functionName);
+        omm.MeteorMethod({ replaceWithCall: true })(t, functionName, objectDescriptor);
     }
     omm.Wrap = Wrap;
     function CollectionUpdate(p1, fName) {
@@ -669,7 +670,7 @@ var omm;
         };
         Serializer.prototype.toDocumentRecursive = function (object, rootClass, parentObject, propertyNameOnParentObject) {
             var result;
-            if (typeof object == "string" || typeof object == "number" || typeof object == "date" || typeof object == "boolean")
+            if (!object || typeof object == "string" || typeof object == "number" || typeof object == "date" || typeof object == "boolean")
                 result = object;
             else {
                 var objectClass = omm.PersistenceAnnotation.getClass(object);

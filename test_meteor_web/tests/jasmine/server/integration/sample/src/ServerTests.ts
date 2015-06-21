@@ -43,7 +43,6 @@ describe("The persistence thing on the server", function(){
         treeCollection.insert(t1);
         expect(treeCollection.getById(t1.treeId)).toBeDefined();
         expect(treeCollection.getById(t1.treeId).getLeaves()[0] instanceof Tests.TestLeaf).toBeTruthy();
-
     });
 
     it("can call wrapped functions", function(done){

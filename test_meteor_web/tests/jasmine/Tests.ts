@@ -18,6 +18,18 @@ describe("The persistence thing", function(){
         });
     });
 
+    function onlyOnce( f:Function ):any
+    {
+        var counter = 0;
+        return function(){
+            if( counter>0 ) {
+                throw new Error("Function called twice");
+            }
+            counter = 1;
+            f.apply(this,arguments);
+        }
+    }
+/*
     it( "knows the difference between root entities and subdocument entities ", function(){
         expect( omm.PersistenceAnnotation.getCollectionName(Tests.TestPerson) ).toBe("TestPerson");
         expect( omm.PersistenceAnnotation.isRootEntity(Tests.TestPerson) ).toBeTruthy();
@@ -40,11 +52,35 @@ describe("The persistence thing", function(){
         expect( omm.PersistenceAnnotation.getCollectionUpdateFunctionNames(Tests.TestPerson) ).toBeDefined();
         expect( omm.PersistenceAnnotation.getCollectionUpdateFunctionNames(Tests.TestPerson) ).toContain("collectionUpdateRename");
     });
-    it( "updates the collection", function(){
+*/
+
+    it( "updates the collection", function(done){
         personCollection.newPerson( 'bert', function(err, e:Tests.TestPerson){
-            e.collectionUpdateRename("klaus");
-            expect( personCollection.getById(e.getId()).getName()).toBe("klaus");
+            omm.callHelper(e).collectionUpdateRename("klaus");
+            expect( personCollection.getById(e.getId()).getName()).toBe("Collection Update:klaus");
+            done();
         });
+    });
+
+    it("can save foreign keys in a map", function(done){
+        treeCollection.newTree(12, onlyOnce(function(e:any, klaus:Tests.TestTree){
+            treeCollection.newTree(13, onlyOnce(function(e:any, peter:Tests.TestTree){
+                personCollection.newPerson("Held", onlyOnce(function(e:any, held:Tests.TestPerson){
+                    held.addToWood( klaus, "klausKey" );
+                    held.addToWood( peter, "peterKey" );
+                    held = personCollection.getById(held.getId());
+                    expect( held ).toBeDefined();
+                    expect( omm.Serializer.needsLazyLoading( held,"wood") ).toBeTruthy();
+                    expect( held.wood ).toBeDefined();
+                    expect( omm.Serializer.needsLazyLoading( held,"wood") ).toBeFalsy();
+                    expect( typeof held.wood ).toBe("object");
+                    expect( held.wood["peterKey"] ).toBeDefined();
+                    expect( held.wood["peterKey"] instanceof Tests.TestTree ).toBeTruthy();
+                    expect( held.wood["peterKey"].treeId ).toBe(peter.treeId);
+                    done();
+                }));
+            }));
+        }));
     });
 
     it( "knows the difference between root entities and subdocument entities ", function(){
@@ -64,18 +100,6 @@ describe("The persistence thing", function(){
         expect( omm.PersistenceAnnotation.getObjectPropertyName(Tests.TestLeaf, "greenIndex") ).toBe("greenNess");
     });
 
-
-    function onlyOnce( f:Function ):any
-    {
-        var counter = 0;
-        return function(){
-            if( counter>0 ) {
-                throw new Error("Function called twice");
-            }
-            counter = 1;
-            f.apply(this,arguments);
-        }
-    }
 
     it("can do basic inserts", function( done ){
         treeCollection.newTree( 20, onlyOnce(function(error, tree:Tests.TestTree){
@@ -163,7 +187,6 @@ describe("The persistence thing", function(){
         t1.grow();
         expect(t1.getLeaves().length).toBe(1);
     });
-
     it("uses persistence paths on subdocuments in arrays", function(){
         var t1:Tests.TestTree = new Tests.TestTree(10);
         t1.treeId = "tree1";
@@ -240,10 +263,15 @@ describe("The persistence thing", function(){
     });
 
     it("can save objects that have foreign key properties", function(done){
+        var c = 0;
         personCollection.newPerson( "jake", function( error:any, jake:Tests.TestPerson ){
+            c++;
+            expect(c).toBe(1);
             expect(error).toBeFalsy();
             expect(jake).toBeDefined();
             treeCollection.newTree(12, function( error, t:Tests.TestTree ){
+                c++;
+                expect(c).toBe(2);
                 jake.chooseTree(t);
                 var loadedJake = personCollection.getById(jake.getId());
                 expect(loadedJake).toBeDefined();
@@ -343,27 +371,6 @@ describe("The persistence thing", function(){
         });
     });
 
-
-    it("can save foreign keys in a map", function(done){
-        treeCollection.newTree(12, function(e:any, klaus:Tests.TestTree){
-            treeCollection.newTree(13, function(e:any, peter:Tests.TestTree){
-                personCollection.newPerson("Held", function(e:any, held:Tests.TestPerson){
-                    held.addToWood(klaus,"klausKey");
-                    held.addToWood(peter, "peterKey");
-                    held = personCollection.getById(held.getId());
-                    expect( held ).toBeDefined();
-                    expect( omm.Serializer.needsLazyLoading( held,"wood") ).toBeTruthy();
-                    expect( held.wood ).toBeDefined();
-                    expect( omm.Serializer.needsLazyLoading( held,"wood") ).toBeFalsy();
-                    expect( typeof held.wood ).toBe("object");
-                    expect( held.wood["peterKey"] ).toBeDefined();
-                    expect( held.wood["peterKey"] instanceof Tests.TestTree ).toBeTruthy();
-                    expect( held.wood["peterKey"].treeId ).toBe(peter.treeId);
-                    done();
-                });
-            });
-        });
-    });
     //
     //it("can save objects keys in a map", function(){
     //    var tp = new Tests.TestPerson("tp");
@@ -380,7 +387,7 @@ describe("The persistence thing", function(){
     //    expect( personCollection.getById("tp").phoneBook["superman"] instanceof Tests.TestPhoneNumber ).toBeTruthy();
     //    expect( personCollection.getById("tp").phoneBook["superman"].getNumber() ).toBe("12345");
     //});
-    //
+    //xxx
     it("can save objects with a dictionary to objects in the same collection", function(done){
         personCollection.newPerson("mom", function(e:any, mom:Tests.TestPerson){
             personCollection.newPerson("dad", function(e:any, dad:Tests.TestPerson) {

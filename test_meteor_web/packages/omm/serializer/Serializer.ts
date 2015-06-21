@@ -243,7 +243,7 @@ module omm{
 
         private toDocumentRecursive(object:Object, rootClass?:omm.TypeClass<Object>, parentObject?:Object, propertyNameOnParentObject?:string):omm.Document {
             var result:omm.Document;
-            if (typeof object == "string" || typeof object == "number" || typeof object == "date" || typeof object == "boolean")
+            if ( !object || typeof object == "string" || typeof object == "number" || typeof object == "date" || typeof object == "boolean")
                 result =  <Document>object;
             else
             {

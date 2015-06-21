@@ -111,8 +111,8 @@ module Tests
             return this.name;
         }
 
-        @omm.Wrap
-        @omm.MeteorMethod({parameterTypes:["TestAddress"]})
+        @omm.CollectionUpdate
+        @omm.MeteorMethod({parameterTypes:["TestAddress"], replaceWithCall:true})
         addAddress(a:TestAddress):Tests.TestAddress
         {
             console.log("inside add address:", (a instanceof TestAddress));
@@ -150,6 +150,13 @@ module Tests
             return this.tree.getHeight();
         }
 
+        //@omm.MeteorMethod({replaceWithCall:true})
+        //tendToGardenNewStyle():number
+        //{
+        //    this.gardenState++;
+        //    this.tree.grow();
+        //    return this.tree.getHeight();
+        //}
 
     }
 }
