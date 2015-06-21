@@ -56,19 +56,11 @@ module Tests
         }
 
 
-        @omm.Wrap
-        @omm.MeteorMethod({parameterTypes:["TestAddress"]})
-        addAddress(a:TestAddress):Tests.TestAddress
-        {
-            console.log("inside add address:", (a instanceof TestAddress));
-            this.addresses.push(a);
-            return a;
-        }
 
-        rename(n:string):void
-        {
-            this.name = n;
-        }
+        //rename(n:string):void
+        //{
+        //    this.name = n;
+        //}
 
         getName():string
         {
@@ -104,6 +96,31 @@ module Tests
         {
             this.leaf = l;
         }
+
+        @omm.CollectionUpdate
+        @omm.MeteorMethod
+        rename(n:string):string {
+            this.name = n;
+            return this.name;
+        }
+
+        @omm.CollectionUpdate
+        @omm.MeteorMethod
+        collectionUpdateRename(n:string):string {
+            this.name = "Collection Update:"+n;
+            return this.name;
+        }
+
+        @omm.Wrap
+        @omm.MeteorMethod({parameterTypes:["TestAddress"]})
+        addAddress(a:TestAddress):Tests.TestAddress
+        {
+            console.log("inside add address:", (a instanceof TestAddress));
+            this.addresses.push(a);
+            return a;
+        }
+
+
         @omm.Wrap
         addToWood(t:TestTree, s?:string )
         {

@@ -10,8 +10,7 @@ interface IMethodOptions {
     name?: string;
     parameterTypes?: Array<string>;
     resultType?: string;
-    thePrototypeObject?: Object;
-    function?: Function;
+    parentObject?: Object;
     functionName?: string;
 }
 declare module omm {

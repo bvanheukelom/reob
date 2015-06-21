@@ -8,8 +8,7 @@ interface IMethodOptions{
     name?:string;
     parameterTypes?:Array<string>;
     resultType?:string;
-    thePrototypeObject?:Object;
-    function?:Function;
+    parentObject?:Object; // which has the function as a property
     functionName?:string;
 }
 
@@ -66,6 +65,8 @@ module omm {
     }
 
     export function Wrap( t:Function, functionName:string, objectDescriptor:any ) {
+        //omm.CollectionUpdate(t,functionName,objectDescriptor);
+        //omm.MeteorMethod(t,functionName,objectDescriptor);
         defineMetadata("persistence:wrap", true, (<any>t)[functionName] );
     }
 
@@ -183,13 +184,12 @@ module omm {
     }
 
     export function MeteorMethod( p1:any, p2?:any ) {
-        if( typeof p1=="function" ){
+        if( typeof p1=="object" && typeof p2=="string" ){
             var options:IMethodOptions = { isStatic:false };
-            options.function = p1[p2];
+            options.parentObject = p1;
             options.functionName = p2;
-            options.thePrototypeObject = p1;
             if( !options.name )
-                options.name = omm.className(p1)+"-"+p2;
+                options.name = omm.className(p1.constructor)+"-"+p2;
             omm.meteorMethodFunctions[options.name] = options;
         } else {
             return function (t:Function, functionName:string, objectDescriptor:any) {
@@ -201,10 +201,9 @@ module omm {
                         options = p2;
                     options.name = p1;
                 }
-                options.function = t[functionName];
                 options.functionName = functionName;
                 options.isStatic = false;
-                options.thePrototypeObject = t;
+                options.parentObject = t;
                 if( !options.name ){
                     options.name = omm.className(<any>t.constructor)+"-"+functionName;
                 }
@@ -215,9 +214,9 @@ module omm {
     }
 
     export function StaticMeteorMethod( p1:any, p2?:any ) {
-        if( typeof p1=="function" ){
+        if( typeof p1=="function" && typeof p2=="string"  ){
             var options:IMethodOptions = { isStatic:true };
-            options.function = p1[p2];
+            options.parentObject = p1;
             options.functionName = p2;
             options.object = p1;
             if( !options.name )
@@ -233,7 +232,7 @@ module omm {
                         options = p2;
                     options.name = p1;
                 }
-                options.function = t[functionName];
+                options.parentObject = t;
                 options.functionName = functionName;
                 options.isStatic = true;
                 options.object = t;
@@ -255,7 +254,7 @@ module omm {
             var ret = [];
             for( var i in omm.meteorMethodFunctions ){
                 var methodOptions:IMethodOptions = omm.meteorMethodFunctions[i];
-                if( methodOptions.thePrototypeObject==c )
+                if( methodOptions.parentObject==c )
                     ret.push( i );
             }
             return ret;

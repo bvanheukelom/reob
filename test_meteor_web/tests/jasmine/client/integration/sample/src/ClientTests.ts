@@ -147,7 +147,7 @@ describe("The persistence thing on the client ", function(){
         });
     });
 
-    fit("knows static meteor method annotations that have parameters", function(){
+    it("knows static meteor method annotations that have parameters", function(){
         var m:IMethodOptions = omm.PersistenceAnnotation.getMethodOptions('helloWorld');
         expect(m).toBeDefined();
         expect(m.name).toBe("helloWorld");
@@ -157,7 +157,7 @@ describe("The persistence thing on the client ", function(){
         expect(m.parameterTypes[0]).toBe('string');
     });
 
-    fit("knows static meteor method annotations ", function(){
+    it("knows static meteor method annotations ", function(){
         var m:IMethodOptions = omm.PersistenceAnnotation.getMethodOptions('TestPersonCollection-staticInsertPerson');
         expect(m).toBeDefined();
         expect(m.name).toBe("TestPersonCollection-staticInsertPerson");
@@ -167,7 +167,7 @@ describe("The persistence thing on the client ", function(){
         expect(m.parameterTypes).toBeUndefined();
     });
 
-    fit("can insert a person using a call ", function(done){
+    it("can insert a person using a call ", function(done){
         omm.call("TestPersonCollection-insertPerson", 'hello', function(error,result:Tests.TestPerson){
             expect( result instanceof Tests.TestPerson ).toBeTruthy();
             expect( result.getName() ).toBe("hello");
@@ -175,7 +175,7 @@ describe("The persistence thing on the client ", function(){
         });
     });
 
-    fit("can insert a person using a call helper to a static function ", function(done){
+    it("can insert a person using a call helper to a static function ", function(done){
         omm.staticCallHelper(Tests.TestPersonCollection,  function(error,result:Tests.TestPerson){
             expect( result instanceof Tests.TestPerson ).toBeTruthy();
             expect( result.getName() ).toBe("hello");
@@ -183,7 +183,7 @@ describe("The persistence thing on the client ", function(){
         }).staticInsertPerson("hello");
     });
 
-    fit("can insert a person using a call to a static function ", function(done){
+    it("can insert a person using a call to a static function ", function(done){
         omm.call("TestPersonCollection-staticInsertPerson", "hiho", function(error,result:Tests.TestPerson){
             expect( result instanceof Tests.TestPerson ).toBeTruthy();
             expect( result.getName() ).toBe("hiho");
@@ -192,12 +192,42 @@ describe("The persistence thing on the client ", function(){
     });
 
 
-    fit("can insert a person using a helper ", function(done){
-        debugger;
+    it("can insert a person using a helper ", function(done){
         omm.callHelper(personCollection, function(error,result){
             expect( result instanceof Tests.TestPerson ).toBeTruthy();
             done();
         }).insertPerson('hello');
+    });
+
+    it("can update a person using a helper ", function(done){
+        omm.staticCallHelper(Tests.TestPersonCollection,  function(error,result:Tests.TestPerson){
+            expect( error ).toBeUndefined();
+            if( !error ){
+                omm.callHelper(result, function(err,r2){
+                    if( !err ) {
+                        expect(err).toBeUndefined();
+                        var n = personCollection.getById(result.getId());
+                        expect(n.getName()).toBe("bert");
+                    }
+                    done();
+                }).rename("bert");
+            }
+            else
+                done();
+        }).staticInsertPerson("hello");
+    });
+
+    fit("can update a person using a meteor call ", function(done){
+        omm.staticCallHelper(Tests.TestPersonCollection,  function(error,result:Tests.TestPerson){
+            expect( error ).toBeUndefined();
+            debugger
+            Meteor.call('TestPerson-rename', result.getId(), "max", function(err, res:string){
+                expect(err).toBeUndefined();
+                expect(res).toBe("max");
+                expect(personCollection.getById(result.getId()).getName()).toBe("max");
+                done();
+            });
+        }).staticInsertPerson("hello");
     });
 
 

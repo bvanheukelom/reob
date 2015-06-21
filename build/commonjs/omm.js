@@ -157,13 +157,12 @@ var omm;
     }
     omm.className = className;
     function MeteorMethod(p1, p2) {
-        if (typeof p1 == "function") {
+        if (typeof p1 == "object" && typeof p2 == "string") {
             var options = { isStatic: false };
-            options.function = p1[p2];
+            options.parentObject = p1;
             options.functionName = p2;
-            options.thePrototypeObject = p1;
             if (!options.name)
-                options.name = omm.className(p1) + "-" + p2;
+                options.name = omm.className(p1.constructor) + "-" + p2;
             omm.meteorMethodFunctions[options.name] = options;
         }
         else {
@@ -176,10 +175,9 @@ var omm;
                         options = p2;
                     options.name = p1;
                 }
-                options.function = t[functionName];
                 options.functionName = functionName;
                 options.isStatic = false;
-                options.thePrototypeObject = t;
+                options.parentObject = t;
                 if (!options.name) {
                     options.name = omm.className(t.constructor) + "-" + functionName;
                 }
@@ -189,9 +187,9 @@ var omm;
     }
     omm.MeteorMethod = MeteorMethod;
     function StaticMeteorMethod(p1, p2) {
-        if (typeof p1 == "function") {
+        if (typeof p1 == "function" && typeof p2 == "string") {
             var options = { isStatic: true };
-            options.function = p1[p2];
+            options.parentObject = p1;
             options.functionName = p2;
             options.object = p1;
             if (!options.name)
@@ -208,7 +206,7 @@ var omm;
                         options = p2;
                     options.name = p1;
                 }
-                options.function = t[functionName];
+                options.parentObject = t;
                 options.functionName = functionName;
                 options.isStatic = true;
                 options.object = t;
@@ -229,7 +227,7 @@ var omm;
             var ret = [];
             for (var i in omm.meteorMethodFunctions) {
                 var methodOptions = omm.meteorMethodFunctions[i];
-                if (methodOptions.thePrototypeObject == c)
+                if (methodOptions.parentObject == c)
                     ret.push(i);
             }
             return ret;

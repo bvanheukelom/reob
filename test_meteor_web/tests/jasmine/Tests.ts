@@ -26,15 +26,25 @@ describe("The persistence thing", function(){
     });
 
     it( "knows meteor method annotations ", function(){
-        debugger;
         var methodNames = omm.PersistenceAnnotation.getMethodFunctionNames(Tests.TestPerson.prototype);
-        expect( methodNames[0] ).toBe("TestPerson-addAddress");
-        expect( methodNames.length ).toBe(1);
+        expect( methodNames ).toContain("TestPerson-addAddress");
+        expect( methodNames.length ).toBeGreaterThan(0);
     });
 
     it( "knows the name of collections", function(){
         expect( personCollection.getName() ).toBe("TestPerson");
         expect( treeCollection.getName() ).toBe("TheTreeCollection");
+    });
+
+    it( "knows collection updates", function(){
+        expect( omm.PersistenceAnnotation.getCollectionUpdateFunctionNames(Tests.TestPerson) ).toBeDefined();
+        expect( omm.PersistenceAnnotation.getCollectionUpdateFunctionNames(Tests.TestPerson) ).toContain("collectionUpdateRename");
+    });
+    it( "updates the collection", function(){
+        personCollection.newPerson( 'bert', function(err, e:Tests.TestPerson){
+            e.collectionUpdateRename("klaus");
+            expect( personCollection.getById(e.getId()).getName()).toBe("klaus");
+        });
     });
 
     it( "knows the difference between root entities and subdocument entities ", function(){

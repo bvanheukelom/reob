@@ -9,8 +9,7 @@ interface IMethodOptions {
     name?: string;
     parameterTypes?: Array<string>;
     resultType?: string;
-    thePrototypeObject?: Object;
-    function?: Function;
+    parentObject?: Object;
     functionName?: string;
 }
 declare module omm {
@@ -148,7 +147,7 @@ declare module omm {
         static init(): void;
         static objectsClassName(o: any): string;
         static withCallback(p: Function, c: (error: any, result: any) => void): void;
-        static createMeteorMethod(meteorMethodName: string, isStatic: boolean, staticObject: string | Object, parameterClassNames: Array<string>, originalFunction: Function): void;
+        static createMeteorMethod(options: IMethodOptions): void;
         static wrapClass<T extends Object>(c: TypeClass<T>): void;
         private static getClassName(o);
         static wrapFunction(object: any, propertyName: string, meteorMethodName: string, serverOnly: boolean, argumentSerializer: omm.Serializer, objectRetriever: ObjectRetriever): void;

@@ -126,11 +126,7 @@ module omm {
 
                 omm.PersistenceAnnotation.getAllMethodFunctionNames().forEach(function(functionName:string){
                     var methodOptions:IMethodOptions = omm.PersistenceAnnotation.getMethodOptions( functionName );
-                    var fn = methodOptions.name;
-                    if(!fn){
-                        fn = omm.className(<any>methodOptions.thePrototypeObject.constructor)+"-"+methodOptions.functionName;
-                    }
-                    omm.MeteorPersistence.createMeteorMethod(fn, methodOptions.isStatic, methodOptions.object, methodOptions.parameterTypes, methodOptions.function );
+                    omm.MeteorPersistence.createMeteorMethod(methodOptions);
                 });
 
 
@@ -155,7 +151,12 @@ module omm {
                 throw new Error("'withCallback' only works on the client as it is called when the next wrapped meteor call returns" );
         }
 
-        static createMeteorMethod(meteorMethodName:string, isStatic:boolean, staticObject:string|Object, parameterClassNames:Array<string>, originalFunction:Function ){
+        static createMeteorMethod(options:IMethodOptions){
+            var meteorMethodName:string = options.name;
+            var isStatic = options.isStatic;
+            var staticObject = options.object;
+            var parameterClassNames = options.parameterTypes;
+            var originalFunction = options.parentObject[options.functionName];
             var m = {};
             m[meteorMethodName] = function ( ...args:any[] ) {
                 //console.log("Meteor method invoked: "+meteorMethodName+" id:"+id+" appendCallback:"+appendCallback+" args:", args, " classNames:"+classNames);
@@ -170,6 +171,11 @@ module omm {
                         args.splice(0,1);
                         if( typeof id != "string" )
                             throw new Error('Error calling meteor method '+meteorMethodName+': Id is not of type string.');
+                        if( options.parentObject && options.parentObject.constructor ) {
+                            var className = omm.className(<any>options.parentObject.constructor);
+                            if (omm.PersistenceAnnotation.getEntityClassByName(className) && id.indexOf("[") == -1)
+                                id = className + "[" + id + "]";
+                        }
                         object = omm.MeteorPersistence.meteorObjectRetriever.getObject(id);
                     } else {
                         if( typeof staticObject=="string")
