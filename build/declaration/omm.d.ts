@@ -150,7 +150,6 @@ declare module omm {
         static createMeteorMethod(options: IMethodOptions): void;
         static wrapClass<T extends Object>(c: TypeClass<T>): void;
         private static getClassName(o);
-        static wrapFunction(object: any, propertyName: string, meteorMethodName: string, serverOnly: boolean, argumentSerializer: omm.Serializer, objectRetriever: ObjectRetriever): void;
         static monkeyPatch(object: any, functionName: string, patchFunction: (original: Function, ...arg: any[]) => any): void;
     }
 }

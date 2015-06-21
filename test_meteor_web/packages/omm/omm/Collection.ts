@@ -204,7 +204,7 @@ module omm {
             //    throw new Error("Insert can not be called on the client. Wrap it into a meteor method.");
         }
 
-
+        @omm.StaticMeteorMethod({replaceWithCall:true, parameterTypes:['callback']})
         static resetAll( cb:(error?:any)=>void ){
             var arr = [];
             for( var i in Collection.meteorCollections )
@@ -228,5 +228,5 @@ module omm {
 
     }
 }
-omm.MeteorPersistence.wrapFunction( omm.Collection, "resetAll", "resetAll", true, null, new omm.ConstantObjectRetriever(omm.Collection) );
+//omm.MeteorPersistence.wrapFunction( omm.Collection, "resetAll", "resetAll", true, null, new omm.ConstantObjectRetriever(omm.Collection) );
 

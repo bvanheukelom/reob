@@ -29,7 +29,6 @@ describe("The persistence thing", function(){
             f.apply(this,arguments);
         }
     }
-/*
     it( "knows the difference between root entities and subdocument entities ", function(){
         expect( omm.PersistenceAnnotation.getCollectionName(Tests.TestPerson) ).toBe("TestPerson");
         expect( omm.PersistenceAnnotation.isRootEntity(Tests.TestPerson) ).toBeTruthy();
@@ -52,7 +51,6 @@ describe("The persistence thing", function(){
         expect( omm.PersistenceAnnotation.getCollectionUpdateFunctionNames(Tests.TestPerson) ).toBeDefined();
         expect( omm.PersistenceAnnotation.getCollectionUpdateFunctionNames(Tests.TestPerson) ).toContain("collectionUpdateRename");
     });
-*/
 
     it( "updates the collection", function(done){
         personCollection.newPerson( 'bert', function(err, e:Tests.TestPerson){
@@ -187,6 +185,7 @@ describe("The persistence thing", function(){
         t1.grow();
         expect(t1.getLeaves().length).toBe(1);
     });
+
     it("uses persistence paths on subdocuments in arrays", function(){
         var t1:Tests.TestTree = new Tests.TestTree(10);
         t1.treeId = "tree1";
