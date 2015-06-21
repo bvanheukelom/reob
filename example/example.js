@@ -102,7 +102,6 @@ omm.register( o, id? )
 
 		omm.call( bertCounter, "inc", 5 );
 
-
 Options 
 		static:true
 			The function is called without changing the 'this' context.
@@ -122,7 +121,7 @@ Options
 			If the object has an id property, the first parameter will be the id.
 			If no methodname is given, it will use <classname.functionName>.
 
-		omm.makeMeteorCall( CounterCollection, "newCounter", { id:"" })
+		js api: omm.makeMeteorCall( CounterCollection, "newCounter", { id:"" })
 
 @omm.Expose (experimental)
 	

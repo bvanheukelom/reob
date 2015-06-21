@@ -2,9 +2,22 @@
 /// <reference path="./TypeClass.ts"/>
 /// <reference path="../../../../typings/node/node.d.ts"/>
 
-module omm
-{
+interface IMethodOptions{
+    isStatic?:boolean;
+    object?:string|Object;
+    name?:string;
+    parameterTypes?:Array<string>;
+    resultType?:string;
+    thePrototypeObject?:Object;
+    function?:Function;
+    functionName?:string;
+}
+
+module omm {
     export var entityClasses:{[index:string]:omm.TypeClass<Object>};
+    export var registeredObjects:{[index:string]:any};
+    export var meteorMethodFunctions:{[index:string]:Object};
+
     export function setNonEnumerableProperty( obj:Object, propertyName:string, value:any ):void{
         if (!Object.getOwnPropertyDescriptor(obj, propertyName)) {
             Object.defineProperty(obj, propertyName, {
@@ -29,13 +42,12 @@ module omm
     export function getMetadata( propertyName, cls ){
         if( cls.hasOwnProperty("_ommAnnotations") )
             return cls["_ommAnnotations"][propertyName];
-        else{
+        else {
             return undefined;
         }
     }
 
-    export function Entity( p1:Function ):any
-    {
+    export function Entity( p1:Function ):any {
         var typeClass:TypeClass<Object> = <TypeClass<Object>>p1;
         defineMetadata("persistence:entity", true, typeClass);
         omm.entityClasses[className(typeClass)]=typeClass;
@@ -53,23 +65,21 @@ module omm
         defineMetadata("persistence:collectionName", collectionName, t);
     }
 
-    export function Wrap( t:Function, functionName:string, objectDescriptor:any )
-    {
+    export function Wrap( t:Function, functionName:string, objectDescriptor:any ) {
         defineMetadata("persistence:wrap", true, (<any>t)[functionName] );
     }
 
-    export function MeteorMethod( p1:any, fName?:string )
+
+    export function CollectionUpdate( p1:any, fName?:string )
     {
         var options = {};
         if( fName ){
-            debugger;
-            PersistenceAnnotation.setPropertyProperty(p1, fName, "method", options);
+            PersistenceAnnotation.setPropertyProperty(p1, fName, "collectionUpdate", options);
         }
         else{
             return function (t:Function, functionName:string, objectDescriptor:any) {
                 options = p1;
-                debugger;
-                PersistenceAnnotation.setPropertyProperty(<any>t, functionName, "method", options);
+                PersistenceAnnotation.setPropertyProperty(<any>t, functionName, "collectionUpdate", options);
             };
         }
     }
@@ -155,6 +165,15 @@ module omm
         omm.Ignore(t.prototype, propertyName);
     }
 
+    export function getId( o:Object ){
+        var idPropertyName = omm.PersistenceAnnotation.getIdPropertyName(omm.PersistenceAnnotation.getClass(o));
+        if(!idPropertyName)
+            throw new Error( "No id property defined for object of class "+omm.PersistenceAnnotation.getClass(o) );
+        else
+            return o[idPropertyName];
+    }
+
+
     export function className(fun:omm.TypeClass<Object>):string
     {
         var ret = fun.toString();
@@ -163,8 +182,103 @@ module omm
         return ret;
     }
 
+    export function MeteorMethod( p1:any, p2?:any ) {
+        if( typeof p1=="function" ){
+            var options:IMethodOptions = { isStatic:false };
+            options.function = p1[p2];
+            options.functionName = p2;
+            options.thePrototypeObject = p1;
+            if( !options.name )
+                options.name = omm.className(p1)+"-"+p2;
+            omm.meteorMethodFunctions[options.name] = options;
+        } else {
+            return function (t:Function, functionName:string, objectDescriptor:any) {
+                var options:IMethodOptions = {};
+                if( typeof p1=="object" )
+                    options = p1;
+                else if( typeof p1=="string" ) {
+                    if (typeof p2 == "object")
+                        options = p2;
+                    options.name = p1;
+                }
+                options.function = t[functionName];
+                options.functionName = functionName;
+                options.isStatic = false;
+                options.thePrototypeObject = t;
+                if( !options.name ){
+                    options.name = omm.className(<any>t.constructor)+"-"+functionName;
+                }
+
+                omm.meteorMethodFunctions[options.name] = options;
+            };
+        }
+    }
+
+    export function StaticMeteorMethod( p1:any, p2?:any ) {
+        if( typeof p1=="function" ){
+            var options:IMethodOptions = { isStatic:true };
+            options.function = p1[p2];
+            options.functionName = p2;
+            options.object = p1;
+            if( !options.name )
+                options.name = omm.className(p1)+"-"+p2;
+            omm.meteorMethodFunctions[options.name] = options;
+        } else {
+            return function (t:Function, functionName:string, objectDescriptor:any) {
+                var options:IMethodOptions = {};
+                if( typeof p1=="object" )
+                    options = p1;
+                else if( typeof p1=="string" ) {
+                    if (typeof p2 == "object")
+                        options = p2;
+                    options.name = p1;
+                }
+                options.function = t[functionName];
+                options.functionName = functionName;
+                options.isStatic = true;
+                options.object = t;
+                if( !options.name )
+                    options.name = omm.className(<any>t)+"-"+functionName;
+
+                omm.meteorMethodFunctions[options.name] = options;
+            };
+        }
+    }
+
     export class PersistenceAnnotation
     {
+        public static getMethodOptions( functionName:string ):IMethodOptions{
+            return omm.meteorMethodFunctions[functionName];
+        }
+
+        public static getMethodFunctionNames<T extends Object>(c:any):Array<string> {
+            var ret = [];
+            for( var i in omm.meteorMethodFunctions ){
+                var methodOptions:IMethodOptions = omm.meteorMethodFunctions[i];
+                if( methodOptions.thePrototypeObject==c )
+                    ret.push( i );
+            }
+            return ret;
+        }
+
+        public static getMethodFunctionNamesByObject<T extends Object>(o:any):Array<string> {
+            var ret = [];
+            for( var i in omm.meteorMethodFunctions ){
+                var methodOptions:IMethodOptions = omm.meteorMethodFunctions[i];
+                if( methodOptions.object==o )
+                    ret.push( i );
+            }
+            return ret;
+        }
+
+        public static getAllMethodFunctionNames():Array<string> {
+            var ret = [];
+            for( var i in omm.meteorMethodFunctions ){
+                ret.push( i );
+            }
+            return ret;
+        }
+
         static getClass<T extends Object>( o:T ):omm.TypeClass<T>
         {
             if( o )
@@ -320,34 +434,30 @@ module omm
 
         // ---- Wrap ----
 
-        public static getWrappedFunctionNames<T extends Object>(f:TypeClass<T>):Array<string>
-        {
+        public static getWrappedFunctionNames<T extends Object>(f:TypeClass<T>):Array<string> {
             return PersistenceAnnotation.getPropertyNamesByMetaData(f.prototype, "persistence:wrap");
         }
 
-        public static getMethodOptions( cls:TypeClass<any>, functionName:string ):any{
-            return PersistenceAnnotation.getPropertyProperty(cls.prototype, functionName, "method");
+
+        private static getCollectionUpdateOptions( cls:TypeClass<any>, functionName:string ):any{
+            return PersistenceAnnotation.getPropertyProperty(cls.prototype, functionName, "collectionUpdate");
         }
 
-        public static getMethodFunctionNames<T extends Object>(f:TypeClass<T>):Array<string>
-        {
+
+
+        public static getCollectionUpdateFunctionNames<T extends Object>(f:TypeClass<T>):Array<string> {
             var result:Array<string> = [];
-            //while( f!=<any>Object ) {
-                var props = getMetadata("persistence:typedproperties", f.prototype);
-                for (var i in props) {
-                    if (PersistenceAnnotation.getMethodOptions(f, i))
-                        result.push(i);
-                }
-            //    f = omm.PersistenceAnnotation.getParentClass(f);
-            //}
+            var props = getMetadata("persistence:typedproperties", f.prototype);
+            for (var i in props) {
+                if (PersistenceAnnotation.getCollectionUpdateOptions(f, i))
+                    result.push(i);
+            }
             return result;
         }
 
-        static getPropertyNamesByMetaData( o:any, metaData:string )
-        {
+        static getPropertyNamesByMetaData( o:any, metaData:string ) {
             var result:Array<string> = [];
-            for( var i in o )
-            {
+            for( var i in o ) {
                 var value = o[i];
                 //console.log("Cave man style debugging 1",i, value,getMetadata("persistence:wrap", value) );
                 if( typeof value =="function" && getMetadata(metaData, value) )
@@ -355,21 +465,26 @@ module omm
             }
             return result;
         }
-
-
-
     }
-
-    // TODO rename and store on omm object
 }
+(function(){
+    var data;
+    if( typeof global!="undefined" ){
+        if(!global["_omm_data"])
+            global["_omm_data"] = {};
+        data = global["_omm_data"];
+    } else if( typeof window !="undefined" ){
+        if(!window["_omm_data"])
+            window["_omm_data"] = {};
+        data = window["_omm_data"];
+    } else
+        data = {};
+    data.entityClasses = {};
+    omm.entityClasses = data.entityClasses;
+    data.registeredObjects = {};
+    omm.registeredObjects = data.registeredObjects;
+    data.meteorMethods = {};
+    omm.meteorMethodFunctions = {};
 
-if( typeof global!="undefined" ){
-    if(!global["entityClasses"])
-        global["entityClasses"] = {};
-    omm.entityClasses = global["entityClasses"];
-} else if( typeof window !="undefined" ){
-    if(!window["entityClasses"])
-        window["entityClasses"] = {};
-    omm.entityClasses = window["entityClasses"];
-} else
-    omm.entityClasses = {};
+})();
+

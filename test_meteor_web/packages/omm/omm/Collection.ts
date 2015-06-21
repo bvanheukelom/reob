@@ -156,8 +156,8 @@ module omm {
 
         insert( p:T, callback?:(e:any, id?:string)=>void ):string
         {
-            if( Meteor.isServer )
-            {
+            //if( Meteor.isServer )
+            //{
 
                 // TODO make sure that this is unique
                 var idPropertyName = omm.PersistenceAnnotation.getIdPropertyName(this.theClass);
@@ -189,10 +189,9 @@ module omm {
                 try{
                     var id = this.meteorCollection.insert(doc, callback?afterwards:undefined);
                     if( !callback )
-                        afterwards(undefined,id);
+                        afterwards( undefined, id );
                     else
                         return id;
-
                 }
                 catch( e )
                 {
@@ -200,9 +199,9 @@ module omm {
                         afterwards(e);
                 }
                 return id;
-            }
-            else
-                throw new Error("Insert can not be called on the client. Wrap it into a meteor method.");
+            //}
+            //else
+            //    throw new Error("Insert can not be called on the client. Wrap it into a meteor method.");
         }
 
 

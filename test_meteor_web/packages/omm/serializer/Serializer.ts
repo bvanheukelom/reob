@@ -178,27 +178,28 @@ module omm{
 
         }
 
-        toObject<T extends Object>(doc:Document, f:omm.TypeClass<T>):T {
+        toObject<T extends Object>(doc:Document, f?:omm.TypeClass<T>):T {
             var o:T = this.toObjectRecursive(doc,f);
             this.objectRetriever.postToObject(o);
             return o;
         }
 
-        private toObjectRecursive<T extends Object>(doc:Document, f:omm.TypeClass<T>):T {
+        private toObjectRecursive<T extends Object>(doc:Document, f?:omm.TypeClass<T>):T {
             var o:T;
             if( !doc )
                 return <T>doc;
             if(typeof doc=="function")
                 throw new Error("Error in 'toObject'. doc is a function.");
 
-            if ( typeof f["toObject"]=="function" ) {
+            if ( f && typeof f["toObject"]=="function" ) {
                     //console.log("using the custom toObject function of class "+omm.className(f));
                     o = f["toObject"](doc);
             } else {
                 // if the document contains a property called "className" it defines the class that's going to be instantiated
                 if (doc.className)
                     f = omm.PersistenceAnnotation.getEntityClassByName(doc.className);
-
+                if(!f)
+                    throw new Error("Could not determine class of document. Either the document needs to have a 'className' property or a class needs to be passed to the serializer." );
                 // instantiate the new object
                 o = new f();
 

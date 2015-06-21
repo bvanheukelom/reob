@@ -5,6 +5,7 @@ module Tests {
             super(Tests.TestPerson);
         }
 
+        @omm.MeteorMethod({object:'TestPersonCollection'})
         newPerson(n:string, callback:(err:any, tree?:Tests.TestPerson)=>void):void {
             var p:Tests.TestPerson = new Tests.TestPerson();
             p.name = n;
@@ -12,6 +13,33 @@ module Tests {
             this.insert(p, function (e:any, id:string) {
                 callback(e, id ? that.getById(id) : undefined);
             });
+        }
+        @omm.MeteorMethod({object:'TestPersonCollection'})
+        insertPerson(n:string):Tests.TestPerson {
+            var p:Tests.TestPerson = new Tests.TestPerson();
+            p.name = n;
+            var that = this;
+            var id = this.insert(p);
+            return this.getById(id);
+        }
+
+        @omm.StaticMeteorMethod
+        static staticInsertPerson(n:string):Tests.TestPerson {
+            var personCollection:Tests.TestPersonCollection = omm.getRegisteredObject("TestPersonCollection");
+            var p:Tests.TestPerson = new Tests.TestPerson();
+            p.name = n;
+            var id = personCollection.insert(p);
+            return personCollection.getById(id);
+        }
+
+
+        @omm.StaticMeteorMethod('helloWorld', {parameterTypes:['string']})
+        static staticInsertPerson2(n:string):Tests.TestPerson {
+            var personCollection:Tests.TestPersonCollection = omm.getRegisteredObject("TestPersonCollection");
+            var p:Tests.TestPerson = new Tests.TestPerson();
+            p.name = n;
+            var id = personCollection.insert(p);
+            return personCollection.getById(id);
         }
 
         haveBaby(mom:Tests.TestPerson, dad:Tests.TestPerson, callback:(err:any, p?:Tests.TestPerson)=>void):void {
@@ -42,6 +70,8 @@ else
 {
     Meteor.subscribe("persons");
 }
+
+omm.registerObject('TestPersonCollection', new Tests.TestPersonCollection());
 
 omm.MeteorPersistence.wrapFunction(Tests.TestPersonCollection.prototype, "removePerson", "removePerson", true, null, new omm.ConstantObjectRetriever(new Tests.TestPersonCollection()) );
 omm.MeteorPersistence.wrapFunction(Tests.TestPersonCollection.prototype, "newPerson", "newPerson", true, new omm.Serializer(new omm.MeteorObjectRetriever()), new omm.ConstantObjectRetriever(new Tests.TestPersonCollection()) );

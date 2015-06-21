@@ -4,9 +4,25 @@ declare module omm {
         new (): T;
     }
 }
+interface IMethodOptions {
+    isStatic?: boolean;
+    object?: string | Object;
+    name?: string;
+    parameterTypes?: Array<string>;
+    resultType?: string;
+    thePrototypeObject?: Object;
+    function?: Function;
+    functionName?: string;
+}
 declare module omm {
     var entityClasses: {
         [index: string]: omm.TypeClass<Object>;
+    };
+    var registeredObjects: {
+        [index: string]: any;
+    };
+    var meteorMethodFunctions: {
+        [index: string]: Object;
     };
     function setNonEnumerableProperty(obj: Object, propertyName: string, value: any): void;
     function defineMetadata(propertyName: any, value: any, cls: any): void;
@@ -16,7 +32,7 @@ declare module omm {
     function getDefaultCollectionName(t: omm.TypeClass<any>): string;
     function addCollectionRoot(t: omm.TypeClass<any>, collectionName: string): void;
     function Wrap(t: Function, functionName: string, objectDescriptor: any): void;
-    function MeteorMethod(p1: any, fName?: string): (t: Function, functionName: string, objectDescriptor: any) => void;
+    function CollectionUpdate(p1: any, fName?: string): (t: Function, functionName: string, objectDescriptor: any) => void;
     function ArrayOrMap(typeClassName: string): (targetPrototypeObject: any, propertyName: string) => void;
     function ArrayType(typeClassName: string): (targetPrototypeObject: any, propertyName: string) => void;
     function DictionaryType(typeClassName: string): (targetPrototypeObject: any, propertyName: string) => void;
@@ -31,8 +47,15 @@ declare module omm {
     function propertyDictionaryType(t: TypeClass<Object>, propertyName: string, typeClassName: string): void;
     function asForeignKey(t: TypeClass<Object>, propertyName: string): void;
     function ignoreProperty(t: TypeClass<Object>, propertyName: string): void;
+    function getId(o: Object): any;
     function className(fun: omm.TypeClass<Object>): string;
+    function MeteorMethod(p1: any, p2?: any): (t: Function, functionName: string, objectDescriptor: any) => void;
+    function StaticMeteorMethod(p1: any, p2?: any): (t: Function, functionName: string, objectDescriptor: any) => void;
     class PersistenceAnnotation {
+        static getMethodOptions(functionName: string): IMethodOptions;
+        static getMethodFunctionNames<T extends Object>(c: any): Array<string>;
+        static getMethodFunctionNamesByObject<T extends Object>(o: any): Array<string>;
+        static getAllMethodFunctionNames(): Array<string>;
         static getClass<T extends Object>(o: T): omm.TypeClass<T>;
         static getEntityClassByName(className: string): omm.TypeClass<any>;
         static getCollectionClasses(): Array<omm.TypeClass<Object>>;
@@ -52,8 +75,8 @@ declare module omm {
         static isStoredAsForeignKeys(f: TypeClass<any>, propertyName: string): boolean;
         static isIgnored(f: TypeClass<any>, propertyName: string): boolean;
         static getWrappedFunctionNames<T extends Object>(f: TypeClass<T>): Array<string>;
-        static getMethodOptions(cls: TypeClass<any>, functionName: string): any;
-        static getMethodFunctionNames<T extends Object>(f: TypeClass<T>): Array<string>;
+        private static getCollectionUpdateOptions(cls, functionName);
+        static getCollectionUpdateFunctionNames<T extends Object>(f: TypeClass<T>): Array<string>;
         static getPropertyNamesByMetaData(o: any, metaData: string): string[];
     }
 }
@@ -95,8 +118,8 @@ declare module omm {
         static forEachTypedObject(object: Object, cb: (path: omm.SubObjectPath, object: Object) => void): void;
         static forEachTypedObjectRecursive(rootObject: Object, object: Object, path: omm.SubObjectPath, visited: Array<Object>, cb: (path: omm.SubObjectPath, object: Object) => void): void;
         static needsLazyLoading(object: Object, propertyName: string): boolean;
-        toObject<T extends Object>(doc: Document, f: omm.TypeClass<T>): T;
-        private toObjectRecursive<T>(doc, f);
+        toObject<T extends Object>(doc: Document, f?: omm.TypeClass<T>): T;
+        private toObjectRecursive<T>(doc, f?);
         toDocument(object: Object): omm.Document;
         private toDocumentRecursive(object, rootClass?, parentObject?, propertyNameOnParentObject?);
         private createDocument(object, rootClass?, parentObject?, propertyNameOnParentObject?);

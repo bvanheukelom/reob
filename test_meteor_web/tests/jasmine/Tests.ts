@@ -26,8 +26,9 @@ describe("The persistence thing", function(){
     });
 
     it( "knows meteor method annotations ", function(){
-        var methodNames = omm.PersistenceAnnotation.getMethodFunctionNames(Tests.TestPerson)
-        expect( methodNames[0] ).toBe("addAddress");
+        debugger;
+        var methodNames = omm.PersistenceAnnotation.getMethodFunctionNames(Tests.TestPerson.prototype);
+        expect( methodNames[0] ).toBe("TestPerson-addAddress");
         expect( methodNames.length ).toBe(1);
     });
 

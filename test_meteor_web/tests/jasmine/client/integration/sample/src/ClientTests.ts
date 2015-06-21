@@ -147,5 +147,58 @@ describe("The persistence thing on the client ", function(){
         });
     });
 
+    fit("knows static meteor method annotations that have parameters", function(){
+        var m:IMethodOptions = omm.PersistenceAnnotation.getMethodOptions('helloWorld');
+        expect(m).toBeDefined();
+        expect(m.name).toBe("helloWorld");
+        expect(m.functionName).toBe('staticInsertPerson2');
+        expect(m.isStatic).toBeTruthy();
+        expect(m.object).toBe(Tests.TestPersonCollection);
+        expect(m.parameterTypes[0]).toBe('string');
+    });
+
+    fit("knows static meteor method annotations ", function(){
+        var m:IMethodOptions = omm.PersistenceAnnotation.getMethodOptions('TestPersonCollection-staticInsertPerson');
+        expect(m).toBeDefined();
+        expect(m.name).toBe("TestPersonCollection-staticInsertPerson");
+        expect(m.functionName).toBe('staticInsertPerson');
+        expect(m.isStatic).toBeTruthy();
+        expect(m.object).toBe(Tests.TestPersonCollection);
+        expect(m.parameterTypes).toBeUndefined();
+    });
+
+    fit("can insert a person using a call ", function(done){
+        omm.call("TestPersonCollection-insertPerson", 'hello', function(error,result:Tests.TestPerson){
+            expect( result instanceof Tests.TestPerson ).toBeTruthy();
+            expect( result.getName() ).toBe("hello");
+            done();
+        });
+    });
+
+    fit("can insert a person using a call helper to a static function ", function(done){
+        omm.staticCallHelper(Tests.TestPersonCollection,  function(error,result:Tests.TestPerson){
+            expect( result instanceof Tests.TestPerson ).toBeTruthy();
+            expect( result.getName() ).toBe("hello");
+            done();
+        }).staticInsertPerson("hello");
+    });
+
+    fit("can insert a person using a call to a static function ", function(done){
+        omm.call("TestPersonCollection-staticInsertPerson", "hiho", function(error,result:Tests.TestPerson){
+            expect( result instanceof Tests.TestPerson ).toBeTruthy();
+            expect( result.getName() ).toBe("hiho");
+            done();
+        });
+    });
+
+
+    fit("can insert a person using a helper ", function(done){
+        debugger;
+        omm.callHelper(personCollection, function(error,result){
+            expect( result instanceof Tests.TestPerson ).toBeTruthy();
+            done();
+        }).insertPerson('hello');
+    });
+
 
 });

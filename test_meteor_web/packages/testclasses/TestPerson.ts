@@ -57,7 +57,7 @@ module Tests
 
 
         @omm.Wrap
-        @omm.MeteorMethod
+        @omm.MeteorMethod({parameterTypes:["TestAddress"]})
         addAddress(a:TestAddress):Tests.TestAddress
         {
             console.log("inside add address:", (a instanceof TestAddress));
@@ -74,17 +74,6 @@ module Tests
         {
             return this.name;
         }
-
-
-        //getAddressById(id:String):TestAddress
-        //{
-        //    for( var i=0;i<this.addresses.length; i++ )
-        //    {
-        //        var address = this.addresses[i];
-        //        if( address.getId()==id )
-        //            return address;
-        //    }
-        //}
 
         getAddresses():Array<TestAddress>
         {
