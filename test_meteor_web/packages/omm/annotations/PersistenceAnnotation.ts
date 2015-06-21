@@ -10,6 +10,7 @@ interface IMethodOptions{
     resultType?:string;
     parentObject?:Object; // which has the function as a property
     functionName?:string;
+    replaceWithCall?:boolean;
 }
 
 module omm {
@@ -69,6 +70,7 @@ module omm {
         //omm.MeteorMethod(t,functionName,objectDescriptor);
         defineMetadata("persistence:wrap", true, (<any>t)[functionName] );
     }
+
 
 
     export function CollectionUpdate( p1:any, fName?:string )

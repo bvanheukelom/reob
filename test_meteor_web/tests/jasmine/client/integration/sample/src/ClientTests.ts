@@ -217,10 +217,9 @@ describe("The persistence thing on the client ", function(){
         }).staticInsertPerson("hello");
     });
 
-    fit("can update a person using a meteor call ", function(done){
+    it("can update a person using a meteor call ", function(done){
         omm.staticCallHelper(Tests.TestPersonCollection,  function(error,result:Tests.TestPerson){
             expect( error ).toBeUndefined();
-            debugger
             Meteor.call('TestPerson-rename', result.getId(), "max", function(err, res:string){
                 expect(err).toBeUndefined();
                 expect(res).toBe("max");

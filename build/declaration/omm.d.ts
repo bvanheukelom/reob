@@ -11,6 +11,7 @@ interface IMethodOptions {
     resultType?: string;
     parentObject?: Object;
     functionName?: string;
+    replaceWithCall?: boolean;
 }
 declare module omm {
     var entityClasses: {

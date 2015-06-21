@@ -236,6 +236,8 @@ module omm {
                 });
             });
 
+
+
             omm.PersistenceAnnotation.getWrappedFunctionNames(c).forEach(function (functionName) {
                 var domainObjectFunction = c.prototype[functionName];
                 // this is executed last. it wraps the original function into a collection.update

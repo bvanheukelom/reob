@@ -14,6 +14,7 @@ module Tests {
                 callback(e, id ? that.getById(id) : undefined);
             });
         }
+
         @omm.MeteorMethod({object:'TestPersonCollection'})
         insertPerson(n:string):Tests.TestPerson {
             var p:Tests.TestPerson = new Tests.TestPerson();
