@@ -463,7 +463,7 @@ var omm;
                         var foundEntry = false;
                         for (var j in o) {
                             var arrayEntry = o[j];
-                            if (arrayEntry.getId() == id) {
+                            if (omm.getId(arrayEntry) == id) {
                                 o = arrayEntry;
                                 foundEntry = true;
                                 break;
@@ -577,8 +577,8 @@ var omm;
                             for (var i in v) {
                                 var e = v[i];
                                 var subObjectPath = path.clone();
-                                if (e.getId && e.getId()) {
-                                    subObjectPath.appendArrayOrMapLookup(typedPropertyName, e.getId());
+                                if (typeof omm.getId(e) != "undefined") {
+                                    subObjectPath.appendArrayOrMapLookup(typedPropertyName, omm.getId(e));
                                 }
                                 else {
                                     subObjectPath.appendArrayOrMapLookup(typedPropertyName, i);

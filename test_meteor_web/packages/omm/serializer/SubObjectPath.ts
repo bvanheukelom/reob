@@ -34,7 +34,7 @@ module omm {
                         var foundEntry:boolean = false;
                         for (var j in o) {
                             var arrayEntry:Object = o[j];
-                            if ((<any>arrayEntry).getId() == id) {
+                            if (omm.getId(<any>arrayEntry) == id) {
                                 o = arrayEntry;
                                 foundEntry = true;
                                 break;

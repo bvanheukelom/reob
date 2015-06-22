@@ -105,8 +105,8 @@ module omm{
                                 var e = v[i];
                                 //console.log("updating persistnece path for isArrayOrMap " + typedPropertyName + "  key:" + i + " value:", e, "object: ", object);
                                 var subObjectPath = path.clone();
-                                if (e.getId && e.getId()) {
-                                    subObjectPath.appendArrayOrMapLookup(typedPropertyName, e.getId());
+                                if (typeof omm.getId(e)!="undefined") {
+                                    subObjectPath.appendArrayOrMapLookup(typedPropertyName, omm.getId(e));
                                 } else {
                                     subObjectPath.appendArrayOrMapLookup(typedPropertyName, i);
                                 }

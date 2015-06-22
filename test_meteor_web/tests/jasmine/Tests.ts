@@ -607,4 +607,8 @@ describe("The persistence thing", function(){
 
     // write test that 'null' values for objects and properties can be serialized and deserialized
 
+    // test regarding a number as an id property
+
+    // test regarding a different property than the _id property as the id property
+
 });
