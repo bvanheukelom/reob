@@ -488,6 +488,6 @@ module omm {
     omm.registeredObjects = data.registeredObjects;
     if(!data.meteorMethodFunctions)
         data.meteorMethodFunctions = {};
-    omm.meteorMethodFunctions = data.meteorMethods;
+    omm.meteorMethodFunctions = data.meteorMethodFunctions;
 })();
 
