@@ -405,12 +405,15 @@ var omm;
     }
     else
         data = {};
-    data.entityClasses = {};
+    if (!data.entityClasses)
+        data.entityClasses = {};
     omm.entityClasses = data.entityClasses;
-    data.registeredObjects = {};
+    if (!data.registeredObjects)
+        data.registeredObjects = {};
     omm.registeredObjects = data.registeredObjects;
-    data.meteorMethods = {};
-    omm.meteorMethodFunctions = {};
+    if (!data.meteorMethodFunctions)
+        data.meteorMethodFunctions = {};
+    omm.meteorMethodFunctions = data.meteorMethods;
 })();
 var omm;
 (function (omm) {
