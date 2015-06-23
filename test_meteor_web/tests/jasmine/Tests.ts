@@ -605,10 +605,15 @@ describe("The persistence thing", function(){
         expect( person2.addresses[2] instanceof Tests.TestCar).toBeTruthy();
     });
 
-    // write test that 'null' values for objects and properties can be serialized and deserialized
-
     // test regarding a number as an id property
 
     // test regarding a different property than the _id property as the id property
+
+    // test that shows that root entities can be passed as parameters
+
+    // test that shows that entities can be passed as parameters
+
+    // test that shows that the subobjectpath class can handle array index lookups
+
 
 });

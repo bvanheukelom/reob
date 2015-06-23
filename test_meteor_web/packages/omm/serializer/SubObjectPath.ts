@@ -34,14 +34,15 @@ module omm {
                         var foundEntry:boolean = false;
                         for (var j in o) {
                             var arrayEntry:Object = o[j];
-                            if (omm.getId(<any>arrayEntry) == id) {
+                            if (omm.getId(<any>arrayEntry) === id) {
                                 o = arrayEntry;
                                 foundEntry = true;
                                 break;
                             }
                         }
-                        if (!foundEntry)
-                            o = undefined;
+                        if (!foundEntry){
+                            o = o[id];
+                        }
                     }
                 }
             });

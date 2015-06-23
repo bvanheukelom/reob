@@ -463,14 +463,15 @@ var omm;
                         var foundEntry = false;
                         for (var j in o) {
                             var arrayEntry = o[j];
-                            if (omm.getId(arrayEntry) == id) {
+                            if (omm.getId(arrayEntry) === id) {
                                 o = arrayEntry;
                                 foundEntry = true;
                                 break;
                             }
                         }
-                        if (!foundEntry)
-                            o = undefined;
+                        if (!foundEntry) {
+                            o = o[id];
+                        }
                     }
                 }
             });

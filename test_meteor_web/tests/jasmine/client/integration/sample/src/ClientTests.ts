@@ -99,6 +99,7 @@ describe("The persistence thing on the client ", function(){
                     expect(loadedJake).toBeDefined();
                     expect((<any>loadedJake)._tree).toBeDefined();
                     expect(omm.Serializer.needsLazyLoading(loadedJake, "tree") ).toBeTruthy();
+                    expect(loadedJake.getTree() instanceof Tests.TestTree).toBeTruthy();
                     done();
                 }).chooseTree(t);
             });
@@ -200,6 +201,31 @@ describe("The persistence thing on the client ", function(){
             });
         }).staticInsertPerson("hello");
     });
+
+    it("can handle null values ", function(done){
+        omm.staticCallHelper(Tests.TestPersonCollection,  function(error,result:Tests.TestPerson){
+            expect( error ).toBeUndefined();
+            omm.callHelper( result ,function(e,r){
+                expect( e ).toBeUndefined();
+                expect(r).toBeNull();
+                expect( personCollection.getById(result.getId()).getName() ).toBeNull();
+                done();
+            }).rename(null);
+        }).staticInsertPerson("hello");
+    });
+
+    it("can handle null as values for a dictionary  ", function(done){
+        omm.staticCallHelper(Tests.TestPersonCollection,  function(error,result:Tests.TestPerson){
+            expect( error ).toBeUndefined();
+            omm.callHelper( result ,function(e,r){
+                expect( e ).toBeUndefined();
+                expect( r ).toBeUndefined();
+                expect( personCollection.getById(result.getId()).family['uncle'] ).toBeNull();
+                done();
+            }).addFamilyRelation("uncle", null);
+        }).staticInsertPerson("hello");
+    });
+
 
 
 });

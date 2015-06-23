@@ -88,13 +88,15 @@ module omm {
                             //console.log("updating foreignkey property " + typedPropertyName + " is array");
                             for (var i in v) {
                                 var e = v[i];
-                                var index = i;
-                                if( e.getId && e.getId() )
-                                    index = e.getId();
-                                //console.log("updating persistnece path for isArrayOrMap " + typedPropertyName + "  key:" + i + " value:", e, "object: ", object);
-                                that.setSerializationPath(e, object._serializationPath.clone());
-                                e._serializationPath.appendArrayOrMapLookup(typedPropertyName, index);
-                                that.updateSerializationPaths(e, visited);
+                                if( e ) {
+                                    var index = i;
+                                    if (omm.getId(e))
+                                        index = omm.getId(e);
+                                    //console.log("updating persistnece path for isArrayOrMap " + typedPropertyName + "  key:" + i + " value:", e, "object: ", object);
+                                    that.setSerializationPath(e, object._serializationPath.clone());
+                                    e._serializationPath.appendArrayOrMapLookup(typedPropertyName, index);
+                                    that.updateSerializationPaths(e, visited);
+                                }
                             }
                         }
                         else {
@@ -114,7 +116,7 @@ module omm {
                             if (PersistenceAnnotation.isArrayOrMap(objectClass, typedPropertyName)) {
                                 for (var i in v) {
                                     var e = v[i];
-                                    if (!e._serializationPath) {
+                                    if ( e && !e._serializationPath) {
                                         //console.log("non- foreign key array/map entry key:"+i+" value:"+e);
                                         that.updateSerializationPaths(e, visited);
                                     }

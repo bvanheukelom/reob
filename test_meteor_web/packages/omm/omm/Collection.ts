@@ -108,49 +108,53 @@ module omm {
 
         update(id:string, updateFunction:(o:T)=>void)
         {
-            if( !id )
-                throw new Error("Id missing");
-            for (var i = 0; i < 10; i++)
-            {
-                var document:omm.Document = this.meteorCollection.findOne({
-                    _id : id
-                });
+            omm.MeteorPersistence.updateInProgress = true;
+            try {
+                if (!id)
+                    throw new Error("Id missing");
+                for (var i = 0; i < 10; i++) {
+                    var document:omm.Document = this.meteorCollection.findOne({
+                        _id: id
+                    });
 
-                if (!document){
-                    throw new Error("No document found for id: "+id );
+                    if (!document) {
+                        throw new Error("No document found for id: " + id);
+                    }
+
+                    var currentSerial = document.serial;
+
+                    // call the update function
+                    var object:T = this.documentToObject(document);
+                    var result = updateFunction(object);
+
+                    this.objectRetriever.updateSerializationPaths(object);
+
+                    var documentToSave:Document = this.serializer.toDocument(object);
+                    documentToSave.serial = currentSerial + 1;
+
+                    // update the collection
+                    //console.log("writing document ", documentToSave);
+                    var updatedDocumentCount = this.meteorCollection.update({
+                        _id: id,
+                        serial: currentSerial
+                    }, documentToSave);
+
+                    // verify that that went well
+                    if (updatedDocumentCount == 1) {
+                        return result; // we're done
+                    }
+                    else if (updatedDocumentCount > 1)
+                        throw new Meteor.Error("verifiedUpdate should only update one document");
+                    else {
+                        //console.log("rerunning verified update ");
+                        // we need to do this again
+                    }
                 }
-
-                var currentSerial = document.serial;
-
-                // call the update function
-                var object:T = this.documentToObject(document);
-                var result = updateFunction(object);
-
-                this.objectRetriever.updateSerializationPaths(object);
-
-                var documentToSave:Document = this.serializer.toDocument(object);
-                documentToSave.serial = currentSerial+1;
-
-                // update the collection
-                //console.log("writing document ", documentToSave);
-                var updatedDocumentCount = this.meteorCollection.update({
-                    _id:id,
-                    serial:currentSerial
-                }, documentToSave);
-
-                // verify that that went well
-                if (updatedDocumentCount == 1){
-                    return result; // we're done
-                }
-                else if (updatedDocumentCount > 1)
-                    throw new Meteor.Error( "verifiedUpdate should only update one document");
-                else
-                {
-                    //console.log("rerunning verified update ");
-                    // we need to do this again
-                }
+                throw new Error("update gave up after 10 attempts to update the object ");
             }
-            throw new Error("update gave up after 10 attempts to update the object ");
+            finally{
+                omm.MeteorPersistence.updateInProgress = false;
+            }
         }
 
 

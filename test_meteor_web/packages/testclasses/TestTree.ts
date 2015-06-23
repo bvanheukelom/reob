@@ -33,8 +33,7 @@ module Tests
         }
 
         @omm.Wrap
-        wither()
-        {
+        wither() {
             this.leaves = [];
         }
 

@@ -89,4 +89,30 @@ describe("The persistence thing on the server", function(){
         expect(t2.address instanceof Tests.TestAddress).toBeTruthy();
         expect(t2.address.getStreet()).toBe("jockeh str.1");
     });
+
+    it("verifies that updateInProgress is false after an exception happned in the update function", function(){
+        var m = new Tests.TestPerson("id1");
+        personCollection.insert(m);
+        try {
+            personCollection.update( "id1", function(){
+                expect( omm.MeteorPersistence.updateInProgress ).toBeTruthy();
+                throw new Error("someting broke");
+            });
+            fail();
+        }catch( e ){
+        }
+        expect( omm.MeteorPersistence.updateInProgress ).toBeFalsy();
+    });
+    it("verifies that updates fail if the id is not given ", function(){
+        var m = new Tests.TestPerson("id1");
+        personCollection.insert(m);
+        try {
+            personCollection.update(undefined, function () {
+            });
+            fail();
+        }catch( e ){
+
+        }
+    });
+
 });

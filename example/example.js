@@ -1,4 +1,7 @@
-counterjs:
+<<<<<<< Local Changes
+<<<<<<< Local Changes
+=======
+
 var Counter = function( name ){
 	this.name = name;
 	this.clicks = 0;
@@ -6,58 +9,32 @@ var Counter = function( name ){
 
 Counter.prototype.inc = function(i){
 	this.clicks+=i;
-	return this.clicks;
-};
+}
+
 
 omm.addEntity(Counter);
-omm.expose(Counter, "inc");
+omm.persistChanges(Counter, 'inc');
+omm.addMeteorMethod(Counter, 'inc');
 
+var CounterCollection = function(){
+}
 
-countercollectionjs:
-
-var CounterCollection = function CounterCollection(){
-};
-CounterCollection.prototype = new omm.Collection(Counter, "counters");
-CounterCollection.newCounter = function(){
-	var c = new Counter();
-	return this.insert( c ); 
-};
-
-omm.addMeteorMethod( CounterCollection, "newCounter", {staticId:'counterCollection'} );
-omm.meteorCall( CounterCollection, 'newCounter' );
-
-
-
+CounterCollection.prototype = new omm.Collection(Counter);
 var counterCollection = new CounterCollection();
 
 var c = new Counter('bertcounter');
-
-// on the server
 counterCollection.insert( c );
 
-// on the client 
-
-counterCollection.newCounter( function( error, result ){
-	if( !error){
-		var c = counterCollection.getById(result);
-		c.inc(5);
-		console.log("counter :"+c.clicks ) // 0
-		console.log("counter :"+counterCollection.getById(result).clicks ) // 5
-	}
+// no typechecking
+omm.call(c, "inc", p1, p2, p3 function(err, result){
+	
 });
 
-counterCollection.newCounter( function( error, counterId ){
-	if( !error){
-		var c = counterCollection.getById(counterId);
-		console.log("counter :"+c.clicks ) // 0
-		c.inc(5);
-		Meteor.call( "Counter.inc", counterId, 10, function( err, clicks ){
-			console.log("counter clicks : "+clicks ) // 15 
-		});
-	}
-});
+var promise = omm.callCallOn(c).inc();.then(function());
 
-
+<<<<<<< Local Changes
+c.inc(5);
+=======
 ----------------------------------- annotation -----------------------------------
 
 @omm.CollectionUpdate
@@ -101,7 +78,12 @@ omm.register( o, id? )
 		} );
 
 		omm.call( bertCounter, "inc", 5 );
+>>>>>>> External Changes
 
+<<<<<<< Local Changes
+console.log( counterCollection.getById(c.getId()).clicks );
+console.log( c.clicks );
+=======
 Options 
 		static:true
 			The function is called without changing the 'this' context.
@@ -145,7 +127,39 @@ omm.callHelper( o, function( error, result ){
 omm.callHelper( CounterCollection, function( error, result ){
 	
 } ).newCounter();
+>>>>>>> External Changes
 
-This knows everything that was defined by the @omm.meteor.Method annotation therefore the helper can dynamically have the right functions.
+/*
 
-How to serialize parameters? By making "className" into something that is a LOT less likely to be hit: "_omm_parameter_type"
+Problem: 
+	OOP breaks if the update is invoked on the object but the object is not changed.
+
+*/
+
+/*
+if (Meteor.isClient) {
+  // counter starts at 0
+  Session.setDefault('counter', 0);
+
+  Template.hello.helpers({
+    counter: function () {
+      return Session.get('counter');
+    }
+  });
+
+  Template.hello.events({
+    'click button': function () {
+      // increment the counter when button is clicked
+      Session.set('counter', Session.get('counter') + 1);
+    }
+  });
+}
+
+if (Meteor.isServer) {
+  Meteor.startup(function () {
+    // code to run on server at startup
+  });
+}
+*/>>>>>>> External Changes
+=======
+>>>>>>> External Changes

@@ -27,7 +27,7 @@ module omm {
             helper[methodOptions.functionName] = function (...originalArguments:any[]) {
                 var args = [];
                 for (var i in originalArguments) {
-                    if (originalArguments[i]._serializationPath) {
+                    if( (typeof originalArguments[i]=="object") && originalArguments[i] && originalArguments[i]._serializationPath) {
                         args[i] = originalArguments[i]._serializationPath.toString();
                     }
                     else {
@@ -64,7 +64,7 @@ module omm {
             helper[methodOptions.functionName] = function(...originalArguments:any[] ){
                 var args = [];
                 for (var i in originalArguments) {
-                    if (originalArguments[i]._serializationPath) {
+                    if ((typeof originalArguments[i]=="object") && originalArguments[i] && originalArguments[i]._serializationPath) {
                         args[i] = originalArguments[i]._serializationPath.toString();
                     }
                     else {
