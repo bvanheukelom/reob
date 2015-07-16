@@ -1,4 +1,14 @@
-Store and retrieve objects from a mongo/meteor database.
+###Meteor object mapper
+
+Omm is a library that store and retrieves objects from meteor/mongo collections. It aims to separate the logic to persist and retrive object from the business logic. It is inspired by ORMs like JPA/Hibernate or Backbone.
+
+Here is an example:
+
+We define two javascript classes that reference each other.
+
+<Garden.js>
+<Plant.js>
+
 
 Annotate type information on the class.
 
@@ -15,26 +25,5 @@ On restoration of a document
 
 4) The object created is filled with the properties found on the document.
 
-Other rules:
 
-If a wrapped call can only cause persitent updates on their root object.
 
-Parameters are serialized unless they have a persistence path. In that case the persistence path is used and the object is loaded once.
-
-Todo:
-
-	redefine what can be configured with the object retriever:
-
-		1) the key format? (not so important but kind of nice)
-		2) where objectes are retrieved from : mandatory
-
-		add "isLocal" function to the objectRetriever and write tests for a different kind of key format
-
-		OR remove getId function and only pass collection name and id to the getObject function (the latter is a good idea anyways)
-
-		Currently multiple entities with the same name cause omm to break. Can this be fixed?
-
-		redefine the interface between the objectRetriever and the Serializer. The object retriever is currently too
-		tightly coupled to the omm.SerializationPath and this needs to be clarified.
-
-		Is the persistence path intrinsic to the serializer ?

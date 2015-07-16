@@ -86,6 +86,14 @@ module omm {
             };
         }
     }
+    export function collectionUpdate(t:omm.TypeClass<any>, functionName:string, options?:any ){
+        if(!options){
+            omm.CollectionUpdate(t.prototype, functionName);
+        } else {
+            (<any>omm.CollectionUpdate(options))(t.prototype, functionName);
+        }
+    }
+
 
     export function ArrayOrMap( typeClassName:string )
     {
@@ -101,6 +109,10 @@ module omm {
         return omm.ArrayOrMap(typeClassName);
     }
 
+    export function arrayType( cls:TypeClass<Object>, propertyName:string, typeClassName:string ) {
+        return omm.ArrayOrMap(typeClassName)(cls.prototype, propertyName);
+    }
+
     export function DictionaryType( typeClassName:string ) {
         return omm.ArrayOrMap(typeClassName);
     }
@@ -112,6 +124,10 @@ module omm {
 
     export function Id( targetPrototypeObject:any, propertyName:string  ) {
         omm.DocumentName("_id")(targetPrototypeObject, propertyName);
+    }
+
+    export function idProperty(cls:TypeClass<Object>, propertyName:string){
+        omm.Id(cls.prototype, propertyName);
     }
 
     export function Ignore( targetPrototypeObject:any, propertyName:string  )
@@ -149,6 +165,10 @@ module omm {
             //console.log("  "+propertyName+" as "+typeClassName);
             PersistenceAnnotation.setPropertyProperty( targetPrototypeObject.constructor, propertyName, "type", typeClassName);
         };
+    }
+
+    export function type( t:TypeClass<Object>, propertyName:string, className:string){
+        omm.Type(className)(t.prototype, propertyName);
     }
 
     // plain js api
@@ -214,6 +234,7 @@ module omm {
             };
         }
     }
+
 
     export function StaticMeteorMethod( p1:any, p2?:any ) {
         if( typeof p1=="function" && typeof p2=="string"  ){

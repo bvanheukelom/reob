@@ -68,6 +68,15 @@ var omm;
         }
     }
     omm.CollectionUpdate = CollectionUpdate;
+    function collectionUpdate(t, functionName, options) {
+        if (!options) {
+            omm.CollectionUpdate(t.prototype, functionName);
+        }
+        else {
+            omm.CollectionUpdate(options)(t.prototype, functionName);
+        }
+    }
+    omm.collectionUpdate = collectionUpdate;
     function ArrayOrMap(typeClassName) {
         return function (targetPrototypeObject, propertyName) {
             PersistenceAnnotation.setPropertyProperty(targetPrototypeObject.constructor, propertyName, "type", typeClassName);
@@ -79,6 +88,10 @@ var omm;
         return omm.ArrayOrMap(typeClassName);
     }
     omm.ArrayType = ArrayType;
+    function arrayType(cls, propertyName, typeClassName) {
+        return omm.ArrayOrMap(typeClassName)(cls.prototype, propertyName);
+    }
+    omm.arrayType = arrayType;
     function DictionaryType(typeClassName) {
         return omm.ArrayOrMap(typeClassName);
     }
@@ -91,6 +104,10 @@ var omm;
         omm.DocumentName("_id")(targetPrototypeObject, propertyName);
     }
     omm.Id = Id;
+    function idProperty(cls, propertyName) {
+        omm.Id(cls.prototype, propertyName);
+    }
+    omm.idProperty = idProperty;
     function Ignore(targetPrototypeObject, propertyName) {
         PersistenceAnnotation.setPropertyProperty(targetPrototypeObject.constructor, propertyName, "ignore", true);
     }
@@ -122,6 +139,10 @@ var omm;
         };
     }
     omm.Type = Type;
+    function type(t, propertyName, className) {
+        omm.Type(className)(t.prototype, propertyName);
+    }
+    omm.type = type;
     function propertyType(t, propertyName, typeClassName) {
         omm.Type(typeClassName)(t.prototype, propertyName);
     }

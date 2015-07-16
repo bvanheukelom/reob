@@ -4,11 +4,14 @@
 
 <body>
   <h1>Welcome to Meteor!</h1>
-
-  {{> hello}}
+  {{> garden}}
 </body>
 
-<template name="hello">
-  <button>Click Me</button>
-  <p>You've pressed the button {{counter}} times.</p>
+<template name="garden">
+    <button id="grow">Grow</button>
+    <button id="plant">Plant</button>
+	harvested:{{theGarden.harvested}}
+    {{#each theGarden.plants}}
+	    <p>{{type}} height:{{height}} <button id="harvest">Harvest</button></p>
+    {{/each}}
 </template>
