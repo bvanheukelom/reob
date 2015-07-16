@@ -5,6 +5,13 @@ Plant = function Plant( type, garden ){
 	this.height = 1;
 	this.garden = garden;
 };
+// declares that Plant is an Entity
+omm.addEntity(Plant);
+// declares that the property garden contains object of the class "Garden"
+omm.type(Plant, "garden", "Garden");
+// declares that the value of the property should be stored as a key (string) rather than the actual object
+omm.asForeignKey(Plant, "garden");
+
 
 Plant.prototype.grow = function(){
 	if( this.height<20 )
@@ -19,15 +26,9 @@ Plant.prototype.harvest = function(){
 	this.garden.plants.splice(i,1);
 	this.garden.harvested+=this.height;
 };
-
-// declares that Plant is an Entity
-omm.addEntity(Plant);
-
-// declares that the property garden contains object of the class "Garden"
-omm.type(Plant, "garden", "Garden");
-
-// declares that the value of the property should be stored as a key (string) rather than the actual object
-omm.asForeignKey(Plant, "garden");
-
 // declares that the function "harvest" should also be invoked on the object in the collection.
 omm.collectionUpdate( Plant, "harvest");
+
+
+
+
