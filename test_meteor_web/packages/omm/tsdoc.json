@@ -1,0 +1,37 @@
+{
+	"tags":
+	{
+		"allowUnknownTags" : true
+	},
+	"plugins":[
+		 "plugins/markdown"
+		,"/usr/local/lib/node_modules/tsdoc/template/plugins/TSDoc.js"
+	],
+	"opts":
+	{
+		"template"	:"/usr/local/lib/node_modules/tsdoc/template",
+		"recurse"	:"true"
+	},
+	"templates" : {
+		"cleverLinks"     : false,
+		"monospaceLinks"  : false
+	},
+	"source":
+	{
+		"includePattern": "(\\.d)?\\.ts$"
+	},
+	"markdown"  : {
+		"parser"   : "gfm",
+		"hardwrap" : true
+	},
+	"tsdoc":{
+		"source"		:"/Users/bert/Work/meteorpersistence/test_meteor_web/packages/omm/",
+		"destination"	:"/Users/bert/Work/meteorpersistence/test_meteor_web/packages/omm/docs",
+		"tutorials"		:"",
+		"systemName"	: "omm",
+		"footer"		: "",
+		"copyright"		: "omm Copyright © 2015 Bert van Heukelom.",
+		"outputSourceFiles" : true,
+		"commentsOnly": true
+	}
+}

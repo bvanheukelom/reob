@@ -1,0 +1,311 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="utf-8">
+    <title>JSDoc: Source: omm/Collection.js</title>
+
+    <script src="scripts/prettify/prettify.js"> </script>
+    <script src="scripts/prettify/lang-css.js"> </script>
+    <!--[if lt IE 9]>
+      <script src="//html5shiv.googlecode.com/svn/trunk/html5.js"></script>
+    <![endif]-->
+    <link type="text/css" rel="stylesheet" href="styles/prettify-tomorrow.css">
+    <link type="text/css" rel="stylesheet" href="styles/jsdoc-default.css">
+</head>
+
+<body>
+
+<div id="main">
+
+    <h1 class="page-title">Source: omm/Collection.js</h1>
+
+    
+
+
+
+    
+    <section>
+        <article>
+            <pre class="prettyprint source linenums"><code>if (typeof __decorate !== "function") __decorate = function (decorators, target, key, desc) {
+    if (typeof Reflect === "object" &amp;&amp; typeof Reflect.decorate === "function") return Reflect.decorate(decorators, target, key, desc);
+    switch (arguments.length) {
+        case 2: return decorators.reduceRight(function(o, d) { return (d &amp;&amp; d(o)) || o; }, target);
+        case 3: return decorators.reduceRight(function(o, d) { return (d &amp;&amp; d(target, key)), void 0; }, void 0);
+        case 4: return decorators.reduceRight(function(o, d) { return (d &amp;&amp; d(target, key, o)) || o; }, desc);
+    }
+};
+/// &lt;reference path="./../serializer/Serializer.ts" />
+/// &lt;reference path="./../serializer/ConstantObjectRetriever.ts" />
+/// &lt;reference path="./MeteorPersistence.ts" />
+/// &lt;reference path="./MeteorObjectRetriever.ts" />
+/**
+ * @namespace omm
+ */
+omm;
+(function (omm) {
+    var Collection = (function () {
+        /**
+         * Represents a Mongo collection that contains entities.
+         * @param c {function} The constructor function of the entity class.
+         * @param collectionName {string=} The name of the collection
+         * @class
+         * @memberof omm
+         */
+        function Collection(entityClass, collectionName) {
+            this.objectRetriever = new omm.MeteorObjectRetriever();
+            this.serializer = new omm.Serializer(this.objectRetriever);
+            //var collectionName = omm.PersistenceAnnotation.getCollectionName(persistableClass);
+            if (!collectionName)
+                collectionName = omm.getDefaultCollectionName(entityClass);
+            omm.addCollectionRoot(entityClass, collectionName);
+            this.name = collectionName;
+            if (!omm.MeteorPersistence.collections[collectionName]) {
+                // as it doesnt really matter which base collection is used in meteor-calls, we're just using the first that is created
+                omm.MeteorPersistence.collections[collectionName] = this;
+            }
+            this.meteorCollection = Collection._getMeteorCollection(collectionName);
+            this.theClass = entityClass;
+        }
+        Collection.getCollection = function (t) {
+            return omm.MeteorPersistence.collections[omm.PersistenceAnnotation.getCollectionName(t)];
+        };
+        Collection._getMeteorCollection = function (name) {
+            if (!Collection.meteorCollections[name]) {
+                if (name != "users") {
+                    Collection.meteorCollections[name] = new Meteor.Collection(name);
+                }
+                else
+                    Collection.meteorCollections[name] = Meteor.users;
+            }
+            return Collection.meteorCollections[name];
+        };
+        /**
+         * Gets the name of the collection.
+         * @returns {string}
+         */
+        Collection.prototype.getName = function () {
+            return this.name;
+        };
+        /**
+         * Returns the underlying mongo collection.
+         * @returns {any}
+         */
+        Collection.prototype.getMeteorCollection = function () {
+            return this.meteorCollection;
+        };
+        /**
+         * Loads an object from the collection by its id.
+         * @param id {string} the id
+         * @returns {T} the object or undefined if it wasn't found
+         */
+        Collection.prototype.getById = function (id) {
+            var o = this.find({
+                "_id": id
+            });
+            return o.length > 0 ? o[0] : undefined;
+        };
+        /**
+         * Finds objects based on a selector.
+         * @param {object} findCriteria the mongo selector
+         * @returns {Array&lt;T>}
+         * @protected
+         */
+        Collection.prototype.find = function (findCriteria) {
+            var documents = this.meteorCollection.find(findCriteria).fetch();
+            var objects = [];
+            for (var i = 0; i &lt; documents.length; i++) {
+                var document = documents[i];
+                objects[i] = this.documentToObject(document);
+            }
+            return objects;
+        };
+        /**
+         * Gets all objects in a collection.
+         * @returns {Array&lt;T>}
+         */
+        Collection.prototype.getAll = function () {
+            return this.find({});
+        };
+        /**
+         * Removes an entry from a collection
+         * @param id {string} the id of the object to be removed from the collection
+         * @callback cb the callback that's called once the object is removed or an error happend
+         */
+        Collection.prototype.remove = function (id, cb) {
+            if (Meteor.isServer) {
+                if (id) {
+                    this.meteorCollection.remove(id, cb);
+                }
+                else
+                    throw new Error("Trying to remove an object that does not have an id.");
+            }
+            else
+                throw new Error("Trying to remove an object from the client. 'remove' can only be called on the server.");
+        };
+        Collection.prototype.documentToObject = function (doc) {
+            var p = this.serializer.toObject(doc, this.theClass);
+            this.objectRetriever.updateSerializationPaths(p);
+            this.objectRetriever.retrieveLocalKeys(p);
+            return p;
+        };
+        /**
+         * Performs an update on an object in the collection. After the update the object is attempted to be saved to
+         * the collection. If the object has changed between the time it was loaded and the time it is saved, the whole
+         * process is repeated. This means that the updateFunction might be called more than once.
+         * @param id - the id of the object
+         * @param updateFunction - the function that alters the loaded object
+         */
+        Collection.prototype.update = function (id, updateFunction) {
+            omm.MeteorPersistence.updateInProgress = true;
+            try {
+                if (!id)
+                    throw new Error("Id missing");
+                for (var i = 0; i &lt; 10; i++) {
+                    var document = this.meteorCollection.findOne({
+                        _id: id
+                    });
+                    if (!document) {
+                        throw new Error("No document found for id: " + id);
+                    }
+                    var currentSerial = document.serial;
+                    // call the update function
+                    var object = this.documentToObject(document);
+                    var result = updateFunction(object);
+                    this.objectRetriever.updateSerializationPaths(object);
+                    var documentToSave = this.serializer.toDocument(object);
+                    documentToSave.serial = currentSerial + 1;
+                    // update the collection
+                    //console.log("writing document ", documentToSave);
+                    var updatedDocumentCount = this.meteorCollection.update({
+                        _id: id,
+                        serial: currentSerial
+                    }, documentToSave);
+                    // verify that that went well
+                    if (updatedDocumentCount == 1) {
+                        return result; // we're done
+                    }
+                    else if (updatedDocumentCount > 1)
+                        throw new Meteor.Error("verifiedUpdate should only update one document");
+                    else {
+                    }
+                }
+                throw new Error("update gave up after 10 attempts to update the object ");
+            }
+            finally {
+                omm.MeteorPersistence.updateInProgress = false;
+            }
+        };
+        /**
+         * callback is called once the object got inserted or an error happened
+         * @callback insertCallback
+         * @param e {any} error
+         * @param id {id=} string
+         */
+        /**
+         * Inserts an object into the collection
+         * @param p the object
+         * @param {insertCallback} callback
+         * @returns {string} the id of the new object
+         */
+        Collection.prototype.insert = function (p, callback) {
+            //if( Meteor.isServer )
+            //{
+            // TODO make sure that this is unique
+            var idPropertyName = omm.PersistenceAnnotation.getIdPropertyName(this.theClass);
+            if (!p[idPropertyName])
+                p[idPropertyName] = new Mongo.ObjectID()._str;
+            var doc = this.serializer.toDocument(p);
+            //if( typeof p.getId=="function" &amp;&amp; p.getId() )
+            //    doc._id = p.getId();
+            //else
+            //    doc._id = ;
+            doc.serial = 0;
+            //console.log( "inserting document: ", doc);
+            var that = this;
+            function afterwards(e, id) {
+                if (!e) {
+                    //console.log( "inserted into '"+that.getName()+"' new id:"+id);
+                    p[idPropertyName] = id;
+                    that.objectRetriever.postToObject(p); // kind of the same thing?
+                }
+                else {
+                }
+                if (callback)
+                    callback(e, id);
+            }
+            try {
+                var id = this.meteorCollection.insert(doc, callback ? afterwards : undefined);
+                if (!callback)
+                    afterwards(undefined, id);
+                else
+                    return id;
+            }
+            catch (e) {
+                if (!callback)
+                    afterwards(e);
+            }
+            return id;
+            //}
+            //else
+            //    throw new Error("Insert can not be called on the client. Wrap it into a meteor method.");
+        };
+        /**
+         * called once the objects are removed or an error happens
+         * @callback omm.Collection~resetAllCallback
+         * @param error {any=} if an error occured it is passed to the callback
+         */
+        /**
+         * removes all objects (for testing purposes)
+         * @param {omm.Collection~resetAllCallback} cb called when it's done
+         */
+        Collection.resetAll = function (cb) {
+            var arr = [];
+            for (var i in Collection.meteorCollections)
+                arr.push(Collection.meteorCollections[i]);
+            if (arr.length > 0) {
+                for (var j in arr) {
+                    if (j != arr.length - 1)
+                        Meteor.wrapAsync(function (cb2) {
+                            arr[j].remove({}, cb2);
+                        })();
+                    else {
+                        arr[j].remove({}, cb);
+                    }
+                }
+            }
+            else
+                cb();
+        };
+        Collection.meteorCollections = {};
+        Object.defineProperty(Collection, "resetAll",
+            __decorate([
+                omm.StaticMeteorMethod({ replaceWithCall: true, parameterTypes: ['callback'] })
+            ], Collection, "resetAll", Object.getOwnPropertyDescriptor(Collection, "resetAll")));
+        return Collection;
+    })();
+    omm.Collection = Collection;
+})(omm || (omm = {}));
+//omm.MeteorPersistence.wrapFunction( omm.Collection, "resetAll", "resetAll", true, null, new omm.ConstantObjectRetriever(omm.Collection) );
+//# sourceMappingURL=Collection.js.map</code></pre>
+        </article>
+    </section>
+
+
+
+
+</div>
+
+<nav>
+    <h2><a href="index.html">Home</a></h2><h3>Classes</h3><ul><li><a href="omm.Collection.html">Collection</a></li></ul><h3>Namespaces</h3><ul><li><a href="omm.html">omm</a></li></ul><h3><a href="global.html">Global</a></h3>
+</nav>
+
+<br class="clear">
+
+<footer>
+    Documentation generated by <a href="https://github.com/jsdoc3/jsdoc">JSDoc 3.3.2</a> on Sat Jul 18 2015 14:27:25 GMT+0200 (CEST)
+</footer>
+
+<script> prettyPrint(); </script>
+<script src="scripts/linenumber.js"> </script>
+</body>
+</html>

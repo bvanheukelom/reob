@@ -38,8 +38,8 @@ var omm;
         omm.entityClasses[className(typeClass)] = typeClass;
     }
     omm.Entity = Entity;
-    function addEntity(cls) {
-        omm.Entity(cls);
+    function addEntity(c) {
+        omm.Entity(c);
     }
     omm.addEntity = addEntity;
     function getDefaultCollectionName(t) {
@@ -68,12 +68,12 @@ var omm;
         }
     }
     omm.CollectionUpdate = CollectionUpdate;
-    function collectionUpdate(t, functionName, options) {
+    function collectionUpdate(c, functionName, options) {
         if (!options) {
-            omm.CollectionUpdate(t.prototype, functionName);
+            omm.CollectionUpdate(c, functionName);
         }
         else {
-            omm.CollectionUpdate(options)(t.prototype, functionName);
+            omm.CollectionUpdate(options)(c, functionName);
         }
     }
     omm.collectionUpdate = collectionUpdate;
@@ -88,14 +88,18 @@ var omm;
         return omm.ArrayOrMap(typeClassName);
     }
     omm.ArrayType = ArrayType;
-    function arrayType(cls, propertyName, typeClassName) {
-        return omm.ArrayOrMap(typeClassName)(cls.prototype, propertyName);
+    function arrayType(c, propertyName, typeClassName) {
+        omm.ArrayOrMap(typeClassName)(c.prototype, propertyName);
     }
     omm.arrayType = arrayType;
     function DictionaryType(typeClassName) {
         return omm.ArrayOrMap(typeClassName);
     }
     omm.DictionaryType = DictionaryType;
+    function dictionaryType(typeClassName) {
+        return omm.ArrayOrMap(typeClassName);
+    }
+    omm.dictionaryType = dictionaryType;
     function AsForeignKeys(targetPrototypeObject, propertyName) {
         return PersistenceAnnotation.setPropertyProperty(targetPrototypeObject.constructor, propertyName, "askeys", true);
     }
@@ -104,14 +108,18 @@ var omm;
         omm.DocumentName("_id")(targetPrototypeObject, propertyName);
     }
     omm.Id = Id;
-    function idProperty(cls, propertyName) {
-        omm.Id(cls.prototype, propertyName);
+    function idProperty(c, propertyName) {
+        omm.Id(c.prototype, propertyName);
     }
     omm.idProperty = idProperty;
     function Ignore(targetPrototypeObject, propertyName) {
         PersistenceAnnotation.setPropertyProperty(targetPrototypeObject.constructor, propertyName, "ignore", true);
     }
     omm.Ignore = Ignore;
+    function ignoreProperty(c, propertyName) {
+        omm.Ignore(c.prototype, propertyName);
+    }
+    omm.ignoreProperty = ignoreProperty;
     function DocumentName(name) {
         return function (targetPrototypeObject, propertyName) {
             var objNames = getMetadata("objectNames", targetPrototypeObject);
@@ -155,14 +163,10 @@ var omm;
         omm.DictionaryType(typeClassName)(t.prototype, propertyName);
     }
     omm.propertyDictionaryType = propertyDictionaryType;
-    function asForeignKey(t, propertyName) {
-        omm.AsForeignKey(t.prototype, propertyName);
+    function asForeignKey(c, propertyName) {
+        omm.AsForeignKey(c.prototype, propertyName);
     }
     omm.asForeignKey = asForeignKey;
-    function ignoreProperty(t, propertyName) {
-        omm.Ignore(t.prototype, propertyName);
-    }
-    omm.ignoreProperty = ignoreProperty;
     function getId(o) {
         var idPropertyName = omm.PersistenceAnnotation.getIdPropertyName(omm.PersistenceAnnotation.getClass(o));
         if (!idPropertyName)

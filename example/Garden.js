@@ -1,3 +1,9 @@
+/**
+ * The garden class.
+ * @param name
+ * @param id
+ * @constructor
+ */
 Garden = function Garden( name, id ){
 	this._id = id;
 	this.name = name;
@@ -8,7 +14,10 @@ Garden = function Garden( name, id ){
 omm.addEntity(Garden);
 // declares that the property "plants" contains objects of the type "Plant"
 omm.arrayType(Garden, "plants", "Plant");
-
+/**
+ * Adds a plant to the garden
+ * @param t
+ */
 Garden.prototype.addPlant = function( t ){
 	this.plants.push( new Plant( t, this ) );
 };

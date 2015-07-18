@@ -2,7 +2,9 @@
 /// <reference path="./../serializer/ConstantObjectRetriever.ts" />
 /// <reference path="./MeteorPersistence.ts" />
 /// <reference path="./MeteorObjectRetriever.ts" />
-
+/**
+ * @namespace omm
+ */
 module omm {
 
     export class Collection<T extends Object>
@@ -15,34 +17,36 @@ module omm {
 
         private static meteorCollections:{[index:string]:any} = { };
 
-        constructor( persistableClass:omm.TypeClass<T>, collectionName?:string )
-        {
+        /**
+         * Represents a Mongo collection that contains entities.
+         * @param c {function} The constructor function of the entity class.
+         * @param collectionName {string=} The name of the collection
+         * @class
+         * @memberof omm
+         */
+        constructor( entityClass:omm.TypeClass<T>, collectionName?:string ) {
             this.objectRetriever = new omm.MeteorObjectRetriever();
             this.serializer = new omm.Serializer( this.objectRetriever );
             //var collectionName = omm.PersistenceAnnotation.getCollectionName(persistableClass);
             if( !collectionName )
-                collectionName = omm.getDefaultCollectionName(persistableClass);
-            omm.addCollectionRoot(persistableClass, collectionName);
+                collectionName = omm.getDefaultCollectionName(entityClass);
+            omm.addCollectionRoot(entityClass, collectionName);
             this.name = collectionName;
             if( !MeteorPersistence.collections[collectionName] ) {
                 // as it doesnt really matter which base collection is used in meteor-calls, we're just using the first that is created
                 MeteorPersistence.collections[collectionName] = this;
             }
             this.meteorCollection = Collection._getMeteorCollection(collectionName);
-            this.theClass = persistableClass;
+            this.theClass = entityClass;
         }
 
-        static getCollection<P extends Object>( t:omm.TypeClass<P> ):Collection<P>
-        {
+        static getCollection<P extends Object>( t:omm.TypeClass<P> ):Collection<P> {
             return MeteorPersistence.collections[omm.PersistenceAnnotation.getCollectionName(t)];
         }
 
-        private static _getMeteorCollection( name?:string )
-        {
-            if( !Collection.meteorCollections[name] )
-            {
-                if( name!="users")
-                {
+        private static _getMeteorCollection( name?:string ) {
+            if( !Collection.meteorCollections[name] ) {
+                if( name!="users") {
                     Collection.meteorCollections[name] = new (<any>Meteor).Collection( name );
                 }
                 else
@@ -51,16 +55,28 @@ module omm {
             return Collection.meteorCollections[name];
         }
 
-        getName():string
-        {
+        /**
+         * Gets the name of the collection.
+         * @returns {string}
+         */
+        getName():string {
             return this.name;
         }
 
+        /**
+         * Returns the underlying mongo collection.
+         * @returns {any}
+         */
         getMeteorCollection( ):any
         {
             return this.meteorCollection;
         }
 
+        /**
+         * Loads an object from the collection by its id.
+         * @param id {string} the id
+         * @returns {T} the object or undefined if it wasn't found
+         */
         getById(id:string):T
         {
             var o = this.find({
@@ -69,6 +85,12 @@ module omm {
             return o.length>0?o[0]:undefined;
         }
 
+        /**
+         * Finds objects based on a selector.
+         * @param {object} findCriteria the mongo selector
+         * @returns {Array<T>}
+         * @protected
+         */
         protected find(findCriteria:any):Array<T>
         {
             var documents:Array<Document> = this.meteorCollection.find(findCriteria).fetch();
@@ -80,11 +102,20 @@ module omm {
             return objects;
         }
 
+        /**
+         * Gets all objects in a collection.
+         * @returns {Array<T>}
+         */
         getAll():Array<T>
         {
             return this.find({});
         }
 
+        /**
+         * Removes an entry from a collection
+         * @param id {string} the id of the object to be removed from the collection
+         * @callback cb the callback that's called once the object is removed or an error happend
+         */
         protected remove( id:string, cb?:(err:any)=>void )
         {
             if( Meteor.isServer ) {
@@ -106,6 +137,13 @@ module omm {
             return p;
         }
 
+        /**
+         * Performs an update on an object in the collection. After the update the object is attempted to be saved to
+         * the collection. If the object has changed between the time it was loaded and the time it is saved, the whole
+         * process is repeated. This means that the updateFunction might be called more than once.
+         * @param id - the id of the object
+         * @param updateFunction - the function that alters the loaded object
+         */
         update(id:string, updateFunction:(o:T)=>void)
         {
             omm.MeteorPersistence.updateInProgress = true;
@@ -157,7 +195,19 @@ module omm {
             }
         }
 
+        /**
+         * callback is called once the object got inserted or an error happened
+         * @callback omm.Collection~insertCallback
+         * @param e {any} error
+         * @param id {id=} string
+         */
 
+        /**
+         * Inserts an object into the collection
+         * @param p the object
+         * @param {omm.Collection~insertCallback} callback
+         * @returns {string} the id of the new object
+         */
         insert( p:T, callback?:(e:any, id?:string)=>void ):string
         {
             //if( Meteor.isServer )
@@ -208,6 +258,16 @@ module omm {
             //    throw new Error("Insert can not be called on the client. Wrap it into a meteor method.");
         }
 
+        /**
+         * called once the objects are removed or an error happens
+         * @callback omm.Collection~resetAllCallback
+         * @param error {any=} if an error occured it is passed to the callback
+         */
+
+        /**
+         * removes all objects (for testing purposes)
+         * @param {omm.Collection~resetAllCallback} cb called when it's done
+         */
         @omm.StaticMeteorMethod({replaceWithCall:true, parameterTypes:['callback']})
         static resetAll( cb:(error?:any)=>void ){
             var arr = [];

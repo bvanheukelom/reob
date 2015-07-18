@@ -12,7 +12,10 @@ interface IMethodOptions{
     functionName?:string;
     replaceWithCall?:boolean;
 }
-
+/**
+ * The omm module
+ * @namespace omm
+ */
 module omm {
     export var entityClasses:{[index:string]:omm.TypeClass<Object>};
     export var registeredObjects:{[index:string]:any};
@@ -53,8 +56,13 @@ module omm {
         omm.entityClasses[className(typeClass)]=typeClass;
     }
 
-    export function addEntity( cls:TypeClass<Object>){
-        omm.Entity(cls);
+    /**
+     * Declares a class as an entity.
+     * @param c {function} The constructor function of the entity class.
+     * @memberof omm
+     */
+    export function addEntity( c:TypeClass<Object>){
+        omm.Entity(c);
     }
 
     export function getDefaultCollectionName(t:omm.TypeClass<any>):string{
@@ -86,11 +94,20 @@ module omm {
             };
         }
     }
-    export function collectionUpdate(t:omm.TypeClass<any>, functionName:string, options?:any ){
+
+    /**
+     * Used to declare a function of a class as a "collection update". That means that whenever the function is called
+     * the same operation is also invoked on the document in the collection.
+     * @param c {function} The constructor function of the entity class.
+     * @param functionName {string} The name of the function that is declared as a "collection update".
+     * @param options
+     * @memberof omm
+     */
+    export function collectionUpdate(c:omm.TypeClass<any>, functionName:string, options?:any ){
         if(!options){
-            omm.CollectionUpdate(t.prototype, functionName);
+            omm.CollectionUpdate(c, functionName);
         } else {
-            (<any>omm.CollectionUpdate(options))(t.prototype, functionName);
+            (<any>omm.CollectionUpdate(options))(c, functionName);
         }
     }
 
@@ -109,11 +126,29 @@ module omm {
         return omm.ArrayOrMap(typeClassName);
     }
 
-    export function arrayType( cls:TypeClass<Object>, propertyName:string, typeClassName:string ) {
-        return omm.ArrayOrMap(typeClassName)(cls.prototype, propertyName);
+    /**
+     * Declares the type of the values in the array. This is synonymous to {@link omm.dictionaryType}.
+     * @param c {function} The constructor function of the entity class.
+     * @param propertyName {string} The name of the array property.
+     * @param typeClassName {string} The classname of the entity that the array contains.
+     * @memberof omm
+     */
+    export function arrayType( c:TypeClass<Object>, propertyName:string, typeClassName:string ) {
+        omm.ArrayOrMap(typeClassName)(c.prototype, propertyName);
     }
 
     export function DictionaryType( typeClassName:string ) {
+        return omm.ArrayOrMap(typeClassName);
+    }
+
+    /**
+     * Declares the type of the values in the dictionary. This is synonymous to {@link omm.arrayType}.
+     * @param c {function} The constructor function of the entity class.
+     * @param propertyName {string} The name of the array property.
+     * @param typeClassName {string} The classname of the entity that the array contains.
+     * @memberof omm
+     */
+    export function dictionaryType( typeClassName:string ) {
         return omm.ArrayOrMap(typeClassName);
     }
 
@@ -126,13 +161,29 @@ module omm {
         omm.DocumentName("_id")(targetPrototypeObject, propertyName);
     }
 
-    export function idProperty(cls:TypeClass<Object>, propertyName:string){
-        omm.Id(cls.prototype, propertyName);
+    /**
+     * Used to declare which property is used as the value for "_id".
+     * @param c {function} The constructor function of the entity class.
+     * @param propertyName {string} The name of the id property.
+     * @memberof omm
+     */
+    export function idProperty(c:TypeClass<Object>, propertyName:string){
+        omm.Id(c.prototype, propertyName);
     }
 
     export function Ignore( targetPrototypeObject:any, propertyName:string  )
     {
         PersistenceAnnotation.setPropertyProperty(targetPrototypeObject.constructor, propertyName, "ignore", true);
+    }
+
+    /**
+     * Declares that a property of an entity is not persisted.
+     * @param c {function} The constructor function of the entity class.
+     * @param propertyName {string} The name of the id property.
+     * @memberof omm
+     */
+    export function ignoreProperty(c:TypeClass<Object>, propertyName:string){
+        omm.Ignore(c.prototype, propertyName);
     }
 
 
@@ -181,13 +232,25 @@ module omm {
     export function propertyDictionaryType( t:TypeClass<Object>, propertyName:string, typeClassName:string ){
         omm.DictionaryType(typeClassName)(t.prototype, propertyName);
     }
-    export function asForeignKey( t:TypeClass<Object>, propertyName:string ){
-        omm.AsForeignKey(t.prototype, propertyName);
-    }
-    export function ignoreProperty( t:TypeClass<Object>, propertyName:string ){
-        omm.Ignore(t.prototype, propertyName);
+
+    /**
+     * Declares that a property that stores an Entity is to be stored as a string which references the entity rather than
+     * the whole entity. Use this to break up circular references.
+     *
+     * @param c {function} The constructor function of the class.
+     * @param propertyName {string} The name of the property that should be stored as a string.
+     * @memberof omm
+     */
+    export function asForeignKey( c:TypeClass<Object>, propertyName:string ){
+        omm.AsForeignKey(c.prototype, propertyName);
     }
 
+    /**
+     * Returns the property previously defined with {@link omm.idProperty} or the _id property.
+     * @param o {Object} the object
+     * @returns {any}
+     * @memberof omm
+     */
     export function getId( o:Object ){
         var idPropertyName = omm.PersistenceAnnotation.getIdPropertyName(omm.PersistenceAnnotation.getClass(o));
         if(!idPropertyName)

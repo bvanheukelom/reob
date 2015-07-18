@@ -1,0 +1,565 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="utf-8">
+    <title>JSDoc: Source: annotations/PersistenceAnnotation.js</title>
+
+    <script src="scripts/prettify/prettify.js"> </script>
+    <script src="scripts/prettify/lang-css.js"> </script>
+    <!--[if lt IE 9]>
+      <script src="//html5shiv.googlecode.com/svn/trunk/html5.js"></script>
+    <![endif]-->
+    <link type="text/css" rel="stylesheet" href="styles/prettify-tomorrow.css">
+    <link type="text/css" rel="stylesheet" href="styles/jsdoc-default.css">
+</head>
+
+<body>
+
+<div id="main">
+
+    <h1 class="page-title">Source: annotations/PersistenceAnnotation.js</h1>
+
+    
+
+
+
+    
+    <section>
+        <article>
+            <pre class="prettyprint source linenums"><code>/// &lt;reference path="./TypeClass.ts"/>
+/// &lt;reference path="../../../../typings/node/node.d.ts"/>
+/**
+ * The omm module
+ * @namespace omm
+ */
+omm;
+(function (omm) {
+    omm.entityClasses;
+    omm.registeredObjects;
+    omm.meteorMethodFunctions;
+    function setNonEnumerableProperty(obj, propertyName, value) {
+        if (!Object.getOwnPropertyDescriptor(obj, propertyName)) {
+            Object.defineProperty(obj, propertyName, {
+                configurable: false,
+                enumerable: false,
+                writable: true
+            });
+        }
+        obj[propertyName] = value;
+    }
+    omm.setNonEnumerableProperty = setNonEnumerableProperty;
+    // it seems that the local variable that "reflect" uses is prone to the same difficulties when it gets loaded
+    // multiple times. This is why it's been removed until it is supported by the Runtime directly.
+    function defineMetadata(propertyName, value, cls) {
+        if (!cls.hasOwnProperty("_ommAnnotations")) {
+            omm.setNonEnumerableProperty(cls, "_ommAnnotations", {});
+        }
+        var _ommAnnotations = cls._ommAnnotations;
+        _ommAnnotations[propertyName] = value;
+    }
+    omm.defineMetadata = defineMetadata;
+    function getMetadata(propertyName, cls) {
+        if (cls.hasOwnProperty("_ommAnnotations"))
+            return cls["_ommAnnotations"][propertyName];
+        else {
+            return undefined;
+        }
+    }
+    omm.getMetadata = getMetadata;
+    function Entity(p1) {
+        var typeClass = p1;
+        defineMetadata("persistence:entity", true, typeClass);
+        omm.entityClasses[className(typeClass)] = typeClass;
+    }
+    omm.Entity = Entity;
+    /**
+     * Declares a class as an entity.
+     * @param c {function} The constructor function of the entity class.
+     * @memberof omm
+     */
+    function addEntity(c) {
+        omm.Entity(c);
+    }
+    omm.addEntity = addEntity;
+    function getDefaultCollectionName(t) {
+        return omm.className(t);
+    }
+    omm.getDefaultCollectionName = getDefaultCollectionName;
+    function addCollectionRoot(t, collectionName) {
+        defineMetadata("persistence:collectionName", collectionName, t);
+    }
+    omm.addCollectionRoot = addCollectionRoot;
+    function Wrap(t, functionName, objectDescriptor) {
+        //omm.CollectionUpdate(t,functionName,objectDescriptor);
+        //omm.MeteorMethod(t,functionName,objectDescriptor);
+        //defineMetadata("persistence:wrap", true, (&lt;any>t)[functionName] );
+        omm.CollectionUpdate(t, functionName);
+        omm.MeteorMethod({ replaceWithCall: true })(t, functionName, objectDescriptor);
+    }
+    omm.Wrap = Wrap;
+    function CollectionUpdate(p1, fName) {
+        var options = {};
+        if (fName) {
+            PersistenceAnnotation.setPropertyProperty(p1, fName, "collectionUpdate", options);
+        }
+        else {
+            return function (t, functionName, objectDescriptor) {
+                options = p1;
+                PersistenceAnnotation.setPropertyProperty(t, functionName, "collectionUpdate", options);
+            };
+        }
+    }
+    omm.CollectionUpdate = CollectionUpdate;
+    /**
+     * Used to declare a function of a class as a "collection update". That means that whenever the function is called
+     * the same operation is also invoked on the document in the collection.
+     * @param c {function} The constructor function of the entity class.
+     * @param functionName {string} The name of the function that is declared as a "collection update".
+     * @param options
+     * @memberof omm
+     */
+    function collectionUpdate(c, functionName, options) {
+        if (!options) {
+            omm.CollectionUpdate(c, functionName);
+        }
+        else {
+            omm.CollectionUpdate(options)(c, functionName);
+        }
+    }
+    omm.collectionUpdate = collectionUpdate;
+    function ArrayOrMap(typeClassName) {
+        return function (targetPrototypeObject, propertyName) {
+            //console.log("  "+propertyName+" as collection of "+typeClassName);
+            PersistenceAnnotation.setPropertyProperty(targetPrototypeObject.constructor, propertyName, "type", typeClassName);
+            PersistenceAnnotation.setPropertyProperty(targetPrototypeObject.constructor, propertyName, "arrayOrMap", true);
+        };
+    }
+    omm.ArrayOrMap = ArrayOrMap;
+    function ArrayType(typeClassName) {
+        return omm.ArrayOrMap(typeClassName);
+    }
+    omm.ArrayType = ArrayType;
+    /**
+     * Declares the type of the values in the array. This is synonymous to {@link omm.dictionaryType}.
+     * @param c {function} The constructor function of the entity class.
+     * @param propertyName {string} The name of the array property.
+     * @param typeClassName {string} The classname of the entity that the array contains.
+     * @memberof omm
+     */
+    function arrayType(c, propertyName, typeClassName) {
+        omm.ArrayOrMap(typeClassName)(c.prototype, propertyName);
+    }
+    omm.arrayType = arrayType;
+    function DictionaryType(typeClassName) {
+        return omm.ArrayOrMap(typeClassName);
+    }
+    omm.DictionaryType = DictionaryType;
+    /**
+     * Declares the type of the values in the dictionary. This is synonymous to {@link omm.arrayType}.
+     * @param c {function} The constructor function of the entity class.
+     * @param propertyName {string} The name of the array property.
+     * @param typeClassName {string} The classname of the entity that the array contains.
+     * @memberof omm
+     */
+    function dictionaryType(typeClassName) {
+        return omm.ArrayOrMap(typeClassName);
+    }
+    omm.dictionaryType = dictionaryType;
+    function AsForeignKeys(targetPrototypeObject, propertyName) {
+        return PersistenceAnnotation.setPropertyProperty(targetPrototypeObject.constructor, propertyName, "askeys", true);
+    }
+    omm.AsForeignKeys = AsForeignKeys;
+    function Id(targetPrototypeObject, propertyName) {
+        omm.DocumentName("_id")(targetPrototypeObject, propertyName);
+    }
+    omm.Id = Id;
+    /**
+     * Used to declare which property is used as the value for "_id".
+     * @param c {function} The constructor function of the entity class.
+     * @param propertyName {string} The name of the id property.
+     * @memberof omm
+     */
+    function idProperty(c, propertyName) {
+        omm.Id(c.prototype, propertyName);
+    }
+    omm.idProperty = idProperty;
+    function Ignore(targetPrototypeObject, propertyName) {
+        PersistenceAnnotation.setPropertyProperty(targetPrototypeObject.constructor, propertyName, "ignore", true);
+    }
+    omm.Ignore = Ignore;
+    /**
+     * Declares that a property of an entity is not persisted.
+     * @param c {function} The constructor function of the entity class.
+     * @param propertyName {string} The name of the id property.
+     * @memberof omm
+     */
+    function ignoreProperty(c, propertyName) {
+        omm.Ignore(c.prototype, propertyName);
+    }
+    omm.ignoreProperty = ignoreProperty;
+    function DocumentName(name) {
+        return function (targetPrototypeObject, propertyName) {
+            var objNames = getMetadata("objectNames", targetPrototypeObject);
+            if (!objNames) {
+                objNames = {};
+                defineMetadata("objectNames", objNames, targetPrototypeObject);
+            }
+            var documentNames = getMetadata("documentNames", targetPrototypeObject);
+            if (!documentNames) {
+                documentNames = {};
+                defineMetadata("documentNames", documentNames, targetPrototypeObject);
+            }
+            objNames[name] = propertyName;
+            documentNames[propertyName] = name;
+        };
+    }
+    omm.DocumentName = DocumentName;
+    // for grammar reasons
+    function AsForeignKey(targetPrototypeObject, propertyName) {
+        return AsForeignKeys(targetPrototypeObject, propertyName);
+    }
+    omm.AsForeignKey = AsForeignKey;
+    function Type(typeClassName) {
+        return function (targetPrototypeObject, propertyName) {
+            //console.log("  "+propertyName+" as "+typeClassName);
+            PersistenceAnnotation.setPropertyProperty(targetPrototypeObject.constructor, propertyName, "type", typeClassName);
+        };
+    }
+    omm.Type = Type;
+    function type(t, propertyName, className) {
+        omm.Type(className)(t.prototype, propertyName);
+    }
+    omm.type = type;
+    // plain js api
+    function propertyType(t, propertyName, typeClassName) {
+        omm.Type(typeClassName)(t.prototype, propertyName);
+    }
+    omm.propertyType = propertyType;
+    function propertyArrayType(t, propertyName, typeClassName) {
+        omm.ArrayType(typeClassName)(t.prototype, propertyName);
+    }
+    omm.propertyArrayType = propertyArrayType;
+    function propertyDictionaryType(t, propertyName, typeClassName) {
+        omm.DictionaryType(typeClassName)(t.prototype, propertyName);
+    }
+    omm.propertyDictionaryType = propertyDictionaryType;
+    /**
+     * Declares that a property that stores an Entity is to be stored as a string which references the entity rather than
+     * the whole entity. Use this to break up circular references.
+     *
+     * @param c {function} The constructor function of the class.
+     * @param propertyName {string} The name of the property that should be stored as a string.
+     * @memberof omm
+     */
+    function asForeignKey(c, propertyName) {
+        omm.AsForeignKey(c.prototype, propertyName);
+    }
+    omm.asForeignKey = asForeignKey;
+    /**
+     * Returns the property previously defined with {@link omm.idProperty} or the _id property.
+     * @param o {Object} the object
+     * @returns {any}
+     * @memberof omm
+     */
+    function getId(o) {
+        var idPropertyName = omm.PersistenceAnnotation.getIdPropertyName(omm.PersistenceAnnotation.getClass(o));
+        if (!idPropertyName)
+            throw new Error("No id property defined for object of class " + omm.PersistenceAnnotation.getClass(o));
+        else
+            return o[idPropertyName];
+    }
+    omm.getId = getId;
+    function className(fun) {
+        var ret = fun.toString();
+        ret = ret.substr('function '.length);
+        ret = ret.substr(0, ret.indexOf('('));
+        return ret;
+    }
+    omm.className = className;
+    function MeteorMethod(p1, p2) {
+        if (typeof p1 == "object" &amp;&amp; typeof p2 == "string") {
+            var options = { isStatic: false };
+            options.parentObject = p1;
+            options.functionName = p2;
+            if (!options.name)
+                options.name = omm.className(p1.constructor) + "-" + p2;
+            omm.meteorMethodFunctions[options.name] = options;
+        }
+        else {
+            return function (t, functionName, objectDescriptor) {
+                var options = {};
+                if (typeof p1 == "object")
+                    options = p1;
+                else if (typeof p1 == "string") {
+                    if (typeof p2 == "object")
+                        options = p2;
+                    options.name = p1;
+                }
+                options.functionName = functionName;
+                options.isStatic = false;
+                options.parentObject = t;
+                if (!options.name) {
+                    options.name = omm.className(t.constructor) + "-" + functionName;
+                }
+                omm.meteorMethodFunctions[options.name] = options;
+            };
+        }
+    }
+    omm.MeteorMethod = MeteorMethod;
+    function StaticMeteorMethod(p1, p2) {
+        if (typeof p1 == "function" &amp;&amp; typeof p2 == "string") {
+            var options = { isStatic: true };
+            options.parentObject = p1;
+            options.functionName = p2;
+            options.object = p1;
+            if (!options.name)
+                options.name = omm.className(p1) + "-" + p2;
+            omm.meteorMethodFunctions[options.name] = options;
+        }
+        else {
+            return function (t, functionName, objectDescriptor) {
+                var options = {};
+                if (typeof p1 == "object")
+                    options = p1;
+                else if (typeof p1 == "string") {
+                    if (typeof p2 == "object")
+                        options = p2;
+                    options.name = p1;
+                }
+                options.parentObject = t;
+                options.functionName = functionName;
+                options.isStatic = true;
+                options.object = t;
+                if (!options.name)
+                    options.name = omm.className(t) + "-" + functionName;
+                omm.meteorMethodFunctions[options.name] = options;
+            };
+        }
+    }
+    omm.StaticMeteorMethod = StaticMeteorMethod;
+    var PersistenceAnnotation = (function () {
+        function PersistenceAnnotation() {
+        }
+        PersistenceAnnotation.getMethodOptions = function (functionName) {
+            return omm.meteorMethodFunctions[functionName];
+        };
+        PersistenceAnnotation.getMethodFunctionNames = function (c) {
+            var ret = [];
+            for (var i in omm.meteorMethodFunctions) {
+                var methodOptions = omm.meteorMethodFunctions[i];
+                if (methodOptions.parentObject == c)
+                    ret.push(i);
+            }
+            return ret;
+        };
+        PersistenceAnnotation.getMethodFunctionNamesByObject = function (o) {
+            var ret = [];
+            for (var i in omm.meteorMethodFunctions) {
+                var methodOptions = omm.meteorMethodFunctions[i];
+                if (methodOptions.object == o)
+                    ret.push(i);
+            }
+            return ret;
+        };
+        PersistenceAnnotation.getAllMethodFunctionNames = function () {
+            var ret = [];
+            for (var i in omm.meteorMethodFunctions) {
+                ret.push(i);
+            }
+            return ret;
+        };
+        PersistenceAnnotation.getClass = function (o) {
+            if (o)
+                return o.constructor;
+            else
+                return undefined;
+        };
+        // ---- Entity ----
+        PersistenceAnnotation.getEntityClassByName = function (className) {
+            return omm.entityClasses[className];
+        };
+        PersistenceAnnotation.getCollectionClasses = function () {
+            var result = [];
+            for (var i in omm.entityClasses) {
+                var entityClass = omm.entityClasses[i];
+                if (PersistenceAnnotation.getCollectionName(entityClass))
+                    result.push(entityClass);
+            }
+            return result;
+        };
+        PersistenceAnnotation.getEntityClasses = function () {
+            var result = [];
+            for (var i in omm.entityClasses) {
+                var entityClass = omm.entityClasses[i];
+                result.push(entityClass);
+            }
+            return result;
+        };
+        PersistenceAnnotation.getCollectionName = function (f) {
+            return getMetadata("persistence:collectionName", f);
+        };
+        PersistenceAnnotation.isRootEntity = function (f) {
+            return !!PersistenceAnnotation.getCollectionName(f);
+        };
+        PersistenceAnnotation.isEntity = function (f) {
+            return !!omm.entityClasses[className(f)];
+        };
+        PersistenceAnnotation.getDocumentPropertyName = function (typeClass, objectPropertyName) {
+            var documentNames = getMetadata("documentNames", typeClass.prototype);
+            return documentNames ? documentNames[objectPropertyName] : undefined;
+        };
+        PersistenceAnnotation.getObjectPropertyName = function (typeClass, documentPropertyName) {
+            var objectNames = getMetadata("objectNames", typeClass.prototype);
+            return objectNames ? objectNames[documentPropertyName] : undefined;
+        };
+        PersistenceAnnotation.isArrayOrMap = function (f, propertyName) {
+            while (f != Object) {
+                if (PersistenceAnnotation.getPropertyProperty(f, propertyName, "arrayOrMap"))
+                    return true;
+                f = omm.PersistenceAnnotation.getParentClass(f);
+            }
+            return false;
+        };
+        // ---- typed properties ----
+        PersistenceAnnotation.getPropertyClass = function (f, propertyName) {
+            while (f != Object) {
+                var className = PersistenceAnnotation.getPropertyProperty(f, propertyName, "type");
+                if (className)
+                    return PersistenceAnnotation.getEntityClassByName(className);
+                f = omm.PersistenceAnnotation.getParentClass(f);
+            }
+            return undefined;
+        };
+        PersistenceAnnotation.getTypedPropertyNames = function (f) {
+            var result = [];
+            while (f != Object) {
+                var props = getMetadata("persistence:typedproperties", f);
+                for (var i in props) {
+                    if (PersistenceAnnotation.getPropertyClass(f, i))
+                        result.push(i);
+                }
+                f = omm.PersistenceAnnotation.getParentClass(f);
+            }
+            return result;
+        };
+        PersistenceAnnotation.setPropertyProperty = function (cls, propertyName, property, value) {
+            var arr = getMetadata("persistence:typedproperties", cls);
+            if (!arr) {
+                arr = {};
+                defineMetadata("persistence:typedproperties", arr, cls);
+            }
+            var propProps = arr[propertyName];
+            if (!propProps) {
+                propProps = {};
+                arr[propertyName] = propProps;
+            }
+            propProps[property] = value;
+        };
+        PersistenceAnnotation.getPropertyProperty = function (cls, propertyName, propertyProperty) {
+            var arr = getMetadata("persistence:typedproperties", cls);
+            if (arr &amp;&amp; arr[propertyName]) {
+                return arr[propertyName][propertyProperty];
+            }
+            return undefined;
+        };
+        PersistenceAnnotation.getParentClass = function (t) {
+            return Object.getPrototypeOf(t.prototype).constructor;
+        };
+        PersistenceAnnotation.getIdPropertyName = function (t) {
+            return omm.PersistenceAnnotation.getObjectPropertyName(t, "_id") || "_id";
+        };
+        // ---- AsForeignKeys ----
+        PersistenceAnnotation.isStoredAsForeignKeys = function (f, propertyName) {
+            while (f != Object) {
+                if (PersistenceAnnotation.getPropertyProperty(f, propertyName, "askeys"))
+                    return true;
+                f = omm.PersistenceAnnotation.getParentClass(f);
+            }
+            return false;
+        };
+        PersistenceAnnotation.isIgnored = function (f, propertyName) {
+            //return PersistenceAnnotation.getPropertyProperty(typeClass, propertyName, "ignore");
+            while (f != Object) {
+                if (PersistenceAnnotation.getPropertyProperty(f, propertyName, "ignore"))
+                    return true;
+                f = omm.PersistenceAnnotation.getParentClass(f);
+            }
+            return false;
+        };
+        // ---- Wrap ----
+        PersistenceAnnotation.getWrappedFunctionNames = function (f) {
+            return PersistenceAnnotation.getPropertyNamesByMetaData(f.prototype, "persistence:wrap");
+        };
+        PersistenceAnnotation.getCollectionUpdateOptions = function (cls, functionName) {
+            return PersistenceAnnotation.getPropertyProperty(cls.prototype, functionName, "collectionUpdate");
+        };
+        PersistenceAnnotation.getCollectionUpdateFunctionNames = function (f) {
+            var result = [];
+            var props = getMetadata("persistence:typedproperties", f.prototype);
+            for (var i in props) {
+                if (PersistenceAnnotation.getCollectionUpdateOptions(f, i))
+                    result.push(i);
+            }
+            return result;
+        };
+        PersistenceAnnotation.getPropertyNamesByMetaData = function (o, metaData) {
+            var result = [];
+            for (var i in o) {
+                var value = o[i];
+                //console.log("Cave man style debugging 1",i, value,getMetadata("persistence:wrap", value) );
+                if (typeof value == "function" &amp;&amp; getMetadata(metaData, value))
+                    result.push(i);
+            }
+            return result;
+        };
+        return PersistenceAnnotation;
+    })();
+    omm.PersistenceAnnotation = PersistenceAnnotation;
+})(omm || (omm = {}));
+(function () {
+    var data;
+    if (typeof global != "undefined") {
+        if (!global["_omm_data"])
+            global["_omm_data"] = {};
+        data = global["_omm_data"];
+    }
+    else if (typeof window != "undefined") {
+        if (!window["_omm_data"])
+            window["_omm_data"] = {};
+        data = window["_omm_data"];
+    }
+    else
+        data = {};
+    if (!data.entityClasses)
+        data.entityClasses = {};
+    omm.entityClasses = data.entityClasses;
+    if (!data.registeredObjects)
+        data.registeredObjects = {};
+    omm.registeredObjects = data.registeredObjects;
+    if (!data.meteorMethodFunctions)
+        data.meteorMethodFunctions = {};
+    omm.meteorMethodFunctions = data.meteorMethodFunctions;
+})();
+//# sourceMappingURL=PersistenceAnnotation.js.map</code></pre>
+        </article>
+    </section>
+
+
+
+
+</div>
+
+<nav>
+    <h2><a href="index.html">Home</a></h2><h3>Classes</h3><ul><li><a href="omm.Collection.html">Collection</a></li></ul><h3>Namespaces</h3><ul><li><a href="omm.html">omm</a></li></ul><h3><a href="global.html">Global</a></h3>
+</nav>
+
+<br class="clear">
+
+<footer>
+    Documentation generated by <a href="https://github.com/jsdoc3/jsdoc">JSDoc 3.3.2</a> on Sat Jul 18 2015 14:27:25 GMT+0200 (CEST)
+</footer>
+
+<script> prettyPrint(); </script>
+<script src="scripts/linenumber.js"> </script>
+</body>
+</html>

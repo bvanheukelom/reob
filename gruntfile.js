@@ -11,6 +11,7 @@ module.exports = function (grunt) {
 			meteor : {
 				src: ["test_meteor_web/packages/omm/**/*.ts"],
 				options:{
+					removeComments:false
 				}
 			},
 			dtsfile : {
@@ -50,6 +51,7 @@ module.exports = function (grunt) {
 			test : {
 				src: ["test_meteor_web/packages/testclasses/**/*.ts","test_meteor_web/tests/**/*.ts"],
 				options:{
+					removeComments:false
 				}
 			}
 

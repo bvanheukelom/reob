@@ -4,7 +4,15 @@ Omm helps to separate business logic from persistence and access logic in meteor
 calls omm learns about the structure of the objects and is then able to do a lot of the grunt work like converting back and
 forth between objects and documents or passing parameters from Meteor.call to Meteor.method and then to the domain function.
 
-Benefits:
+Key features:
+
+- Interact with collections through rich objects
+
+- Declare meteor methods through annotations
+
+- Mongo update statements dependent on the structure of the document so they might need to be changed if the document structure
+changes. Because omm deducts the document structure from the rich object it is easier to refactor.
+
 
 - Usually the structure of the object is convoluted with meteor update statemens Omm helps that the developer can write
 cleaner domain objects.
@@ -22,9 +30,9 @@ be replicated on the server in order for that piece of object to be changed. Omm
 
 - Refactoring is easier
 
-Here is an example that consists of two classes:
+##Example
 
-[Garden.js!](example/Garden.js)
+[Garden.js](example/Garden.js)
 ```
 Garden = function Garden( name, id ){
 	this._id = id;
@@ -50,9 +58,8 @@ Garden.prototype.growPlants = function(){
 omm.collectionUpdate( Garden, "growPlants" );
 ```
 
-[Plant.js!](example/Plant.js)
+[Plant.js](example/Plant.js)
 ```
-
 Plant = function Plant( type, garden ){
 	//this._id = "id"+garden.plants.length;
 	this.type = type;
