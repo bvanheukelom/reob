@@ -6,34 +6,22 @@ forth between objects and documents or passing parameters from Meteor.call to Me
 
 Key features:
 
-- Interact with collections through rich objects
+- Load rich objects instead of documents from a collection
 
-- Declare meteor methods through annotations
+- Describe the object graph through annotation-style function calls
 
-- Mongo update statements dependent on the structure of the document so they might need to be changed if the document structure
-changes. Because omm deducts the document structure from the rich object it is easier to refactor.
+- Declare meteor methods through annotations-style function calls
 
+- Perform collection altering operations anywhere on the object graph.
 
-- Usually the structure of the object is convoluted with meteor update statemens Omm helps that the developer can write
-cleaner domain objects.
+- Strengthens encapsulation of objects by removing persistence logic from the domain logic.
 
-- Omm helps to "find the right object". After iterating/selecting/iterating through the object graph, that 'lookup' needs to
-be replicated on the server in order for that piece of object to be changed. Omm does that for the developer.
-
-- Omm creates rich object graphs from the documents read from the collections.
-
-- Omm helps to keep the schema intact because all database accesses is done via atomic updates. Updates are repeated if the
- underlying document has changed in the meantime.
-
-- Meteor methods and their parameters are mapped onto class functions. This way the meteor method can expose that domain
- functionality and the developer does not need to write a lot of parameter-passing-code.
-
-- Refactoring is easier
+- Atomicity over complex operations (within one document)
 
 ##Example
 
 [Garden.js](example/Garden.js)
-```
+```js
 Garden = function Garden( name, id ){
 	this._id = id;
 	this.name = name;
@@ -59,7 +47,7 @@ omm.collectionUpdate( Garden, "growPlants" );
 ```
 
 [Plant.js](example/Plant.js)
-```
+```js
 Plant = function Plant( type, garden ){
 	//this._id = "id"+garden.plants.length;
 	this.type = type;
@@ -92,17 +80,6 @@ omm.collectionUpdate( Plant, "harvest");
 
 ```
 
-
-
-On restoration of a document
-
-1) If the expected type has a static function "toObject", that function is used
-
-2) If there is a "className" property on the document, it is used to instantiate the object
-
-3) An object of the expected class is instantiated
-
-4) The object created is filled with the properties found on the document.
 
 
 
