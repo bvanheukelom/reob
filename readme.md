@@ -1,10 +1,8 @@
 ###Meteor object mapper
 
-Omm helps to separate business logic from persistence and access logic in meteor projects. Through descriptive function
-calls omm learns about the structure of the objects and is then able to do a lot of the grunt work like converting back and
-forth between objects and documents or passing parameters from Meteor.call to Meteor.method and then to the domain function.
+Omm maps between rich objects and documents.
 
-Key features:
+##Key features
 
 - Load rich objects instead of documents from a collection
 
@@ -12,11 +10,11 @@ Key features:
 
 - Declare meteor methods through annotations-style function calls
 
-- Perform collection altering operations anywhere on the object graph.
+- Perform collection altering operations anywhere on the object graph
 
-- Strengthens encapsulation of objects by removing persistence logic from the domain logic.
+- Strengthens encapsulation of objects by removing persistence logic from the domain logic
 
-- Atomicity over complex operations (within one document)
+- Atomicity over complex operations within one document
 
 ##Api Documentation
 
@@ -87,5 +85,6 @@ omm.collectionUpdate( Plant, "harvest");
 ## License
 
 MIT
+
 
 
