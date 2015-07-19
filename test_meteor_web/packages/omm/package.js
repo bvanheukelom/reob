@@ -4,7 +4,7 @@ Package.describe({
   // Brief, one-line summary of the package.
   summary: 'Object meteor mapper. Maps between rich objects and documents.',
   // URL to the Git repository containing the source code for this package.
-  git: 'https://bitbucket.org/bertundmax/meteor-om',
+  git: 'https://github.com/bvanheukelom/omm',
   // By default, Meteor will default to using README.md for documentation.
   // To avoid submitting documentation, set this field to null.
   documentation: 'README.md'
