@@ -18,6 +18,10 @@ Key features:
 
 - Atomicity over complex operations (within one document)
 
+##Api Documentation
+
+[JsDoc](https://bvanheukelom.github.io/omm/test_meteor_web/packages/omm/out/omm.html)
+
 ##Example
 
 [Garden.js](example/Garden.js)
