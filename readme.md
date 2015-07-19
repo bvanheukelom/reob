@@ -1,8 +1,8 @@
-###Meteor object mapper
+### Meteor object mapper
 
 Omm maps between rich objects and documents.
 
-##Key features
+## Key features
 
 - Load rich objects instead of documents from a collection
 
@@ -16,11 +16,11 @@ Omm maps between rich objects and documents.
 
 - Atomicity over complex operations within one document
 
-##Api Documentation
+## Api Documentation
 
 [JsDoc](https://bvanheukelom.github.io/omm/test_meteor_web/packages/omm/out/omm.html)
 
-##Example
+## Example
 
 [Garden.js](example/Garden.js)
 ```js
