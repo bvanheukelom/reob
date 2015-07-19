@@ -1,45 +1,92 @@
+###Meteor object mapper
 
-Omm is a meteor package that helps to separate persistence from the domain objects.
+Omm helps to separate business logic from persistence and access logic in meteor projects. Through descriptive function
+calls omm learns about the structure of the objects and is then able to do a lot of the grunt work like converting back and
+forth between objects and documents or passing parameters from Meteor.call to Meteor.method and then to the domain function.
 
-Here is a code sample:
+Key features:
+
+- Load rich objects instead of documents from a collection
+
+- Describe the object graph through annotation-style function calls
+
+- Declare meteor methods through annotations-style function calls
+
+- Perform collection altering operations anywhere on the object graph.
+
+- Strengthens encapsulation of objects by removing persistence logic from the domain logic.
+
+- Atomicity over complex operations (within one document)
+
+##Api Documentation
+
+[JsDoc](https://bvanheukelom.github.io/omm/test_meteor_web/packages/omm/out/omm.html)
+
+##Example
+
+[Garden.js](example/Garden.js)
+```js
+Garden = function Garden( name, id ){
+	this._id = id;
+	this.name = name;
+	this.plants = [];
+	this.harvested = 0;
+};
+// declares Garden as an Entity
+omm.addEntity(Garden);
+// declares that the property "plants" contains objects of the type "Plant"
+omm.arrayType(Garden, "plants", "Plant");
+
+Garden.prototype.addPlant = function( t ){
+	this.plants.push( new Plant( t, this ) );
+};
+omm.collectionUpdate( Garden, "addPlant" );
+
+Garden.prototype.growPlants = function(){
+	this.plants.forEach( function(p){
+		p.grow();
+	});
+};
+omm.collectionUpdate( Garden, "growPlants" );
+```
+
+[Plant.js](example/Plant.js)
+```js
+Plant = function Plant( type, garden ){
+	//this._id = "id"+garden.plants.length;
+	this.type = type;
+	this.height = 1;
+	this.garden = garden;
+};
+// declares that Plant is an Entity
+omm.addEntity(Plant);
+// declares that the property garden contains object of the class "Garden"
+omm.type(Plant, "garden", "Garden");
+// declares that the value of the property should be stored as a key (string) rather than the actual object
+omm.asForeignKey(Plant, "garden");
 
 
+Plant.prototype.grow = function(){
+	if( this.height<20 )
+		this.height++;
+	if( this.height==10 || this.height==15 ){
+		this.garden.addPlant(this.type,this.garden);
+	}
+};
 
+Plant.prototype.harvest = function(){
+	var i = this.garden.plants.indexOf(this);
+	this.garden.plants.splice(i,1);
+	this.garden.harvested+=this.height;
+};
+// declares that the function "harvest" should also be invoked on the object in the collection.
+omm.collectionUpdate( Plant, "harvest");
 
-Store and retrieve objects (not documents) from meteor using a mongo database.
+```
 
+## License
 
+MIT
 
-
-Annotate type information on the class via descriptive functions (ES6 annotations).
-
-Email me to learn more: bert@vanheukelom.de
-
-
-TODO: more text :)
-
-
-
-The MIT License (MIT)
-
-Copyright (c) Bert van Heukelom 2015
-
-Permission is hereby granted, free of charge, to any person obtaining a copy
-of this software and associated documentation files (the "Software"), to deal
-in the Software without restriction, including without limitation the rights
-to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
-copies of the Software, and to permit persons to whom the Software is
-furnished to do so, subject to the following conditions:
-
-The above copyright notice and this permission notice shall be included in
-all copies or substantial portions of the Software.
-
-THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
-IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
-FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
-AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
-LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
-OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
-THE SOFTWARE.
 
 

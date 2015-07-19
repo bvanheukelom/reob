@@ -84,6 +84,8 @@ omm.collectionUpdate( Plant, "harvest");
 
 ```
 
+## License
 
+MIT
 
 
