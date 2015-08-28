@@ -108,6 +108,10 @@ var omm;
         omm.DocumentName("_id")(targetPrototypeObject, propertyName);
     }
     omm.Id = Id;
+    function Parent(targetPrototypeObject, propertyName) {
+        PersistenceAnnotation.setPropertyProperty(targetPrototypeObject.constructor, propertyName, "parent", 1);
+    }
+    omm.Parent = Parent;
     function idProperty(c, propertyName) {
         omm.Id(c.prototype, propertyName);
     }
@@ -388,6 +392,14 @@ var omm;
             }
             return false;
         };
+        PersistenceAnnotation.isParent = function (f, propertyName) {
+            while (f != Object) {
+                if (PersistenceAnnotation.getPropertyProperty(f, propertyName, "parent"))
+                    return true;
+                f = omm.PersistenceAnnotation.getParentClass(f);
+            }
+            return false;
+        };
         PersistenceAnnotation.getWrappedFunctionNames = function (f) {
             return PersistenceAnnotation.getPropertyNamesByMetaData(f.prototype, "persistence:wrap");
         };
@@ -645,11 +657,11 @@ var omm;
                 return false;
         };
         Serializer.prototype.toObject = function (doc, f) {
-            var o = this.toObjectRecursive(doc, f);
+            var o = this.toObjectRecursive(doc, undefined, f);
             this.objectRetriever.postToObject(o);
             return o;
         };
-        Serializer.prototype.toObjectRecursive = function (doc, f) {
+        Serializer.prototype.toObjectRecursive = function (doc, parent, f) {
             var o;
             if (!doc)
                 return doc;
@@ -671,18 +683,25 @@ var omm;
                         objectNameOfTheProperty = propertyName;
                     var propertyClass = omm.PersistenceAnnotation.getPropertyClass(f, objectNameOfTheProperty);
                     var isStoredAsKeys = omm.PersistenceAnnotation.isStoredAsForeignKeys(f, objectNameOfTheProperty);
-                    if (propertyClass && !isStoredAsKeys) {
+                    var isParent = omm.PersistenceAnnotation.isParent(f, objectNameOfTheProperty);
+                    if (isParent) {
+                        if (!parent)
+                            throw new Error("Could not find parent object");
+                        else
+                            o[objectNameOfTheProperty] = parent;
+                    }
+                    else if (propertyClass && !isStoredAsKeys) {
                         if (omm.PersistenceAnnotation.isArrayOrMap(f, objectNameOfTheProperty)) {
                             var result = Array.isArray(value) ? [] : {};
                             for (var i in value) {
                                 var entry = value[i];
-                                entry = this.toObjectRecursive(entry, propertyClass);
+                                entry = this.toObjectRecursive(entry, o, propertyClass);
                                 result[i] = entry;
                             }
                             o[objectNameOfTheProperty] = result;
                         }
                         else {
-                            o[objectNameOfTheProperty] = this.toObjectRecursive(value, propertyClass);
+                            o[objectNameOfTheProperty] = this.toObjectRecursive(value, o, propertyClass);
                         }
                     }
                     else {
@@ -728,7 +747,7 @@ var omm;
                 var documentNameOfTheProperty = omm.PersistenceAnnotation.getDocumentPropertyName(objectClass, property);
                 if (!documentNameOfTheProperty)
                     documentNameOfTheProperty = property;
-                if (value !== undefined && !omm.PersistenceAnnotation.isIgnored(objectClass, property)) {
+                if (value !== undefined && !omm.PersistenceAnnotation.isIgnored(objectClass, property) && !omm.PersistenceAnnotation.isParent(objectClass, property)) {
                     if (omm.PersistenceAnnotation.getPropertyClass(objectClass, property)) {
                         if (omm.PersistenceAnnotation.isArrayOrMap(objectClass, property)) {
                             var result;

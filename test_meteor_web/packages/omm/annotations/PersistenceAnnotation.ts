@@ -11,6 +11,7 @@ interface IMethodOptions{
     parentObject?:Object; // which has the function as a property
     functionName?:string;
     replaceWithCall?:boolean;
+    serverOnly?:boolean;
 }
 /**
  * The omm module
@@ -161,6 +162,10 @@ module omm {
         omm.DocumentName("_id")(targetPrototypeObject, propertyName);
     }
 
+    export function Parent( targetPrototypeObject:any, propertyName:string  ) {
+        PersistenceAnnotation.setPropertyProperty(targetPrototypeObject.constructor, propertyName, "parent", 1);
+    }
+
     /**
      * Used to declare which property is used as the value for "_id".
      * @param c {function} The constructor function of the entity class.
@@ -171,8 +176,7 @@ module omm {
         omm.Id(c.prototype, propertyName);
     }
 
-    export function Ignore( targetPrototypeObject:any, propertyName:string  )
-    {
+    export function Ignore( targetPrototypeObject:any, propertyName:string  ){
         PersistenceAnnotation.setPropertyProperty(targetPrototypeObject.constructor, propertyName, "ignore", true);
     }
 
@@ -512,6 +516,16 @@ module omm {
                     return true;
                 f = omm.PersistenceAnnotation.getParentClass(f);
 
+            }
+            return false;
+        }
+        static isParent( f:TypeClass<any>, propertyName:string ):boolean
+        {
+            //return PersistenceAnnotation.getPropertyProperty(typeClass, propertyName, "ignore");
+            while(f!=Object){
+                if( PersistenceAnnotation.getPropertyProperty(f, propertyName, "parent") )
+                    return true;
+                f = omm.PersistenceAnnotation.getParentClass(f);
             }
             return false;
         }

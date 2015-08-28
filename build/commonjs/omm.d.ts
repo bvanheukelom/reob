@@ -13,6 +13,7 @@ interface IMethodOptions {
     parentObject?: Object;
     functionName?: string;
     replaceWithCall?: boolean;
+    serverOnly?: boolean;
 }
 declare module omm {
     var entityClasses: {
@@ -41,6 +42,7 @@ declare module omm {
     function dictionaryType(typeClassName: string): (targetPrototypeObject: any, propertyName: string) => void;
     function AsForeignKeys(targetPrototypeObject: any, propertyName: string): void;
     function Id(targetPrototypeObject: any, propertyName: string): void;
+    function Parent(targetPrototypeObject: any, propertyName: string): void;
     function idProperty(c: TypeClass<Object>, propertyName: string): void;
     function Ignore(targetPrototypeObject: any, propertyName: string): void;
     function ignoreProperty(c: TypeClass<Object>, propertyName: string): void;
@@ -79,6 +81,7 @@ declare module omm {
         static getIdPropertyName(t: TypeClass<any>): string;
         static isStoredAsForeignKeys(f: TypeClass<any>, propertyName: string): boolean;
         static isIgnored(f: TypeClass<any>, propertyName: string): boolean;
+        static isParent(f: TypeClass<any>, propertyName: string): boolean;
         static getWrappedFunctionNames<T extends Object>(f: TypeClass<T>): Array<string>;
         private static getCollectionUpdateOptions(cls, functionName);
         static getCollectionUpdateFunctionNames<T extends Object>(f: TypeClass<T>): Array<string>;
@@ -124,7 +127,7 @@ declare module omm {
         static forEachTypedObjectRecursive(rootObject: Object, object: Object, path: omm.SubObjectPath, visited: Array<Object>, cb: (path: omm.SubObjectPath, object: Object) => void): void;
         static needsLazyLoading(object: Object, propertyName: string): boolean;
         toObject<T extends Object>(doc: Document, f?: omm.TypeClass<T>): T;
-        private toObjectRecursive<T>(doc, f?);
+        private toObjectRecursive<T>(doc, parent, f?);
         toDocument(object: Object): omm.Document;
         private toDocumentRecursive(object, rootClass?, parentObject?, propertyNameOnParentObject?);
         private createDocument(object, rootClass?, parentObject?, propertyNameOnParentObject?);

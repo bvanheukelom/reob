@@ -179,12 +179,12 @@ module omm{
         }
 
         toObject<T extends Object>(doc:Document, f?:omm.TypeClass<T>):T {
-            var o:T = this.toObjectRecursive(doc,f);
+            var o:T = this.toObjectRecursive(doc,undefined, f);
             this.objectRetriever.postToObject(o);
             return o;
         }
 
-        private toObjectRecursive<T extends Object>(doc:Document, f?:omm.TypeClass<T>):T {
+        private toObjectRecursive<T extends Object>(doc:Document, parent:Object, f?:omm.TypeClass<T>):T {
             var o:T;
             if( !doc )
                 return <T>doc;
@@ -211,19 +211,26 @@ module omm{
                         objectNameOfTheProperty = propertyName;
                     var propertyClass = omm.PersistenceAnnotation.getPropertyClass(f, objectNameOfTheProperty);
                     var isStoredAsKeys = omm.PersistenceAnnotation.isStoredAsForeignKeys(f, objectNameOfTheProperty);
-                    if (propertyClass && !isStoredAsKeys) {
+                    var isParent = omm.PersistenceAnnotation.isParent(f, objectNameOfTheProperty);
+                    if( isParent ){
+                        if( !parent )
+                            throw new Error("Could not find parent object");
+                        else
+                            o[objectNameOfTheProperty] = parent;
+                    }
+                    else if (propertyClass && !isStoredAsKeys) {
                         if (omm.PersistenceAnnotation.isArrayOrMap(f, objectNameOfTheProperty)) {
                             var result = Array.isArray(value) ? [] : {};
                             for (var i in value) {
                                 var entry:omm.Document = value[i];
-                                entry = this.toObjectRecursive(entry, propertyClass);
+                                entry = this.toObjectRecursive(entry, o, propertyClass);
                                 result[i] = entry;
                             }
                             // this can only happen once because if the property is accessed the "lazy load" already kicks in
                             o[objectNameOfTheProperty] = result;
                         }
                         else {
-                            o[objectNameOfTheProperty] = this.toObjectRecursive(value, propertyClass);
+                            o[objectNameOfTheProperty] = this.toObjectRecursive(value, o, propertyClass);
                         }
                     }
                     else {
@@ -275,7 +282,7 @@ module omm{
                 var documentNameOfTheProperty:string = omm.PersistenceAnnotation.getDocumentPropertyName(objectClass,property);
                 if( !documentNameOfTheProperty )
                     documentNameOfTheProperty = property;
-                if (value !== undefined && !omm.PersistenceAnnotation.isIgnored(objectClass, property)) {
+                if (value !== undefined && !omm.PersistenceAnnotation.isIgnored(objectClass, property)&& !omm.PersistenceAnnotation.isParent(objectClass, property)) {
                     // primitives
                     if( omm.PersistenceAnnotation.getPropertyClass(objectClass,property) ) {
 

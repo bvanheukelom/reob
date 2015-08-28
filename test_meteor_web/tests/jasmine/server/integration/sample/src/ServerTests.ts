@@ -1,6 +1,6 @@
 ///<reference path="../../../../references.d.ts"/>
 
-describe("The persistence thing on the server", function(){
+describe("Omm on the server", function(){
     var personCollection:Tests.TestPersonCollection;
     var treeCollection:Tests.TestTreeCollection;
     beforeAll(function(){
@@ -53,6 +53,13 @@ describe("The persistence thing on the server", function(){
             expect(treeCollection.getById(t.treeId).getLeaves()[0] instanceof Tests.TestLeaf).toBeTruthy();
             done();
         });
+    });
+    it("serializes objects that have a parent property properly ", function(done){
+        var t1:Tests.TestTree = new Tests.TestTree(10);
+        t1.grow();
+        var serializer = new omm.Serializer(new omm.MeteorObjectRetriever());
+        var doc:any = serializer.toDocument(t1);
+        expect(doc.thoseGreenThings[0].tree).toBeUndefined();
     });
 
     it("can save an array of foreign ids", function(){

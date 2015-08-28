@@ -106,6 +106,16 @@ describe("The persistence thing on the client ", function(){
         });
     });
 
+    it("calls methods exclusively on the server", function(done){
+        personCollection.newPerson( "jake", function( error:any, jake:Tests.TestPerson ){
+            jake.fromServer(function(error, r){
+                expect(error).toBeUndefined();
+                expect(r).toBe(true);
+                done();
+            });
+        });
+    });
+
     it("doesnt die if a wrapped call calls another wrapped call within a different collection", function(done){
         personCollection.newPerson("mike", function(e:any, p:Tests.TestPerson){
             treeCollection.newTree( 13, function(e:any, t:Tests.TestTree){

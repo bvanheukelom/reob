@@ -120,6 +120,14 @@ module Tests
             return a;
         }
 
+        @omm.MeteorMethod({parameterTypes:["callback"], replaceWithCall:true, serverOnly:true})
+        fromServer(cb:(error:any, r:any)=>void):void
+        {
+            if(Meteor.isClient)
+                throw new Error("though shall not be called on the client");
+            cb(undefined, Meteor.isServer);
+        }
+
 
         @omm.Wrap
         addToWood(t:TestTree, s?:string )

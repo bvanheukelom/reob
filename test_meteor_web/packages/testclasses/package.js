@@ -29,3 +29,6 @@ Package.onUse(function(api) {
 	api.export('Tests', 'server');
 	api.export('Tests', 'client');
 });
+
+
+// TODO write test that tests server only methods

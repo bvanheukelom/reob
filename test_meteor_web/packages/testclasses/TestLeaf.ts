@@ -12,8 +12,7 @@ module Tests
         @omm.DocumentName("greenIndex")
         greenNess:number;
 
-        @omm.Type("TestTree")
-        @omm.AsForeignKey
+        @omm.Parent
         parent:TestTree;
 
         constructor(id?:string, parent?:Tests.TestTree)
