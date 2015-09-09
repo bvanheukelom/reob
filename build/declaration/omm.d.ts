@@ -81,6 +81,7 @@ declare module omm {
         static isStoredAsForeignKeys(f: TypeClass<any>, propertyName: string): boolean;
         static isIgnored(f: TypeClass<any>, propertyName: string): boolean;
         static isParent(f: TypeClass<any>, propertyName: string): boolean;
+        static getParentPropertyNames<T extends Object>(f: TypeClass<T>): Array<string>;
         static getWrappedFunctionNames<T extends Object>(f: TypeClass<T>): Array<string>;
         private static getCollectionUpdateOptions(cls, functionName);
         static getCollectionUpdateFunctionNames<T extends Object>(f: TypeClass<T>): Array<string>;

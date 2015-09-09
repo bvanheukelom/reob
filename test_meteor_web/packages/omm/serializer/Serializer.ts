@@ -211,14 +211,8 @@ module omm{
                         objectNameOfTheProperty = propertyName;
                     var propertyClass = omm.PersistenceAnnotation.getPropertyClass(f, objectNameOfTheProperty);
                     var isStoredAsKeys = omm.PersistenceAnnotation.isStoredAsForeignKeys(f, objectNameOfTheProperty);
-                    var isParent = omm.PersistenceAnnotation.isParent(f, objectNameOfTheProperty);
-                    if( isParent ){
-                        if( !parent )
-                            throw new Error("Could not find parent object");
-                        else
-                            o[objectNameOfTheProperty] = parent;
-                    }
-                    else if (propertyClass && !isStoredAsKeys) {
+
+                    if (propertyClass && !isStoredAsKeys) {
                         if (omm.PersistenceAnnotation.isArrayOrMap(f, objectNameOfTheProperty)) {
                             var result = Array.isArray(value) ? [] : {};
                             for (var i in value) {
@@ -237,6 +231,11 @@ module omm{
                         o[objectNameOfTheProperty] = value;
                     }
                 }
+                PersistenceAnnotation.getParentPropertyNames(f).forEach(function(parentPropertyName:string){
+                    if( !parent )
+                        throw new Error("Could not find parent object");
+                    o[parentPropertyName] = parent;
+                });
             }
             omm.setNonEnumerableProperty(o, "_objectRetriever", this.objectRetriever);
             //o._objectRetriever = this.objectRetriever;
@@ -250,7 +249,7 @@ module omm{
 
         private toDocumentRecursive(object:Object, rootClass?:omm.TypeClass<Object>, parentObject?:Object, propertyNameOnParentObject?:string):omm.Document {
             var result:omm.Document;
-            if ( !object || typeof object == "string" || typeof object == "number" || typeof object == "date" || typeof object == "boolean")
+            if ( !object || typeof object == "string" || typeof object == "number" || Array.isArray(object) || typeof object == "date" || typeof object == "boolean")
                 result =  <Document>object;
             else
             {

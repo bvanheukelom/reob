@@ -400,6 +400,18 @@ var omm;
             }
             return false;
         };
+        PersistenceAnnotation.getParentPropertyNames = function (f) {
+            var result = [];
+            while (f != Object) {
+                var props = getMetadata("persistence:typedproperties", f);
+                for (var i in props) {
+                    if (PersistenceAnnotation.isParent(f, i))
+                        result.push(i);
+                }
+                f = omm.PersistenceAnnotation.getParentClass(f);
+            }
+            return result;
+        };
         PersistenceAnnotation.getWrappedFunctionNames = function (f) {
             return PersistenceAnnotation.getPropertyNamesByMetaData(f.prototype, "persistence:wrap");
         };
@@ -683,14 +695,7 @@ var omm;
                         objectNameOfTheProperty = propertyName;
                     var propertyClass = omm.PersistenceAnnotation.getPropertyClass(f, objectNameOfTheProperty);
                     var isStoredAsKeys = omm.PersistenceAnnotation.isStoredAsForeignKeys(f, objectNameOfTheProperty);
-                    var isParent = omm.PersistenceAnnotation.isParent(f, objectNameOfTheProperty);
-                    if (isParent) {
-                        if (!parent)
-                            throw new Error("Could not find parent object");
-                        else
-                            o[objectNameOfTheProperty] = parent;
-                    }
-                    else if (propertyClass && !isStoredAsKeys) {
+                    if (propertyClass && !isStoredAsKeys) {
                         if (omm.PersistenceAnnotation.isArrayOrMap(f, objectNameOfTheProperty)) {
                             var result = Array.isArray(value) ? [] : {};
                             for (var i in value) {
@@ -708,6 +713,11 @@ var omm;
                         o[objectNameOfTheProperty] = value;
                     }
                 }
+                omm.PersistenceAnnotation.getParentPropertyNames(f).forEach(function (parentPropertyName) {
+                    if (!parent)
+                        throw new Error("Could not find parent object");
+                    o[parentPropertyName] = parent;
+                });
             }
             omm.setNonEnumerableProperty(o, "_objectRetriever", this.objectRetriever);
             return o;
@@ -718,7 +728,7 @@ var omm;
         };
         Serializer.prototype.toDocumentRecursive = function (object, rootClass, parentObject, propertyNameOnParentObject) {
             var result;
-            if (!object || typeof object == "string" || typeof object == "number" || typeof object == "date" || typeof object == "boolean")
+            if (!object || typeof object == "string" || typeof object == "number" || Array.isArray(object) || typeof object == "date" || typeof object == "boolean")
                 result = object;
             else {
                 var objectClass = omm.PersistenceAnnotation.getClass(object);

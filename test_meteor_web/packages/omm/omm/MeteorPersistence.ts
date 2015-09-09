@@ -245,7 +245,7 @@ module omm {
                     }
                     else{
                         // in this case we pretend we're not there
-                        originalFunction.apply(this, a);
+                        return originalFunction.apply(this, a);
                     }
                 });
             }

@@ -529,6 +529,18 @@ module omm {
             }
             return false;
         }
+        static getParentPropertyNames<T extends Object>(f:TypeClass<T>):Array<string> {
+            var result:Array<string> = [];
+            while( f!=<any>Object ) {
+                var props = getMetadata("persistence:typedproperties", f);
+                for (var i in props) {
+                    if (PersistenceAnnotation.isParent(f, i))
+                        result.push(i);
+                }
+                f = omm.PersistenceAnnotation.getParentClass(f);
+            }
+            return result;
+        }
 
 
         // ---- Wrap ----
@@ -587,5 +599,9 @@ module omm {
     if(!data.meteorMethodFunctions)
         data.meteorMethodFunctions = {};
     omm.meteorMethodFunctions = data.meteorMethodFunctions;
+
+    if(!data.config)
+        data.config = {};
+    omm.config = data.config;
 })();
 

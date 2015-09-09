@@ -34,6 +34,7 @@ describe("Omm on the server", function(){
         t1.grow();
         expect(treeCollection.getById(t1.treeId)).toBeDefined();
         expect(treeCollection.getById(t1.treeId).getLeaves()[0] instanceof Tests.TestLeaf).toBeTruthy();
+        expect(treeCollection.getById(t1.treeId).getLeaves()[0].getTree() instanceof Tests.TestTree).toBeTruthy();
 
     });
 
@@ -54,7 +55,7 @@ describe("Omm on the server", function(){
             done();
         });
     });
-    it("serializes objects that have a parent property properly ", function(done){
+    it("serializes objects that have a parent property properly ", function(){
         var t1:Tests.TestTree = new Tests.TestTree(10);
         t1.grow();
         var serializer = new omm.Serializer(new omm.MeteorObjectRetriever());
