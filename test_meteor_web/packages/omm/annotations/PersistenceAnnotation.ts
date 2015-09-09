@@ -600,8 +600,5 @@ module omm {
         data.meteorMethodFunctions = {};
     omm.meteorMethodFunctions = data.meteorMethodFunctions;
 
-    if(!data.config)
-        data.config = {};
-    omm.config = data.config;
 })();
 
