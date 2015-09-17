@@ -34,6 +34,27 @@ describe("The persistence thing on the client ", function(){
         });
     });
 
+    it("can call wrapped functions that return arrays of objects", function(done){
+        var c = 0;
+        treeCollection.newTree(24,function(err:any,t:Tests.TestTree){
+            console.log("can call wrapped functions that return arrays of objects- tree created");
+            c++;
+            expect(c).toBe(1);
+            omm.callHelper(t,function(err, result){
+                console.log("can call wrapped functions that return arrays of objects- in call");
+                c++;
+                expect(c).toBe(2);
+                expect(err).toBeUndefined();
+                //expect( result ).toBeUndefined();
+                //expect( Array.isArray(result) ).toBeTruthy();
+                //expect( result.length ).toBeGreaterThan(0);
+                //expect( !(result[0] instanceof Tests.TestLeaf) ).toBeFalsy(); // inverted to the potential error message is distinguishable
+                done();
+            }).growAndReturnLeaves();
+        });
+    });
+
+
     it("can return values from a wrapped function", function(done){
         personCollection.newPerson("Held", function(e:any, held:Tests.TestPerson) {
             omm.callHelper(held,function(err,a:Tests.TestAddress){

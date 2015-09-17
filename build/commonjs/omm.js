@@ -547,6 +547,7 @@ var omm;
 ///<reference path="../annotations/TypeClass.ts"/>
 ///<reference path="./Document.ts"/>
 ///<reference path="./SubObjectPath.ts"/>
+///<reference path="./ObjectRetriever.ts"/>
 var omm;
 (function (omm) {
     var Serializer = (function () {
@@ -669,7 +670,18 @@ var omm;
                 return false;
         };
         Serializer.prototype.toObject = function (doc, f) {
-            var o = this.toObjectRecursive(doc, undefined, f);
+            var o;
+            if (Array.isArray(doc)) {
+                var r = [];
+                for (var j = 0; j < doc.length; j++) {
+                    r[j] = this.toObjectRecursive(doc[j], parent, f);
+                }
+                o = r;
+            }
+            else if (!doc || typeof doc == "string" || typeof doc == "number" || typeof doc == "date" || typeof doc == "boolean")
+                o = doc;
+            else
+                o = this.toObjectRecursive(doc, undefined, f);
             this.objectRetriever.postToObject(o);
             return o;
         };
@@ -686,7 +698,7 @@ var omm;
                 if (doc.className)
                     f = omm.PersistenceAnnotation.getEntityClassByName(doc.className);
                 if (!f)
-                    throw new Error("Could not determine class of document. Either the document needs to have a 'className' property or a class needs to be passed to the serializer.");
+                    throw new Error("Could not determine class of document. Either the document needs to have a 'className' property or a class needs to be passed to the serializer. Document: " + JSON.stringify(doc));
                 o = new f();
                 for (var propertyName in doc) {
                     var value = doc[propertyName];
@@ -714,8 +726,6 @@ var omm;
                     }
                 }
                 omm.PersistenceAnnotation.getParentPropertyNames(f).forEach(function (parentPropertyName) {
-                    if (!parent)
-                        throw new Error("Could not find parent object");
                     o[parentPropertyName] = parent;
                 });
             }
@@ -728,8 +738,14 @@ var omm;
         };
         Serializer.prototype.toDocumentRecursive = function (object, rootClass, parentObject, propertyNameOnParentObject) {
             var result;
-            if (!object || typeof object == "string" || typeof object == "number" || Array.isArray(object) || typeof object == "date" || typeof object == "boolean")
+            if (!object || typeof object == "string" || typeof object == "number" || typeof object == "date" || typeof object == "boolean")
                 result = object;
+            else if (Array.isArray(object)) {
+                result = [];
+                for (var i = 0; i < object.length; i++) {
+                    result[i] = this.toDocumentRecursive(object[i]);
+                }
+            }
             else {
                 var objectClass = omm.PersistenceAnnotation.getClass(object);
                 if (typeof objectClass.toDocument == "function") {
@@ -747,6 +763,7 @@ var omm;
                     }
                 }
             }
+            console.log("returning document:", result);
             return result;
         };
         Serializer.prototype.createDocument = function (object, rootClass, parentObject, propertyNameOnParentObject) {

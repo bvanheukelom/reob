@@ -1,16 +1,14 @@
 Package.describe({
   name: 'bertundmax:omm',
-  version: '0.0.16',
+  version: '0.0.17',
   // Brief, one-line summary of the package.
-  summary: 'Object meteor mapper. Maps between rich objects and documents.',
+  summary: 'Object mapper (for) meteor. Maps between rich objects and documents.',
   // URL to the Git repository containing the source code for this package.
   git: 'https://github.com/bvanheukelom/omm',
   // By default, Meteor will default to using README.md for documentation.
   // To avoid submitting documentation, set this field to null.
   documentation: 'README.md'
 });
-
-// todo make this depend on reflect-metadata rather than to include it
 
 Package.onUse(function(api) {
     api.versionsFrom('1.0'); // ??

@@ -44,5 +44,12 @@ module Tests
         getLeaves():Array<Tests.TestLeaf> {
             return this.leaves;
         }
+
+        @omm.CollectionUpdate
+        @omm.MeteorMethod({replaceWithCall:true, resultType:"TestLeaf"})
+        growAndReturnLeaves(){
+            this.grow();
+            return this.leaves;
+        }
     }
 }

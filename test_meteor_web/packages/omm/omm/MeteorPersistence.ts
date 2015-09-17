@@ -1,4 +1,7 @@
 ///<reference path="../../../../typings/meteor/meteor.d.ts"/>
+///<reference path="../annotations/PersistenceAnnotation.ts"/>
+///<reference path="./Collection.ts"/>
+///<reference path="./MeteorObjectRetriever.ts"/>
 module omm {
 
     export class CallHelper<T extends Object>{
@@ -41,8 +44,8 @@ module omm {
                 }
                 args.splice(0, 0, methodOptions.name);
                 args.push(function (err:any, result?:any) {
-                    if (result && result.className)
-                        result = omm.MeteorPersistence.serializer.toObject(result);
+                    if( result )
+                        result = omm.MeteorPersistence.serializer.toObject(result, callOptions.resultType?omm.entityClasses[callOptions.resultType]:undefined);
                     if (callback)
                         callback(err, result);
                 });
@@ -73,8 +76,8 @@ module omm {
                 }
                 args.splice( 0, 0, methodName );
                 args.push(function(err:any, result?:any){
-                    if( result && result.className )
-                        result = omm.MeteorPersistence.serializer.toObject(result);
+                    if( result )
+                        result = omm.MeteorPersistence.serializer.toObject(result, methodOptions.resultType?omm.entityClasses[methodOptions.resultType]:undefined);
                     if( callback )
                         callback(err, result);
                 });
@@ -96,8 +99,8 @@ module omm {
             if( args.length>0 && (typeof args[args.length-1] == "function") ) {
                 var orignalCallback:Function = args[args.length-1];
                 args[args.length-1] = function(err:any, result?:any){
-                    if( result && result.className )
-                        result = omm.MeteorPersistence.serializer.toObject(result);
+                    if( result )
+                        result = omm.MeteorPersistence.serializer.toObject(result );
                     orignalCallback(err, result);
                 };
             }
@@ -204,9 +207,21 @@ module omm {
                         }
 
                         var doc:any = omm.MeteorPersistence.serializer.toDocument(result);
-                        var t:TypeClass<Object> = omm.PersistenceAnnotation.getClass(result);
-                        if (t && omm.className(t) && omm.PersistenceAnnotation.getEntityClassByName(omm.className(t)))
-                            doc.className = omm.className(t);
+                        console.log("result of applied meteor method:",result);
+                        if(Array.isArray(result)){
+                            console.log("result of applied meteor method is array of length ", result.length);
+                            for( var ri=0; ri<result.length; ri++ ){
+                                var t:TypeClass<Object> = omm.PersistenceAnnotation.getClass(result[ri]);
+                                console.log("result of applied meteor method is array and found type ",t);
+                                if (t && omm.className(t) && omm.PersistenceAnnotation.getEntityClassByName(omm.className(t)))
+                                    doc[ri].className = omm.className(t);
+                            }
+                        }else{
+                            var t:TypeClass<Object> = omm.PersistenceAnnotation.getClass(result);
+                            if (t && omm.className(t) && omm.PersistenceAnnotation.getEntityClassByName(omm.className(t)))
+                                doc.className = omm.className(t);
+                        }
+                        console.log("MEteor method returns doc:",doc);
                         return doc;
                     } finally {
                         omm.MeteorPersistence.wrappedCallInProgress = false;

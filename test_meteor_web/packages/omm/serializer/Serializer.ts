@@ -2,6 +2,7 @@
 ///<reference path="../annotations/TypeClass.ts"/>
 ///<reference path="./Document.ts"/>
 ///<reference path="./SubObjectPath.ts"/>
+///<reference path="./ObjectRetriever.ts"/>
 
 module omm{
     export class Serializer {
@@ -179,7 +180,17 @@ module omm{
         }
 
         toObject<T extends Object>(doc:Document, f?:omm.TypeClass<T>):T {
-            var o:T = this.toObjectRecursive(doc,undefined, f);
+            var o:T;
+            if(Array.isArray(doc)){
+                var r = [];
+                for( var j=0; j<(<Array<any>>doc).length; j++ ){
+                    r[j] = this.toObjectRecursive(doc[j], parent, f);
+                }
+                o = <any>r;
+            } else if ( !doc || typeof doc == "string" || typeof doc == "number"  || typeof doc == "date" || typeof doc == "boolean")
+                o =  <T>doc;
+            else
+                o =  this.toObjectRecursive(doc,undefined, f);
             this.objectRetriever.postToObject(o);
             return o;
         }
@@ -191,6 +202,8 @@ module omm{
             if(typeof doc=="function")
                 throw new Error("Error in 'toObject'. doc is a function.");
 
+
+
             if ( f && typeof f["toObject"]=="function" ) {
                     //console.log("using the custom toObject function of class "+omm.className(f));
                     o = f["toObject"](doc);
@@ -199,7 +212,7 @@ module omm{
                 if (doc.className)
                     f = omm.PersistenceAnnotation.getEntityClassByName(doc.className);
                 if(!f)
-                    throw new Error("Could not determine class of document. Either the document needs to have a 'className' property or a class needs to be passed to the serializer." );
+                    throw new Error("Could not determine class of document. Either the document needs to have a 'className' property or a class needs to be passed to the serializer. Document: "+ JSON.stringify( doc ) );
                 // instantiate the new object
                 o = new f();
 
@@ -231,9 +244,7 @@ module omm{
                         o[objectNameOfTheProperty] = value;
                     }
                 }
-                PersistenceAnnotation.getParentPropertyNames(f).forEach(function(parentPropertyName:string){
-                    if( !parent )
-                        throw new Error("Could not find parent object");
+                PersistenceAnnotation.getParentPropertyNames(f).forEach(function (parentPropertyName:string) {
                     o[parentPropertyName] = parent;
                 });
             }
@@ -247,12 +258,16 @@ module omm{
             return this.toDocumentRecursive(object);
         }
 
-        private toDocumentRecursive(object:Object, rootClass?:omm.TypeClass<Object>, parentObject?:Object, propertyNameOnParentObject?:string):omm.Document {
+        private toDocumentRecursive(object:any, rootClass?:omm.TypeClass<Object>, parentObject?:Object, propertyNameOnParentObject?:string):omm.Document {
             var result:omm.Document;
-            if ( !object || typeof object == "string" || typeof object == "number" || Array.isArray(object) || typeof object == "date" || typeof object == "boolean")
+            if ( !object || typeof object == "string" || typeof object == "number"  || typeof object == "date" || typeof object == "boolean")
                 result =  <Document>object;
-            else
-            {
+            else if( Array.isArray(object) ){
+                result = [];
+                for( var i=0; i<object.length; i++ ){
+                    result[i] = this.toDocumentRecursive(object[i]);
+                }
+            } else {
                 var objectClass =  omm.PersistenceAnnotation.getClass(object);
                 if( typeof (<any>objectClass).toDocument == "function" ){
                     result = (<any>objectClass).toDocument( object );
@@ -270,6 +285,7 @@ module omm{
                     }
                 }
             }
+            console.log("returning document:",result);
             return result;
         }
 

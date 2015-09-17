@@ -119,6 +119,14 @@ declare module omm {
     }
 }
 declare module omm {
+    interface ObjectRetriever {
+        getId(o: Object): any;
+        getObject(value: string, parentObject?: Object, propertyName?: string): Object;
+        preToDocument(o: Object): any;
+        postToObject(o: Object): any;
+    }
+}
+declare module omm {
     class Serializer {
         private objectRetriever;
         constructor(retri: ObjectRetriever);
@@ -132,14 +140,6 @@ declare module omm {
         toDocument(object: Object): omm.Document;
         private toDocumentRecursive(object, rootClass?, parentObject?, propertyNameOnParentObject?);
         private createDocument(object, rootClass?, parentObject?, propertyNameOnParentObject?);
-    }
-}
-declare module omm {
-    interface ObjectRetriever {
-        getId(o: Object): any;
-        getObject(value: string, parentObject?: Object, propertyName?: string): Object;
-        preToDocument(o: Object): any;
-        postToObject(o: Object): any;
     }
 }
 declare module omm {

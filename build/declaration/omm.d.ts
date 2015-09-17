@@ -108,6 +108,14 @@ declare module omm {
     }
 }
 declare module omm {
+    interface ObjectRetriever {
+        getId(o: Object): any;
+        getObject(value: string, parentObject?: Object, propertyName?: string): Object;
+        preToDocument(o: Object): any;
+        postToObject(o: Object): any;
+    }
+}
+declare module omm {
     class Serializer {
         private objectRetriever;
         constructor(retri: ObjectRetriever);
@@ -131,43 +139,6 @@ declare module omm {
         getObject(s: string): Object;
         preToDocument(o: Object): void;
         postToObject(o: Object): void;
-    }
-}
-declare module omm {
-    class CallHelper<T extends Object> {
-        object: T;
-        callback: (error: any, result?: any) => void;
-        constructor(o: any, cb?: (error: any, result?: any) => void);
-    }
-    function registerObject<O extends Object>(key: string, o: O): void;
-    function getRegisteredObject(key: string): any;
-    function callHelper<O extends Object>(o: O, callback?: (err: any, result?: any) => void): O;
-    function staticCallHelper<O extends Object>(tc: O, callback?: (err: any, result?: any) => void): O;
-    function call(meteorMethodName: string, ...args: any[]): void;
-    class MeteorPersistence {
-        static collections: {
-            [index: string]: omm.Collection<any>;
-        };
-        static wrappedCallInProgress: boolean;
-        static updateInProgress: boolean;
-        static nextCallback: any;
-        private static initialized;
-        static meteorObjectRetriever: omm.ObjectRetriever;
-        static serializer: omm.Serializer;
-        static init(): void;
-        static objectsClassName(o: any): string;
-        static createMeteorMethod(options: IMethodOptions): void;
-        static wrapClass<T extends Object>(c: TypeClass<T>): void;
-        private static getClassName(o);
-        static monkeyPatch(object: any, functionName: string, patchFunction: (original: Function, ...arg: any[]) => any): void;
-    }
-}
-declare module omm {
-    interface ObjectRetriever {
-        getId(o: Object): any;
-        getObject(value: string, parentObject?: Object, propertyName?: string): Object;
-        preToDocument(o: Object): any;
-        postToObject(o: Object): any;
     }
 }
 declare module omm {
@@ -198,6 +169,35 @@ declare module omm {
         private setSerializationPath(o, pPath);
         updateSerializationPaths(object: MeteorPersistable, visited?: Array<Object>): void;
         retrieveLocalKeys(o: omm.MeteorPersistable, visited?: Array<Object>, rootObject?: omm.MeteorPersistable): void;
+    }
+}
+declare module omm {
+    class CallHelper<T extends Object> {
+        object: T;
+        callback: (error: any, result?: any) => void;
+        constructor(o: any, cb?: (error: any, result?: any) => void);
+    }
+    function registerObject<O extends Object>(key: string, o: O): void;
+    function getRegisteredObject(key: string): any;
+    function callHelper<O extends Object>(o: O, callback?: (err: any, result?: any) => void): O;
+    function staticCallHelper<O extends Object>(tc: O, callback?: (err: any, result?: any) => void): O;
+    function call(meteorMethodName: string, ...args: any[]): void;
+    class MeteorPersistence {
+        static collections: {
+            [index: string]: omm.Collection<any>;
+        };
+        static wrappedCallInProgress: boolean;
+        static updateInProgress: boolean;
+        static nextCallback: any;
+        private static initialized;
+        static meteorObjectRetriever: omm.ObjectRetriever;
+        static serializer: omm.Serializer;
+        static init(): void;
+        static objectsClassName(o: any): string;
+        static createMeteorMethod(options: IMethodOptions): void;
+        static wrapClass<T extends Object>(c: TypeClass<T>): void;
+        private static getClassName(o);
+        static monkeyPatch(object: any, functionName: string, patchFunction: (original: Function, ...arg: any[]) => any): void;
     }
 }
 declare module omm {

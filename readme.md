@@ -1,10 +1,10 @@
-### Meteor object mapper
+### Object mapper (for) Meteor
 
 Omm maps between rich objects and documents.
 
 ## Key features
 
-- Load rich objects instead of documents from a collection
+- Load rich objects from a collection
 
 - Describe the object graph through annotation-style function calls
 
@@ -12,7 +12,7 @@ Omm maps between rich objects and documents.
 
 - Perform collection altering operations anywhere on the object graph
 
-- Strengthens encapsulation of objects by removing persistence logic from the domain logic
+- Strengthens encapsulation of objects by removing persistence logic from the domain objects
 
 - Atomicity over complex operations within one document
 
@@ -81,6 +81,34 @@ Plant.prototype.harvest = function(){
 omm.collectionUpdate( Plant, "harvest");
 
 ```
+
+## Typescript annotations
+
+// class annotation
+@omm.Entity
+@omm.Entity('<collectionName>')
+
+// property annotations
+@omm.Parent - not stored in the database, contains reference to the parent object. This is only useful if the object is not a root object.
+@omm.Type('<typeClassName>') - declare the type of the property
+@omm.ArrayOrMap('<typeClassName>')
+@omm.AsForeignKey - the value of the property is an object and it is not going to be stored as the object itself but as a string-key
+@omm.AsForeignKeys - same as above to be used with arrays/maps
+@omm.Id - this is mapped to the _id property in mongo
+@omm.DocumentName('<propertyNameInTheDatabase>') -- the property is stored in the database with a different name
+
+// function annotations
+@omm.Wrap - short for collection update + meteor method with replaceWithCall:true
+@omm.CollectionUpdate
+@omm.MeteorMethod(options)
+	options:
+		replaceWithCall:true
+		parameterTypes:Array<string>
+		object:stringIdentifier (referrs to a registered object)
+
+@omm.StaticMeteorMethod ?
+
+omm.registerObject(stringIdentifier, object);
 
 ## License
 
