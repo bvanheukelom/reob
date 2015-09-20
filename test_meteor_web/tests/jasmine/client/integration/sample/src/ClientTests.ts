@@ -112,7 +112,7 @@ describe("The persistence thing on the client ", function(){
         });
     });
 
-    fit("is able to call methods that take and return arrays of entities", function(done){
+    it("is able to call methods that take and return arrays of entities", function(done){
         personCollection.newPerson("Held", function(e:any, held:Tests.TestPerson){
             omm.callHelper(held, function(e,r){
                 var adrs:Array<Tests.TestAddress> = r;
