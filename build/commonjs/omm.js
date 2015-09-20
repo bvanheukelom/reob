@@ -674,7 +674,7 @@ var omm;
             if (Array.isArray(doc)) {
                 var r = [];
                 for (var j = 0; j < doc.length; j++) {
-                    r[j] = this.toObjectRecursive(doc[j], parent, f);
+                    r[j] = this.toObjectRecursive(doc[j], undefined, f);
                 }
                 o = r;
             }

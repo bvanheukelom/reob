@@ -184,7 +184,7 @@ module omm{
             if(Array.isArray(doc)){
                 var r = [];
                 for( var j=0; j<(<Array<any>>doc).length; j++ ){
-                    r[j] = this.toObjectRecursive(doc[j], parent, f);
+                    r[j] = this.toObjectRecursive(doc[j], undefined, f);
                 }
                 o = <any>r;
             } else if ( !doc || typeof doc == "string" || typeof doc == "number"  || typeof doc == "date" || typeof doc == "boolean")

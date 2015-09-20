@@ -112,6 +112,24 @@ describe("The persistence thing on the client ", function(){
         });
     });
 
+    fit("is able to call methods that take and return arrays of entities", function(done){
+        personCollection.newPerson("Held", function(e:any, held:Tests.TestPerson){
+            omm.callHelper(held, function(e,r){
+                var adrs:Array<Tests.TestAddress> = r;
+                expect(e).toBeUndefined();
+                expect(r).toBeDefined();
+                expect(r.length).toBe(3);
+                expect(r[0] instanceof Tests.TestAddress).toBeTruthy();
+                expect(r[1] instanceof Tests.TestAddress).toBeTruthy();
+                expect(r[2] instanceof Tests.TestAddress).toBeTruthy();
+                expect( adrs[0].getStreet() ).toBe('streetname');
+                expect( adrs[1].getStreet() ).toBe('streetname2');
+                expect( adrs[2].getStreet() ).toBe('streetname3');
+                done();
+            } ).addAddresses([new Tests.TestAddress("streetname", held),new Tests.TestAddress("streetname2", held),new Tests.TestAddress("streetname3", held)]);
+        });
+    });
+
     it("lazy loads objects", function(done){
         personCollection.newPerson( "jake", function( error:any, jake:Tests.TestPerson ){
             treeCollection.newTree(12, function( error, t:Tests.TestTree ){

@@ -120,6 +120,17 @@ module Tests
             return a;
         }
 
+        @omm.CollectionUpdate
+        @omm.MeteorMethod({parameterTypes:["TestAddress"], replaceWithCall:true})
+        addAddresses(addresses:Array<TestAddress>):Array<Tests.TestAddress>
+        {
+            var that = this;
+            addresses.forEach(function(a:TestAddress){
+                that.addresses.push(a);
+            });
+            return this.addresses;
+        }
+
         @omm.MeteorMethod({parameterTypes:["callback"], replaceWithCall:true, serverOnly:true})
         fromServer(cb:(error:any, r:any)=>void):void
         {
