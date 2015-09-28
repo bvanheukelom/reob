@@ -278,7 +278,7 @@ module omm {
             options.parentObject = p1;
             options.functionName = p2;
             if( !options.name )
-                options.name = omm.className(p1.constructor)+"-"+p2;
+                options.name = p2;
             omm.meteorMethodFunctions[options.name] = options;
         } else {
             return function (t:Function, functionName:string, objectDescriptor:any) {
@@ -294,7 +294,7 @@ module omm {
                 options.isStatic = false;
                 options.parentObject = t;
                 if( !options.name ){
-                    options.name = omm.className(<any>t.constructor)+"-"+functionName;
+                    options.name = functionName;
                 }
 
                 omm.meteorMethodFunctions[options.name] = options;
@@ -310,7 +310,7 @@ module omm {
             options.functionName = p2;
             options.object = p1;
             if( !options.name )
-                options.name = omm.className(p1)+"-"+p2;
+                options.name = p2;
             omm.meteorMethodFunctions[options.name] = options;
         } else {
             return function (t:Function, functionName:string, objectDescriptor:any) {
@@ -327,7 +327,7 @@ module omm {
                 options.isStatic = true;
                 options.object = t;
                 if( !options.name )
-                    options.name = omm.className(<any>t)+"-"+functionName;
+                    options.name = functionName;
 
                 omm.meteorMethodFunctions[options.name] = options;
             };

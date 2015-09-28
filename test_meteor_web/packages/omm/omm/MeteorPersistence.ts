@@ -63,7 +63,7 @@ module omm {
             var methodOptions = omm.PersistenceAnnotation.getMethodOptions(functionName);
             var methodName = methodOptions.name;
             if( !methodName )
-                methodName = className+"-"+functionName;
+                methodName =  functionName;
             helper[methodOptions.functionName] = function(...originalArguments:any[] ){
                 var args = [];
                 for (var i in originalArguments) {
@@ -207,12 +207,12 @@ module omm {
                         }
 
                         var doc:any = omm.MeteorPersistence.serializer.toDocument(result);
-                        console.log("result of applied meteor method:",result);
+                        //console.log("result of applied meteor method:",result);
                         if(Array.isArray(result)){
-                            console.log("result of applied meteor method is array of length ", result.length);
+                            //console.log("result of applied meteor method is array of length ", result.length);
                             for( var ri=0; ri<result.length; ri++ ){
                                 var t:TypeClass<Object> = omm.PersistenceAnnotation.getClass(result[ri]);
-                                console.log("result of applied meteor method is array and found type ",t);
+                                //console.log("result of applied meteor method is array and found type ",t);
                                 if (t && omm.className(t) && omm.PersistenceAnnotation.getEntityClassByName(omm.className(t)))
                                     doc[ri].className = omm.className(t);
                             }
@@ -221,7 +221,7 @@ module omm {
                             if (t && omm.className(t) && omm.PersistenceAnnotation.getEntityClassByName(omm.className(t)))
                                 doc.className = omm.className(t);
                         }
-                        console.log("MEteor method returns doc:",doc);
+                        //console.log("MEteor method returns doc:",doc);
                         return doc;
                     } finally {
                         omm.MeteorPersistence.wrappedCallInProgress = false;

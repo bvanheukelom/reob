@@ -125,7 +125,9 @@ module Tests
         addAddresses(addresses:Array<TestAddress>):Array<Tests.TestAddress>
         {
             var that = this;
+
             addresses.forEach(function(a:TestAddress){
+                console.log('street:',a.getStreet());
                 that.addresses.push(a);
             });
             return this.addresses;

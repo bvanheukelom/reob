@@ -180,9 +180,9 @@ describe("The persistence thing on the client ", function(){
     });
 
     it("knows static meteor method annotations ", function(){
-        var m:IMethodOptions = omm.PersistenceAnnotation.getMethodOptions('TestPersonCollection-staticInsertPerson');
+        var m:IMethodOptions = omm.PersistenceAnnotation.getMethodOptions('staticInsertPerson');
         expect(m).toBeDefined();
-        expect(m.name).toBe("TestPersonCollection-staticInsertPerson");
+        expect(m.name).toBe("staticInsertPerson");
         expect(m.functionName).toBe('staticInsertPerson');
         expect(m.isStatic).toBeTruthy();
         expect(m.object).toBe(Tests.TestPersonCollection);
@@ -190,7 +190,7 @@ describe("The persistence thing on the client ", function(){
     });
 
     it("can insert a person using a call ", function(done){
-        omm.call("TestPersonCollection-insertPerson", 'hello', function(error,result:Tests.TestPerson){
+        omm.call("insertPerson", 'hello', function(error,result:Tests.TestPerson){
             expect( result instanceof Tests.TestPerson ).toBeTruthy();
             expect( result.getName() ).toBe("hello");
             done();
@@ -206,7 +206,7 @@ describe("The persistence thing on the client ", function(){
     });
 
     it("can insert a person using a call to a static function ", function(done){
-        omm.call("TestPersonCollection-staticInsertPerson", "hiho", function(error,result:Tests.TestPerson){
+        omm.call("staticInsertPerson", "hiho", function(error,result:Tests.TestPerson){
             expect( result instanceof Tests.TestPerson ).toBeTruthy();
             expect( result.getName() ).toBe("hiho");
             done();
@@ -242,7 +242,7 @@ describe("The persistence thing on the client ", function(){
     it("can update a person using a meteor call ", function(done){
         omm.staticCallHelper(Tests.TestPersonCollection,  function(error,result:Tests.TestPerson){
             expect( error ).toBeUndefined();
-            Meteor.call('TestPerson-rename', result.getId(), "max", function(err, res:string){
+            Meteor.call('rename', result.getId(), "max", function(err, res:string){
                 expect(err).toBeUndefined();
                 expect(res).toBe("max");
                 expect(personCollection.getById(result.getId()).getName()).toBe("max");

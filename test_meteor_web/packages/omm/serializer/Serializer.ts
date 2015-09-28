@@ -285,7 +285,7 @@ module omm{
                     }
                 }
             }
-            console.log("returning document:",result);
+            //console.log("returning document:",result);
             return result;
         }
 

@@ -192,7 +192,7 @@ var omm;
             options.parentObject = p1;
             options.functionName = p2;
             if (!options.name)
-                options.name = omm.className(p1.constructor) + "-" + p2;
+                options.name = p2;
             omm.meteorMethodFunctions[options.name] = options;
         }
         else {
@@ -209,7 +209,7 @@ var omm;
                 options.isStatic = false;
                 options.parentObject = t;
                 if (!options.name) {
-                    options.name = omm.className(t.constructor) + "-" + functionName;
+                    options.name = functionName;
                 }
                 omm.meteorMethodFunctions[options.name] = options;
             };
@@ -223,7 +223,7 @@ var omm;
             options.functionName = p2;
             options.object = p1;
             if (!options.name)
-                options.name = omm.className(p1) + "-" + p2;
+                options.name = p2;
             omm.meteorMethodFunctions[options.name] = options;
         }
         else {
@@ -241,7 +241,7 @@ var omm;
                 options.isStatic = true;
                 options.object = t;
                 if (!options.name)
-                    options.name = omm.className(t) + "-" + functionName;
+                    options.name = functionName;
                 omm.meteorMethodFunctions[options.name] = options;
             };
         }
@@ -763,7 +763,6 @@ var omm;
                     }
                 }
             }
-            console.log("returning document:", result);
             return result;
         };
         Serializer.prototype.createDocument = function (object, rootClass, parentObject, propertyNameOnParentObject) {
