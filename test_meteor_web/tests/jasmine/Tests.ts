@@ -38,7 +38,7 @@ describe("The persistence thing", function(){
 
     it( "knows meteor method annotations ", function(){
         var methodNames = omm.PersistenceAnnotation.getMethodFunctionNames(Tests.TestPerson.prototype);
-        expect( methodNames ).toContain("addAddress");
+        expect( methodNames ).toContain( "addAddress" );
         expect( methodNames.length ).toBeGreaterThan(0);
     });
 
@@ -604,6 +604,20 @@ describe("The persistence thing", function(){
         expect( person2.addresses[1] instanceof Tests.TestWheel).toBeTruthy();
         expect( person2.addresses[2] instanceof Tests.TestCar).toBeTruthy();
     });
+
+    it("can get the testwheel class by its configured name", function(){
+        var p = omm.PersistenceAnnotation.getEntityClassByName("TestWheelBanzai")
+        expect( p ).toBeDefined();
+        expect( p ).toBe(Tests.TestWheel);
+    });
+
+    it("can get the testCar class by its name", function(){
+        var p = omm.PersistenceAnnotation.getEntityClassByName("TestCar");
+        expect( p ).toBeDefined();
+        expect( p ).toBe(Tests.TestCar);
+    });
+
+    // test for omm.PersistenceAnnotation.getPropertyClass(omm.entityClasses["TestCar"], "wheels")
 
     // test regarding a number as an id property
 

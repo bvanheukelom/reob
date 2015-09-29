@@ -1,7 +1,7 @@
 /// <reference path="./TestCar.ts"/>
 module Tests{
 
-    @omm.Entity
+    @omm.Entity("TestWheelBanzai")
     export class TestWheel{
         @omm.Type("TestCar")
         @omm.AsForeignKey

@@ -32,10 +32,34 @@ var omm;
         }
     }
     omm.getMetadata = getMetadata;
-    function Entity(p1) {
-        var typeClass = p1;
-        defineMetadata("persistence:entity", true, typeClass);
-        omm.entityClasses[className(typeClass)] = typeClass;
+    function Entity(entityNameOrP1) {
+        var entityName;
+        if (typeof entityNameOrP1 == "string") {
+            entityName = entityNameOrP1;
+        }
+        else {
+            var n = entityNameOrP1.toString();
+            n = n.substr('function '.length);
+            n = n.substr(0, n.indexOf('('));
+            entityName = n;
+        }
+        var f = function (p1) {
+            var typeClass = p1;
+            defineMetadata("persistence:entity", true, typeClass);
+            omm.entityClasses[entityName] = typeClass;
+            Object.defineProperty(p1, "_ommClassName", {
+                value: entityName,
+                writable: false,
+                configurable: false,
+                enumerable: false
+            });
+        };
+        if (typeof entityNameOrP1 == "string") {
+            return f;
+        }
+        else {
+            f(entityNameOrP1);
+        }
     }
     omm.Entity = Entity;
     function addEntity(c) {
@@ -180,10 +204,7 @@ var omm;
     }
     omm.getId = getId;
     function className(fun) {
-        var ret = fun.toString();
-        ret = ret.substr('function '.length);
-        ret = ret.substr(0, ret.indexOf('('));
-        return ret;
+        return typeof fun == "function" ? fun['_ommClassName'] : undefined;
     }
     omm.className = className;
     function MeteorMethod(p1, p2) {
@@ -191,9 +212,8 @@ var omm;
             var options = { isStatic: false };
             options.parentObject = p1;
             options.functionName = p2;
-            if (!options.name)
-                options.name = p2;
-            omm.meteorMethodFunctions[options.name] = options;
+            options.name = p2;
+            omm.meteorMethodFunctions.push(options);
         }
         else {
             return function (t, functionName, objectDescriptor) {
@@ -211,7 +231,7 @@ var omm;
                 if (!options.name) {
                     options.name = functionName;
                 }
-                omm.meteorMethodFunctions[options.name] = options;
+                omm.meteorMethodFunctions.push(options);
             };
         }
     }
@@ -224,7 +244,7 @@ var omm;
             options.object = p1;
             if (!options.name)
                 options.name = p2;
-            omm.meteorMethodFunctions[options.name] = options;
+            omm.meteorMethodFunctions.push(options);
         }
         else {
             return function (t, functionName, objectDescriptor) {
@@ -242,7 +262,7 @@ var omm;
                 options.object = t;
                 if (!options.name)
                     options.name = functionName;
-                omm.meteorMethodFunctions[options.name] = options;
+                omm.meteorMethodFunctions.push(options);
             };
         }
     }
@@ -251,30 +271,34 @@ var omm;
         function PersistenceAnnotation() {
         }
         PersistenceAnnotation.getMethodOptions = function (functionName) {
-            return omm.meteorMethodFunctions[functionName];
+            for (var i = 0; i < omm.meteorMethodFunctions.length; i++) {
+                if (omm.meteorMethodFunctions[i].name == functionName)
+                    return omm.meteorMethodFunctions[i];
+            }
+            return undefined;
         };
         PersistenceAnnotation.getMethodFunctionNames = function (c) {
             var ret = [];
-            for (var i in omm.meteorMethodFunctions) {
+            for (var i = 0; i < omm.meteorMethodFunctions.length; i++) {
                 var methodOptions = omm.meteorMethodFunctions[i];
                 if (methodOptions.parentObject == c)
-                    ret.push(i);
+                    ret.push(methodOptions.name);
             }
             return ret;
         };
         PersistenceAnnotation.getMethodFunctionNamesByObject = function (o) {
             var ret = [];
-            for (var i in omm.meteorMethodFunctions) {
+            for (var i = 0; i < omm.meteorMethodFunctions.length; i++) {
                 var methodOptions = omm.meteorMethodFunctions[i];
                 if (methodOptions.object == o)
-                    ret.push(i);
+                    ret.push(omm.meteorMethodFunctions[i].name);
             }
             return ret;
         };
         PersistenceAnnotation.getAllMethodFunctionNames = function () {
             var ret = [];
-            for (var i in omm.meteorMethodFunctions) {
-                ret.push(i);
+            for (var i = 0; i < omm.meteorMethodFunctions.length; i++) {
+                ret.push(omm.meteorMethodFunctions[i].name);
             }
             return ret;
         };
@@ -461,7 +485,7 @@ var omm;
         data.registeredObjects = {};
     omm.registeredObjects = data.registeredObjects;
     if (!data.meteorMethodFunctions)
-        data.meteorMethodFunctions = {};
+        data.meteorMethodFunctions = [];
     omm.meteorMethodFunctions = data.meteorMethodFunctions;
 })();
 var omm;

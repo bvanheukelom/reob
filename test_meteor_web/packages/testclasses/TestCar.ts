@@ -4,10 +4,10 @@ module Tests{
 
     @omm.Entity
     export class TestCar{
-        @omm.Type("TestWheel")
+        @omm.Type("TestWheelBanzai")
         wheel:Tests.TestWheel;
 
-        @omm.ArrayOrMap("TestWheel")
+        @omm.ArrayOrMap("TestWheelBanzai")
         wheels:Array<Tests.TestWheel>=[];
 
         brand:string;

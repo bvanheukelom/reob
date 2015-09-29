@@ -20,7 +20,7 @@ interface IMethodOptions{
 module omm {
     export var entityClasses:{[index:string]:omm.TypeClass<Object>};
     export var registeredObjects:{[index:string]:any};
-    export var meteorMethodFunctions:{[index:string]:Object};
+    export var meteorMethodFunctions:Array<IMethodOptions>;
 
     export function setNonEnumerableProperty( obj:Object, propertyName:string, value:any ):void{
         if (!Object.getOwnPropertyDescriptor(obj, propertyName)) {
@@ -51,10 +51,32 @@ module omm {
         }
     }
 
-    export function Entity( p1:Function ):any {
-        var typeClass:TypeClass<Object> = <TypeClass<Object>>p1;
-        defineMetadata("persistence:entity", true, typeClass);
-        omm.entityClasses[className(typeClass)]=typeClass;
+    export function Entity( entityNameOrP1?:any ):any {
+        var entityName;
+        if( typeof entityNameOrP1 =="string" ) {
+            entityName = entityNameOrP1;
+        }else{
+            var n = entityNameOrP1.toString();
+            n = n.substr('function '.length);
+            n = n.substr(0, n.indexOf('('));
+            entityName = n;
+        }
+        var f = function(p1:Function){
+            var typeClass:TypeClass<Object> = <TypeClass<Object>>p1;
+            defineMetadata("persistence:entity", true, typeClass);
+            omm.entityClasses[entityName]=typeClass;
+            Object.defineProperty( p1, "_ommClassName", {
+                value:entityName,
+                writable:false,
+                configurable: false,
+                enumerable: false
+            });
+        };
+        if( typeof entityNameOrP1 =="string" ) {
+            return f;
+        }else{
+            f(entityNameOrP1);
+        }
     }
 
     /**
@@ -263,13 +285,8 @@ module omm {
             return o[idPropertyName];
     }
 
-
-    export function className(fun:omm.TypeClass<Object>):string
-    {
-        var ret = fun.toString();
-        ret = ret.substr('function '.length);
-        ret = ret.substr(0, ret.indexOf('('));
-        return ret;
+    export function className(fun:omm.TypeClass<Object>):string {
+        return typeof fun=="function" ? fun['_ommClassName'] : undefined;
     }
 
     export function MeteorMethod( p1:any, p2?:any ) {
@@ -277,9 +294,8 @@ module omm {
             var options:IMethodOptions = { isStatic:false };
             options.parentObject = p1;
             options.functionName = p2;
-            if( !options.name )
-                options.name = p2;
-            omm.meteorMethodFunctions[options.name] = options;
+            options.name = p2;
+            omm.meteorMethodFunctions.push(options);
         } else {
             return function (t:Function, functionName:string, objectDescriptor:any) {
                 var options:IMethodOptions = {};
@@ -296,8 +312,7 @@ module omm {
                 if( !options.name ){
                     options.name = functionName;
                 }
-
-                omm.meteorMethodFunctions[options.name] = options;
+                omm.meteorMethodFunctions.push(options);
             };
         }
     }
@@ -311,7 +326,7 @@ module omm {
             options.object = p1;
             if( !options.name )
                 options.name = p2;
-            omm.meteorMethodFunctions[options.name] = options;
+            omm.meteorMethodFunctions.push(options);
         } else {
             return function (t:Function, functionName:string, objectDescriptor:any) {
                 var options:IMethodOptions = {};
@@ -329,7 +344,7 @@ module omm {
                 if( !options.name )
                     options.name = functionName;
 
-                omm.meteorMethodFunctions[options.name] = options;
+                omm.meteorMethodFunctions.push(options);
             };
         }
     }
@@ -337,33 +352,37 @@ module omm {
     export class PersistenceAnnotation
     {
         public static getMethodOptions( functionName:string ):IMethodOptions{
-            return omm.meteorMethodFunctions[functionName];
+            for( var i=0; i<omm.meteorMethodFunctions.length; i++){
+                if( omm.meteorMethodFunctions[i].name==functionName )
+                    return omm.meteorMethodFunctions[i];
+            }
+            return undefined;
         }
 
         public static getMethodFunctionNames<T extends Object>(c:any):Array<string> {
             var ret = [];
-            for( var i in omm.meteorMethodFunctions ){
+            for( var i=0; i<omm.meteorMethodFunctions.length; i++){
                 var methodOptions:IMethodOptions = omm.meteorMethodFunctions[i];
                 if( methodOptions.parentObject==c )
-                    ret.push( i );
+                    ret.push( methodOptions.name );
             }
             return ret;
         }
 
         public static getMethodFunctionNamesByObject<T extends Object>(o:any):Array<string> {
             var ret = [];
-            for( var i in omm.meteorMethodFunctions ){
+            for( var i=0; i<omm.meteorMethodFunctions.length; i++){
                 var methodOptions:IMethodOptions = omm.meteorMethodFunctions[i];
                 if( methodOptions.object==o )
-                    ret.push( i );
+                    ret.push( omm.meteorMethodFunctions[i].name );
             }
             return ret;
         }
 
         public static getAllMethodFunctionNames():Array<string> {
             var ret = [];
-            for( var i in omm.meteorMethodFunctions ){
-                ret.push( i );
+            for( var i=0; i<omm.meteorMethodFunctions.length; i++){
+                ret.push( omm.meteorMethodFunctions[i].name );
             }
             return ret;
         }
@@ -597,7 +616,7 @@ module omm {
         data.registeredObjects = {};
     omm.registeredObjects = data.registeredObjects;
     if(!data.meteorMethodFunctions)
-        data.meteorMethodFunctions = {};
+        data.meteorMethodFunctions = [];
     omm.meteorMethodFunctions = data.meteorMethodFunctions;
 
 })();

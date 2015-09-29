@@ -22,13 +22,11 @@ declare module omm {
     var registeredObjects: {
         [index: string]: any;
     };
-    var meteorMethodFunctions: {
-        [index: string]: Object;
-    };
+    var meteorMethodFunctions: Array<IMethodOptions>;
     function setNonEnumerableProperty(obj: Object, propertyName: string, value: any): void;
     function defineMetadata(propertyName: any, value: any, cls: any): void;
     function getMetadata(propertyName: any, cls: any): any;
-    function Entity(p1: Function): any;
+    function Entity(entityNameOrP1?: any): any;
     function addEntity(c: TypeClass<Object>): void;
     function getDefaultCollectionName(t: omm.TypeClass<any>): string;
     function addCollectionRoot(t: omm.TypeClass<any>, collectionName: string): void;

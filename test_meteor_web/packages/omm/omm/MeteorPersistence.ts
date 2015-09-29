@@ -24,7 +24,7 @@ module omm {
     export function callHelper<O extends Object>(o:O, callback?:( err:any, result?:any)=>void ):O {
         var helper:any = {};
         var c = omm.PersistenceAnnotation.getClass(o);
-        var className = omm.className(c);
+        //var className = omm.className(c);
         omm.PersistenceAnnotation.getMethodFunctionNames(c.prototype).forEach(function (functionName:string) {
             var methodOptions = omm.PersistenceAnnotation.getMethodOptions(functionName);
             helper[methodOptions.functionName] = function (...originalArguments:any[]) {
@@ -63,7 +63,7 @@ module omm {
             var methodOptions = omm.PersistenceAnnotation.getMethodOptions(functionName);
             var methodName = methodOptions.name;
             if( !methodName )
-                methodName =  functionName;
+                methodName = functionName;
             helper[methodOptions.functionName] = function(...originalArguments:any[] ){
                 var args = [];
                 for (var i in originalArguments) {
@@ -132,7 +132,6 @@ module omm {
                     omm.MeteorPersistence.createMeteorMethod(methodOptions);
                 });
 
-
                 MeteorPersistence.initialized = true;
             }
         }
@@ -159,10 +158,10 @@ module omm {
                         if (!isStatic) {
                             if (!staticObject) {
                                 if (args.length == 0)
-                                    throw new Error("An omm crated meteor method requires an id if no static object is given");
+                                    throw new Error('Error calling meteor method ' + meteorMethodName + ': id or static object required');
                                 var id:string = args[0];
                                 if (typeof id != "string")
-                                    throw new Error('Error calling meteor method ' + meteorMethodName + ': Id is not of type string.');
+                                    throw new Error('Error calling meteor method ' + meteorMethodName + ': id is not of type string.');
                                 if (options.parentObject && options.parentObject.constructor) {
                                     var className = omm.className(<any>options.parentObject.constructor);
                                     if (omm.PersistenceAnnotation.getEntityClassByName(className) && id.indexOf("[") == -1)
@@ -177,7 +176,7 @@ module omm {
                                     object = staticObject;
                             }
                             if (!object)
-                                throw new Error("Unable to retrieve object by id: " + id);
+                                throw new Error( 'Error calling meteor method ' + meteorMethodName + ':Unable to retrieve object by id: ' + id );
                         }
 
                         var callbackIndex = -1;
@@ -217,11 +216,16 @@ module omm {
                                     doc[ri].className = omm.className(t);
                             }
                         }else{
+
                             var t:TypeClass<Object> = omm.PersistenceAnnotation.getClass(result);
+                            console.log( 'result ',result);
+                            console.log( 'type class ',t, omm.className(t));
                             if (t && omm.className(t) && omm.PersistenceAnnotation.getEntityClassByName(omm.className(t)))
+                            {
                                 doc.className = omm.className(t);
+                            }
                         }
-                        //console.log("MEteor method returns doc:",doc);
+                        console.log("Meteor method returns doc:",doc);
                         return doc;
                     } finally {
                         omm.MeteorPersistence.wrappedCallInProgress = false;
@@ -268,7 +272,7 @@ module omm {
 
         static wrapClass<T extends Object>(c:TypeClass<T>) {
 
-            var className = omm.className(c);
+            //var className = omm.className(c);
 
             omm.PersistenceAnnotation.getCollectionUpdateFunctionNames(c).forEach(function(functionName:string){
                 MeteorPersistence.monkeyPatch(c.prototype, functionName, function (originalFunction, ...args:string[]) {
