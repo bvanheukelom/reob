@@ -596,6 +596,7 @@ module omm {
             return result;
         }
     }
+
 }
 (function(){
     var data;
@@ -618,6 +619,5 @@ module omm {
     if(!data.meteorMethodFunctions)
         data.meteorMethodFunctions = [];
     omm.meteorMethodFunctions = data.meteorMethodFunctions;
-
 })();
 

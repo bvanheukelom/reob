@@ -4,6 +4,26 @@
 ///<reference path="./MeteorObjectRetriever.ts"/>
 module omm {
 
+    export class EventContext<T>{
+        private  cancelledError:any = false;
+        preUpdate:T;
+        object:T;
+        collection:omm.Collection<T>;
+
+        constructor( o:T, coll:omm.Collection<T> ){
+            this.object = o;
+            this.collection = coll;
+        }
+
+        cancel(err:any):void{
+            this.cancelledError = err;
+        }
+
+        cancelledWithError():any{
+            return this.cancelledError;
+        }
+    }
+
     export class CallHelper<T extends Object>{
         object:T;
         callback:(error:any, result?:any)=>void;
@@ -46,6 +66,8 @@ module omm {
                 args.push(function (err:any, result?:any) {
                     if( result )
                         result = omm.MeteorPersistence.serializer.toObject(result, callOptions.resultType?omm.entityClasses[callOptions.resultType]:undefined);
+                    if( err && err instanceof Meteor.Error )
+                        err = err.error;
                     if (callback)
                         callback(err, result);
                 });
@@ -78,6 +100,8 @@ module omm {
                 args.push(function(err:any, result?:any){
                     if( result )
                         result = omm.MeteorPersistence.serializer.toObject(result, methodOptions.resultType?omm.entityClasses[methodOptions.resultType]:undefined);
+                    if( err && err instanceof Meteor.Error )
+                        err = err.error;
                     if( callback )
                         callback(err, result);
                 });
@@ -101,6 +125,8 @@ module omm {
                 args[args.length-1] = function(err:any, result?:any){
                     if( result )
                         result = omm.MeteorPersistence.serializer.toObject(result );
+                    if( err && err instanceof Meteor.Error )
+                        err = err.error;
                     orignalCallback(err, result);
                 };
             }
@@ -141,12 +167,17 @@ module omm {
             return omm.className(o.constructor);
         }
 
+        // this method registers a meteor method
         static createMeteorMethod(options:IMethodOptions){
+
+            // here the options are converted into local variables for readablility
             var meteorMethodName:string = options.name;
             var isStatic = options.isStatic;
             var staticObject = options.object;
             var parameterClassNames = options.parameterTypes;
             var originalFunction = options.parentObject[options.functionName];
+
+            // methods are only created on the server if that was specified
             if( Meteor.isServer || typeof options.serverOnly == "undefined" || !options.serverOnly ) {
                 var m = {};
                 m[meteorMethodName] = function (...args:any[]) {
@@ -179,6 +210,7 @@ module omm {
                                 throw new Error( 'Error calling meteor method ' + meteorMethodName + ':Unable to retrieve object by id: ' + id );
                         }
 
+                        // convert the parameters based on their defined types
                         var callbackIndex = -1;
                         for (var i = 0; i < args.length; i++) {
                             if (parameterClassNames && parameterClassNames.length > i) {
@@ -196,8 +228,14 @@ module omm {
                         // CALLING THE ORIGINAL FUNCTION
                         var result;
                         if (callbackIndex != -1) {
-                            var syncFunction = Meteor.wrapAsync(function (cb) {
-                                args[callbackIndex] = cb;
+                            var syncFunction = Meteor.wrapAsync(function (cb:(error:any, result:any)=>void) {
+                                args[callbackIndex] = function(error, result){
+                                    if( error )
+                                        throw new Meteor.Error(error);
+                                    else
+                                        cb(undefined, result);
+
+                                };
                                 originalFunction.apply(object, args);
                             });
                             result = syncFunction();
@@ -205,6 +243,7 @@ module omm {
                             result = originalFunction.apply(object, args);
                         }
 
+                        // converting the result into a doc
                         var doc:any = omm.MeteorPersistence.serializer.toDocument(result);
                         //console.log("result of applied meteor method:",result);
                         if(Array.isArray(result)){
@@ -218,14 +257,12 @@ module omm {
                         }else{
 
                             var t:TypeClass<Object> = omm.PersistenceAnnotation.getClass(result);
-                            console.log( 'result ',result);
-                            console.log( 'type class ',t, omm.className(t));
                             if (t && omm.className(t) && omm.PersistenceAnnotation.getEntityClassByName(omm.className(t)))
                             {
                                 doc.className = omm.className(t);
                             }
                         }
-                        console.log("Meteor method returns doc:",doc);
+                        //console.log("Meteor method returns doc:",doc);
                         return doc;
                     } finally {
                         omm.MeteorPersistence.wrappedCallInProgress = false;
@@ -256,6 +293,8 @@ module omm {
                             }
                         }
                         a.push(function (error, result) {
+                            if( error && error instanceof Meteor.Error )
+                                error = error.error;
                             if (cb)
                                 cb(error, result);
                         });
@@ -281,6 +320,7 @@ module omm {
                     if( !MeteorPersistence.updateInProgress && _serializationPath ) {
                         var collection:omm.Collection<any> = omm.MeteorPersistence.collections[_serializationPath.getCollectionName()];
                         omm.MeteorPersistence.updateInProgress = true;
+                        
                         var result = collection.update(_serializationPath.getId(), function (o) {
                             var subObject = _serializationPath.getSubObject(o);
                             var r2 =  originalFunction.apply(subObject, args);

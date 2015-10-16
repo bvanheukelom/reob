@@ -3,13 +3,10 @@
 describe("The persistence thing on the client ", function(){
     var personCollection:Tests.TestPersonCollection;
     var treeCollection:Tests.TestTreeCollection;
-    beforeAll(function(){
-        personCollection = new Tests.TestPersonCollection();
-        treeCollection = new Tests.TestTreeCollection();
-    });
-
 
     beforeEach(function(done){
+        personCollection = new Tests.TestPersonCollection();
+        treeCollection = new Tests.TestTreeCollection();
         console.log("------------------- new test");
         omm.Collection.resetAll(function(error){
             if (error)
@@ -274,7 +271,5 @@ describe("The persistence thing on the client ", function(){
             }).addFamilyRelation("uncle", null);
         }).staticInsertPerson("hello");
     });
-
-
 
 });

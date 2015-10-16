@@ -14,8 +14,54 @@ module omm {
         private name:string;
         private serializer:omm.Serializer;
         private objectRetriever:omm.MeteorObjectRetriever;
+        private eventListeners:{ [index:string]:Array< ( i:omm.EventContext<T>, data?:any )=>void > } = {};
 
         private static meteorCollections:{[index:string]:any} = { };
+
+        private queue:Array<any>;
+
+        removeAllListeners():void{
+            this.eventListeners = {};
+        }
+
+        addListener( topic:string, f:( evtCtx:omm.EventContext<T>, data:any )=>void ){
+            if( !this.eventListeners[topic] )
+                this.eventListeners[topic] = [];
+            this.eventListeners[topic].push(f);
+        }
+
+        addPreUpdateListener( tc:TypeClass<any>, functionName:string, f:( evtCtx:omm.EventContext<T>, data:any )=>void ){
+            //omm.PersistenceAnnotation.g
+            //if( !this.eventListeners[topic] )
+            //    this.eventListeners[topic] = [];
+            //this.eventListeners[topic].push(f);
+        }
+
+        emit( topic:string, data:any ){
+            if( this.queue )
+                this.queue.push({topic:topic, data:data});
+        }
+
+        private emitNow( t:string, evtCtx:omm.EventContext<T>, data?:any ){
+            if( this.eventListeners[t] ) {
+                this.eventListeners[t].forEach(function (listener:Function) {
+                    listener(evtCtx, data);
+                });
+            }
+        }
+
+        private flushQueue(){
+            if( this.queue ){
+                this.queue.forEach(function(evt:any){
+                    this.emitNow(evt.topic, evt.data);
+                });
+                this.queue = undefined;
+            }
+        }
+
+        private resetQueue(){
+            this.queue = [];
+        }
 
         /**
          * Represents a Mongo collection that contains entities.
@@ -118,15 +164,26 @@ module omm {
          */
         protected remove( id:string, cb?:(err:any)=>void )
         {
-            if( Meteor.isServer ) {
-                if (id) {
-                    this.meteorCollection.remove(id,cb);
+            var ctx = new omm.EventContext( o, this )
+            this.emitNow( "willRemove", ctx );
+            if( ctx.cancelledWithError() ) {
+                if( cb )
+                    cb(ctx.cancelledWithError());
+            }else{
+                if (Meteor.isServer) {
+                    if (id) {
+                        this.meteorCollection.remove(id, cb);
+                        var o = this.getById(id);
+                        this.emitNow("didRemove", new omm.EventContext(o, this));
+                    }
+                    else
+                        throw new Error("Trying to remove an object that does not have an id.");
                 }
                 else
-                    throw new Error("Trying to remove an object that does not have an id.");
+                    throw new Error("Trying to remove an object from the client. 'remove' can only be called on the server.");
             }
-            else
-                throw new Error("Trying to remove an object from the client. 'remove' can only be called on the server.");
+
+
         }
 
         protected documentToObject( doc:Document ):T
@@ -210,14 +267,23 @@ module omm {
          */
         insert( p:T, callback?:(e:any, id?:string)=>void ):string
         {
-            //if( Meteor.isServer )
-            //{
+            console.log("inserting !!");
+            var ctx = new omm.EventContext(p, this);
+            this.emitNow("willInsert", ctx);
+            console.log("inserting 2n");
+            if( ctx.cancelledWithError() ){
+                console.log("insert cancelled ",ctx.cancelledWithError(), callback );
+                if( callback )
+                    callback(  ctx.cancelledWithError() );
 
+                return undefined;
+            } else {
+                console.log("insert not cancelled");
                 // TODO make sure that this is unique
                 var idPropertyName = omm.PersistenceAnnotation.getIdPropertyName(this.theClass);
-                if( !p[idPropertyName] )
+                if (!p[idPropertyName])
                     p[idPropertyName] = new (<any>Mongo.ObjectID)()._str;
-                var doc : Document = this.serializer.toDocument( p );
+                var doc:Document = this.serializer.toDocument(p);
                 //if( typeof p.getId=="function" && p.getId() )
                 //    doc._id = p.getId();
                 //else
@@ -226,36 +292,38 @@ module omm {
                 doc.serial = 0;
                 //console.log( "inserting document: ", doc);
                 var that = this;
-                function afterwards(e:any, id?:string){
-                    if( !e )
-                    {
+
+                function afterwards(e:any, id?:string) {
+                    if (!e) {
                         //console.log( "inserted into '"+that.getName()+"' new id:"+id);
                         p[idPropertyName] = id;
                         that.objectRetriever.postToObject(p); // kind of the same thing?
                     }
-                    else{
+                    else {
                         //console.log("error while inserting into "+this.name, e);
                     }
-                    if( callback )
-                        callback( e,id );
+
+                    console.log("didInsert");
+                    that.emitNow("didInsert", new omm.EventContext(that.getById(id), this));
+
+                    if (callback)
+                        callback(e, id);
                 }
 
-                try{
-                    var id = this.meteorCollection.insert(doc, callback?afterwards:undefined);
-                    if( !callback )
-                        afterwards( undefined, id );
+                try {
+                    var id = this.meteorCollection.insert(doc, callback ? afterwards : undefined);
+                    if (!callback)
+                        afterwards(undefined, id);
                     else
                         return id;
                 }
-                catch( e )
-                {
-                    if( !callback )
+                catch (e) {
+                    console.log("error while inserting ",e);
+                    if (!callback)
                         afterwards(e);
                 }
                 return id;
-            //}
-            //else
-            //    throw new Error("Insert can not be called on the client. Wrap it into a meteor method.");
+            }
         }
 
         /**

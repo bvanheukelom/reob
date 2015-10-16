@@ -170,6 +170,15 @@ declare module omm {
     }
 }
 declare module omm {
+    class EventContext<T> {
+        private cancelledError;
+        preUpdate: T;
+        object: T;
+        collection: omm.Collection<T>;
+        constructor(o: T, coll: omm.Collection<T>);
+        cancel(err: any): void;
+        cancelledWithError(): any;
+    }
     class CallHelper<T extends Object> {
         object: T;
         callback: (error: any, result?: any) => void;
@@ -205,7 +214,16 @@ declare module omm {
         private name;
         private serializer;
         private objectRetriever;
+        private eventListeners;
         private static meteorCollections;
+        private queue;
+        removeAllListeners(): void;
+        addListener(topic: string, f: (evtCtx: omm.EventContext<T>, data: any) => void): void;
+        addPreUpdateListener(tc: TypeClass<any>, functionName: string, f: (evtCtx: omm.EventContext<T>, data: any) => void): void;
+        emit(topic: string, data: any): void;
+        private emitNow(t, evtCtx, data?);
+        private flushQueue();
+        private resetQueue();
         constructor(entityClass: omm.TypeClass<T>, collectionName?: string);
         static getCollection<P extends Object>(t: omm.TypeClass<P>): Collection<P>;
         private static _getMeteorCollection(name?);

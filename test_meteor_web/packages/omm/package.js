@@ -12,6 +12,8 @@ Package.describe({
 
 Package.onUse(function(api) {
     api.versionsFrom('1.0'); // ??
+	api.use('raix:eventemitter', 'server');
+	api.use('raix:eventemitter', 'client');
 	api.addFiles('serializer/Document.js');
 	api.addFiles('annotations/PersistenceAnnotation.js');
 	api.addFiles('annotations/TypeClass.js');

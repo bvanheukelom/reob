@@ -3,13 +3,16 @@
 describe("Omm on the server", function(){
     var personCollection:Tests.TestPersonCollection;
     var treeCollection:Tests.TestTreeCollection;
+
     beforeAll(function(){
-        personCollection = new Tests.TestPersonCollection();
-        treeCollection = new Tests.TestTreeCollection();
+        jasmine.DEFAULT_TIMEOUT_INTERVAL = 5000000;
     });
 
 
     beforeEach(function(done){
+        Tests.registeredTestTreeCollection.removeAllListeners();
+        personCollection = new Tests.TestPersonCollection();
+        treeCollection = new Tests.TestTreeCollection();
         console.log("------------------- new test");
         omm.Collection.resetAll(function(error){
             if (!error)
@@ -121,6 +124,97 @@ describe("Omm on the server", function(){
         }catch( e ){
 
         }
+    });
+
+    it("invokes didInsert events", function(){
+        var l:any = {};
+        l.listener = function(event:omm.EventContext<Tests.TestTree>){
+            expect(event.object instanceof Tests.TestTree).toBeTruthy();
+            expect(event.cancelledWithError()).toBeFalsy();
+        };
+        spyOn(l, 'listener').and.callThrough();
+        Tests.registeredTestTreeCollection.addListener("didInsert", l.listener);
+        treeCollection.newTree(10, function(err,t){
+
+        });
+        expect(l.listener).toHaveBeenCalled();
+        //fail();
+        //done();
+    });
+
+    it("can cancel inserts", function(done){
+        var l:any = {};
+        l.listener = function(event:omm.EventContext<Tests.TestTree>){
+            event.cancel("Not allowed");
+        };
+        spyOn(l, 'listener').and.callThrough();
+        Tests.registeredTestTreeCollection.addListener("willInsert", l.listener);
+        treeCollection.newTree(10, function (err, t) {
+            expect(err).toBe("Not allowed");
+            expect(treeCollection.getAll().length).toBe(0);
+            done();
+        });
+    });
+
+    it("invokes deletition events", function(done){
+        var l:any = {};
+        l.listener = function(event:omm.EventContext<Tests.TestTree>){
+
+        };
+        spyOn(l, 'listener').and.callThrough();
+        Tests.registeredTestTreeCollection.addListener("didRemove", l.listener);
+        treeCollection.newTree(10, function (err, t:Tests.TestTree) {
+            expect( err ).toBeUndefined();
+
+            treeCollection.deleteTree(t.treeId, function(error){
+                expect(error).toBeUndefined();
+                expect(l.listener).toHaveBeenCalled();
+                done();
+            });
+        });
+    });
+
+    it("can return errors in a callback ", function(done){
+        treeCollection.errorMethod(10, function (err, t) {
+            expect(err).toBe("the error");
+            done();
+        });
+    });
+
+    it("can cancel deletes ", function(done){
+        var l:any = {};
+        l.listener = function(event:omm.EventContext<Tests.TestTree>){
+            event.cancel("nope");
+        };
+        spyOn(l, 'listener').and.callThrough();
+        Tests.registeredTestTreeCollection.addListener("willRemove", l.listener);
+        treeCollection.newTree(10, function (err, t:Tests.TestTree) {
+            expect( err ).toBeUndefined();
+            treeCollection.deleteTree(t.treeId, function(error){
+                expect(error).toBe("nope");
+                expect(l.listener).toHaveBeenCalled();
+                expect(treeCollection.getById(t.treeId)).toBeDefined();
+                done();
+            });
+        });
+    });
+
+    it("can register for update events", function(done){
+        var l:any = {};
+        l.listener = function(event:omm.EventContext<Tests.TestTree>){
+            event.cancel("nope");
+        };
+        spyOn(l, 'listener').and.callThrough();
+        Tests.registeredTestTreeCollection.addPreUpdateListener( Tests.TestTree, "grow", l.listener);
+        treeCollection.newTree(10, function (err, t:Tests.TestTree) {
+            expect( err ).toBeUndefined();
+            treeCollection.deleteTree(t.treeId, function(error){
+                expect(error).toBe("nope");
+                expect(l.listener).toHaveBeenCalled();
+                expect(treeCollection.getById(t.treeId)).toBeDefined();
+                done();
+            });
+        });
     });
 
 });

@@ -3,6 +3,8 @@
  */
 ///<reference path="./references.d.ts"/>
 module Tests {
+
+
     export class TestTreeCollection extends omm.Collection<Tests.TestTree> {
         constructor() {
             super(Tests.TestTree,"TheTreeCollection");
@@ -10,12 +12,22 @@ module Tests {
         @omm.MeteorMethod({object:'TestTreeCollection', replaceWithCall:true, parameterTypes:["number","callback"]})
         newTree(initialHeight:number, callback:(err:any, tree?:Tests.TestTree)=>void):void {
             var t:Tests.TestTree = new Tests.TestTree(initialHeight);
+            var that = this;
             try {
-                var id:string = this.insert(t);
-                callback(undefined, this.getById(id));
+                var id:string = this.insert( t, function(err,id:string){
+                    console.log("error while inserting new tree:", err);
+                    if( err )
+                        callback(err);
+                    else
+                        callback(undefined, that.getById(id));
+                });
             } catch (err) {
                 callback(err);
             }
+        }
+        @omm.MeteorMethod({object:'TestTreeCollection', replaceWithCall:true, parameterTypes:["number","callback"]})
+        errorMethod(initialHeight:number, callback:(err:any, result?:any)=>void):void {
+            callback("the error");
         }
 
         @omm.MeteorMethod({object:'TestTreeCollection', replaceWithCall:true, parameterTypes:["string","callback"]})
@@ -29,6 +41,7 @@ module Tests {
         }
 
     }
+    export var registeredTestTreeCollection = new Tests.TestTreeCollection();
 }
 
 if( Meteor.isServer ) {
@@ -41,4 +54,4 @@ else
     Meteor.subscribe("trees");
 }
 
-omm.registerObject('TestTreeCollection', new Tests.TestTreeCollection());
+omm.registerObject('TestTreeCollection', Tests.registeredTestTreeCollection);

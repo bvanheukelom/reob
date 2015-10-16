@@ -1,7 +1,7 @@
 amplify@1.0.0
 autoupdate@1.2.1
 base64@1.0.3
-bertundmax:omm@0.0.19
+bertundmax:omm@0.0.20
 bertundmax:testclasses@0.0.1
 binary-heap@1.0.3
 blaze@2.1.2
@@ -38,6 +38,7 @@ ordered-dict@1.0.3
 package-version-parser@3.0.3
 practicalmeteor:chai@2.1.0_1
 practicalmeteor:loglevel@1.2.0_2
+raix:eventemitter@0.0.2
 random@1.0.3
 reactive-dict@1.1.0
 reactive-var@1.0.5
