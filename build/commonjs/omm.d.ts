@@ -22,6 +22,11 @@ declare module omm {
     var registeredObjects: {
         [index: string]: any;
     };
+    var eventListeners: {
+        [index: string]: {
+            [index: string]: Array<EventListener>;
+        };
+    };
     var meteorMethodFunctions: Array<IMethodOptions>;
     function setNonEnumerableProperty(obj: Object, propertyName: string, value: any): void;
     function defineMetadata(propertyName: any, value: any, cls: any): void;
@@ -31,6 +36,7 @@ declare module omm {
     function getDefaultCollectionName(t: omm.TypeClass<any>): string;
     function addCollectionRoot(t: omm.TypeClass<any>, collectionName: string): void;
     function Wrap(t: Function, functionName: string, objectDescriptor: any): void;
+    function wrap(t: omm.TypeClass<any>, functionName: string): void;
     function CollectionUpdate(p1: any, fName?: string): (t: Function, functionName: string, objectDescriptor: any) => void;
     function collectionUpdate(c: omm.TypeClass<any>, functionName: string, options?: any): void;
     function ArrayOrMap(typeClassName: string): (targetPrototypeObject: any, propertyName: string) => void;

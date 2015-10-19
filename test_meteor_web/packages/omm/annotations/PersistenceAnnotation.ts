@@ -20,6 +20,7 @@ interface IMethodOptions{
 module omm {
     export var entityClasses:{[index:string]:omm.TypeClass<Object>};
     export var registeredObjects:{[index:string]:any};
+    export var eventListeners:{ [index:string] : { [index:string] : Array<EventListener>} };
     export var meteorMethodFunctions:Array<IMethodOptions>;
 
     export function setNonEnumerableProperty( obj:Object, propertyName:string, value:any ):void{
@@ -102,6 +103,12 @@ module omm {
         //defineMetadata("persistence:wrap", true, (<any>t)[functionName] );
         omm.CollectionUpdate(t,functionName);
         omm.MeteorMethod({replaceWithCall:true})(t,functionName,objectDescriptor);
+    }
+
+    // js api
+    export function wrap( t:omm.TypeClass<any>, functionName:string  ) {
+        omm.collectionUpdate( t, functionName );
+        omm.MeteorMethod({replaceWithCall:true})( t, functionName, undefined );
     }
 
     export function CollectionUpdate( p1:any, fName?:string )
@@ -619,5 +626,9 @@ module omm {
     if(!data.meteorMethodFunctions)
         data.meteorMethodFunctions = [];
     omm.meteorMethodFunctions = data.meteorMethodFunctions;
+    if(!data.eventListeners)
+        data.eventListeners = {};
+    omm.eventListeners = data.eventListeners;
+
 })();
 

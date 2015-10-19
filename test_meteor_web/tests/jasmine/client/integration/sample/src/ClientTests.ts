@@ -5,6 +5,7 @@ describe("The persistence thing on the client ", function(){
     var treeCollection:Tests.TestTreeCollection;
 
     beforeEach(function(done){
+        omm.removeAllUpdateEventListeners();
         personCollection = new Tests.TestPersonCollection();
         treeCollection = new Tests.TestTreeCollection();
         console.log("------------------- new test");

@@ -21,6 +21,11 @@ declare module omm {
     var registeredObjects: {
         [index: string]: any;
     };
+    var eventListeners: {
+        [index: string]: {
+            [index: string]: Array<EventListener>;
+        };
+    };
     var meteorMethodFunctions: Array<IMethodOptions>;
     function setNonEnumerableProperty(obj: Object, propertyName: string, value: any): void;
     function defineMetadata(propertyName: any, value: any, cls: any): void;
@@ -30,6 +35,7 @@ declare module omm {
     function getDefaultCollectionName(t: omm.TypeClass<any>): string;
     function addCollectionRoot(t: omm.TypeClass<any>, collectionName: string): void;
     function Wrap(t: Function, functionName: string, objectDescriptor: any): void;
+    function wrap(t: omm.TypeClass<any>, functionName: string): void;
     function CollectionUpdate(p1: any, fName?: string): (t: Function, functionName: string, objectDescriptor: any) => void;
     function collectionUpdate(c: omm.TypeClass<any>, functionName: string, options?: any): void;
     function ArrayOrMap(typeClassName: string): (targetPrototypeObject: any, propertyName: string) => void;
@@ -170,6 +176,9 @@ declare module omm {
     }
 }
 declare module omm {
+    interface EventListener {
+        (i: EventContext<any>, data?: any): void;
+    }
     class EventContext<T> {
         private cancelledError;
         preUpdate: T;
@@ -184,6 +193,15 @@ declare module omm {
         callback: (error: any, result?: any) => void;
         constructor(o: any, cb?: (error: any, result?: any) => void);
     }
+    function addUpdateListener<O extends Object>(t: TypeClass<O>, topic: string, f: EventListener): void;
+    function addPostUpdateListener<O extends Object>(t: TypeClass<O>, functionName: string, f: EventListener): void;
+    function addPreUpdateListener<O extends Object>(t: TypeClass<O>, functionName: string, f: EventListener): void;
+    function emitUpdateEvent<O extends Object>(t: TypeClass<O>, topic: string, ctx: omm.EventContext<any>, data?: any): void;
+    function removeAllUpdateEventListeners(): void;
+    var _queue: Array<any>;
+    function resetQueue(): void;
+    function emit(topic: any, data: any): void;
+    function deleteQueue(): void;
     function registerObject<O extends Object>(key: string, o: O): void;
     function getRegisteredObject(key: string): any;
     function callHelper<O extends Object>(o: O, callback?: (err: any, result?: any) => void): O;
@@ -225,7 +243,6 @@ declare module omm {
         private flushQueue();
         private resetQueue();
         constructor(entityClass: omm.TypeClass<T>, collectionName?: string);
-        static getCollection<P extends Object>(t: omm.TypeClass<P>): Collection<P>;
         private static _getMeteorCollection(name?);
         getName(): string;
         getMeteorCollection(): any;
@@ -237,6 +254,7 @@ declare module omm {
         update(id: string, updateFunction: (o: T) => void): void;
         insert(p: T, callback?: (e: any, id?: string) => void): string;
         static resetAll(cb: (error?: any) => void): void;
+        getEntityClass(): TypeClass<T>;
     }
 }
 declare module omm {

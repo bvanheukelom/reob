@@ -4,12 +4,15 @@ describe("The persistence thing", function(){
     var personCollection:Tests.TestPersonCollection;
     var treeCollection:Tests.TestTreeCollection;
     beforeAll(function(done){
+        //jasmine.DEFAULT_TIMEOUT_INTERVAL = 5000000;
         personCollection = new Tests.TestPersonCollection();
         treeCollection = new Tests.TestTreeCollection();
         done();
     });
 
     beforeEach(function(done){
+        Tests.registeredTestTreeCollection.removeAllListeners();
+        omm.removeAllUpdateEventListeners();
         console.log("------------------- new test");
         omm.Collection.resetAll(function(error){
             if (error)
@@ -293,11 +296,14 @@ describe("The persistence thing", function(){
                 if( c!=2 )
                     debugger;
                 expect(c).toBe(2);
-                tp.chooseTree(t);
-                tp.collectLeaf();
-                expect(personCollection.getById(tp.getId()).leaf).toBeDefined();
-                expect(personCollection.getById(tp.getId()).leaf.getId()+"!").toBe(treeCollection.getById(t.treeId).getLeaves()[0].getId()+"!");
-                done();
+                omm.callHelper(tp, function(err, res){
+                    omm.callHelper(tp, function(err, res){
+                        expect(personCollection.getById(tp.getId()).leaf).toBeDefined();
+                        expect(personCollection.getById(tp.getId()).leaf.getId()+"!").toBe(treeCollection.getById(t.treeId).getLeaves()[0].getId()+"!");
+                        done();
+                    }).collectLeaf();
+                }).chooseTree(t);
+
             });
         });
     });
@@ -416,21 +422,7 @@ describe("The persistence thing", function(){
             });
         });
     });
-    //
-    //
-    it("stores something as a foreign key turns undefined after the foreign sub object is deleted", function(done){
-        treeCollection.newTree( 10, function(e:any, t:Tests.TestTree){
-            t.grow();
-            personCollection.newPerson("mike", function(e:any, p:Tests.TestPerson){
-                p.chooseTree(t);
-                p.collectLeaf();
-                expect( personCollection.getById(p.getId()).leaf ).toBeDefined();
-                t.wither();
-                expect( personCollection.getById(p.getId()).leaf ).toBeUndefined();
-                done();
-            });
-        });
-    });
+
 
     it("serializes the classname of unexpected objects", function(){
         var t:Tests.TestPerson = new Tests.TestPerson("id1", "jake");

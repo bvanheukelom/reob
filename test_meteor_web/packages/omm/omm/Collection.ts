@@ -86,14 +86,14 @@ module omm {
             this.theClass = entityClass;
         }
 
-        static getCollection<P extends Object>( t:omm.TypeClass<P> ):Collection<P> {
-            return MeteorPersistence.collections[omm.PersistenceAnnotation.getCollectionName(t)];
-        }
+        //static getCollection<P extends Object>( t:omm.TypeClass<P> ):Collection<P> {
+        //    return MeteorPersistence.collections[omm.PersistenceAnnotation.getCollectionName(t)];
+        //}
 
         private static _getMeteorCollection( name?:string ) {
             if( !Collection.meteorCollections[name] ) {
                 if( name!="users") {
-                    Collection.meteorCollections[name] = new (<any>Meteor).Collection( name );
+                    Collection.meteorCollections[name] = new (<any>Mongo).Collection( name );
                 }
                 else
                     Collection.meteorCollections[name] = Meteor.users;
@@ -170,20 +170,14 @@ module omm {
                 if( cb )
                     cb(ctx.cancelledWithError());
             }else{
-                if (Meteor.isServer) {
-                    if (id) {
-                        this.meteorCollection.remove(id, cb);
-                        var o = this.getById(id);
-                        this.emitNow("didRemove", new omm.EventContext(o, this));
-                    }
-                    else
-                        throw new Error("Trying to remove an object that does not have an id.");
+                if (id) {
+                    this.meteorCollection.remove(id, cb);
+                    var o = this.getById(id);
+                    this.emitNow("didRemove", new omm.EventContext(o, this));
                 }
                 else
-                    throw new Error("Trying to remove an object from the client. 'remove' can only be called on the server.");
+                    throw new Error("Trying to remove an object that does not have an id.");
             }
-
-
         }
 
         protected documentToObject( doc:Document ):T
@@ -208,6 +202,7 @@ module omm {
                 if (!id)
                     throw new Error("Id missing");
                 for (var i = 0; i < 10; i++) {
+                    omm.resetQueue();
                     var document:omm.Document = this.meteorCollection.findOne({
                         _id: id
                     });
@@ -358,6 +353,9 @@ module omm {
 
         }
 
+        getEntityClass():TypeClass<T>{
+            return this.theClass;
+        }
     }
 }
 //omm.MeteorPersistence.wrapFunction( omm.Collection, "resetAll", "resetAll", true, null, new omm.ConstantObjectRetriever(omm.Collection) );

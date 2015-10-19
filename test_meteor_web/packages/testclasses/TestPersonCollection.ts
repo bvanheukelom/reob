@@ -64,14 +64,19 @@ module Tests {
 
     }
 }
-if( Meteor.isServer ) {
-    Meteor.publish("persons", function(){
-        return omm.MeteorPersistence.collections["TestPerson"].getMeteorCollection().find({});
-    });
-}
-else
-{
-    Meteor.subscribe("persons");
-}
 
-omm.registerObject('TestPersonCollection', new Tests.TestPersonCollection());
+console.log("Meteor", Meteor);
+
+Meteor.startup(function(){
+    if( Meteor.isServer ) {
+        Meteor.publish("persons", function(){
+            return omm.MeteorPersistence.collections["TestPerson"].getMeteorCollection().find({});
+        });
+    }
+    else
+    {
+        Meteor.subscribe("persons");
+    }
+    omm.registerObject('TestPersonCollection', new Tests.TestPersonCollection());
+});
+

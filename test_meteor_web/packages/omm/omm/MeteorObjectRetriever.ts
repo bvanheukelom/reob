@@ -27,9 +27,6 @@ module omm {
             if (typeof s != "string")
                 throw new Error("Path needs to be a string");
             var sPath = new omm.SerializationPath(this, s);
-            //var typeClass:TypeClass<any> = mapper.PersistenceAnnotation.getCollectionName(persistencePath.getClassName());
-            //if (!typeClass || typeof typeClass != "function")
-            //    throw new Error("Could not load path. No class found for class name :" + persistencePath.getClassName() + ". Key:" + s);
             var collectionName = sPath.getCollectionName();
             var collection:omm.Collection<Object> = collectionName ? omm.MeteorPersistence.collections[collectionName] : undefined;
             if (collection) {

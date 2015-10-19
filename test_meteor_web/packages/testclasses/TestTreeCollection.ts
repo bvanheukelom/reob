@@ -41,17 +41,18 @@ module Tests {
         }
 
     }
-    export var registeredTestTreeCollection = new Tests.TestTreeCollection();
+    export var registeredTestTreeCollection : Tests.TestTreeCollection;
 }
-
-if( Meteor.isServer ) {
-    Meteor.publish("trees", function(){
-        return omm.MeteorPersistence.collections["TheTreeCollection"].getMeteorCollection().find({});
-    });
-}
-else
-{
-    Meteor.subscribe("trees");
-}
-
-omm.registerObject('TestTreeCollection', Tests.registeredTestTreeCollection);
+Meteor.startup(function(){
+    if( Meteor.isServer ) {
+        Meteor.publish("trees", function(){
+            return omm.MeteorPersistence.collections["TheTreeCollection"].getMeteorCollection().find({});
+        });
+    }
+    else
+    {
+        Meteor.subscribe("trees");
+    }
+    Tests.registeredTestTreeCollection = new Tests.TestTreeCollection();
+    omm.registerObject('TestTreeCollection', Tests.registeredTestTreeCollection);
+});

@@ -1,6 +1,6 @@
 Package.describe({
   name: 'bertundmax:omm',
-  version: '0.0.20',
+  version: '0.0.21',
   // Brief, one-line summary of the package.
   summary: 'Object mapper (for) meteor. Maps between rich objects and documents.',
   // URL to the Git repository containing the source code for this package.
@@ -12,9 +12,6 @@ Package.describe({
 
 Package.onUse(function(api) {
     api.versionsFrom('1.0'); // ??
-	api.use('raix:eventemitter', 'server');
-	api.use('raix:eventemitter', 'client');
-	api.addFiles('serializer/Document.js');
 	api.addFiles('annotations/PersistenceAnnotation.js');
 	api.addFiles('annotations/TypeClass.js');
 

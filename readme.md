@@ -1,91 +1,171 @@
-### Object mapper (for) Meteor
+# Object mapper (for) Meteor
 
-Omm maps between rich objects and documents.
+Write 'plain old' javascript objects (even with circular references) and store them in Mongo.
 
-## Key features
+Load objects and call functions on them which change the Database.
 
-- Load rich objects from a collection
+No need to write Meteor methods or think about object/document conversion. Focus on domain objects and the UI.
 
-- Describe the object graph through annotation-style function calls
+##Concepts
 
-- Declare meteor methods through annotations-style function calls
+### Annotation style
 
-- Perform collection altering operations anywhere on the object graph
+Omm does not require domain objects to have a specific base class or use proprietary getters/setters. Instead developers
+ describe the structure of their domain objects using Omm's annotation style API.
 
-- Strengthens encapsulation of objects by removing persistence logic from the domain objects
+###Entity
 
-- Atomicity over complex operations within one document
+An entity is a javascript class that has properties and methods. Entities can have references to other entities. Methods
+that manipulate the properties can receive entities as parameters and return entities as a result.
 
+###Object <=> Document conversion
+
+Omm converts an object graph into JSON documents and documents back into objects. This allows it to load and save objects from and to collections.
+
+###Updating a collection
+
+Omm attaches a version number to each objects state (document). Also see [the mongo db documentation](http://docs.mongodb.org/manual/tutorial/update-if-current/).
+
+Steps to update an object in a collection:
+
+ -  Load Object
+ -  Run function with parameters on the object
+ -  Increase the version number
+ -  Store object if the version in the collection has not changed.
+
+###Meteor methods
+
+Omm can create meteor methods for functions on entities. You can load an object on the client and call a function on it.
+Omm will make a meteor method call with the given parameters instead.
+
+
+
+
+
+###Api doc
+
+
+todo:create full javascript api link that has all js method calls in it
+
+todo:create full typescript api link that has all d.ts method calls in it
+
+
+###Example
+
+Explain the structure of the example using a simplified class definition (just plain text) and write a couple of things
+about it. also deploy it to meteor.com and link that. then connect that with links to the files in the examples folder.
+
+garde -> plants
+
+Person
+
+Garden
+	plants
+	plantAPlant()
+
+plants
+   water
+   height
+   garden:Garden
+
+	giveWater()
+	harvest();
+
+
+###Installation
+
+```
+meteor add bertundmax:omm
+```
+
+
+
+
+/*
 ## Api Documentation
 
 [JsDoc](https://bvanheukelom.github.io/omm/test_meteor_web/packages/omm/out/omm.html)
 
-## Example
+###Declare entities and describe the object relations
 
-[Garden.js](example/Garden.js)
+Let's say you wrote a class called 'Garden' then this is how you let Omm know about it's existence.
+
 ```js
-Garden = function Garden( name, id ){
-	this._id = id;
-	this.name = name;
-	this.plants = [];
-	this.harvested = 0;
-};
-// declares Garden as an Entity
-omm.addEntity(Garden);
-// declares that the property "plants" contains objects of the type "Plant"
-omm.arrayType(Garden, "plants", "Plant");
+omm.addEntity(Garden, 'Garden'); // the name is necessary in case you want to minify the code
+```
 
-Garden.prototype.addPlant = function( t ){
-	this.plants.push( new Plant( t, this ) );
-};
-omm.collectionUpdate( Garden, "addPlant" );
+Declare the type of a property. This is only needed for other entities.
 
-Garden.prototype.growPlants = function(){
-	this.plants.forEach( function(p){
-		p.grow();
-	});
-};
+```js
+omm.type( Garden, 'gardener', 'Person' );
+```
+
+Declare the type of the values of an array.
+
+```js
+omm.arrayType( Garden, 'plants', 'Plant' );
+```
+
+Declare the type of the values of a dictionary.
+
+```js
+omm.dictionaryType( Garden, 'plantsByName', 'Plant' );
+```
+
+If a referenced object is stored in a different collection declare it as a forein key.
+
+```js
+omm.asForeignKey(Garden, "gardener");
+```
+
+If you're using a different property in your object than in the document, this is how you can specify that:
+
+```js
+omm.id(Garden, 'gardenId' );
+```
+
+Tell om to use a different name for a property in the database than on the object:
+
+```js
+omm.documentName(Garden, 'harvested', 'harvestCount' );
+```
+
+###Collection updates and meteor methods
+
+Tell omm to replace a function ith a collection update
+```js
 omm.collectionUpdate( Garden, "growPlants" );
 ```
 
-[Plant.js](example/Plant.js)
 ```js
-Plant = function Plant( type, garden ){
-	//this._id = "id"+garden.plants.length;
-	this.type = type;
-	this.height = 1;
-	this.garden = garden;
-};
-// declares that Plant is an Entity
-omm.addEntity(Plant);
-// declares that the property garden contains object of the class "Garden"
-omm.type(Plant, "garden", "Garden");
-// declares that the value of the property should be stored as a key (string) rather than the actual object
-omm.asForeignKey(Plant, "garden");
-
-
-Plant.prototype.grow = function(){
-	if( this.height<20 )
-		this.height++;
-	if( this.height==10 || this.height==15 ){
-		this.garden.addPlant(this.type,this.garden);
-	}
-};
-
-Plant.prototype.harvest = function(){
-	var i = this.garden.plants.indexOf(this);
-	this.garden.plants.splice(i,1);
-	this.garden.harvested+=this.height;
-};
-// declares that the function "harvest" should also be invoked on the object in the collection.
-omm.collectionUpdate( Plant, "harvest");
-
+omm.meteorMethod(Garden, "growPlants", options);
 ```
 
-## Typescript annotations
+	options:
+		replaceWithCall:true
+		parameterTypes:Array<string>
+		object:stringIdentifier (referrs to a registered object)
 
+
+###Meteor methods
+@omm.wrap - short for collection update + meteor method with replaceWithCall:true
+
+@omm.MeteorMethod(options)
+	options:
+		replaceWithCall:true
+		parameterTypes:Array<string>
+		object:stringIdentifier (referrs to a registered object)
+
+
+Complete files for the domain classes:
+[Garden.js](example/Garden.js) [Person.js](example/Person.js) [Plant.js](example/Plant.js)
+
+
+
+## Typescript annotations
+```ts
 // class annotation
-@omm.Entity
+@omm.Entity('<name>')
 @omm.Entity('<collectionName>')
 
 // property annotations
@@ -109,6 +189,8 @@ omm.collectionUpdate( Plant, "harvest");
 @omm.StaticMeteorMethod ?
 
 omm.registerObject(stringIdentifier, object);
+```
+*/
 
 ## License
 

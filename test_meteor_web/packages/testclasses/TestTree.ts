@@ -35,6 +35,8 @@ module Tests
         @omm.Wrap
         wither() {
             this.leaves = [];
+            omm.emit("gardenevents", "withered");
+            omm.emit("gardenevents", "withered2");
         }
 
         getHeight():number {

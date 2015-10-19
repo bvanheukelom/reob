@@ -4,6 +4,7 @@ var omm;
 (function (omm) {
     omm.entityClasses;
     omm.registeredObjects;
+    omm.eventListeners;
     omm.meteorMethodFunctions;
     function setNonEnumerableProperty(obj, propertyName, value) {
         if (!Object.getOwnPropertyDescriptor(obj, propertyName)) {
@@ -79,6 +80,11 @@ var omm;
         omm.MeteorMethod({ replaceWithCall: true })(t, functionName, objectDescriptor);
     }
     omm.Wrap = Wrap;
+    function wrap(t, functionName) {
+        omm.collectionUpdate(t, functionName);
+        omm.MeteorMethod({ replaceWithCall: true })(t, functionName, undefined);
+    }
+    omm.wrap = wrap;
     function CollectionUpdate(p1, fName) {
         var options = {};
         if (fName) {
@@ -487,6 +493,9 @@ var omm;
     if (!data.meteorMethodFunctions)
         data.meteorMethodFunctions = [];
     omm.meteorMethodFunctions = data.meteorMethodFunctions;
+    if (!data.eventListeners)
+        data.eventListeners = {};
+    omm.eventListeners = data.eventListeners;
 })();
 var omm;
 (function (omm) {

@@ -5,12 +5,12 @@ describe("Omm on the server", function(){
     var treeCollection:Tests.TestTreeCollection;
 
     beforeAll(function(){
-        jasmine.DEFAULT_TIMEOUT_INTERVAL = 5000000;
+        //jasmine.DEFAULT_TIMEOUT_INTERVAL = 5000000;
     });
-
 
     beforeEach(function(done){
         Tests.registeredTestTreeCollection.removeAllListeners();
+        omm.removeAllUpdateEventListeners();
         personCollection = new Tests.TestPersonCollection();
         treeCollection = new Tests.TestTreeCollection();
         console.log("------------------- new test");
@@ -199,22 +199,87 @@ describe("Omm on the server", function(){
         });
     });
 
-    it("can register for update events", function(done){
+    it("can register for pre update events", function(done){
+        var l:any = {};
+        l.listener = function(event:omm.EventContext<Tests.TestTree>){
+            expect(event.object).toBeDefined();
+            expect(event.object instanceof Tests.TestTree).toBeTruthy();
+            var tt:Tests.TestTree = event.object;
+            expect(tt.getLeaves().length).toBe( 0 );
+        };
+        spyOn(l, 'listener').and.callThrough();
+        omm.addPreUpdateListener( Tests.TestTree, "grow", l.listener );
+
+        treeCollection.newTree(10, function (err, t:Tests.TestTree) {
+            omm.callHelper(t, function(err, result){
+                expect(err).toBeUndefined();
+                expect(result).toBe( "grown on the server" );
+                expect(l.listener).toHaveBeenCalled();
+                done();
+            }).grow();
+        });
+    });
+
+
+    it("can register for post update events", function(done){
+        var l:any = {};
+        l.listener = function(event:omm.EventContext<Tests.TestTree>){
+            expect(event.object).toBeDefined();
+            expect(event.object instanceof Tests.TestTree).toBeTruthy();
+            var tt:Tests.TestTree = event.object;
+            expect(tt.getLeaves().length).toBe( 1 );
+        };
+        spyOn(l, 'listener').and.callThrough();
+        omm.addPostUpdateListener( Tests.TestTree, "grow", l.listener );
+        treeCollection.newTree(10, function (err, t:Tests.TestTree) {
+            omm.callHelper(t, function(err, result){
+                expect(err).toBeUndefined();
+                expect(result).toBe( "grown on the server" );
+                expect(l.listener).toHaveBeenCalled();
+                var nt = treeCollection.getById(t.treeId);
+                expect(nt.getLeaves().length).toBe(1);
+                done();
+            }).grow();
+        });
+    });
+
+    it("can cancel updates", function(done){
         var l:any = {};
         l.listener = function(event:omm.EventContext<Tests.TestTree>){
             event.cancel("nope");
         };
         spyOn(l, 'listener').and.callThrough();
-        Tests.registeredTestTreeCollection.addPreUpdateListener( Tests.TestTree, "grow", l.listener);
+        omm.addPreUpdateListener( Tests.TestTree, "grow", l.listener );
+
         treeCollection.newTree(10, function (err, t:Tests.TestTree) {
-            expect( err ).toBeUndefined();
-            treeCollection.deleteTree(t.treeId, function(error){
-                expect(error).toBe("nope");
+            omm.callHelper(t, function(err, result){
+                expect(err).toBe("nope");
+                expect(result).toBeUndefined();
                 expect(l.listener).toHaveBeenCalled();
-                expect(treeCollection.getById(t.treeId)).toBeDefined();
+                var nt = treeCollection.getById(t.treeId);
+                expect(nt.getLeaves().length).toBe(0);
                 done();
-            });
+            }).grow();
         });
     });
 
+    it("can register to update events", function(done){
+        var l:any = {};
+        var n:Array<string> = [];
+        l.listener = function(event:omm.EventContext<Tests.TestTree>, data:any){
+            n.push(data);
+        };
+        spyOn(l, 'listener').and.callThrough();
+
+        omm.addUpdateListener( Tests.TestTree, "gardenevents", l.listener );
+
+        treeCollection.newTree(10, function (err, t:Tests.TestTree) {
+            omm.callHelper(t, function(err, result){
+                expect(l.listener).toHaveBeenCalled();
+                expect(n).toContain("withered");
+                expect(n).toContain("withered2");
+                done();
+            }).wither();
+        });
+    });
 });
