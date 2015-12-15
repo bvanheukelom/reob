@@ -193,7 +193,7 @@ declare module omm {
         callback: (error: any, result?: any) => void;
         constructor(o: any, cb?: (error: any, result?: any) => void);
     }
-    function addUpdateListener<O extends Object>(t: TypeClass<O>, topic: string, f: EventListener): void;
+    function addUpdateListener<O extends Object>(t: TypeClass<O>, topic: string, f?: EventListener): void;
     function addPostUpdateListener<O extends Object>(t: TypeClass<O>, functionName: string, f: EventListener): void;
     function addPreUpdateListener<O extends Object>(t: TypeClass<O>, functionName: string, f: EventListener): void;
     function emitUpdateEvent<O extends Object>(t: TypeClass<O>, topic: string, ctx: omm.EventContext<any>, data?: any): void;
@@ -237,7 +237,6 @@ declare module omm {
         private queue;
         removeAllListeners(): void;
         addListener(topic: string, f: (evtCtx: omm.EventContext<T>, data: any) => void): void;
-        addPreUpdateListener(tc: TypeClass<any>, functionName: string, f: (evtCtx: omm.EventContext<T>, data: any) => void): void;
         emit(topic: string, data: any): void;
         private emitNow(t, evtCtx, data?);
         private flushQueue();

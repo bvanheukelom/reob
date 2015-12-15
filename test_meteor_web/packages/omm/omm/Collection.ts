@@ -30,13 +30,6 @@ module omm {
             this.eventListeners[topic].push(f);
         }
 
-        addPreUpdateListener( tc:TypeClass<any>, functionName:string, f:( evtCtx:omm.EventContext<T>, data:any )=>void ){
-            //omm.PersistenceAnnotation.g
-            //if( !this.eventListeners[topic] )
-            //    this.eventListeners[topic] = [];
-            //this.eventListeners[topic].push(f);
-        }
-
         emit( topic:string, data:any ){
             if( this.queue )
                 this.queue.push({topic:topic, data:data});
@@ -85,10 +78,6 @@ module omm {
             this.meteorCollection = Collection._getMeteorCollection(collectionName);
             this.theClass = entityClass;
         }
-
-        //static getCollection<P extends Object>( t:omm.TypeClass<P> ):Collection<P> {
-        //    return MeteorPersistence.collections[omm.PersistenceAnnotation.getCollectionName(t)];
-        //}
 
         private static _getMeteorCollection( name?:string ) {
             if( !Collection.meteorCollections[name] ) {
@@ -219,11 +208,16 @@ module omm {
 
                     this.objectRetriever.updateSerializationPaths(object);
 
+                    var ctx = new omm.EventContext( object, this );
+                    omm.emitUpdateEvent(this.getEntityClass(), "preSave", ctx );
+
                     var documentToSave:Document = this.serializer.toDocument(object);
                     documentToSave.serial = currentSerial + 1;
 
                     // update the collection
                     //console.log("writing document ", documentToSave);
+
+
                     var updatedDocumentCount = this.meteorCollection.update({
                         _id: id,
                         serial: currentSerial

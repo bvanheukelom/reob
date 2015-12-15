@@ -71,6 +71,12 @@ plants
 	giveWater()
 	harvest();
 
+###Events
+
+preSave
+
+omm.addUpdateListener(Tests.TestTree, "preSave", l.listener);
+
 
 ###Installation
 

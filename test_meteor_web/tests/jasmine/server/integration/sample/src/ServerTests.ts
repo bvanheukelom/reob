@@ -282,4 +282,23 @@ describe("Omm on the server", function(){
             }).wither();
         });
     });
+
+    it("can register to all update events", function(done){
+        var l:any = {};
+        var n:Array<string> = [];
+        l.listener = function(event:omm.EventContext<Tests.TestTree>, data:any){
+            n.push(data);
+        };
+        spyOn(l, 'listener').and.callThrough();
+
+        omm.addUpdateListener(Tests.TestTree, "preSave", l.listener);
+
+        treeCollection.newTree(10, function (err, t:Tests.TestTree) {
+            omm.callHelper(t, function(err, result){
+                expect(l.listener).toHaveBeenCalled();
+                done();
+            }).wither();
+        });
+    });
+
 });

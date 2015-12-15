@@ -3,6 +3,7 @@
 ///<reference path="./Collection.ts"/>
 ///<reference path="./MeteorObjectRetriever.ts"/>
 
+var methodContext:any;
 
 module omm {
 
@@ -13,6 +14,7 @@ module omm {
         preUpdate:T;
         object:T;
         collection:omm.Collection<T>;
+        methodContext:any;
 
         constructor( o:T, coll:omm.Collection<T> ){
             this.object = o;
@@ -37,7 +39,7 @@ module omm {
         }
     }
 
-    export function addUpdateListener<O extends Object>( t:TypeClass<O>, topic:string,  f:EventListener ):void {
+    export function addUpdateListener<O extends Object>( t:TypeClass<O>, topic:string,  f?:EventListener ):void {
         var className = omm.className(t);
 
         var e= omm.PersistenceAnnotation.getEntityClassByName(className);
@@ -270,6 +272,7 @@ module omm {
             if( Meteor.isServer || typeof options.serverOnly == "undefined" || !options.serverOnly ) {
                 var m = {};
                 m[meteorMethodName] = function (...args:any[]) {
+                    methodContext = this;
                     //console.log("Meteor method invoked: "+meteorMethodName+" id:"+id+" appendCallback:"+appendCallback+" args:", args, " classNames:"+classNames);
                     check(args, Array);
                     omm.MeteorPersistence.wrappedCallInProgress = true;
@@ -413,6 +416,7 @@ module omm {
 
                         var object = collection.getById(_serializationPath.getId());
                         var ctx = new omm.EventContext( object, this );
+                        ctx.methodContext = methodContext;
                         omm.emitUpdateEvent(collection.getEntityClass(), "pre:"+functionName, ctx );
                         if( ctx.cancelledWithError() ){
                             omm.MeteorPersistence.updateInProgress = false;
@@ -429,6 +433,7 @@ module omm {
 
                             var ctx = new omm.EventContext( collection.getById(_serializationPath.getId() ), this );
                             ctx.preUpdate = object;
+                            ctx.methodContext = methodContext;
                             if( omm._queue ){
                                 omm._queue.forEach(function(t){
                                     omm.emitUpdateEvent(collection.getEntityClass(), t.topic, ctx, t.data );
@@ -437,6 +442,7 @@ module omm {
                             omm.deleteQueue();
 
                             var ctx = new omm.EventContext( collection.getById(_serializationPath.getId() ), this );
+                            ctx.methodContext = methodContext;
                             omm.emitUpdateEvent(collection.getEntityClass(), "post:"+functionName, ctx );
 
                             return result;
