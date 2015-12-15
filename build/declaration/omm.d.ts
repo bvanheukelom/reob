@@ -175,6 +175,7 @@ declare module omm {
         retrieveLocalKeys(o: omm.MeteorPersistable, visited?: Array<Object>, rootObject?: omm.MeteorPersistable): void;
     }
 }
+declare var methodContext: any;
 declare module omm {
     interface EventListener {
         (i: EventContext<any>, data?: any): void;
@@ -184,6 +185,7 @@ declare module omm {
         preUpdate: T;
         object: T;
         collection: omm.Collection<T>;
+        methodContext: any;
         constructor(o: T, coll: omm.Collection<T>);
         cancel(err: any): void;
         cancelledWithError(): any;
