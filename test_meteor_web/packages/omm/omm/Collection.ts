@@ -153,7 +153,8 @@ module omm {
          */
         protected remove( id:string, cb?:(err:any)=>void )
         {
-            var ctx = new omm.EventContext( o, this )
+            var ctx = new omm.EventContext( o, this );
+            ctx.methodContext = methodContext;
             this.emitNow( "willRemove", ctx );
             if( ctx.cancelledWithError() ) {
                 if( cb )
@@ -162,7 +163,9 @@ module omm {
                 if (id) {
                     this.meteorCollection.remove(id, cb);
                     var o = this.getById(id);
-                    this.emitNow("didRemove", new omm.EventContext(o, this));
+                    var c2 = new omm.EventContext(o, this);
+                    c2.methodContext = methodContext;
+                    this.emitNow("didRemove", c2 );
                 }
                 else
                     throw new Error("Trying to remove an object that does not have an id.");
@@ -258,6 +261,7 @@ module omm {
         {
             console.log("inserting !!");
             var ctx = new omm.EventContext(p, this);
+            ctx.methodContext = methodContext;
             this.emitNow("willInsert", ctx);
             console.log("inserting 2n");
             if( ctx.cancelledWithError() ){
@@ -293,7 +297,9 @@ module omm {
                     }
 
                     console.log("didInsert");
-                    that.emitNow("didInsert", new omm.EventContext(that.getById(id), this));
+                    var ctx2 =  new omm.EventContext(that.getById(id), this);
+                    ctx2.methodContext = methodContext;
+                    that.emitNow("didInsert", ctx2);
 
                     if (callback)
                         callback(e, id);
