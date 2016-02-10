@@ -495,29 +495,33 @@ module omm {
                         } else {
                             result = originalFunction.apply(this, args);
                         }
-                        if( resetUpdateCollection )
+                        if( resetUpdateCollection ){
                             omm.MeteorPersistence.updateInProgress = false;
+                        }
 
                         // TODO this might potentially catch updates of something that happened between the update and now. Small timeframe but still relevant. Also the extra load should be avoided.
-
-                        var ctx = new omm.EventContext( _serializationPath ? collection.getById(_serializationPath.getId() ) : this, collection );
+                        var rootObject = _serializationPath?collection.getById(_serializationPath.getId() ):undefined;
+                        var ctx = new omm.EventContext( _serializationPath ? _serializationPath.getSubObject( rootObject ) : this, collection );
                         ctx.preUpdate = object;
                         ctx.methodContext = methodContext;
                         ctx.functionName = functionName;
                         ctx.serializationPath = _serializationPath;
+                        ctx.rootObject = rootObject;
+                        //ctx.ob
 
 
                         if( omm._queue ){
                             omm._queue.forEach(function(t){
-                                console.log( 'emitting event:'+t.topic );
+                                //console.log( 'emitting event:'+t.topic );
                                 omm.callEventListeners( entityClass, t.topic, ctx, t.data );
                             });
                         }
-                        omm.deleteQueue();
 
                         omm.callEventListeners( entityClass, "post:"+functionName, ctx );
                         omm.callEventListeners( entityClass, "post", ctx );
-
+                        if( resetUpdateCollection ){
+                            omm.deleteQueue();
+                        }
                         return result;
                     }
                 });

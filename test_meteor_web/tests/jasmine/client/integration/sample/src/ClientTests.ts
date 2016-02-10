@@ -250,7 +250,7 @@ describe("The persistence thing on the client ", function(){
         expect( l.listener ).toHaveBeenCalled();
     });
 
-    fit('can determine the call path in event listeners on sub object updates ', function(){
+    it('can determine the call path in event listeners on sub object updates ', function(){
         var l:any = {};
         l.listener = function(event:omm.EventContext<Tests.TestLeaf>){
             debugger;

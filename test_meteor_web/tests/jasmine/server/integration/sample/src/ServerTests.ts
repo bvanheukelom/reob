@@ -173,7 +173,7 @@ describe("Omm on the server", function(){
             });
         });
     });
-    fit("can receive emitted events from a subobject", function(done){
+    it("can receive emitted events from a subobject", function(done){
         var l:any = {};
         l.listener = function(event:omm.EventContext<Tests.TestTree>){
 
@@ -184,6 +184,24 @@ describe("Omm on the server", function(){
             expect( err ).toBeUndefined();
             t.grow();
             t = treeCollection.getById(t.treeId);
+            expect(l.listener).not.toHaveBeenCalled();
+            t.getLeaves()[0].flutter();
+            expect(l.listener).toHaveBeenCalled();
+            done()
+        });
+    });
+    it("can receive emitted events from a subobject and get the object", function(done){
+        var l:any = {};
+        l.listener = function(event:omm.EventContext<Tests.TestTree>){
+            expect(event.object instanceof Tests.TestLeaf).toBeTruthy();
+        };
+        spyOn(l, 'listener').and.callThrough();
+        omm.on( Tests.TestLeaf, "fluttering", l.listener );
+        treeCollection.newTree(10, function (err, t:Tests.TestTree) {
+            expect( err ).toBeUndefined();
+            t.grow();
+            t = treeCollection.getById(t.treeId);
+            expect(l.listener).not.toHaveBeenCalled();
             t.getLeaves()[0].flutter();
             expect(l.listener).toHaveBeenCalled();
             done()
@@ -253,7 +271,7 @@ describe("Omm on the server", function(){
         });
     });
 
-    fit("can cancel updates on a subobject in a generic listener on a subobject", function(done){
+    it("can cancel updates on a subobject in a generic listener on a subobject", function(done){
         var l:any = {};
         l.listener = function(event:omm.EventContext<Tests.TestTree>){
             event.cancel("not happening either");
