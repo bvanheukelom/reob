@@ -24,7 +24,24 @@ module omm {
             this.eventListeners = {};
         }
 
-        addListener( topic:string, f:( evtCtx:omm.EventContext<T>, data:any )=>void ){
+        preSave( f:( evtCtx:omm.EventContext<T>, data:any )=>void ){
+            this.addListener("preSave", f);
+        }
+
+        onRemove( f:( evtCtx:omm.EventContext<T>, data:any )=>void ){
+            this.addListener("didRemove", f);
+        }
+        preRemove( f:( evtCtx:omm.EventContext<T>, data:any )=>void ){
+            this.addListener("willRemove", f);
+        }
+        onInsert( f:( evtCtx:omm.EventContext<T>, data:any )=>void ){
+            this.addListener("didInsert", f);
+        }
+        preInsert( f:( evtCtx:omm.EventContext<T>, data:any )=>void ){
+            this.addListener("willInsert", f);
+        }
+
+        private addListener( topic:string, f:( evtCtx:omm.EventContext<T>, data:any )=>void ){
             if( !this.eventListeners[topic] )
                 this.eventListeners[topic] = [];
             this.eventListeners[topic].push(f);
@@ -187,7 +204,7 @@ module omm {
          * @param id - the id of the object
          * @param updateFunction - the function that alters the loaded object
          */
-        update(id:string, updateFunction:(o:T)=>void)
+        update(id:string, updateFunction:(o:T)=>void):any
         {
             omm.MeteorPersistence.updateInProgress = true;
             try {
@@ -212,7 +229,7 @@ module omm {
                     this.objectRetriever.updateSerializationPaths(object);
 
                     var ctx = new omm.EventContext( object, this );
-                    omm.emitUpdateEvent(this.getEntityClass(), "preSave", ctx );
+                    omm.callEventListeners(this.getEntityClass(), "preSave", ctx );
 
                     var documentToSave:Document = this.serializer.toDocument(object);
                     documentToSave.serial = currentSerial + 1;
@@ -259,19 +276,19 @@ module omm {
          */
         insert( p:T, callback?:(e:any, id?:string)=>void ):string
         {
-            console.log("inserting !!");
+            //console.log("inserting !!");
             var ctx = new omm.EventContext(p, this);
             ctx.methodContext = methodContext;
             this.emitNow("willInsert", ctx);
-            console.log("inserting 2n");
+            //console.log("inserting 2n");
             if( ctx.cancelledWithError() ){
-                console.log("insert cancelled ",ctx.cancelledWithError(), callback );
+                //console.log("insert cancelled ",ctx.cancelledWithError(), callback );
                 if( callback )
                     callback(  ctx.cancelledWithError() );
 
                 return undefined;
             } else {
-                console.log("insert not cancelled");
+                //console.log("insert not cancelled");
                 // TODO make sure that this is unique
                 var idPropertyName = omm.PersistenceAnnotation.getIdPropertyName(this.theClass);
                 if (!p[idPropertyName])
@@ -296,7 +313,7 @@ module omm {
                         //console.log("error while inserting into "+this.name, e);
                     }
 
-                    console.log("didInsert");
+                    //console.log("didInsert");
                     var ctx2 =  new omm.EventContext(that.getById(id), this);
                     ctx2.methodContext = methodContext;
                     that.emitNow("didInsert", ctx2);
@@ -313,7 +330,7 @@ module omm {
                         return id;
                 }
                 catch (e) {
-                    console.log("error while inserting ",e);
+                    //console.log("error while inserting ",e);
                     if (!callback)
                         afterwards(e);
                 }

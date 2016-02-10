@@ -194,6 +194,77 @@ describe("The persistence thing on the client ", function(){
             done();
         });
     });
+    it("can insert a person using a call ", function(done){
+        omm.call("insertPerson", 'hello', function(error,result:Tests.TestPerson){
+            expect( result instanceof Tests.TestPerson ).toBeTruthy();
+            expect( result.getName() ).toBe("hello");
+            done();
+        });
+    });
+
+    //xxx
+    it('emits update events even if the object is not persisted', function(){
+        var l:any = {};
+        l.listener = function(event:omm.EventContext<Tests.TestTree>){
+            expect(event.object).toBeDefined();
+            expect(event.object instanceof Tests.TestTree).toBeTruthy();
+            var tt:Tests.TestTree = event.object;
+            expect(tt.getLeaves().length).toBe( 0 );
+        };
+        spyOn(l, 'listener').and.callThrough();
+
+        omm.on( Tests.TestTree, "gardenevents", l.listener );
+        var t = new Tests.TestTree(1);
+        t.wither();
+        expect( l.listener ).toHaveBeenCalled();
+    });
+
+    it('emits update events even if the object is not persisted. it registers to them generally', function(){
+        var l:any = {};
+        l.listener = function(event:omm.EventContext<Tests.TestTree>){
+            expect(event.object).toBeDefined();
+            expect(event.object instanceof Tests.TestTree).toBeTruthy();
+            var tt:Tests.TestTree = event.object;
+            expect(tt.getLeaves().length).toBe( 0 );
+            expect(event.topic).toBe("gardenevents");
+        };
+        spyOn(l, 'listener').and.callThrough();
+        omm.on( Tests.TestTree, l.listener );
+        var t = new Tests.TestTree(1);
+        t.wither();
+        expect( l.listener ).toHaveBeenCalled();
+    });
+
+    it('cancels the invocations on generic pre Update listeners', function(){
+        var l:any = {};
+        l.listener = function(event:omm.EventContext<Tests.TestTree>){
+            event.cancel("nopinger");
+        };
+        spyOn(l, 'listener').and.callThrough();
+
+        omm.preUpdate( Tests.TestTree, l.listener );
+        var t = new Tests.TestTree(1);
+        expect( function(){
+            t.wither();
+        } ).toThrow("nopinger");
+        expect( l.listener ).toHaveBeenCalled();
+    });
+
+    fit('can determine the call path in event listeners on sub object updates ', function(){
+        var l:any = {};
+        l.listener = function(event:omm.EventContext<Tests.TestLeaf>){
+            debugger;
+        };
+        spyOn(l, 'listener').and.callThrough();
+
+        var t = new Tests.TestTree(1);
+        t.grow();
+        omm.preUpdate( Tests.TestLeaf, l.listener );
+        debugger;
+        t.getLeaves()[0].flutter();
+        expect( l.listener ).toHaveBeenCalled();
+    });
+
 
     it("can insert a person using a call helper to a static function ", function(done){
         omm.staticCallHelper(Tests.TestPersonCollection,  function(error,result:Tests.TestPerson){

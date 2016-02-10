@@ -14,7 +14,11 @@ module omm {
         preUpdate:T;
         object:T;
         collection:omm.Collection<T>;
+        rootObject:any;
         methodContext:any;
+        functionName:string;
+        serializationPath:omm.SerializationPath;
+        topic:string;
 
         constructor( o:T, coll:omm.Collection<T> ){
             this.object = o;
@@ -39,8 +43,12 @@ module omm {
         }
     }
 
-    export function addUpdateListener<O extends Object>( t:TypeClass<O>, topic:string,  f?:EventListener ):void {
+    export function on<O extends Object>( t:TypeClass<O>, topic:string|EventListener,  f?:EventListener ):void {
         var className = omm.className(t);
+        if( typeof topic == "function" ){
+            f = <EventListener>topic;
+            topic = null;
+        }
 
         var e= omm.PersistenceAnnotation.getEntityClassByName(className);
         if( !e )
@@ -49,49 +57,73 @@ module omm {
         if( !omm.eventListeners[className] ){
             omm.eventListeners[className] = {};
         }
+        if( topic ) {
+            if (!omm.eventListeners[className][<string>topic])
+                omm.eventListeners[className][<string>topic] = [];
+            omm.eventListeners[className][<string>topic].push(f);
+        }else{
+            if (!omm.eventListeners[className]["_all"])
+                omm.eventListeners[className]["_all"] = [];
+            omm.eventListeners[className]["_all"].push(f);
+        }
+
+    }
+
+    export function onUpdate<O extends Object>(  t:TypeClass<O>, functionName?:string|EventListener, f?:EventListener ):void {
+        var className = omm.className(t);
+        if( typeof functionName == "function" ){
+            f = <EventListener>functionName;
+            functionName = null;
+        }
+
+        var e= omm.PersistenceAnnotation.getEntityClassByName(className);
+        if( !e )
+            throw new Error("Type is not an entity");
+        if( functionName && omm.PersistenceAnnotation.getCollectionUpdateFunctionNames(t).indexOf(<string>functionName)==-1 )
+            throw new Error("Function '"+functionName+"' is not a collection update function");
+
+        if( !omm.eventListeners[className] ){
+            omm.eventListeners[className] = {};
+        }
+        var topic = "post"+(functionName?":"+functionName:"");
         if( !omm.eventListeners[className][topic] )
             omm.eventListeners[className][topic] = [];
         omm.eventListeners[className][topic].push(f);
     }
 
-    export function addPostUpdateListener<O extends Object>( t:TypeClass<O>, functionName:string, f:EventListener ):void {
+    export function preUpdate<O extends Object>(  t:TypeClass<O>, functionName?:string|EventListener, f?:EventListener ):void {
         var className = omm.className(t);
+        if( typeof functionName == "function" ){
+            f = <EventListener>functionName;
+            functionName = null;
+        }
 
         var e= omm.PersistenceAnnotation.getEntityClassByName(className);
         if( !e )
             throw new Error("Type is not an entity");
-        if( omm.PersistenceAnnotation.getCollectionUpdateFunctionNames(t).indexOf(functionName)==-1 )
-            throw new Error("Function is not a collection update function");
+        if( functionName && omm.PersistenceAnnotation.getCollectionUpdateFunctionNames(t).indexOf(<string>functionName)==-1 )
+            throw new Error("Function '"+functionName+"' is not a collection update function ");
 
         if( !omm.eventListeners[className] ){
             omm.eventListeners[className] = {};
         }
-        if( !omm.eventListeners[className]["post:"+functionName] )
-            omm.eventListeners[className]["post:"+functionName] = [];
-        omm.eventListeners[className]["post:"+functionName].push(f);
+        var topic = "pre"+(functionName?":"+functionName:"");
+        if( !omm.eventListeners[className][topic] )
+            omm.eventListeners[className][topic] = [];
+        omm.eventListeners[className][topic].push(f);
     }
 
-    export function addPreUpdateListener<O extends Object>( t:TypeClass<O>, functionName:string, f:EventListener ):void {
+    export function callEventListeners<O extends Object>( t:TypeClass<O>, topic:string, ctx:omm.EventContext<any>, data?:any ){
         var className = omm.className(t);
-
-        var e= omm.PersistenceAnnotation.getEntityClassByName(className);
-        if( !e )
-            throw new Error("Type is not an entity");
-        if( omm.PersistenceAnnotation.getCollectionUpdateFunctionNames(t).indexOf(functionName)==-1 )
-            throw new Error("Function is not a collection update function");
-
-        if( !omm.eventListeners[className] ){
-            omm.eventListeners[className] = {};
-        }
-        if( !omm.eventListeners[className]["pre:"+functionName] )
-            omm.eventListeners[className]["pre:"+functionName] = [];
-        omm.eventListeners[className]["pre:"+functionName].push(f);
-    }
-
-    export function emitUpdateEvent<O extends Object>( t:TypeClass<O>, topic:string, ctx:omm.EventContext<any>, data?:any ){
-        var className = omm.className(t);
+        ctx.topic = topic;
         if( className && omm.eventListeners[className] && omm.eventListeners[className][topic] ){
             omm.eventListeners[className][topic].forEach( function(el:EventListener){
+                el( ctx, data );
+            });
+        }
+
+        if( topic.indexOf("pre:")!=0 && topic!="pre" && topic.indexOf("post:")!=0 && topic!="post" && className && omm.eventListeners[className] && omm.eventListeners[className]["_all"] ) {
+            omm.eventListeners[className]["_all"].forEach(function (el:EventListener) {
                 el( ctx, data );
             });
         }
@@ -108,7 +140,7 @@ module omm {
         omm._queue = [];
     }
 
-    export function emit( topic, data ){
+    export function emit( topic, data?:any ){
         if( omm._queue ) {
             omm._queue.push({
                 topic: topic,
@@ -401,55 +433,92 @@ module omm {
             }
         }
 
-        static wrapClass<T extends Object>(c:TypeClass<T>) {
+        /**
+         * This patches the functions that are collection updates.
+         * It also emits update events: pre:<FunctionName> post:<FunctionName>.
+         * @param c
+         */
+        static wrapClass<T extends Object>(entityClass:TypeClass<T>) {
 
             //var className = omm.className(c);
             var that = this;
-            omm.PersistenceAnnotation.getCollectionUpdateFunctionNames(c).forEach(function(functionName:string){
-                MeteorPersistence.monkeyPatch(c.prototype, functionName, function (originalFunction, ...args:string[]) {
+            omm.PersistenceAnnotation.getCollectionUpdateFunctionNames(entityClass).forEach(function(functionName:string){
+                MeteorPersistence.monkeyPatch(entityClass.prototype, functionName, function (originalFunction, ...args:string[]) {
                     //console.log("updating object:",this, "original function :"+originalFunction);
                     var _serializationPath:omm.SerializationPath = this._serializationPath;
-                    if( !MeteorPersistence.updateInProgress && _serializationPath ) {
+                    var updateCollection:boolean = true;
+                    var resetUpdateCollection:boolean = false;
 
-                        var collection:omm.Collection<any> = omm.MeteorPersistence.collections[_serializationPath.getCollectionName()];
+                    if( !MeteorPersistence.updateInProgress  ) {
+                        // make sure only one update process happens at the same time
                         omm.MeteorPersistence.updateInProgress = true;
 
-                        var object = collection.getById(_serializationPath.getId());
-                        var ctx = new omm.EventContext( object, this );
-                        ctx.methodContext = methodContext;
-                        omm.emitUpdateEvent(collection.getEntityClass(), "pre:"+functionName, ctx );
-                        if( ctx.cancelledWithError() ){
-                            omm.MeteorPersistence.updateInProgress = false;
-                            throw ctx.cancelledWithError();
-                        } else {
-                            var result = collection.update(_serializationPath.getId(), function (o) {
+                        // empty the queue so that it can hold the events that happen during an update
+                        omm.resetQueue();
+                        resetUpdateCollection = true;
+                    } else {
+                        updateCollection = false;
+                    }
+
+                    var object;
+                    var collection:omm.Collection<any>;
+                    if( _serializationPath ) {
+                        // get the responsible collection
+                        collection = omm.MeteorPersistence.collections[_serializationPath.getCollectionName()];
+                        // load the object or use the 'this' object if its a standard call
+                        object = collection.getById(_serializationPath.getId()) ;
+
+                    } else {
+                        object = this;
+                        updateCollection = false;
+                    }
+
+                    // create the event context
+                    var ctx = new omm.EventContext( object, this );
+                    ctx.methodContext = methodContext;
+
+                    // emit the pre-event
+                    omm.callEventListeners( entityClass, "pre:"+functionName, ctx );
+                    omm.callEventListeners( entityClass, "pre", ctx );
+
+                    if( ctx.cancelledWithError() ){
+                        omm.MeteorPersistence.updateInProgress = false;
+                        throw ctx.cancelledWithError();
+                    } else {
+                        var result;
+                        if( updateCollection ) {
+                            result = collection.update(_serializationPath.getId(), function (o) {
                                 var subObject = _serializationPath.getSubObject(o);
                                 var r2 = originalFunction.apply(subObject, args);
                                 return r2;
                             });
+                        } else {
+                            result = originalFunction.apply(this, args);
+                        }
+                        if( resetUpdateCollection )
                             omm.MeteorPersistence.updateInProgress = false;
 
-                            // TODO this might potentially catch updates of something that happened between the update and now. Small timeframe but still relevant. Also the extra load should be avoided.
+                        // TODO this might potentially catch updates of something that happened between the update and now. Small timeframe but still relevant. Also the extra load should be avoided.
 
-                            var ctx = new omm.EventContext( collection.getById(_serializationPath.getId() ), this );
-                            ctx.preUpdate = object;
-                            ctx.methodContext = methodContext;
-                            if( omm._queue ){
-                                omm._queue.forEach(function(t){
-                                    omm.emitUpdateEvent(collection.getEntityClass(), t.topic, ctx, t.data );
-                                });
-                            }
-                            omm.deleteQueue();
+                        var ctx = new omm.EventContext( _serializationPath ? collection.getById(_serializationPath.getId() ) : this, collection );
+                        ctx.preUpdate = object;
+                        ctx.methodContext = methodContext;
+                        ctx.functionName = functionName;
+                        ctx.serializationPath = _serializationPath;
 
-                            var ctx = new omm.EventContext( collection.getById(_serializationPath.getId() ), this );
-                            ctx.methodContext = methodContext;
-                            omm.emitUpdateEvent(collection.getEntityClass(), "post:"+functionName, ctx );
 
-                            return result;
+                        if( omm._queue ){
+                            omm._queue.forEach(function(t){
+                                console.log( 'emitting event:'+t.topic );
+                                omm.callEventListeners( entityClass, t.topic, ctx, t.data );
+                            });
                         }
-                    } else {
-                        var r = originalFunction.apply(this, args);
-                        return r;
+                        omm.deleteQueue();
+
+                        omm.callEventListeners( entityClass, "post:"+functionName, ctx );
+                        omm.callEventListeners( entityClass, "post", ctx );
+
+                        return result;
                     }
                 });
             });

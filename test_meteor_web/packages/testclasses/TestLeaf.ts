@@ -15,6 +15,7 @@ module Tests
         @omm.Parent
         parent:TestTree;
 
+
         constructor(id?:string, parent?:Tests.TestTree)
         {
             this._id = id;
@@ -35,6 +36,12 @@ module Tests
         getTree():Tests.TestTree
         {
             return this.parent;
+        }
+
+        @omm.Wrap
+        flutter(){
+            this.greenNess++;
+            omm.emit("fluttering");
         }
     }
 }

@@ -65,8 +65,6 @@ module Tests {
     }
 }
 
-console.log("Meteor", Meteor);
-
 Meteor.startup(function(){
     if( Meteor.isServer ) {
         Meteor.publish("persons", function(){

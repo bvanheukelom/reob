@@ -185,7 +185,11 @@ declare module omm {
         preUpdate: T;
         object: T;
         collection: omm.Collection<T>;
+        rootObject: any;
         methodContext: any;
+        functionName: string;
+        serializationPath: omm.SerializationPath;
+        topic: string;
         constructor(o: T, coll: omm.Collection<T>);
         cancel(err: any): void;
         cancelledWithError(): any;
@@ -195,14 +199,14 @@ declare module omm {
         callback: (error: any, result?: any) => void;
         constructor(o: any, cb?: (error: any, result?: any) => void);
     }
-    function addUpdateListener<O extends Object>(t: TypeClass<O>, topic: string, f?: EventListener): void;
-    function addPostUpdateListener<O extends Object>(t: TypeClass<O>, functionName: string, f: EventListener): void;
-    function addPreUpdateListener<O extends Object>(t: TypeClass<O>, functionName: string, f: EventListener): void;
-    function emitUpdateEvent<O extends Object>(t: TypeClass<O>, topic: string, ctx: omm.EventContext<any>, data?: any): void;
+    function on<O extends Object>(t: TypeClass<O>, topic: string | EventListener, f?: EventListener): void;
+    function onUpdate<O extends Object>(t: TypeClass<O>, functionName?: string | EventListener, f?: EventListener): void;
+    function preUpdate<O extends Object>(t: TypeClass<O>, functionName?: string | EventListener, f?: EventListener): void;
+    function callEventListeners<O extends Object>(t: TypeClass<O>, topic: string, ctx: omm.EventContext<any>, data?: any): void;
     function removeAllUpdateEventListeners(): void;
     var _queue: Array<any>;
     function resetQueue(): void;
-    function emit(topic: any, data: any): void;
+    function emit(topic: any, data?: any): void;
     function deleteQueue(): void;
     function registerObject<O extends Object>(key: string, o: O): void;
     function getRegisteredObject(key: string): any;
@@ -222,7 +226,7 @@ declare module omm {
         static init(): void;
         static objectsClassName(o: any): string;
         static createMeteorMethod(options: IMethodOptions): void;
-        static wrapClass<T extends Object>(c: TypeClass<T>): void;
+        static wrapClass<T extends Object>(entityClass: TypeClass<T>): void;
         private static getClassName(o);
         static monkeyPatch(object: any, functionName: string, patchFunction: (original: Function, ...arg: any[]) => any): void;
     }
@@ -238,7 +242,12 @@ declare module omm {
         private static meteorCollections;
         private queue;
         removeAllListeners(): void;
-        addListener(topic: string, f: (evtCtx: omm.EventContext<T>, data: any) => void): void;
+        preSave(f: (evtCtx: omm.EventContext<T>, data: any) => void): void;
+        onRemove(f: (evtCtx: omm.EventContext<T>, data: any) => void): void;
+        preRemove(f: (evtCtx: omm.EventContext<T>, data: any) => void): void;
+        onInsert(f: (evtCtx: omm.EventContext<T>, data: any) => void): void;
+        preInsert(f: (evtCtx: omm.EventContext<T>, data: any) => void): void;
+        private addListener(topic, f);
         emit(topic: string, data: any): void;
         private emitNow(t, evtCtx, data?);
         private flushQueue();
@@ -252,7 +261,7 @@ declare module omm {
         getAll(): Array<T>;
         protected remove(id: string, cb?: (err: any) => void): void;
         protected documentToObject(doc: Document): T;
-        update(id: string, updateFunction: (o: T) => void): void;
+        update(id: string, updateFunction: (o: T) => void): any;
         insert(p: T, callback?: (e: any, id?: string) => void): string;
         static resetAll(cb: (error?: any) => void): void;
         getEntityClass(): TypeClass<T>;

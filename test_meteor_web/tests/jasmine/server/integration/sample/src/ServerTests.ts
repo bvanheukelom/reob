@@ -133,7 +133,7 @@ describe("Omm on the server", function(){
             expect(event.cancelledWithError()).toBeFalsy();
         };
         spyOn(l, 'listener').and.callThrough();
-        Tests.registeredTestTreeCollection.addListener("didInsert", l.listener);
+        Tests.registeredTestTreeCollection.onInsert( l.listener );
         treeCollection.newTree(10, function(err,t){
 
         });
@@ -148,7 +148,7 @@ describe("Omm on the server", function(){
             event.cancel("Not allowed");
         };
         spyOn(l, 'listener').and.callThrough();
-        Tests.registeredTestTreeCollection.addListener("willInsert", l.listener);
+        Tests.registeredTestTreeCollection.preInsert( l.listener);
         treeCollection.newTree(10, function (err, t) {
             expect(err).toBe("Not allowed");
             expect(treeCollection.getAll().length).toBe(0);
@@ -162,7 +162,7 @@ describe("Omm on the server", function(){
 
         };
         spyOn(l, 'listener').and.callThrough();
-        Tests.registeredTestTreeCollection.addListener("didRemove", l.listener);
+        Tests.registeredTestTreeCollection.onRemove( l.listener );
         treeCollection.newTree(10, function (err, t:Tests.TestTree) {
             expect( err ).toBeUndefined();
 
@@ -171,6 +171,22 @@ describe("Omm on the server", function(){
                 expect(l.listener).toHaveBeenCalled();
                 done();
             });
+        });
+    });
+    fit("can receive emitted events from a subobject", function(done){
+        var l:any = {};
+        l.listener = function(event:omm.EventContext<Tests.TestTree>){
+
+        };
+        spyOn(l, 'listener').and.callThrough();
+        omm.on( Tests.TestLeaf, "fluttering", l.listener );
+        treeCollection.newTree(10, function (err, t:Tests.TestTree) {
+            expect( err ).toBeUndefined();
+            t.grow();
+            t = treeCollection.getById(t.treeId);
+            t.getLeaves()[0].flutter();
+            expect(l.listener).toHaveBeenCalled();
+            done()
         });
     });
 
@@ -187,7 +203,7 @@ describe("Omm on the server", function(){
             event.cancel("nope");
         };
         spyOn(l, 'listener').and.callThrough();
-        Tests.registeredTestTreeCollection.addListener("willRemove", l.listener);
+        Tests.registeredTestTreeCollection.preRemove( l.listener );
         treeCollection.newTree(10, function (err, t:Tests.TestTree) {
             expect( err ).toBeUndefined();
             treeCollection.deleteTree(t.treeId, function(error){
@@ -208,7 +224,7 @@ describe("Omm on the server", function(){
             expect(tt.getLeaves().length).toBe( 0 );
         };
         spyOn(l, 'listener').and.callThrough();
-        omm.addPreUpdateListener( Tests.TestTree, "grow", l.listener );
+        omm.preUpdate( Tests.TestTree, "grow", l.listener  );
 
         treeCollection.newTree(10, function (err, t:Tests.TestTree) {
             omm.callHelper(t, function(err, result){
@@ -216,6 +232,44 @@ describe("Omm on the server", function(){
                 expect(result).toBe( "grown on the server" );
                 expect(l.listener).toHaveBeenCalled();
                 done();
+            }).grow();
+        });
+    });
+
+    it("can cancel updates on a subobject in a generic listener", function(done){
+        var l:any = {};
+        l.listener = function(event:omm.EventContext<Tests.TestTree>){
+            event.cancel("not happening");
+        };
+        spyOn(l, 'listener').and.callThrough();
+        omm.preUpdate( Tests.TestTree, l.listener  );
+
+        treeCollection.newTree(10, function (err, t:Tests.TestTree) {
+            omm.callHelper(t, function(err, result){
+                expect(err).toBe("not happening");
+                expect(l.listener).toHaveBeenCalled();
+                done();
+            }).grow();
+        });
+    });
+
+    fit("can cancel updates on a subobject in a generic listener on a subobject", function(done){
+        var l:any = {};
+        l.listener = function(event:omm.EventContext<Tests.TestTree>){
+            event.cancel("not happening either");
+        };
+        spyOn(l, 'listener').and.callThrough();
+        omm.preUpdate( Tests.TestLeaf, l.listener  );
+
+        treeCollection.newTree(10, function (err, t:Tests.TestTree) {
+            omm.callHelper(t, function(err, result){
+                expect(err).toBeUndefined();
+                var t2 = treeCollection.getById(t.treeId);
+                omm.callHelper(t2.getLeaves()[0],function(err,result){
+                    expect(err).toBe("not happening either");
+                    expect(l.listener).toHaveBeenCalled();
+                    done();
+                }).flutter();
             }).grow();
         });
     });
@@ -230,7 +284,7 @@ describe("Omm on the server", function(){
             expect(tt.getLeaves().length).toBe( 1 );
         };
         spyOn(l, 'listener').and.callThrough();
-        omm.addPostUpdateListener( Tests.TestTree, "grow", l.listener );
+        omm.onUpdate( Tests.TestTree, "grow", l.listener );
         treeCollection.newTree(10, function (err, t:Tests.TestTree) {
             omm.callHelper(t, function(err, result){
                 expect(err).toBeUndefined();
@@ -249,7 +303,7 @@ describe("Omm on the server", function(){
             event.cancel("nope");
         };
         spyOn(l, 'listener').and.callThrough();
-        omm.addPreUpdateListener( Tests.TestTree, "grow", l.listener );
+        omm.preUpdate( Tests.TestTree, "grow", l.listener );
 
         treeCollection.newTree(10, function (err, t:Tests.TestTree) {
             omm.callHelper(t, function(err, result){
@@ -271,7 +325,7 @@ describe("Omm on the server", function(){
         };
         spyOn(l, 'listener').and.callThrough();
 
-        omm.addUpdateListener( Tests.TestTree, "gardenevents", l.listener );
+        omm.on( Tests.TestTree, "gardenevents", l.listener );
 
         treeCollection.newTree(10, function (err, t:Tests.TestTree) {
             omm.callHelper(t, function(err, result){
@@ -291,7 +345,7 @@ describe("Omm on the server", function(){
         };
         spyOn(l, 'listener').and.callThrough();
 
-        omm.addUpdateListener(Tests.TestTree, "preSave", l.listener);
+        omm.on(Tests.TestTree, "preSave", l.listener);
 
         treeCollection.newTree(10, function (err, t:Tests.TestTree) {
             omm.callHelper(t, function(err, result){
