@@ -39,6 +39,11 @@ module Tests
             omm.emit("gardenevents", "withered2");
         }
 
+        @omm.Wrap
+        thisThrowsAnError() {
+            throw new Error("Hello world");
+        }
+
         getHeight():number {
             return this.height;
         }

@@ -3,10 +3,11 @@
 ///<reference path="./Collection.ts"/>
 ///<reference path="./MeteorObjectRetriever.ts"/>
 
-var methodContext:any;
+
 
 module omm {
 
+    export var methodContext:any;
     export interface EventListener { (i: EventContext<any>, data?:any ) : void }
 
     export class EventContext<T>{
@@ -304,7 +305,7 @@ module omm {
             if( Meteor.isServer || typeof options.serverOnly == "undefined" || !options.serverOnly ) {
                 var m = {};
                 m[meteorMethodName] = function (...args:any[]) {
-                    methodContext = this;
+                    omm.methodContext = this;
                     //console.log("Meteor method invoked: "+meteorMethodName+" id:"+id+" appendCallback:"+appendCallback+" args:", args, " classNames:"+classNames);
                     check(args, Array);
                     omm.MeteorPersistence.wrappedCallInProgress = true;
@@ -475,7 +476,7 @@ module omm {
 
                     // create the event context
                     var ctx = new omm.EventContext( object, this );
-                    ctx.methodContext = methodContext;
+                    ctx.methodContext = omm.methodContext;
 
                     // emit the pre-event
                     omm.callEventListeners( entityClass, "pre:"+functionName, ctx );
@@ -503,7 +504,7 @@ module omm {
                         var rootObject = _serializationPath?collection.getById(_serializationPath.getId() ):undefined;
                         var ctx = new omm.EventContext( _serializationPath ? _serializationPath.getSubObject( rootObject ) : this, collection );
                         ctx.preUpdate = object;
-                        ctx.methodContext = methodContext;
+                        ctx.methodContext = omm.methodContext;
                         ctx.functionName = functionName;
                         ctx.serializationPath = _serializationPath;
                         ctx.rootObject = rootObject;

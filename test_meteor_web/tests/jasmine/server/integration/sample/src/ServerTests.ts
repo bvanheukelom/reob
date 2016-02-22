@@ -156,6 +156,17 @@ describe("Omm on the server", function(){
         });
     });
 
+    fit("can handle thrown errors", function(done){
+
+        treeCollection.newTree(10, function (err, t) {
+            omm.callHelper(t, function(err, result){
+                expect( err ).toBeDefined();
+                expect( err instanceof Error ).toBeTruthy();
+                done();
+            }).thisThrowsAnError();
+        });
+    });
+
     it("invokes deletition events", function(done){
         var l:any = {};
         l.listener = function(event:omm.EventContext<Tests.TestTree>){
