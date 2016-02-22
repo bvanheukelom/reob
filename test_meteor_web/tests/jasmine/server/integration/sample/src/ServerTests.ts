@@ -156,7 +156,7 @@ describe("Omm on the server", function(){
         });
     });
 
-    fit("can handle thrown errors", function(done){
+    it("can handle thrown errors", function(done){
 
         treeCollection.newTree(10, function (err, t) {
             omm.callHelper(t, function(err, result){

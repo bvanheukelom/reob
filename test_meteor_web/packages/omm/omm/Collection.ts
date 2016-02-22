@@ -278,7 +278,7 @@ module omm {
         {
             //console.log("inserting !!");
             var ctx = new omm.EventContext(p, this);
-            ctx.methodContext = methodContext;
+            ctx.methodContext = omm.methodContext;
             this.emitNow("willInsert", ctx);
             //console.log("inserting 2n");
             if( ctx.cancelledWithError() ){
