@@ -108,7 +108,8 @@ module omm {
         if( !omm.eventListeners[className] ){
             omm.eventListeners[className] = {};
         }
-        var topic = "pre"+(functionName?":"+functionName:"");
+        var topic = "pre"+(typeof functionName =="string"?":"+functionName:"");
+        console.log("topic:"+topic);
         if( !omm.eventListeners[className][topic] )
             omm.eventListeners[className][topic] = [];
         omm.eventListeners[className][topic].push(f);
@@ -475,16 +476,20 @@ module omm {
                     }
 
                     // create the event context
-                    var ctx = new omm.EventContext( object, this );
+                    var ctx = new omm.EventContext( this, collection );
                     ctx.methodContext = omm.methodContext;
+                    ctx.functionName = functionName;
+                    ctx.serializationPath = _serializationPath;
+                    ctx.rootObject = object;
 
                     // emit the pre-event
                     omm.callEventListeners( entityClass, "pre:"+functionName, ctx );
                     omm.callEventListeners( entityClass, "pre", ctx );
 
                     if( ctx.cancelledWithError() ){
-                        omm.MeteorPersistence.updateInProgress = false;
-                        throw ctx.cancelledWithError();
+                        if( resetUpdateCollection ) {
+                            omm.MeteorPersistence.updateInProgress = false;
+                        }
                     } else {
                         var result;
                         if( updateCollection ) {
@@ -501,13 +506,13 @@ module omm {
                         }
 
                         // TODO this might potentially catch updates of something that happened between the update and now. Small timeframe but still relevant. Also the extra load should be avoided.
-                        var rootObject = _serializationPath?collection.getById(_serializationPath.getId() ):undefined;
-                        var ctx = new omm.EventContext( _serializationPath ? _serializationPath.getSubObject( rootObject ) : this, collection );
+
+                        var ctx = new omm.EventContext( this, collection );
                         ctx.preUpdate = object;
                         ctx.methodContext = omm.methodContext;
                         ctx.functionName = functionName;
                         ctx.serializationPath = _serializationPath;
-                        ctx.rootObject = rootObject;
+                        ctx.rootObject = object;
                         //ctx.ob
 
 
