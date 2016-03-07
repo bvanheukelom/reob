@@ -1,5 +1,6 @@
 /// <reference path="./../serializer/Serializer.ts" />
 /// <reference path="./../serializer/ConstantObjectRetriever.ts" />
+/// <reference path="./../event/OmmEvent.ts" />
 /// <reference path="./MeteorPersistence.ts" />
 /// <reference path="./MeteorObjectRetriever.ts" />
 /**
@@ -350,13 +351,13 @@ module omm {
          */
         @omm.StaticMeteorMethod({replaceWithCall:true, parameterTypes:['callback']})
         static resetAll( cb:(error?:any)=>void ){
-            var arr = [];
+            var arr:Array<any> = [];
             for( var i in Collection.meteorCollections )
                 arr.push(Collection.meteorCollections[i]);
             if( arr.length>0 ){
                 for( var j in arr )
                 {
-                    if( j!=arr.length-1)
+                    if( parseInt(j)!=arr.length-1)
                         Meteor.wrapAsync(function(cb2){
                             arr[j].remove({},cb2);
                         })();

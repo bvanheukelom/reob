@@ -34,9 +34,9 @@ declare module omm {
     function addEntity(c: TypeClass<Object>): void;
     function getDefaultCollectionName(t: omm.TypeClass<any>): string;
     function addCollectionRoot(t: omm.TypeClass<any>, collectionName: string): void;
-    function Wrap(t: Function, functionName: string, objectDescriptor: any): void;
+    function Wrap(t: any, functionName: string, objectDescriptor: any): void;
     function wrap(t: omm.TypeClass<any>, functionName: string): void;
-    function CollectionUpdate(p1: any, fName?: string): (t: Function, functionName: string, objectDescriptor: any) => void;
+    function CollectionUpdate(p1: any, fName?: string): (t: any, functionName: string, objectDescriptor: any) => void;
     function collectionUpdate(c: omm.TypeClass<any>, functionName: string, options?: any): void;
     function ArrayOrMap(typeClassName: string): (targetPrototypeObject: any, propertyName: string) => void;
     function ArrayType(typeClassName: string): (targetPrototypeObject: any, propertyName: string) => void;
@@ -50,7 +50,7 @@ declare module omm {
     function Ignore(targetPrototypeObject: any, propertyName: string): void;
     function ignoreProperty(c: TypeClass<Object>, propertyName: string): void;
     function DocumentName(name: string): (targetPrototypeObject: any, propertyName: string) => void;
-    function AsForeignKey(targetPrototypeObject: Function, propertyName: string): void;
+    function AsForeignKey(targetPrototypeObject: any, propertyName: string): void;
     function Type(typeClassName: string): (targetPrototypeObject: any, propertyName: string) => void;
     function type(t: TypeClass<Object>, propertyName: string, className: string): void;
     function propertyType(t: TypeClass<Object>, propertyName: string, typeClassName: string): void;
@@ -59,8 +59,8 @@ declare module omm {
     function asForeignKey(c: TypeClass<Object>, propertyName: string): void;
     function getId(o: Object): any;
     function className(fun: omm.TypeClass<Object>): string;
-    function MeteorMethod(p1: any, p2?: any): (t: Function, functionName: string, objectDescriptor: any) => void;
-    function StaticMeteorMethod(p1: any, p2?: any): (t: Function, functionName: string, objectDescriptor: any) => void;
+    function MeteorMethod(p1: any, p2?: any): (t: any, functionName: string, objectDescriptor: any) => void;
+    function StaticMeteorMethod(p1: any, p2?: any): any;
     class PersistenceAnnotation {
         static getMethodOptions(functionName: string): IMethodOptions;
         static getMethodFunctionNames<T extends Object>(c: any): Array<string>;
@@ -97,6 +97,7 @@ declare module omm {
         _id?: string;
         serial?: number;
         className?: string;
+        [x: string]: any;
     }
 }
 declare module omm {
@@ -180,34 +181,11 @@ declare module omm {
     interface EventListener {
         (i: EventContext<any>, data?: any): void;
     }
-    class EventContext<T> {
-        private cancelledError;
-        preUpdate: T;
-        object: T;
-        collection: omm.Collection<T>;
-        rootObject: any;
-        methodContext: any;
-        functionName: string;
-        serializationPath: omm.SerializationPath;
-        topic: string;
-        constructor(o: T, coll: omm.Collection<T>);
-        cancel(err: any): void;
-        cancelledWithError(): any;
-    }
     class CallHelper<T extends Object> {
         object: T;
         callback: (error: any, result?: any) => void;
         constructor(o: any, cb?: (error: any, result?: any) => void);
     }
-    function on<O extends Object>(t: TypeClass<O>, topic: string | EventListener, f?: EventListener): void;
-    function onUpdate<O extends Object>(t: TypeClass<O>, functionName?: string | EventListener, f?: EventListener): void;
-    function preUpdate<O extends Object>(t: TypeClass<O>, functionName?: string | EventListener, f?: EventListener): void;
-    function callEventListeners<O extends Object>(t: TypeClass<O>, topic: string, ctx: omm.EventContext<any>, data?: any): void;
-    function removeAllUpdateEventListeners(): void;
-    var _queue: Array<any>;
-    function resetQueue(): void;
-    function emit(topic: any, data?: any): void;
-    function deleteQueue(): void;
     function registerObject<O extends Object>(key: string, o: O): void;
     function getRegisteredObject(key: string): any;
     function callHelper<O extends Object>(o: O, callback?: (err: any, result?: any) => void): O;
@@ -266,6 +244,31 @@ declare module omm {
         static resetAll(cb: (error?: any) => void): void;
         getEntityClass(): TypeClass<T>;
     }
+}
+declare module omm {
+    class EventContext<T> {
+        private cancelledError;
+        preUpdate: T;
+        object: T;
+        collection: omm.Collection<T>;
+        rootObject: any;
+        methodContext: any;
+        functionName: string;
+        serializationPath: omm.SerializationPath;
+        topic: string;
+        constructor(o: T, coll: omm.Collection<T>);
+        cancel(err: any): void;
+        cancelledWithError(): any;
+    }
+    function on<O extends Object>(t: TypeClass<O>, topic: string | EventListener, f?: EventListener): void;
+    function onUpdate<O extends Object>(t: TypeClass<O>, functionName?: string | EventListener, f?: EventListener): void;
+    function preUpdate<O extends Object>(t: TypeClass<O>, functionName?: string | EventListener, f?: EventListener): void;
+    function callEventListeners<O extends Object>(t: TypeClass<O>, topic: string, ctx: omm.EventContext<any>, data?: any): void;
+    function removeAllUpdateEventListeners(): void;
+    var _queue: Array<any>;
+    function resetQueue(): void;
+    function emit(topic: any, data?: any): void;
+    function deleteQueue(): void;
 }
 declare module omm {
     class LocalObjectRetriever implements omm.ObjectRetriever {

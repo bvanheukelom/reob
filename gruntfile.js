@@ -11,31 +11,35 @@ module.exports = function (grunt) {
 			meteor : {
 				src: ["test_meteor_web/packages/omm/**/*.ts"],
 				options:{
-					removeComments:false
+					removeComments:false,
+					experimentalDecorators:true
 				}
 			},
 			dtsfile : {
 				src: ["test_meteor_web/packages/omm/**/*.ts"],
 				options:{
-					declaration:"test_meteor_web/packages/omm/omm.d.ts"
+					declaration:"test_meteor_web/packages/omm/omm.d.ts",
+					experimentalDecorators:true
 				},
 				out:"test_meteor_web/packages/omm/omm.js"
 			},
 			commonjs : {
-				src:  ["test_meteor_web/packages/omm/annotations/**/*.ts","test_meteor_web/packages/omm/serializer/**/*.ts"],
+				src:  ["test_meteor_web/packages/omm/annotations/**/*.ts","test_meteor_web/packages/omm/event/**/*.ts","test_meteor_web/packages/omm/serializer/**/*.ts"],
 				options:{
 					sourceMap:false,
 					declaration:"build/commonjs/omm.d.ts",
-					module:"commonjs"
+					module:"commonjs",
+					experimentalDecorators:true
 				},
 				out:"build/commonjs/omm.js"
 			},
-			declaration : {
+			buildDeclaration : {
 				src:  ["test_meteor_web/packages/omm/**/*.ts"],
 				options:{
 					sourceMap:false,
 					declaration:"build/declaration/omm.d.ts",
-					module:"commonjs"
+					module:"commonjs",
+					experimentalDecorators:true
 				},
 				out:"build/declaration/omm.js"
 			},
@@ -44,27 +48,29 @@ module.exports = function (grunt) {
 				options:{
 					sourceMap:false,
 					declaration:"build/amd/omm.d.ts",
-					module:"amd"
+					module:"amd",
+					experimentalDecorators:true
 				},
 				out:"build/amd/omm/omm.js"
 			},
 			test : {
 				src: ["test_meteor_web/packages/testclasses/**/*.ts","test_meteor_web/tests/**/*.ts"],
 				options:{
-					removeComments:false
+					removeComments:false,
+					experimentalDecorators:true
 				}
 			}
 
 		}
 	});
 
-	grunt.registerTask('default', ["testweb", "commonjs", "declaration"]);
+	grunt.registerTask('default', ["testweb", "commonjs", "buildDeclaration"]);
 	grunt.registerTask('testweb', ["ts:meteor", 'ts:test', "rewrite", 'copyFilesToTestMeteorWeb']);
 	grunt.registerTask('commonjs', ["ts:commonjs", 'copyCommonJsFiles']);
-	grunt.registerTask('declaration', ["ts:declaration", 'copyDeclarationFiles']);
+	grunt.registerTask('buildDeclaration', ["ts:buildDeclaration", 'copyDeclarationFiles']);
 
 	// NPM TASKS
-	grunt.loadNpmTasks("grunt-ts-1.5");
+	grunt.loadNpmTasks("grunt-ts");
 	grunt.loadNpmTasks("grunt-nodemon");
 	grunt.loadNpmTasks("grunt-concurrent");
 	grunt.loadNpmTasks('grunt-contrib-copy');

@@ -15,6 +15,8 @@ Package.onUse(function(api) {
 	api.addFiles('annotations/PersistenceAnnotation.js');
 	api.addFiles('annotations/TypeClass.js');
 
+	api.addFiles('event/OmmEvent.js');
+
 	api.addFiles('serializer/ConstantObjectRetriever.js');
 	api.addFiles('serializer/Document.js');
 	api.addFiles('serializer/LocalObjectRetriever.js');

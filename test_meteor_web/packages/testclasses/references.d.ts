@@ -11,6 +11,7 @@
 ///<reference path="./TestInheritanceParent.ts"/>
 ///<reference path="./TestInheritanceOther.ts"/>
 ///<reference path="../omm/annotations/PersistenceAnnotation.ts"/>
+///<reference path="../omm/event/OmmEvent.ts"/>
 ///<reference path="../omm/serializer/Document.ts"/>
 ///<reference path="../omm/omm/MeteorPersistence.ts"/>
 ///<reference path="../omm/omm/MeteorObjectRetriever.ts"/>

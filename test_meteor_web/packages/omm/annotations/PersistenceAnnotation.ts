@@ -62,7 +62,7 @@ module omm {
             n = n.substr(0, n.indexOf('('));
             entityName = n;
         }
-        var f = function(p1:Function){
+        var f = function(p1:any){
             var typeClass:TypeClass<Object> = <TypeClass<Object>>p1;
             defineMetadata("persistence:entity", true, typeClass);
             omm.entityClasses[entityName]=typeClass;
@@ -97,7 +97,7 @@ module omm {
         defineMetadata("persistence:collectionName", collectionName, t);
     }
 
-    export function Wrap( t:Function, functionName:string, objectDescriptor:any ) {
+    export function Wrap( t:any, functionName:string, objectDescriptor:any ) {
         //omm.CollectionUpdate(t,functionName,objectDescriptor);
         //omm.MeteorMethod(t,functionName,objectDescriptor);
         //defineMetadata("persistence:wrap", true, (<any>t)[functionName] );
@@ -118,7 +118,7 @@ module omm {
             PersistenceAnnotation.setPropertyProperty(p1, fName, "collectionUpdate", options);
         }
         else{
-            return function (t:Function, functionName:string, objectDescriptor:any) {
+            return function (t:any, functionName:string, objectDescriptor:any) {
                 options = p1;
                 PersistenceAnnotation.setPropertyProperty(<any>t, functionName, "collectionUpdate", options);
             };
@@ -239,7 +239,7 @@ module omm {
 
 
     // for grammar reasons
-    export function AsForeignKey( targetPrototypeObject:Function, propertyName:string  )
+    export function AsForeignKey( targetPrototypeObject:any, propertyName:string  )
     {
         return AsForeignKeys(targetPrototypeObject, propertyName );
     }
@@ -304,7 +304,7 @@ module omm {
             options.name = p2;
             omm.meteorMethodFunctions.push(options);
         } else {
-            return function (t:Function, functionName:string, objectDescriptor:any) {
+            return function (t:any, functionName:string, objectDescriptor:any) {
                 var options:IMethodOptions = {};
                 if( typeof p1=="object" )
                     options = p1;
@@ -325,7 +325,7 @@ module omm {
     }
 
 
-    export function StaticMeteorMethod( p1:any, p2?:any ) {
+    export function StaticMeteorMethod( p1:any, p2?:any ) :any {
         if( typeof p1=="function" && typeof p2=="string"  ){
             var options:IMethodOptions = { isStatic:true };
             options.parentObject = p1;
@@ -335,7 +335,7 @@ module omm {
                 options.name = p2;
             omm.meteorMethodFunctions.push(options);
         } else {
-            return function (t:Function, functionName:string, objectDescriptor:any) {
+            return function (t:any, functionName:string, objectDescriptor:any) {
                 var options:IMethodOptions = {};
                 if( typeof p1=="object" )
                     options = p1;
