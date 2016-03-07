@@ -277,7 +277,6 @@ module omm {
          */
         insert( p:T, callback?:(e:any, id?:string)=>void ):string
         {
-            //console.log("inserting !!");
             var ctx = new omm.EventContext(p, this);
             ctx.methodContext = omm.methodContext;
             this.emitNow("willInsert", ctx);

@@ -216,43 +216,57 @@ module omm {
 
                         // CALLING THE ORIGINAL FUNCTION
                         var result;
-                        if (callbackIndex != -1) {
-                            var syncFunction = Meteor.wrapAsync(function (cb:(error:any, result:any)=>void) {
-                                args[callbackIndex] = function(error, result){
-                                    if( error )
-                                        throw new Meteor.Error(error);
-                                    else
-                                        cb(undefined, result);
+                        var theError:any = undefined;
+                        try {
+                            if (callbackIndex != -1) {
+                                var syncFunction = Meteor.wrapAsync(function (ascb:(error:any, result:any)=>void) {
+                                    args[callbackIndex] = function (error, result) {
+                                        theError = error;
+                                        ascb(error, result);
+                                    };
+                                    originalFunction.apply(object, args);
+                                });
+                                result = syncFunction();
+                            } else {
+                                result = originalFunction.apply(object, args);
+                            }
+                        }catch( e ){
+                            if( !theError )
+                                theError = e;
+                        }
+                        if( !theError ) {
+                            // converting the result into a doc
+                            var doc:any = omm.MeteorPersistence.serializer.toDocument(result);
+                            //console.log("result of applied meteor method:",result);
+                            if (Array.isArray(result)) {
+                                //console.log("result of applied meteor method is array of length ", result.length);
+                                for (var ri = 0; ri < result.length; ri++) {
+                                    var t:TypeClass<Object> = omm.PersistenceAnnotation.getClass(result[ri]);
+                                    //console.log("result of applied meteor method is array and found type ",t);
+                                    if (t && omm.className(t) && omm.PersistenceAnnotation.getEntityClassByName(omm.className(t)))
+                                        doc[ri].className = omm.className(t);
+                                }
+                            } else {
 
-                                };
-                                originalFunction.apply(object, args);
-                            });
-                            result = syncFunction();
+                                var t:TypeClass<Object> = omm.PersistenceAnnotation.getClass(result);
+                                if (t && omm.className(t) && omm.PersistenceAnnotation.getEntityClassByName(omm.className(t))) {
+                                    doc.className = omm.className(t);
+                                }
+                            }
+                            //console.log("Meteor method returns doc:",doc);
+                        }
+
+                        // if it has a callback then call it with the error and the doc
+                        if( typeof arguments[arguments.length-1] == "function" ){
+                            arguments[arguments.length-1](theError, doc);
                         } else {
-                            result = originalFunction.apply(object, args);
-                        }
 
-                        // converting the result into a doc
-                        var doc:any = omm.MeteorPersistence.serializer.toDocument(result);
-                        //console.log("result of applied meteor method:",result);
-                        if(Array.isArray(result)){
-                            //console.log("result of applied meteor method is array of length ", result.length);
-                            for( var ri=0; ri<result.length; ri++ ){
-                                var t:TypeClass<Object> = omm.PersistenceAnnotation.getClass(result[ri]);
-                                //console.log("result of applied meteor method is array and found type ",t);
-                                if (t && omm.className(t) && omm.PersistenceAnnotation.getEntityClassByName(omm.className(t)))
-                                    doc[ri].className = omm.className(t);
-                            }
-                        }else{
-
-                            var t:TypeClass<Object> = omm.PersistenceAnnotation.getClass(result);
-                            if (t && omm.className(t) && omm.PersistenceAnnotation.getEntityClassByName(omm.className(t)))
-                            {
-                                doc.className = omm.className(t);
-                            }
+                            // or throw an error or return the doc just like that (sync invocation from Meteor)
+                            if( theError ){
+                                throw theError;
+                            }else
+                                return doc;
                         }
-                        //console.log("Meteor method returns doc:",doc);
-                        return doc;
                     } finally {
                         omm.MeteorPersistence.wrappedCallInProgress = false;
                     }
@@ -325,33 +339,38 @@ module omm {
                         updateCollection = false;
                     }
 
+                    var rootObject;
                     var object;
                     var collection:omm.Collection<any>;
                     if( _serializationPath ) {
                         // get the responsible collection
                         collection = omm.MeteorPersistence.collections[_serializationPath.getCollectionName()];
                         // load the object or use the 'this' object if its a standard call
-                        object = collection.getById(_serializationPath.getId()) ;
-
+                        rootObject = collection.getById(_serializationPath.getId());
+                        object =_serializationPath.getSubObject(rootObject);
                     } else {
+                        rootObject = this;
                         object = this;
                         updateCollection = false;
                     }
 
                     // create the event context
-                    var ctx = new omm.EventContext( this, collection );
+                    var ctx = new omm.EventContext( object, collection );
                     ctx.methodContext = omm.methodContext;
                     ctx.functionName = functionName;
                     ctx.serializationPath = _serializationPath;
-                    ctx.rootObject = object;
+                    ctx.rootObject = rootObject;
 
                     // emit the pre-event
                     omm.callEventListeners( entityClass, "pre:"+functionName, ctx );
                     omm.callEventListeners( entityClass, "pre", ctx );
 
+                    var preUpdateObject = object;
+
                     if( ctx.cancelledWithError() ){
                         if( resetUpdateCollection ) {
                             omm.MeteorPersistence.updateInProgress = false;
+                            throw ctx.cancelledWithError();
                         }
                     } else {
                         var result;
@@ -370,12 +389,18 @@ module omm {
 
                         // TODO this might potentially catch updates of something that happened between the update and now. Small timeframe but still relevant. Also the extra load should be avoided.
 
-                        var ctx = new omm.EventContext( this, collection );
-                        ctx.preUpdate = object;
+
+                        if( updateCollection ){
+                            rootObject = collection.getById(_serializationPath.getId());
+                            object =_serializationPath.getSubObject(rootObject);
+                        }
+
+                        var ctx = new omm.EventContext( object, collection );
+                        ctx.preUpdate = preUpdateObject;
                         ctx.methodContext = omm.methodContext;
                         ctx.functionName = functionName;
                         ctx.serializationPath = _serializationPath;
-                        ctx.rootObject = object;
+                        ctx.rootObject = rootObject;
                         //ctx.ob
 
 

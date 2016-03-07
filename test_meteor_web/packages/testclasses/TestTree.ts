@@ -1,3 +1,5 @@
+///<reference path="./references.d.ts"/>
+
 module Tests
 {
     @omm.Entity//("TheTreeCollection")

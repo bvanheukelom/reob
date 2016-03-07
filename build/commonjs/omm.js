@@ -1256,36 +1256,52 @@ var omm;
                             }
                         }
                         var result;
-                        if (callbackIndex != -1) {
-                            var syncFunction = Meteor.wrapAsync(function (cb) {
-                                args[callbackIndex] = function (error, result) {
-                                    if (error)
-                                        throw new Meteor.Error(error);
-                                    else
-                                        cb(undefined, result);
-                                };
-                                originalFunction.apply(object, args);
-                            });
-                            result = syncFunction();
-                        }
-                        else {
-                            result = originalFunction.apply(object, args);
-                        }
-                        var doc = omm.MeteorPersistence.serializer.toDocument(result);
-                        if (Array.isArray(result)) {
-                            for (var ri = 0; ri < result.length; ri++) {
-                                var t = omm.PersistenceAnnotation.getClass(result[ri]);
-                                if (t && omm.className(t) && omm.PersistenceAnnotation.getEntityClassByName(omm.className(t)))
-                                    doc[ri].className = omm.className(t);
+                        var theError = undefined;
+                        try {
+                            if (callbackIndex != -1) {
+                                var syncFunction = Meteor.wrapAsync(function (ascb) {
+                                    args[callbackIndex] = function (error, result) {
+                                        theError = error;
+                                        ascb(error, result);
+                                    };
+                                    originalFunction.apply(object, args);
+                                });
+                                result = syncFunction();
+                            }
+                            else {
+                                result = originalFunction.apply(object, args);
                             }
                         }
-                        else {
-                            var t = omm.PersistenceAnnotation.getClass(result);
-                            if (t && omm.className(t) && omm.PersistenceAnnotation.getEntityClassByName(omm.className(t))) {
-                                doc.className = omm.className(t);
+                        catch (e) {
+                            if (!theError)
+                                theError = e;
+                        }
+                        if (!theError) {
+                            var doc = omm.MeteorPersistence.serializer.toDocument(result);
+                            if (Array.isArray(result)) {
+                                for (var ri = 0; ri < result.length; ri++) {
+                                    var t = omm.PersistenceAnnotation.getClass(result[ri]);
+                                    if (t && omm.className(t) && omm.PersistenceAnnotation.getEntityClassByName(omm.className(t)))
+                                        doc[ri].className = omm.className(t);
+                                }
+                            }
+                            else {
+                                var t = omm.PersistenceAnnotation.getClass(result);
+                                if (t && omm.className(t) && omm.PersistenceAnnotation.getEntityClassByName(omm.className(t))) {
+                                    doc.className = omm.className(t);
+                                }
                             }
                         }
-                        return doc;
+                        if (typeof arguments[arguments.length - 1] == "function") {
+                            arguments[arguments.length - 1](theError, doc);
+                        }
+                        else {
+                            if (theError) {
+                                throw theError;
+                            }
+                            else
+                                return doc;
+                        }
                     }
                     finally {
                         omm.MeteorPersistence.wrappedCallInProgress = false;
@@ -1352,26 +1368,31 @@ var omm;
                     else {
                         updateCollection = false;
                     }
+                    var rootObject;
                     var object;
                     var collection;
                     if (_serializationPath) {
                         collection = omm.MeteorPersistence.collections[_serializationPath.getCollectionName()];
-                        object = collection.getById(_serializationPath.getId());
+                        rootObject = collection.getById(_serializationPath.getId());
+                        object = _serializationPath.getSubObject(rootObject);
                     }
                     else {
+                        rootObject = this;
                         object = this;
                         updateCollection = false;
                     }
-                    var ctx = new omm.EventContext(this, collection);
+                    var ctx = new omm.EventContext(object, collection);
                     ctx.methodContext = omm.methodContext;
                     ctx.functionName = functionName;
                     ctx.serializationPath = _serializationPath;
-                    ctx.rootObject = object;
+                    ctx.rootObject = rootObject;
                     omm.callEventListeners(entityClass, "pre:" + functionName, ctx);
                     omm.callEventListeners(entityClass, "pre", ctx);
+                    var preUpdateObject = object;
                     if (ctx.cancelledWithError()) {
                         if (resetUpdateCollection) {
                             omm.MeteorPersistence.updateInProgress = false;
+                            throw ctx.cancelledWithError();
                         }
                     }
                     else {
@@ -1389,12 +1410,16 @@ var omm;
                         if (resetUpdateCollection) {
                             omm.MeteorPersistence.updateInProgress = false;
                         }
-                        var ctx = new omm.EventContext(this, collection);
-                        ctx.preUpdate = object;
+                        if (updateCollection) {
+                            rootObject = collection.getById(_serializationPath.getId());
+                            object = _serializationPath.getSubObject(rootObject);
+                        }
+                        var ctx = new omm.EventContext(object, collection);
+                        ctx.preUpdate = preUpdateObject;
                         ctx.methodContext = omm.methodContext;
                         ctx.functionName = functionName;
                         ctx.serializationPath = _serializationPath;
-                        ctx.rootObject = object;
+                        ctx.rootObject = rootObject;
                         if (omm._queue) {
                             omm._queue.forEach(function (t) {
                                 omm.callEventListeners(entityClass, t.topic, ctx, t.data);

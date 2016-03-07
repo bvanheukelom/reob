@@ -292,7 +292,6 @@ describe("Omm on the server", function(){
         };
         spyOn(l, 'listener').and.callThrough();
         omm.preUpdate( Tests.TestLeaf, l.listener  );
-
         treeCollection.newTree(10, function (err, t:Tests.TestTree) {
             omm.callHelper(t, function(err, result){
                 expect(err).toBeUndefined();
@@ -313,7 +312,7 @@ describe("Omm on the server", function(){
             expect(event.object).toBeDefined();
             expect(event.object instanceof Tests.TestTree).toBeTruthy();
             var tt:Tests.TestTree = event.object;
-            expect(tt.getLeaves().length).toBe( 1 );
+            expect(tt.getLeaves().length+1000).toBe( 1001 ); //
         };
         spyOn(l, 'listener').and.callThrough();
         omm.onUpdate( Tests.TestTree, "grow", l.listener );

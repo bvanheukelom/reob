@@ -16,9 +16,9 @@ module Tests {
             try {
                 var id:string = this.insert( t, function(err,id:string){
                     console.log("error while inserting new tree:", err);
-                    if( err )
+                    if( err ){
                         callback(err);
-                    else
+                    }else
                         callback(undefined, that.getById(id));
                 });
             } catch (err) {

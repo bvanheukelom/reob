@@ -253,14 +253,12 @@ describe("The persistence thing on the client ", function(){
     it('can determine the call path in event listeners on sub object updates ', function(){
         var l:any = {};
         l.listener = function(event:omm.EventContext<Tests.TestLeaf>){
-            debugger;
         };
         spyOn(l, 'listener').and.callThrough();
 
         var t = new Tests.TestTree(1);
         t.grow();
         omm.preUpdate( Tests.TestLeaf, l.listener );
-        debugger;
         t.getLeaves()[0].flutter();
         expect( l.listener ).toHaveBeenCalled();
     });
