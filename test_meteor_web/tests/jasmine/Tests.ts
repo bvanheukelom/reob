@@ -207,7 +207,7 @@ describe("The persistence thing", function(){
         expect(doc._id).toBe("tp1");
         expect(doc["phoneNumber"]["pn"]).toBe("12345");
     });
-
+//
     it("deserializes basic objects", function(){
         var serializer:omm.Serializer = new omm.Serializer( new omm.MeteorObjectRetriever() );
         var t1:Tests.TestPerson = new Tests.TestPerson("tp1");
@@ -241,11 +241,12 @@ describe("The persistence thing", function(){
     });
 
 
-    it("reoves all", function(){
+    it("removes all", function(){
+        // this test tests the before all thing
         expect(true).toBeTruthy();
     });
 
-    // test that properties that need lazy loading are not loaded during serialization
+     //test that properties that need lazy loading are not loaded during serialization
 
     it("can use persistence paths on objects that have foreign key properties", function(){
         var t1:Tests.TestTree = new Tests.TestTree(12);
@@ -307,7 +308,7 @@ describe("The persistence thing", function(){
             });
         });
     });
-
+//
     it("can save objects that have subobjects which are one of many elements in a subobject-array of another root object", function(done){
         var c = 0;
         treeCollection.newTree(10,function(err,t1:Tests.TestTree) {
@@ -608,18 +609,18 @@ describe("The persistence thing", function(){
         expect( p ).toBeDefined();
         expect( p ).toBe(Tests.TestCar);
     });
-
-    // test for omm.PersistenceAnnotation.getPropertyClass(omm.entityClasses["TestCar"], "wheels")
-
-    // test regarding a number as an id property
-
-    // test regarding a different property than the _id property as the id property
-
-    // test that shows that root entities can be passed as parameters
-
-    // test that shows that entities can be passed as parameters
-
-    // test that shows that the subobjectpath class can handle array index lookups
-
-
+//
+//    // test for omm.PersistenceAnnotation.getPropertyClass(omm.entityClasses["TestCar"], "wheels")
+//
+//    // test regarding a number as an id property
+//
+//    // test regarding a different property than the _id property as the id property
+//
+//    // test that shows that root entities can be passed as parameters
+//
+//    // test that shows that entities can be passed as parameters
+//
+//    // test that shows that the subobjectpath class can handle array index lookups
+//
+//
 });

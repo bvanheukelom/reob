@@ -1,23 +1,26 @@
 /**
  * Created by bert on 06.03.16.
  */
-    ///<reference path="../../../../typings/meteor/meteor.d.ts"/>
 ///<reference path="../annotations/PersistenceAnnotation.ts"/>
-///<reference path="../omm/Collection.ts"/>
-///<reference path="../omm/MeteorObjectRetriever.ts"/>
+
 module omm {
+
+    export interface EventListener {
+        (i: EventContext<any>, data?:any ) : void
+    }
+
     export class EventContext<T>{
         private  cancelledError:any = false;
         preUpdate:T;
         object:T;
-        collection:omm.Collection<T>;
+        collection:any; //omm.Collection<T>;
         rootObject:any;
         methodContext:any;
         functionName:string;
-        serializationPath:omm.SerializationPath;
+        serializationPath:any; //omm.SerializationPath;
         topic:string;
 
-        constructor( o:T, coll:omm.Collection<T> ){
+        constructor( o:T, coll:any /*omm.Collection<T>*/ ){
             this.object = o;
             this.collection = coll;
         }
@@ -109,13 +112,21 @@ module omm {
         ctx.topic = topic;
         if( className && omm.eventListeners[className] && omm.eventListeners[className][topic] ){
             omm.eventListeners[className][topic].forEach( function(el:EventListener){
-                el( ctx, data );
+                try {
+                    el(ctx, data);
+                }catch( e ){
+                    console.log("Exception in event listener for class '"+className+"' and topic '"+topic+"':", e);
+                }
             });
         }
 
         if( topic.indexOf("pre:")!=0 && topic!="pre" && topic.indexOf("post:")!=0 && topic!="post" && className && omm.eventListeners[className] && omm.eventListeners[className]["_all"] ) {
             omm.eventListeners[className]["_all"].forEach(function (el:EventListener) {
-                el( ctx, data );
+                try{
+                    el( ctx, data );
+                }catch( e ){
+                    console.log("Exception in event listener for class '"+className+"' and _all topic:", e);
+                }
             });
         }
     }

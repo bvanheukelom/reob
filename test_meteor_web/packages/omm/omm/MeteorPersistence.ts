@@ -1,6 +1,7 @@
 ///<reference path="../../../../typings/meteor/meteor.d.ts"/>
 ///<reference path="../annotations/PersistenceAnnotation.ts"/>
 ///<reference path="./Collection.ts"/>
+///<reference path="./Collection.ts"/>
 ///<reference path="./MeteorObjectRetriever.ts"/>
 
 
@@ -8,7 +9,6 @@
 module omm {
 
     export var methodContext:any;
-    export interface EventListener { (i: EventContext<any>, data?:any ) : void }
 
 
 
@@ -256,17 +256,13 @@ module omm {
                             //console.log("Meteor method returns doc:",doc);
                         }
 
-                        // if it has a callback then call it with the error and the doc
-                        if( typeof arguments[arguments.length-1] == "function" ){
-                            arguments[arguments.length-1](theError, doc);
-                        } else {
-
-                            // or throw an error or return the doc just like that (sync invocation from Meteor)
-                            if( theError ){
-                                throw theError;
-                            }else
-                                return doc;
-                        }
+                        // meteor methods never have callbacks. If needed just throw a Meteor.Error.
+                        if( theError ){
+                            if( !(theError instanceof Meteor.Error) )
+                                theError = new Meteor.Error( theError );
+                            throw theError;
+                        }else
+                            return doc;
                     } finally {
                         omm.MeteorPersistence.wrappedCallInProgress = false;
                     }

@@ -93,6 +93,34 @@ declare module omm {
     }
 }
 declare module omm {
+    interface EventListener {
+        (i: EventContext<any>, data?: any): void;
+    }
+    class EventContext<T> {
+        private cancelledError;
+        preUpdate: T;
+        object: T;
+        collection: any;
+        rootObject: any;
+        methodContext: any;
+        functionName: string;
+        serializationPath: any;
+        topic: string;
+        constructor(o: T, coll: any);
+        cancel(err: any): void;
+        cancelledWithError(): any;
+    }
+    function on<O extends Object>(t: TypeClass<O>, topic: string | EventListener, f?: EventListener): void;
+    function onUpdate<O extends Object>(t: TypeClass<O>, functionName?: string | EventListener, f?: EventListener): void;
+    function preUpdate<O extends Object>(t: TypeClass<O>, functionName?: string | EventListener, f?: EventListener): void;
+    function callEventListeners<O extends Object>(t: TypeClass<O>, topic: string, ctx: omm.EventContext<any>, data?: any): void;
+    function removeAllUpdateEventListeners(): void;
+    var _queue: Array<any>;
+    function resetQueue(): void;
+    function emit(topic: any, data?: any): void;
+    function deleteQueue(): void;
+}
+declare module omm {
     interface Document {
         _id?: string;
         serial?: number;
@@ -178,9 +206,6 @@ declare module omm {
 }
 declare module omm {
     var methodContext: any;
-    interface EventListener {
-        (i: EventContext<any>, data?: any): void;
-    }
     class CallHelper<T extends Object> {
         object: T;
         callback: (error: any, result?: any) => void;
@@ -244,31 +269,6 @@ declare module omm {
         static resetAll(cb: (error?: any) => void): void;
         getEntityClass(): TypeClass<T>;
     }
-}
-declare module omm {
-    class EventContext<T> {
-        private cancelledError;
-        preUpdate: T;
-        object: T;
-        collection: omm.Collection<T>;
-        rootObject: any;
-        methodContext: any;
-        functionName: string;
-        serializationPath: omm.SerializationPath;
-        topic: string;
-        constructor(o: T, coll: omm.Collection<T>);
-        cancel(err: any): void;
-        cancelledWithError(): any;
-    }
-    function on<O extends Object>(t: TypeClass<O>, topic: string | EventListener, f?: EventListener): void;
-    function onUpdate<O extends Object>(t: TypeClass<O>, functionName?: string | EventListener, f?: EventListener): void;
-    function preUpdate<O extends Object>(t: TypeClass<O>, functionName?: string | EventListener, f?: EventListener): void;
-    function callEventListeners<O extends Object>(t: TypeClass<O>, topic: string, ctx: omm.EventContext<any>, data?: any): void;
-    function removeAllUpdateEventListeners(): void;
-    var _queue: Array<any>;
-    function resetQueue(): void;
-    function emit(topic: any, data?: any): void;
-    function deleteQueue(): void;
 }
 declare module omm {
     class LocalObjectRetriever implements omm.ObjectRetriever {

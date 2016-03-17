@@ -12,6 +12,9 @@ Package.describe({
 
 Package.onUse(function(api) {
     api.versionsFrom('1.0'); // ??
+	api.use('mongo', ['server','client']);
+	api.use('check', ['server','client']);
+
 	api.addFiles('annotations/PersistenceAnnotation.js');
 	api.addFiles('annotations/TypeClass.js');
 

@@ -32,6 +32,13 @@ describe("The persistence thing on the client ", function(){
         });
     });
 
+    it("can return errors in a callback ", function(done){
+        treeCollection.errorMethod(10, function (err, t) {
+            expect(err).toBe("the error");
+            done();
+        });
+    });
+
     it("can call wrapped functions that return arrays of objects", function(done){
         var c = 0;
         treeCollection.newTree(24,function(err:any,t:Tests.TestTree){

@@ -33,6 +33,15 @@ module.exports = function (grunt) {
 				},
 				out:"build/commonjs/omm.js"
 			},
+			nonMeteorPlain : {
+				src:  ["test_meteor_web/packages/omm/annotations/**/*.ts","test_meteor_web/packages/omm/event/**/*.ts","test_meteor_web/packages/omm/serializer/**/*.ts"],
+				options:{
+					sourceMap:false,
+					declaration:"build/commonjs/omm.d.ts",
+					experimentalDecorators:true
+				},
+				out:"build/nonMeteor/omm.js"
+			},
 			buildDeclaration : {
 				src:  ["test_meteor_web/packages/omm/**/*.ts"],
 				options:{
@@ -64,7 +73,7 @@ module.exports = function (grunt) {
 		}
 	});
 
-	grunt.registerTask('default', ["testweb", "commonjs", "buildDeclaration"]);
+	grunt.registerTask('default', ["testweb", "commonjs", "buildDeclaration", "ts:nonMeteorPlain"]);
 	grunt.registerTask('testweb', ["ts:meteor", 'ts:test', "rewrite", 'copyFilesToTestMeteorWeb']);
 	grunt.registerTask('commonjs', ["ts:commonjs", 'copyCommonJsFiles']);
 	grunt.registerTask('buildDeclaration', ["ts:buildDeclaration", 'copyDeclarationFiles']);

@@ -999,5 +999,3 @@ var omm;
     })();
     omm.LocalObjectRetriever = LocalObjectRetriever;
 })(omm || (omm = {}));
-
-module.exports = omm;

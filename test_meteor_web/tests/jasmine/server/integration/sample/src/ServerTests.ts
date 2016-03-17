@@ -187,6 +187,7 @@ describe("Omm on the server", function(){
             });
         });
     });
+
     it("can receive emitted events from a subobject", function(done){
         var l:any = {};
         l.listener = function(event:omm.EventContext<Tests.TestTree>){
@@ -204,6 +205,32 @@ describe("Omm on the server", function(){
             done()
         });
     });
+
+    it("can receive emitted events from a subobject even if another (the first) event listener throws an exception", function(done){
+        var l:any = {};
+        l.listener1 = function(event:omm.EventContext<Tests.TestTree>){
+            throw "freekish error";
+        };
+        l.listener2 = function(event:omm.EventContext<Tests.TestTree>){
+
+        };
+        spyOn(l, 'listener1').and.callThrough();
+        spyOn(l, 'listener2').and.callThrough();
+        omm.on( Tests.TestLeaf, "fluttering", l.listener1 );
+        omm.on( Tests.TestLeaf, "fluttering", l.listener2 );
+        treeCollection.newTree(10, function (err, t:Tests.TestTree) {
+            expect( err ).toBeUndefined();
+            t.grow();
+            t = treeCollection.getById(t.treeId);
+            t.getLeaves()[0].flutter();
+
+            expect(l.listener1).toHaveBeenCalled();
+            expect(l.listener2).toHaveBeenCalled();
+            done()
+        });
+    });
+
+
     it("can receive emitted events from a subobject and get the object", function(done){
         var l:any = {};
         l.listener = function(event:omm.EventContext<Tests.TestTree>){
