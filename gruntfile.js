@@ -24,14 +24,24 @@ module.exports = function (grunt) {
 				out:"test_meteor_web/packages/omm/omm.js"
 			},
 			commonjs : {
-				src:  ["test_meteor_web/packages/omm/annotations/**/*.ts","test_meteor_web/packages/omm/event/**/*.ts","test_meteor_web/packages/omm/serializer/**/*.ts"],
+				src:  ["testweb/node_modules/omm/src/**/*.ts"],
 				options:{
 					sourceMap:false,
-					declaration:"build/commonjs/omm.d.ts",
+					declaration:"testweb/node_modules/omm/build/omm.d.ts",
 					module:"commonjs",
 					experimentalDecorators:true
 				},
-				out:"build/commonjs/omm.js"
+				out:"testweb/node_modules/omm/build/omm.js"
+			},
+			test : {
+				src: ["testweb/node_modules/omm_testclasses/src/**/*.ts"],
+				options:{
+					removeComments:false,
+					declaration:"testweb/node_modules/omm/build/omm_testclasses.d.ts",
+					experimentalDecorators:true,
+					module:"commonjs"
+				},
+				out:"testweb/node_modules/omm_testclasses/build/omm_testclasses.js"
 			},
 			nonMeteorPlain : {
 				src:  ["test_meteor_web/packages/omm/annotations/**/*.ts","test_meteor_web/packages/omm/event/**/*.ts","test_meteor_web/packages/omm/serializer/**/*.ts"],
@@ -61,13 +71,6 @@ module.exports = function (grunt) {
 					experimentalDecorators:true
 				},
 				out:"build/amd/omm/omm.js"
-			},
-			test : {
-				src: ["test_meteor_web/packages/testclasses/**/*.ts","test_meteor_web/tests/**/*.ts"],
-				options:{
-					removeComments:false,
-					experimentalDecorators:true
-				}
 			}
 
 		}
@@ -181,7 +184,36 @@ module.exports = function (grunt) {
 		//grunt.file.copy("commonjs/package.json", "build/amd/package.json");
 	});
 	grunt.registerTask("rewrite", "Copies all necessary files for the amd js package", function () {
-		rewrite("test_meteor_web/packages/omm/**/*.js");
+		//rewrite("testweb/node_modules/omm/test/**/*.js");
+		rewrite("testweb/packages/**/*.js");
 	});
-
+	grunt.registerTask("rewriteDTS", "Copies all necessary files for the amd js package", function () {
+		function rewriteDTS(name)
+		{
+			grunt.file.copy(name, name, {
+				process: function (content)
+				{
+					var s = content;
+					var l, p;
+					do {
+						l = s.length;
+						s = s.replace('declare module omm', 'export module omm');
+						p = s.length;
+					} while (l != p);
+					var splitArray = s.split("\n");
+					var returnContent = "";
+					for (var i = 0; i < splitArray.length; i++)
+					{
+						if (splitArray[i].indexOf("///") != 0)
+						{
+							returnContent += splitArray[i] + "\n";
+						}
+					}
+					return returnContent;
+				}
+			});
+		}
+		rewriteDTS('testweb/node_modules/omm/build/omm.d.ts');
+		rewriteDTS('testweb/node_modules/omm_testclasses/build/omm_testclasses.d.ts');
+	});
 };
