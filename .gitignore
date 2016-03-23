@@ -1,5 +1,4 @@
 .tscache
-node_modules
 test_meteor_web/packages/mapper
 code/*.js
 code/*.map
@@ -8,3 +7,5 @@ test_meteor_web/packages/testclasses/*.js
 test_meteor_web/tests/**/*.js
 .baseDir.ts
 *.js.map
+node_modules
+!/node_modules/omm
