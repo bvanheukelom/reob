@@ -4,25 +4,11 @@ module.exports = function (grunt) {
 
 	grunt.initConfig({
 		watch: {
-			files: ["test_meteor_web/**/*.ts",],
+			files: ["test_meteor_web/**/*.ts"],
 			tasks: ["default"]
 		},
 		ts: {
-			meteor : {
-				src: ["test_meteor_web/packages/omm/**/*.ts"],
-				options:{
-					removeComments:false,
-					experimentalDecorators:true
-				}
-			},
-			dtsfile : {
-				src: ["test_meteor_web/packages/omm/**/*.ts"],
-				options:{
-					declaration:"test_meteor_web/packages/omm/omm.d.ts",
-					experimentalDecorators:true
-				},
-				out:"test_meteor_web/packages/omm/omm.js"
-			},
+
 			commonjs : {
 				src:  ["testweb/node_modules/omm/src/**/*.ts"],
 				options:{
@@ -42,36 +28,8 @@ module.exports = function (grunt) {
 					module:"commonjs"
 				},
 				out:"testweb/node_modules/omm_testclasses/build/omm_testclasses.js"
-			},
-			nonMeteorPlain : {
-				src:  ["test_meteor_web/packages/omm/annotations/**/*.ts","test_meteor_web/packages/omm/event/**/*.ts","test_meteor_web/packages/omm/serializer/**/*.ts"],
-				options:{
-					sourceMap:false,
-					declaration:"build/commonjs/omm.d.ts",
-					experimentalDecorators:true
-				},
-				out:"build/nonMeteor/omm.js"
-			},
-			buildDeclaration : {
-				src:  ["test_meteor_web/packages/omm/**/*.ts"],
-				options:{
-					sourceMap:false,
-					declaration:"build/declaration/omm.d.ts",
-					module:"commonjs",
-					experimentalDecorators:true
-				},
-				out:"build/declaration/omm.js"
-			},
-			amd : {
-				src:  ["src/annotations/**/*.ts"],
-				options:{
-					sourceMap:false,
-					declaration:"build/amd/omm.d.ts",
-					module:"amd",
-					experimentalDecorators:true
-				},
-				out:"build/amd/omm/omm.js"
 			}
+
 
 		}
 	});

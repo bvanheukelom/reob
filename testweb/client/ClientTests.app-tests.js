@@ -1,4 +1,4 @@
-///<reference path="../../typings/jasmine/jasmine.d.ts"/>
+///<reference path="../node_modules/omm/typings/jasmine/jasmine.d.ts"/>
 "use strict";
 var Tests_spec_1 = require("../node_modules/omm/spec/Tests.spec");
 var ClientTests_spec_1 = require("../node_modules/omm/spec/ClientTests.spec");
