@@ -1,4 +1,5 @@
 ///<reference path="../node_modules/omm/typings/jasmine/jasmine.d.ts"/>
+///<reference path="../node_modules/omm/typings/meteor/meteor.d.ts"/>
 
 import TestsSpec from "../node_modules/omm/spec/Tests.spec"
 import ClientSpec from "../node_modules/omm/spec/ClientTests.spec"

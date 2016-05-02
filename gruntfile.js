@@ -9,15 +9,8 @@ module.exports = function (grunt) {
 		},
 		ts: {
 
-			commonjs : {
-				src:  ["testweb/node_modules/omm/src/**/*.ts"],
-				options:{
-					sourceMap:false,
-					declaration:"testweb/node_modules/omm/build/omm.d.ts",
-					module:"commonjs",
-					experimentalDecorators:true
-				},
-				out:"testweb/node_modules/omm/build/omm.js"
+			all : {
+				tsconfig:true
 			},
 			test : {
 				src: ["testweb/node_modules/omm_testclasses/src/**/*.ts"],
