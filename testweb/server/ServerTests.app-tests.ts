@@ -3,7 +3,8 @@
 
 import TestsSpec from "../node_modules/omm/spec/Tests.spec"
 import ServerSpec from "../node_modules/omm/spec/ServerTests.spec"
-import * as omm from "omm"
+import * as omm from"../node_modules/omm/src/omm"
+
 
 import * as Tests from "../node_modules/omm/spec/classes/Tests"
 

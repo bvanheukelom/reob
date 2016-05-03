@@ -3,7 +3,7 @@
 
 import TestsSpec from "../node_modules/omm/spec/Tests.spec"
 import ClientSpec from "../node_modules/omm/spec/ClientTests.spec"
-import * as omm from "omm"
+import * as omm from"../node_modules/omm/src/omm"
 import * as Tests from "../node_modules/omm/spec/classes/Tests"
 
 // this file is used to run the integration tests with the command

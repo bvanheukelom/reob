@@ -3,7 +3,7 @@
 "use strict";
 var Tests_spec_1 = require("../node_modules/omm/spec/Tests.spec");
 var ClientTests_spec_1 = require("../node_modules/omm/spec/ClientTests.spec");
-var omm = require("omm");
+var omm = require("../node_modules/omm/src/omm");
 var Tests = require("../node_modules/omm/spec/classes/Tests");
 // this file is used to run the integration tests with the command
 // meteor test --driver-package sanjo:jasmine

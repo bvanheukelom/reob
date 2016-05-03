@@ -21,4 +21,5 @@ standard-minifier-css
 standard-minifier-js
 #practicalmeteor:mocha
 #practicalmeteor:mocha-console-runner
-sanjo:jasmine@1.0.0-rc.3
+sanjo:jasmine
+velocity:html-reporter

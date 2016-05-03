@@ -3,7 +3,7 @@
 "use strict";
 var Tests_spec_1 = require("../node_modules/omm/spec/Tests.spec");
 var ServerTests_spec_1 = require("../node_modules/omm/spec/ServerTests.spec");
-var omm = require("omm");
+var omm = require("../node_modules/omm/src/omm");
 var Tests = require("../node_modules/omm/spec/classes/Tests");
 console.log("servering");
 Meteor.startup(function () {
