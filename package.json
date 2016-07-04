@@ -1,7 +1,13 @@
 {
-  "name": "omm",
-  "version": "0.0.1",
+  "name": "o-m-m",
+  "version": "0.0.33",
+  "main": "dist/src/omm.js",
+  "typings": "dist/src/omm.d.ts",
+  "scripts": {
+    "test": "./node_modules/jasmine/bin/jasmine.js"
+  },
   "devDependencies": {
+    "jasmine": "^2.4.1",
     "dts-generator": "^1.7.0",
     "grunt": "^0.4.5",
     "grunt-auto-install": "^0.2.3",
@@ -14,5 +20,10 @@
     "grunt-ts": "^5.5.0-beta.2",
     "typescript": "^1.8.10",
     "underscore": "^1.8.3"
+  },
+  "dependencies": {
+    "@bvanheukelom/web-methods": "*",
+    "bluebird": "^3.4.1",
+    "mongodb": "^2.1.18"
   }
 }

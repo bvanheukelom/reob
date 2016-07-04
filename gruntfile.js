@@ -8,35 +8,21 @@ module.exports = function (grunt) {
 			tasks: ["default"]
 		},
 		clean: { files:[
-			"testweb/node_modules/omm/build",
-			"testweb/node_modules/omm/src/**/*.js*",
-			"testweb/node_modules/omm/src/**/*.d.ts",
-			"testweb/node_modules/omm/spec/**/*.js*",
-			"testweb/node_modules/omm/spec/**/*.d.ts",
-			"testweb/client/*.js",
-			"testweb/client/*.js.map",
-			"testweb/server/*.js",
-			"testweb/server/*.js.map"
+			"dist",
+			"src/**/*.js*",
+			"src/**/*.d.ts",
+			"spec/**/*.js*",
+			"spec/**/*.d.ts"
 		] },
 		ts: {
 			omm : {
-				tsconfig:"testweb/node_modules/omm/tsconfig.json"
-			},
-			build : {
-				tsconfig:"testweb/node_modules/omm/tsconfig.json",
-				options:{
-					declaration:true
-				},
-				outDir:"testweb/node_modules/omm/build"
-			},
-			other : {
-				tsconfig:true
+				tsconfig:"tsconfig.json"
 			}
 		}
 	});
 
 	grunt.registerTask('default', ["clean", "compile"]);
-	grunt.registerTask('compile', ["ts:omm", "ts:other", "ts:build"]);
+	grunt.registerTask('compile', ["ts"]);
 
 	// NPM TASKS
 	grunt.loadNpmTasks("grunt-ts");
