@@ -205,8 +205,7 @@ export default class Collection<T extends Object>
         omm_sp.SerializationPath.updateSerializationPaths(p);
         return p;
     }
-
-
+    
     private updateOnce(id:string, updateFunction:(o:T)=>void, attempt:number):Promise<any> {
         var valuePromise = this.mongoCollection.find({
             _id: id

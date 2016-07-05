@@ -217,8 +217,6 @@ export class MeteorPersistence {
                         var r = MeteorPersistence.serializer.toDocument(result);
                         console.log("Result of web method " + options.name + " is ", r);
                         return r;
-                    }).catch((e)=> {
-                        console.log("Web method promise caught an exception:", e);
                     });
 
                 // return the promise
