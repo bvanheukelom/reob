@@ -1,6 +1,6 @@
 
 
-import * as omm from "../annotations/PersistenceAnnotation"
+import * as omm from "../omm"
 
 import * as omm_sp from "./SerializationPath"
 import Serializer from "../serializer/Serializer"
@@ -9,15 +9,16 @@ import {TypeClass as TypeClass } from "../annotations/PersistenceAnnotation"
 import * as omm_event from "../event/OmmEvent"
 import Status from "./Status"
 import * as Config from "./Config"
+import * as mongodb from "mongodb"
 
 export default class Collection<T extends Object>
 {
-    private meteorCollection:Config.MongoCollectionInterface;
+    private mongoCollection:mongodb.Collection;
     private theClass:omm.TypeClass<T>;
     private name:string;
     private serializer:Serializer;
     private eventListeners:{ [index:string]:Array< ( i:omm.EventContext<T>, data?:any )=>void > } = {};
-
+    private db:mongodb.Db;
     private static meteorCollections:{[index:string]:any} = { };
 
     private static collections:{[index:string]:Collection<any>} = {};
@@ -88,7 +89,7 @@ export default class Collection<T extends Object>
      * @class
      * @memberof omm
      */
-    constructor( entityClass:omm.TypeClass<T>, collectionName?:string ) {
+    constructor(  entityClass:omm.TypeClass<T>, collectionName?:string ) {
         this.serializer = new Serializer();
         //var collectionName = omm.PersistenceAnnotation.getCollectionName(persistableClass);
         if( !collectionName )
@@ -101,16 +102,16 @@ export default class Collection<T extends Object>
             Collection.collections[collectionName] = this;
         }
 
-        this.meteorCollection = Collection._getMeteorCollection(collectionName);
+        this.mongoCollection = omm.MeteorPersistence.db.collection( this.name );
         this.theClass = entityClass;
     }
 
-    private static _getMeteorCollection( name?:string ) {
-        if( !Collection.meteorCollections[name] ) {
-            Collection.meteorCollections[name] = (Config.getMongo()).collection( name );
-        }
-        return Collection.meteorCollections[name];
-    }
+    // private static _getMeteorCollection( name?:string ) {
+    //     if( !Collection.meteorCollections[name] ) {
+    //         Collection.meteorCollections[name] = (Config.getMongo()).;
+    //     }
+    //     return Collection.meteorCollections[name];
+    // }
 
     /**
      * Gets the name of the collection.
@@ -126,7 +127,7 @@ export default class Collection<T extends Object>
      */
     getMeteorCollection( ):any
     {
-        return this.meteorCollection;
+        return this.mongoCollection;
     }
 
     /**
@@ -152,7 +153,7 @@ export default class Collection<T extends Object>
      */
     protected find(findCriteria:any):Promise<Array<T>>
     {
-        return this.meteorCollection.find(findCriteria).toArray().then((documents:Array<Document>)=>{
+        return this.mongoCollection.find(findCriteria).toArray().then((documents:Array<Document>)=>{
             var objects:Array<T> = [];
             for (var i = 0; i < documents.length; i++) {
                 var document:Document = documents[i];
@@ -177,7 +178,7 @@ export default class Collection<T extends Object>
      * @param id {string} the id of the object to be removed from the collection
      * @callback cb the callback that's called once the object is removed or an error happend
      */
-    protected remove( id:string ):Promise<void>
+    protected remove( id:string ):Promise<any>
     {
         var ctx = new omm.EventContext( undefined, this );
         ctx.objectId = id;
@@ -188,7 +189,7 @@ export default class Collection<T extends Object>
         }else if (!id) {
             return Promise.reject("Trying to remove an object that does not have an id.");
         }else{
-            return this.meteorCollection.remove({_id:id }).then((result)=>{
+            return this.mongoCollection.remove({_id:id }).then((result)=>{
                 var c2 = new omm.EventContext(undefined, this);
                 c2.objectId = id;
                 c2.methodContext = Status.methodContext;
@@ -207,7 +208,7 @@ export default class Collection<T extends Object>
 
 
     private updateOnce(id:string, updateFunction:(o:T)=>void, attempt:number):Promise<any> {
-        var valuePromise = this.meteorCollection.find({
+        var valuePromise = this.mongoCollection.find({
             _id: id
         }).toArray().then((documents:Document[])=> {
             var document = documents[0];
@@ -236,7 +237,7 @@ export default class Collection<T extends Object>
             // update the collection
             //console.log("writing document ", documentToSave);
 
-            return this.meteorCollection.updateOne({
+            return this.mongoCollection.updateOne({
                 _id: id,
                 serial: data.currentSerial
             }, documentToSave);
@@ -277,12 +278,6 @@ export default class Collection<T extends Object>
         return this.updateOnce(id, updateFunction,0);
     }
 
-    /**
-     * callback is called once the object got inserted or an error happened
-     * @callback omm.Collection~insertCallback
-     * @param e {any} error
-     * @param id {id=} string
-     */
 
     /**
      * Inserts an object into the collection
@@ -307,7 +302,7 @@ export default class Collection<T extends Object>
             var idPropertyName = omm.PersistenceAnnotation.getIdPropertyName(this.theClass);
             var id = p[idPropertyName];
             if (!id){
-                p[idPropertyName] = new (Config.getMongo().ObjectID)().toString();
+                p[idPropertyName] = new mongodb.ObjectID().toString();
                 id = p[idPropertyName];
             }
             var doc:Document = this.serializer.toDocument(p);
@@ -315,7 +310,7 @@ export default class Collection<T extends Object>
             doc.serial = 0;
             //console.log( "inserting document: ", doc);
 
-            return this.meteorCollection.insert(doc).then(()=>{
+            return this.mongoCollection.insert(doc).then(()=>{
                 omm_sp.SerializationPath.updateSerializationPaths(p);
 
                 //console.log("didInsert");
@@ -333,31 +328,6 @@ export default class Collection<T extends Object>
      * @param error {any=} if an error occured it is passed to the callback
      */
 
-    ///**
-    // * removes all objects (for testing purposes)
-    // * @param {omm.Collection~resetAllCallback} cb called when it's done
-    // */
-    //@omm.StaticMeteorMethod({replaceWithCall:true, parameterTypes:['callback']})
-    //static resetAll( cb:(error?:any)=>void ){
-    //    var arr:Array<any> = [];
-    //    for( var i in Collection.meteorCollections )
-    //        arr.push(Collection.meteorCollections[i]);
-    //    if( arr.length>0 ){
-    //        for( var j in arr )
-    //        {
-    //            if( parseInt(j)!=arr.length-1)
-    //                Config.getMeteor().wrapAsync(function(cb2){
-    //                    arr[j].remove({},cb2);
-    //                })();
-    //            else {
-    //                arr[j].remove({}, cb);
-    //            }
-    //        }
-    //    }
-    //    else
-    //        cb();
-    //
-    //}
 
     getEntityClass():TypeClass<T>{
         return this.theClass;

@@ -528,9 +528,6 @@ exports.PersistenceAnnotation = PersistenceAnnotation;
     if (!data.entityClasses)
         data.entityClasses = {};
     exports.entityClasses = data.entityClasses;
-    if (!data.environmentReferences)
-        data.environmentReferences = {};
-    exports.environmentReferences = data.environmentReferences;
     if (!data.registeredObjects)
         data.registeredObjects = {};
     exports.registeredObjects = data.registeredObjects;

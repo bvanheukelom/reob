@@ -16,23 +16,9 @@ describe("Omm both on client and server", function () {
 
     beforeAll((done)=>{
         jasmine.DEFAULT_TIMEOUT_INTERVAL = 10000000;
-        mongodb.MongoClient.connect('mongodb://localhost:27017/test',{promiseLibrary:Promise}).then((d:any)=>{
-            var webMethods = new wm.WebMethods("http://localhost:7000/methods");
-            omm.config({Mongo:{
-                    collection:(n:string)=>d.collection(n),
-                    ObjectID:mongodb.ObjectID
-                },
-                Meteor:{ isServer:false,
-                    call:webMethods.call.bind(webMethods),
-                    add:webMethods.add.bind(webMethods)
-                }
-            });
-            omm.init();
-            console.log("starting");
-            webMethods.start(7000).then(()=>{
-                done();
-
-            });
+        omm.startServer( 'mongodb://localhost:27017/test', 7000 ).then(()=>{
+            omm.init("localhost", 7000);
+            done();
         }).catch((err)=>{
             fail(err);
             done();
@@ -55,6 +41,42 @@ describe("Omm both on client and server", function () {
             f.apply(this, arguments);
         }
     }
+
+    it("can load trees ", function (done) {
+        treeCollection.newTree(20)
+            .then((tree:Tests.TestTree)=>{
+                console.log("Tree id", tree.treeId);
+                return omm.load( Tests.TestTree, tree.treeId );
+            })
+            .then((tree:Tests.TestTree)=>{
+                expect( tree ).toBeDefined();
+                done();
+            });
+    });
+
+    it("can load trees and call stuff on it", function (done) {
+        var treeId;
+        treeCollection.newTree(20)
+            .then((tree:Tests.TestTree)=>{
+                console.log("Tree id", tree.treeId);
+                treeId = tree.treeId;
+                expect( tree.getHeight() ).toBe(20);
+                return omm.load( Tests.TestTree, tree.treeId );
+            })
+            .then((tree:Tests.TestTree)=>{
+                expect( tree ).toBeDefined();
+                expect( tree.getHeight() ).toBe(20);
+                var growPromise = tree.grow();
+                return growPromise;
+            })
+            .then((s:string)=>{
+                return treeCollection.getById(treeId);
+            })
+            .then((tree:Tests.TestTree)=>{
+                expect( tree.getHeight() ).toBe(21);
+                done();
+            });
+    });
 
     it("knows the difference between root entities and subdocument entities ", function () {
         expect(omm.PersistenceAnnotation.getCollectionName(Tests.TestPerson)).toBe("TestPerson");
@@ -106,7 +128,6 @@ describe("Omm both on client and server", function () {
     });
 
     it("updates the collection", function (done) {
-        debugger;
         var id;
         personCollection.newPerson('bert').then((e:Tests.TestPerson)=> {
             id = e.getId();
@@ -130,7 +151,6 @@ describe("Omm both on client and server", function () {
             var t1 = values[0];
             var t2 = values[1];
             var held = values[2];
-            debugger;
             var ap1 = (<any>held.addToWood(t1, "peterKey")).then((r)=>{
                 return r;
             });
@@ -209,7 +229,6 @@ describe("Omm both on client and server", function () {
 
     it("can do basic removes", function (done) {
         var treeId;
-        debugger;
         treeCollection.newTree(20).then( ( t:Tests.TestTree) => {
             treeId = t.treeId;
         }).then(()=>{
@@ -238,7 +257,6 @@ describe("Omm both on client and server", function () {
     });
 
     it("uses persistence paths on sub documents", function () {
-        debugger;
         var tp:Tests.TestPerson = new Tests.TestPerson("tp1");
         tp.phoneNumber = new Tests.TestPhoneNumber("12345");
         omm.SerializationPath.updateSerializationPaths(tp);

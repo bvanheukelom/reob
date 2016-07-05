@@ -8,7 +8,9 @@ import { MeteorPersistable } from "./MeteorPersistable"
 import * as omm_annotation from "../annotations/PersistenceAnnotation"
 import * as omm_event from "../event/OmmEvent"
 import * as Config from "./Config"
-
+import * as mongodb from "mongodb"
+import * as wm from "@bvanheukelom/web-methods"
+import * as Promise from "bluebird"
 
 export var methodContext:any;
 
@@ -49,7 +51,7 @@ function call( methodName:string, objectId:string, args:any[]  ):Promise<any>{
     args.unshift( objectId );
     args.unshift( methodName );
 
-    var p:Promise<any> = Config.getMeteor().call.apply(this, args);
+    var p:Promise<any> = MeteorPersistence.clientWebMethods.call.apply(MeteorPersistence.clientWebMethods, args);
     return p.then((result:any)=>{
         // convert the result from json to an object
         if( result ) {
@@ -72,6 +74,10 @@ export class MeteorPersistence {
     private static initialized = false;
     static meteorObjectRetriever:ObjectRetriever;
     static serializer:Serializer;
+
+    static db:mongodb.Db;
+    static serverWebMethods:wm.WebMethods;
+    static clientWebMethods:wm.WebMethods;
 
     static init() {
         if (!MeteorPersistence.initialized) {
@@ -174,52 +180,51 @@ export class MeteorPersistence {
             console.log("Running replacer function of a function that is also a web method. Name:"+options.name );
             var key = omm_annotation.isRegisteredWithKey(this) || ( this._serializationPath ? this._serializationPath.toString() : undefined );
             var r:any;
-            if( !options.serverOnly || Config.getMeteor().isServer ){
+            var isServer:boolean = (this._serializationPath && !this._serializationPath.isClient);
+
+            if( !options.serverOnly || isServer || !key ){
                 console.log( "Running original function of web method "+options.name);
                 r = originalFunction.apply(this, a);
             }
-            if( !Config.getMeteor().isServer ) {
-                if( key ) {
-                    r = call(options.name, key, a);
-                }else{
-                    // in case a method is run plain on the client ... do nothing
-                }
+            if( !isServer && key ) {
+                r = call(options.name, key, a);
             }
             return r;
         });
         
         // register the web method
-        Config.getMeteor().add(options.name, (...args:any[])=> {
-            console.log("Web method "+options.name );
-            debugger;
+        if( MeteorPersistence.serverWebMethods ) {
+            MeteorPersistence.serverWebMethods.add(options.name, (...args:any[])=> {
+                console.log("Web method " + options.name);
 
-            // the object id is the first parameter
-            var objectId = args.shift();
+                // the object id is the first parameter
+                var objectId = args.shift();
 
-            // convert parameters given to the web method from documents to objects
-            MeteorPersistence.convertWebMethodParameters(args, options.parameterTypes);
+                // convert parameters given to the web method from documents to objects
+                MeteorPersistence.convertWebMethodParameters(args, options.parameterTypes);
 
-            // load object based on the object id. this could either be a registered object or an object form a collection
-            var p = MeteorPersistence.retrieveObject( objectId )
+                // load object based on the object id. this could either be a registered object or an object form a collection
+                var p = MeteorPersistence.retrieveObject(objectId)
 
-            // call function 
-            .then((object:any)=>{
-                return object[options.name].originalFunction.apply(object, args);
-            })
+                    // call function
+                    .then((object:any)=> {
+                        return object[options.name].originalFunction.apply(object, args);
+                    })
 
-            // convert the result to a document
-            .then( (result)=>{
-                MeteorPersistence.attachClassName(result);
-                var r = MeteorPersistence.serializer.toDocument(result);
-                console.log( "Result of web method " +options.name+ " is ", r);
-                return r;
-            }).catch((e)=>{
-               console.log("Web method promise caught an exception:", e);
+                    // convert the result to a document
+                    .then((result)=> {
+                        MeteorPersistence.attachClassName(result);
+                        var r = MeteorPersistence.serializer.toDocument(result);
+                        console.log("Result of web method " + options.name + " is ", r);
+                        return r;
+                    }).catch((e)=> {
+                        console.log("Web method promise caught an exception:", e);
+                    });
+
+                // return the promise
+                return p;
             });
-
-            // return the promise
-            return p;
-        });
+        }
     }
 
 
@@ -236,23 +241,10 @@ export class MeteorPersistence {
             MeteorPersistence.monkeyPatch(entityClass.prototype, functionName, function (originalFunction, ...args:string[]) {
                 //console.log("updating object:",this, "original function :"+originalFunction);
                 var _serializationPath:SerializationPath = this._serializationPath;
-                if( !_serializationPath ){
+                if( !_serializationPath || _serializationPath.isClient ){
                     return originalFunction.apply(this, args);
                 }
-                // var updateCollection:boolean = true;
-                // var resetUpdateCollection:boolean = false;
-
-                // if( !Status.updateInProgress  ) {
-                //     // make sure only one update process happens at the same time
-                //     Status.updateInProgress = true;
-                //
-                //     // empty the queue so that it can hold the events that happen during an update
-                //     omm_event.resetQueue();
-                //     resetUpdateCollection = true;
-                // } else {
-                //     updateCollection = false;
-                // }
-
+                
                 var rootObject;
                 var object;
                 var collection:Collection<any>;
@@ -365,10 +357,57 @@ export class MeteorPersistence {
 
 
 
-export function init(){
-    MeteorPersistence.init();
+
+var endpointUrl:string;
+
+export function load<T>( cls:omm_annotation.TypeClass<T>, id:string ):Promise<T>{
+    var webMethods = new wm.WebMethods(endpointUrl);
+    var serializer = new Serializer();
+    if( !omm_annotation.PersistenceAnnotation.isRootEntity(cls) ){
+        throw new Error("Given class is not a root entity");
+    }
+    var className = omm_annotation.className(cls);
+    return webMethods.call( "get", className, id ).then( (doc)=>{
+        var o = serializer.toObject( doc, cls );
+        var collectionName = omm_annotation.PersistenceAnnotation.getCollectionName(cls);
+        var sp = new SerializationPath( collectionName, id );
+        sp.isClient = true;
+        SerializationPath.setSerializationPath( o, sp );
+        SerializationPath.updateSerializationPaths(o);
+        return o;
+    });
 }
 
-//Meteor.startup(function(){
-//    MeteorPersistence.init();
-//});
+function registerGetter( webMethods:wm.WebMethods ){
+    var serializer = new Serializer();
+    webMethods.add("get", (className:string, objectId:string)=>{
+        console.log("Getter "+className, objectId );
+        var type = omm_annotation.entityClasses[className];
+        var collectionName  = type ? omm_annotation.PersistenceAnnotation.getCollectionName( type ) : undefined;
+        var objPromise = collectionName ? MeteorPersistence.retrieveObject(collectionName+"["+objectId+"]") : undefined;
+        return objPromise.then((obj)=>{
+            return obj ? serializer.toDocument(obj) : undefined;
+        });
+    });
+}
+
+export function init( host:string, port:number ){
+    endpointUrl = "http://"+host+":"+port+"/methods";
+    MeteorPersistence.clientWebMethods = new wm.WebMethods(endpointUrl);
+    MeteorPersistence.init();
+
+}
+
+export function startServer( mongoUrl:string, port:number ):Promise<any>{
+
+    return mongodb.MongoClient.connect( mongoUrl, {promiseLibrary:Promise}).then((db:mongodb.Db)=>{
+        MeteorPersistence.db = db;
+        MeteorPersistence.serverWebMethods = new wm.WebMethods("http://localhost:"+port+"/methods");
+        registerGetter(MeteorPersistence.serverWebMethods);
+        MeteorPersistence.init();
+        console.log("starting");
+        return MeteorPersistence.serverWebMethods.start(7000);
+    });
+}
+
+

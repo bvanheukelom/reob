@@ -1,10 +1,10 @@
 "use strict";
-var omm = require("../annotations/PersistenceAnnotation");
+var omm = require("../omm");
 var omm_sp = require("./SerializationPath");
 var Serializer_1 = require("../serializer/Serializer");
 var omm_event = require("../event/OmmEvent");
 var Status_1 = require("./Status");
-var Config = require("./Config");
+var mongodb = require("mongodb");
 var Collection = (function () {
     /**
      * Represents a Mongo collection that contains entities.
@@ -25,7 +25,7 @@ var Collection = (function () {
             // as it doesnt really matter which base collection is used in meteor-calls, we're just using the first that is created
             Collection.collections[collectionName] = this;
         }
-        this.meteorCollection = Collection._getMeteorCollection(collectionName);
+        this.mongoCollection = omm.MeteorPersistence.db.collection(this.name);
         this.theClass = entityClass;
     }
     Collection.prototype.removeAllListeners = function () {
@@ -76,12 +76,12 @@ var Collection = (function () {
     Collection.prototype.resetQueue = function () {
         this.queue = [];
     };
-    Collection._getMeteorCollection = function (name) {
-        if (!Collection.meteorCollections[name]) {
-            Collection.meteorCollections[name] = (Config.getMongo()).collection(name);
-        }
-        return Collection.meteorCollections[name];
-    };
+    // private static _getMeteorCollection( name?:string ) {
+    //     if( !Collection.meteorCollections[name] ) {
+    //         Collection.meteorCollections[name] = (Config.getMongo()).;
+    //     }
+    //     return Collection.meteorCollections[name];
+    // }
     /**
      * Gets the name of the collection.
      * @returns {string}
@@ -94,7 +94,7 @@ var Collection = (function () {
      * @returns {any}
      */
     Collection.prototype.getMeteorCollection = function () {
-        return this.meteorCollection;
+        return this.mongoCollection;
     };
     /**
      * Loads an object from the collection by its id.
@@ -116,7 +116,7 @@ var Collection = (function () {
      */
     Collection.prototype.find = function (findCriteria) {
         var _this = this;
-        return this.meteorCollection.find(findCriteria).toArray().then(function (documents) {
+        return this.mongoCollection.find(findCriteria).toArray().then(function (documents) {
             var objects = [];
             for (var i = 0; i < documents.length; i++) {
                 var document = documents[i];
@@ -150,7 +150,7 @@ var Collection = (function () {
             return Promise.reject("Trying to remove an object that does not have an id.");
         }
         else {
-            return this.meteorCollection.remove({ _id: id }).then(function (result) {
+            return this.mongoCollection.remove({ _id: id }).then(function (result) {
                 var c2 = new omm.EventContext(undefined, _this);
                 c2.objectId = id;
                 c2.methodContext = Status_1.default.methodContext;
@@ -166,7 +166,7 @@ var Collection = (function () {
     };
     Collection.prototype.updateOnce = function (id, updateFunction, attempt) {
         var _this = this;
-        var valuePromise = this.meteorCollection.find({
+        var valuePromise = this.mongoCollection.find({
             _id: id
         }).toArray().then(function (documents) {
             var document = documents[0];
@@ -188,7 +188,7 @@ var Collection = (function () {
             documentToSave.serial = (data.currentSerial || 0) + 1;
             // update the collection
             //console.log("writing document ", documentToSave);
-            return _this.meteorCollection.updateOne({
+            return _this.mongoCollection.updateOne({
                 _id: id,
                 serial: data.currentSerial
             }, documentToSave);
@@ -225,12 +225,6 @@ var Collection = (function () {
         return this.updateOnce(id, updateFunction, 0);
     };
     /**
-     * callback is called once the object got inserted or an error happened
-     * @callback omm.Collection~insertCallback
-     * @param e {any} error
-     * @param id {id=} string
-     */
-    /**
      * Inserts an object into the collection
      * @param p the object
      * @param {omm.Collection~insertCallback} callback
@@ -253,13 +247,13 @@ var Collection = (function () {
             var idPropertyName = omm.PersistenceAnnotation.getIdPropertyName(this.theClass);
             var id = p[idPropertyName];
             if (!id) {
-                p[idPropertyName] = new (Config.getMongo().ObjectID)().toString();
+                p[idPropertyName] = new mongodb.ObjectID().toString();
                 id = p[idPropertyName];
             }
             var doc = this.serializer.toDocument(p);
             doc.serial = 0;
             //console.log( "inserting document: ", doc);
-            return this.meteorCollection.insert(doc).then(function () {
+            return this.mongoCollection.insert(doc).then(function () {
                 omm_sp.SerializationPath.updateSerializationPaths(p);
                 //console.log("didInsert");
                 var ctx2 = new omm.EventContext(p, _this);
@@ -274,31 +268,6 @@ var Collection = (function () {
      * @callback omm.Collection~resetAllCallback
      * @param error {any=} if an error occured it is passed to the callback
      */
-    ///**
-    // * removes all objects (for testing purposes)
-    // * @param {omm.Collection~resetAllCallback} cb called when it's done
-    // */
-    //@omm.StaticMeteorMethod({replaceWithCall:true, parameterTypes:['callback']})
-    //static resetAll( cb:(error?:any)=>void ){
-    //    var arr:Array<any> = [];
-    //    for( var i in Collection.meteorCollections )
-    //        arr.push(Collection.meteorCollections[i]);
-    //    if( arr.length>0 ){
-    //        for( var j in arr )
-    //        {
-    //            if( parseInt(j)!=arr.length-1)
-    //                Config.getMeteor().wrapAsync(function(cb2){
-    //                    arr[j].remove({},cb2);
-    //                })();
-    //            else {
-    //                arr[j].remove({}, cb);
-    //            }
-    //        }
-    //    }
-    //    else
-    //        cb();
-    //
-    //}
     Collection.prototype.getEntityClass = function () {
         return this.theClass;
     };

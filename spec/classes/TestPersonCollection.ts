@@ -1,10 +1,11 @@
 
 import * as omm from "../../src/omm"
 import * as Tests from "./Tests"
+import * as mongodb from "mongodb"
 
 export class TestPersonCollection extends omm.Collection<Tests.TestPerson> {
-    constructor() {
-        super(Tests.TestPerson);
+    constructor( ) {
+        super( Tests.TestPerson);
         omm.registerObject( "TestPersonCollection", this);
     }
 

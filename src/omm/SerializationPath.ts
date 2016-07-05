@@ -4,12 +4,13 @@ import * as PersistenceAnnotation from "../annotations/PersistenceAnnotation"
 
 export class SerializationPath {
     private path:string;
+    isClient:boolean;
 
     // this is used when lazy loading properties
     // private objectRetriever:ObjectRetriever;
 
-    constructor(className:string, id?:string) {
-        this.path = className;
+    constructor(collectionName:string, id?:string) {
+        this.path = collectionName;
         // this.objectRetriever = objectRetriever;
         if (id) this.path += "[" + id + "]";
         if (!this.getId())
@@ -17,7 +18,9 @@ export class SerializationPath {
     }
 
     clone():SerializationPath {
-        return new SerializationPath(this.path);
+        var sp =  new SerializationPath(this.path);
+        sp.isClient = this.isClient;
+        return sp;
     }
 
     getCollectionName():string {
@@ -143,27 +146,7 @@ export class SerializationPath {
                     that.updateSerializationPaths(v, visited);
                 }
             }
-            //
-            // }
-            // else {
-            //     //console.log( "foreign key "+typedPropertyName );
-            //     if (!Serializer.needsLazyLoading(object, typedPropertyName)) {
-            //         var v:MeteorPersistable = object[typedPropertyName];
-            //         if (v) {
-            //             if (PersistenceAnnotation.isArrayOrMap(objectClass, typedPropertyName)) {
-            //                 for (var i in v) {
-            //                     var e = v[i];
-            //                     if ( e && !e._serializationPath) {
-            //                         //console.log("non- foreign key array/map entry key:"+i+" value:"+e);
-            //                         that.updateSerializationPaths(e, visited);
-            //                     }
-            //                 }
-            //             }
-            //             else if (!v._serializationPath)
-            //                 that.updateSerializationPaths(v, visited);
-            //         }
-            // }
-            // }
+
         });
     }
 

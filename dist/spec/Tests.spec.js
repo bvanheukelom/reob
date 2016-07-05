@@ -4,30 +4,15 @@
 "use strict";
 var omm = require("../src/omm");
 var Tests = require("./classes/Tests");
-var mongodb = require("mongodb");
 var Promise = require("bluebird");
-var wm = require("@bvanheukelom/web-methods");
 describe("Omm both on client and server", function () {
     var personCollection;
     var treeCollection;
     beforeAll(function (done) {
         jasmine.DEFAULT_TIMEOUT_INTERVAL = 10000000;
-        mongodb.MongoClient.connect('mongodb://localhost:27017/test', { promiseLibrary: Promise }).then(function (d) {
-            var webMethods = new wm.WebMethods("http://localhost:7000/methods");
-            omm.config({ Mongo: {
-                    collection: function (n) { return d.collection(n); },
-                    ObjectID: mongodb.ObjectID
-                },
-                Meteor: { isServer: false,
-                    call: webMethods.call.bind(webMethods),
-                    add: webMethods.add.bind(webMethods)
-                }
-            });
-            omm.init();
-            console.log("starting");
-            webMethods.start(7000).then(function () {
-                done();
-            });
+        omm.startServer('mongodb://localhost:27017/test', 7000).then(function () {
+            omm.init("localhost", 7000);
+            done();
         }).catch(function (err) {
             fail(err);
             done();
@@ -48,6 +33,40 @@ describe("Omm both on client and server", function () {
             f.apply(this, arguments);
         };
     }
+    it("can load trees ", function (done) {
+        treeCollection.newTree(20)
+            .then(function (tree) {
+            console.log("Tree id", tree.treeId);
+            return omm.load(Tests.TestTree, tree.treeId);
+        })
+            .then(function (tree) {
+            expect(tree).toBeDefined();
+            done();
+        });
+    });
+    it("can load trees and call stuff on it", function (done) {
+        var treeId;
+        treeCollection.newTree(20)
+            .then(function (tree) {
+            console.log("Tree id", tree.treeId);
+            treeId = tree.treeId;
+            expect(tree.getHeight()).toBe(20);
+            return omm.load(Tests.TestTree, tree.treeId);
+        })
+            .then(function (tree) {
+            expect(tree).toBeDefined();
+            expect(tree.getHeight()).toBe(20);
+            var growPromise = tree.grow();
+            return growPromise;
+        })
+            .then(function (s) {
+            return treeCollection.getById(treeId);
+        })
+            .then(function (tree) {
+            expect(tree.getHeight()).toBe(21);
+            done();
+        });
+    });
     it("knows the difference between root entities and subdocument entities ", function () {
         expect(omm.PersistenceAnnotation.getCollectionName(Tests.TestPerson)).toBe("TestPerson");
         expect(omm.PersistenceAnnotation.isRootEntity(Tests.TestPerson)).toBeTruthy();
@@ -92,7 +111,6 @@ describe("Omm both on client and server", function () {
         });
     });
     it("updates the collection", function (done) {
-        debugger;
         var id;
         personCollection.newPerson('bert').then(function (e) {
             id = e.getId();
@@ -115,7 +133,6 @@ describe("Omm both on client and server", function () {
             var t1 = values[0];
             var t2 = values[1];
             var held = values[2];
-            debugger;
             var ap1 = held.addToWood(t1, "peterKey").then(function (r) {
                 return r;
             });
@@ -185,7 +202,6 @@ describe("Omm both on client and server", function () {
     });
     it("can do basic removes", function (done) {
         var treeId;
-        debugger;
         treeCollection.newTree(20).then(function (t) {
             treeId = t.treeId;
         }).then(function () {
@@ -213,7 +229,6 @@ describe("Omm both on client and server", function () {
         expect(t1["_serializationPath"].toString()).toBe("TheTreeCollection[tree1]");
     });
     it("uses persistence paths on sub documents", function () {
-        debugger;
         var tp = new Tests.TestPerson("tp1");
         tp.phoneNumber = new Tests.TestPhoneNumber("12345");
         omm.SerializationPath.updateSerializationPaths(tp);

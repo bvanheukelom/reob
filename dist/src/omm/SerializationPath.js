@@ -3,8 +3,8 @@ var PersistenceAnnotation = require("../annotations/PersistenceAnnotation");
 var SerializationPath = (function () {
     // this is used when lazy loading properties
     // private objectRetriever:ObjectRetriever;
-    function SerializationPath(className, id) {
-        this.path = className;
+    function SerializationPath(collectionName, id) {
+        this.path = collectionName;
         // this.objectRetriever = objectRetriever;
         if (id)
             this.path += "[" + id + "]";
@@ -12,7 +12,9 @@ var SerializationPath = (function () {
             throw new Error("id is undefined");
     }
     SerializationPath.prototype.clone = function () {
-        return new SerializationPath(this.path);
+        var sp = new SerializationPath(this.path);
+        sp.isClient = this.isClient;
+        return sp;
     };
     SerializationPath.prototype.getCollectionName = function () {
         return this.path.split("[")[0];
@@ -124,27 +126,6 @@ var SerializationPath = (function () {
                     that.updateSerializationPaths(v, visited);
                 }
             }
-            //
-            // }
-            // else {
-            //     //console.log( "foreign key "+typedPropertyName );
-            //     if (!Serializer.needsLazyLoading(object, typedPropertyName)) {
-            //         var v:MeteorPersistable = object[typedPropertyName];
-            //         if (v) {
-            //             if (PersistenceAnnotation.isArrayOrMap(objectClass, typedPropertyName)) {
-            //                 for (var i in v) {
-            //                     var e = v[i];
-            //                     if ( e && !e._serializationPath) {
-            //                         //console.log("non- foreign key array/map entry key:"+i+" value:"+e);
-            //                         that.updateSerializationPaths(e, visited);
-            //                     }
-            //                 }
-            //             }
-            //             else if (!v._serializationPath)
-            //                 that.updateSerializationPaths(v, visited);
-            //         }
-            // }
-            // }
         });
     };
     return SerializationPath;

@@ -5,35 +5,21 @@ import * as mongodb from "mongodb"
 import * as bluebird from "bluebird"
 
 
-describe("Omm on the server", function () {
+xdescribe("Omm on the server", function () {
     var personCollection:Tests.TestPersonCollection;
     var treeCollection:Tests.TestTreeCollection;
 
 
     beforeAll(function (done) {
-        omm.init();
-        // jasmine.DEFAULT_TIMEOUT_INTERVAL = 10000000;
-        mongodb.MongoClient.connect('mongodb://localhost:27017/test',{promiseLibrary:bluebird}).then((d:any)=>{
-            omm.config({Mongo:{
-                collection:(n:string)=>d.collection(n),
-                ObjectID:mongodb.ObjectID
-            }});
-            done();
-        }).catch((err)=>fail(err));
+        done();
     });
 
     beforeEach(function (done) {
         // Tests.registeredTestTreeCollection.removeAllListeners();
-        omm.removeAllUpdateEventListeners();
-        personCollection = new Tests.TestPersonCollection();
-        treeCollection = new Tests.TestTreeCollection();
-        //personCollection.removeAllPersons(function(){
-        //    treeCollection.removeAllTrees(function(){
-        //        done();
-        //
-        //    });
-        //});
-        done();
+        // omm.removeAllUpdateEventListeners();
+        // personCollection = new Tests.TestPersonCollection();
+        // treeCollection = new Tests.TestTreeCollection();
+        // done();
     });
 
     it("can load objects that have sub objects", function () {

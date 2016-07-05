@@ -67,11 +67,6 @@ export interface IMethodOptions{
     export var eventListeners:{ [index:string] : { [index:string] : Array<EventListener>} };
     export var meteorMethodFunctions:Array<IMethodOptions>;
 
-    export var environmentReferences:{
-        meteorReference:any,
-        mongoReference:any
-    };
-
     export function setNonEnumerableProperty(obj:Object, propertyName:string, value:any):void {
         if (!Object.getOwnPropertyDescriptor(obj, propertyName)) {
             Object.defineProperty(obj, propertyName, {
@@ -612,11 +607,7 @@ export interface IMethodOptions{
     if(!data.entityClasses)
         data.entityClasses = {};
     entityClasses = data.entityClasses;
-
-    if(!data.environmentReferences)
-        data.environmentReferences = {};
-    environmentReferences = data.environmentReferences;
-
+    
     if(!data.registeredObjects)
         data.registeredObjects = {};
     registeredObjects = data.registeredObjects;
