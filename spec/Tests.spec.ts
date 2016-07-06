@@ -997,7 +997,7 @@ describe("Omm both on client and server", function () {
         var treePromise = treeCollection.newTree(10);
         treePromise.then((tree)=> {
             return Promise.all([tree.grow(), treePromise]);
-        }).then((values)=>{
+        }).then((values:any)=>{
             return treeCollection.getById(values[1].treeId);
         }).then((tree)=>{
             return tree.getLeaves()[0].flutter()
@@ -1034,7 +1034,7 @@ describe("Omm both on client and server", function () {
         var treePromise = treeCollection.newTree(10);
         return treePromise.then((tree)=> {
             return Promise.all([tree.grow(), treePromise]);
-        }).then((values)=>{
+        }).then((values:any)=>{
             return treeCollection.getById(values[1].treeId);
         }).then((tree)=>{
             expect(l.listener).toHaveBeenCalled();
@@ -1078,7 +1078,7 @@ describe("Omm both on client and server", function () {
         var treePromise = treeCollection.newTree(10);
         return treePromise.then((tree)=> {
             return Promise.all([tree.wither(), treePromise]);
-        }).then((values)=>{
+        }).then((values:any)=>{
             return treeCollection.getById(values[1].treeId);
         }).then((tree)=>{
             expect(l.listener).toHaveBeenCalled();
@@ -1086,7 +1086,6 @@ describe("Omm both on client and server", function () {
             expect(n).toContain("withered2");
             done();
         });
-
     });
     //
     it("can register to all update events", function (done) {

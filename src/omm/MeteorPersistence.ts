@@ -76,9 +76,9 @@ export class MeteorPersistence {
     static meteorObjectRetriever:ObjectRetriever;
     static serializer:Serializer;
 
-    static db:mongodb.Db;
-    static serverWebMethods:wm.WebMethods;
-    static clientWebMethods:wm.WebMethods;
+    static db:any;
+    static serverWebMethods:any;
+    static clientWebMethods:any;
 
     static init() {
         if (!MeteorPersistence.initialized) {
