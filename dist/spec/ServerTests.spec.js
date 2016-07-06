@@ -1,5 +1,5 @@
 "use strict";
-var Tests = require("./classes/Tests");
+const Tests = require("./classes/Tests");
 xdescribe("Omm on the server", function () {
     var personCollection;
     var treeCollection;
@@ -17,9 +17,9 @@ xdescribe("Omm on the server", function () {
         var id = Date.now() + "t444";
         var t1 = new Tests.TestPerson(id);
         t1.phoneNumber = new Tests.TestPhoneNumber("1212");
-        personCollection.insert(t1).then(function (id) {
+        personCollection.insert(t1).then((id) => {
             return personCollection.getById(id);
-        }).then(function (p) {
+        }).then((p) => {
             expect(p).toBeDefined();
             expect(p.phoneNumber instanceof Tests.TestPhoneNumber).toBeTruthy();
         });
@@ -27,14 +27,14 @@ xdescribe("Omm on the server", function () {
     it("can load objects that have sub objects (in an array) which have a parent reference ", function () {
         var t1 = new Tests.TestTree(10);
         var i;
-        treeCollection.insert(t1).then(function (id) {
+        treeCollection.insert(t1).then((id) => {
             i = id;
             return treeCollection.getById(id);
-        }).then(function (t) {
+        }).then((t) => {
             return t1.grow();
-        }).then(function () {
+        }).then(() => {
             return treeCollection.getById(i);
-        }).then(function (t) {
+        }).then((t) => {
             treeCollection;
             expect(t).toBeDefined();
             expect(t.getLeaves()[0] instanceof Tests.TestLeaf).toBeTruthy();
@@ -45,10 +45,10 @@ xdescribe("Omm on the server", function () {
         var t1 = new Tests.TestTree(10);
         t1.grow();
         var i;
-        treeCollection.insert(t1).then(function (id) {
+        treeCollection.insert(t1).then((id) => {
             i = id;
             return treeCollection.getById(id);
-        }).then(function (t) {
+        }).then((t) => {
             expect(t).toBeDefined();
             expect(t.getLeaves()[0] instanceof Tests.TestLeaf).toBeTruthy();
         });

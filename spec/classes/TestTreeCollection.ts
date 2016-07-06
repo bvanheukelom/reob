@@ -21,8 +21,8 @@ export class TestTreeCollection extends omm.Collection<Tests.TestTree> {
     }
 
     @omm.MeteorMethod({  replaceWithCall:true, serverOnly:true, parameterTypes:["number","callback"]})
-    errorMethod(initialHeight:number, callback:(err:any, result?:any)=>void):void {
-        callback("the error");
+    errorMethod(initialHeight:number):Promise<any> {
+        return Promise.reject("the error");
     }
 
     @omm.MeteorMethod({  replaceWithCall:true, parameterTypes:["string","callback"]})

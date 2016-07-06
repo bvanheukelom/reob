@@ -24,6 +24,7 @@
   "dependencies": {
     "@bvanheukelom/web-methods": "*",
     "bluebird": "^3.4.1",
+    "co": "^4.6.0",
     "mongodb": "^2.1.18"
   }
 }

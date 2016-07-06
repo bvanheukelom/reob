@@ -101,14 +101,19 @@ export interface IMethodOptions{
         if (typeof entityNameOrP1 == "string") {
             entityName = entityNameOrP1;
         } else {
-            var n = entityNameOrP1.toString();
-            n = n.substr('function '.length);
-            n = n.substr(0, n.indexOf('('));
-            entityName = n;
+            if( entityNameOrP1.name ){
+                entityName = entityNameOrP1.name;
+            }else {
+                var n = entityNameOrP1.toString();
+                n = n.substr('function '.length);
+                n = n.substr(0, n.indexOf('('));
+                entityName = n;
+            }
         }
         var f = function (p1:any) {
             var typeClass:TypeClass<Object> = <TypeClass<Object>>p1;
             defineMetadata("persistence:entity", true, typeClass);
+            console.log("Adding entity ", entityName );
             entityClasses[entityName] = typeClass;
             Object.defineProperty(p1, "_ommClassName", {
                 value: entityName,
@@ -157,6 +162,7 @@ export interface IMethodOptions{
 
     export function CollectionUpdate(p1:any, fName?:string) {
         var options = {};
+        console.log("registering a collection update on property", fName, p1 );
         if (fName) {
             PersistenceAnnotation.setPropertyProperty(p1, fName, "collectionUpdate", options);
         }
@@ -187,9 +193,9 @@ export interface IMethodOptions{
 
     export function ArrayOrMap(typeClassName:string) {
         return function (targetPrototypeObject:any, propertyName:string) {
-            //console.log("  "+propertyName+" as collection of "+typeClassName);
-            PersistenceAnnotation.setPropertyProperty(targetPrototypeObject.constructor, propertyName, "type", typeClassName);
-            PersistenceAnnotation.setPropertyProperty(targetPrototypeObject.constructor, propertyName, "arrayOrMap", true);
+            // console.log("  "+propertyName+" as collection of "+typeClassName);
+            PersistenceAnnotation.setPropertyProperty(targetPrototypeObject, propertyName, "type", typeClassName);
+            PersistenceAnnotation.setPropertyProperty(targetPrototypeObject, propertyName, "arrayOrMap", true);
         };
     }
 
@@ -233,7 +239,7 @@ export interface IMethodOptions{
     }
 
     export function Parent(targetPrototypeObject:any, propertyName:string) {
-        PersistenceAnnotation.setPropertyProperty(targetPrototypeObject.constructor, propertyName, "parent", 1);
+        PersistenceAnnotation.setPropertyProperty(targetPrototypeObject, propertyName, "parent", 1);
     }
 
     /**
@@ -247,7 +253,7 @@ export interface IMethodOptions{
     }
 
     export function Ignore(targetPrototypeObject:any, propertyName:string) {
-        PersistenceAnnotation.setPropertyProperty(targetPrototypeObject.constructor, propertyName, "ignore", true);
+        PersistenceAnnotation.setPropertyProperty(targetPrototypeObject, propertyName, "ignore", true);
     }
 
     /**
@@ -286,8 +292,8 @@ export interface IMethodOptions{
 
     export function Type(typeClassName:string) {
         return function (targetPrototypeObject:any, propertyName:string) {
-            //console.log("  "+propertyName+" as "+typeClassName);
-            PersistenceAnnotation.setPropertyProperty(targetPrototypeObject.constructor, propertyName, "type", typeClassName);
+            console.log("Registering a type  "+propertyName+" as "+typeClassName, " on ",targetPrototypeObject);
+            PersistenceAnnotation.setPropertyProperty(targetPrototypeObject, propertyName, "type", typeClassName);
         };
     }
 
@@ -456,9 +462,14 @@ export interface IMethodOptions{
 
         static getPropertyClass(f:TypeClass<any>, propertyName:string):TypeClass<any> {
             while (f != <any>Object) {
-                var className = PersistenceAnnotation.getPropertyProperty(f, propertyName, "type")
-                if (className)
-                    return PersistenceAnnotation.getEntityClassByName(className);
+                var classNameOfF = PersistenceAnnotation.getPropertyProperty(f, propertyName, "type")
+                if (classNameOfF) {
+                    var p = PersistenceAnnotation.getEntityClassByName(classNameOfF);
+                    if (!p)
+                        throw new Error('Class ' + f + "', property '" + propertyName + "': Defined as type '" + classNameOfF + "'. Could not find an entity with that name.");
+                    else
+                        return p;
+                }
                 f = PersistenceAnnotation.getParentClass(f);
             }
             return undefined
@@ -467,9 +478,9 @@ export interface IMethodOptions{
         static getTypedPropertyNames<T extends Object>(f:TypeClass<T>):Array<string> {
             var result:Array<string> = [];
             while (f != <any>Object) {
-                var props = getMetadata("persistence:typedproperties", f);
+                var props = getMetadata( "property_properties", f);
                 for (var i in props) {
-                    if (PersistenceAnnotation.getPropertyClass(f, i))
+                    if( props[i].type )
                         result.push(i);
                 }
                 f = PersistenceAnnotation.getParentClass(f);
@@ -478,10 +489,10 @@ export interface IMethodOptions{
         }
 
         static setPropertyProperty(cls:TypeClass<any>, propertyName:string, property:string, value:any):void {
-            var arr:any = getMetadata("persistence:typedproperties", cls);
+            var arr:any = getMetadata("property_properties", cls.constructor);
             if (!arr) {
                 arr = {};
-                defineMetadata("persistence:typedproperties", arr, cls);
+                defineMetadata("property_properties", arr, cls.constructor);
             }
             var propProps = arr[propertyName];
 
@@ -492,8 +503,24 @@ export interface IMethodOptions{
             propProps[property] = value;
         }
 
+        private static getPropertyNamesOfPropertiesThatHaveProperties(cls:TypeClass<any>):Array<string>{
+            return Object.keys( getMetadata("property_properties", cls) );
+        }
+
+        // this is i.e. good to find all properties on a class that have a "type" property
+        private static getPropertyNamesOfPropertiesThatHaveAProperty(cls:TypeClass<any>, propertyPropertyName:string ):Array<string>{
+            var r = [];
+            var props  = getMetadata("property_properties", cls);
+            for( var i in props ){
+                if( props[i][propertyPropertyName] ){
+                    r.push(i);
+                }
+            }
+            return r;
+        }
+
         private static getPropertyProperty(cls:TypeClass<any>, propertyName:string, propertyProperty:string):any {
-            var arr:any = getMetadata("persistence:typedproperties", cls);
+            var arr:any = getMetadata("property_properties", cls);
             if (arr && arr[propertyName]) {
                 return arr[propertyName][propertyProperty];
             }
@@ -546,7 +573,7 @@ export interface IMethodOptions{
         static getParentPropertyNames<T extends Object>(f:TypeClass<T>):Array<string> {
             var result:Array<string> = [];
             while (f != <any>Object) {
-                var props = getMetadata("persistence:typedproperties", f);
+                var props = getMetadata("parent_property", f);
                 for (var i in props) {
                     if (PersistenceAnnotation.isParent(f, i))
                         result.push(i);
@@ -570,13 +597,7 @@ export interface IMethodOptions{
 
 
         public static getCollectionUpdateFunctionNames<T extends Object>(f:TypeClass<T>):Array<string> {
-            var result:Array<string> = [];
-            var props = getMetadata("persistence:typedproperties", f.prototype);
-            for (var i in props) {
-                if (PersistenceAnnotation.getCollectionUpdateOptions(f, i))
-                    result.push(i);
-            }
-            return result;
+            return PersistenceAnnotation.getPropertyNamesOfPropertiesThatHaveAProperty( f, 'collectionUpdate' );
         }
 
         static getPropertyNamesByMetaData(o:any, metaData:string) {

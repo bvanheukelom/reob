@@ -1,20 +1,19 @@
 "use strict";
-var Status_1 = require("./Status");
-var Collection_1 = require("./Collection");
-var Serializer_1 = require("../serializer/Serializer");
-var SerializationPath_1 = require("./SerializationPath");
-var omm_annotation = require("../annotations/PersistenceAnnotation");
-var omm_event = require("../event/OmmEvent");
-var mongodb = require("mongodb");
-var wm = require("@bvanheukelom/web-methods");
-var Promise = require("bluebird");
-var CallHelper = (function () {
-    function CallHelper(o, cb) {
+const Status_1 = require("./Status");
+const Collection_1 = require("./Collection");
+const Serializer_1 = require("../serializer/Serializer");
+const SerializationPath_1 = require("./SerializationPath");
+const omm_annotation = require("../annotations/PersistenceAnnotation");
+const omm_event = require("../event/OmmEvent");
+const mongodb = require("mongodb");
+const wm = require("@bvanheukelom/web-methods");
+const Promise = require("bluebird");
+class CallHelper {
+    constructor(o, cb) {
         this.object = o;
         this.callback = cb;
     }
-    return CallHelper;
-}());
+}
 exports.CallHelper = CallHelper;
 function registerObject(key, o) {
     omm_annotation.registeredObjects[key] = o;
@@ -40,8 +39,10 @@ function call(methodName, objectId, args) {
     // prepend
     args.unshift(objectId);
     args.unshift(methodName);
+    debugger;
     var p = MeteorPersistence.clientWebMethods.call.apply(MeteorPersistence.clientWebMethods, args);
-    return p.then(function (result) {
+    return p.then((result) => {
+        console.log("web method returned " + result);
         // convert the result from json to an object
         if (result) {
             var serializationPath = result.serializationPath;
@@ -55,10 +56,8 @@ function call(methodName, objectId, args) {
         return result;
     });
 }
-var MeteorPersistence = (function () {
-    function MeteorPersistence() {
-    }
-    MeteorPersistence.init = function () {
+class MeteorPersistence {
+    static init() {
         if (!MeteorPersistence.initialized) {
             MeteorPersistence.serializer = new Serializer_1.default();
             // Serializer.init();
@@ -71,23 +70,23 @@ var MeteorPersistence = (function () {
             });
             MeteorPersistence.initialized = true;
         }
-    };
-    MeteorPersistence.isInitialized = function () {
+    }
+    static isInitialized() {
         return MeteorPersistence.initialized;
-    };
-    MeteorPersistence.attachClassName = function (o) {
+    }
+    static attachClassName(o) {
         var className = MeteorPersistence.getClassName(o);
         if (className && omm_annotation.entityClasses[className]) {
             o.className = className;
         }
         if (o._serializationPath)
             o.serializationPath = o._serializationPath.toString();
-    };
+    }
     // TODO new name
-    MeteorPersistence.objectsClassName = function (o) {
+    static objectsClassName(o) {
         return omm_annotation.className(o.constructor);
-    };
-    MeteorPersistence.prototype.getId = function (object) {
+    }
+    getId(object) {
         if (object._serializationPath)
             return object._serializationPath.toString();
         else {
@@ -101,8 +100,8 @@ var MeteorPersistence = (function () {
                 throw new Error("Error while 'toString'. Objects that should be stored as foreign keys need to be persisted beforehand or be the root entity of a collection and have an id.");
             }
         }
-    };
-    MeteorPersistence.retrieveObject = function (objectId) {
+    }
+    static retrieveObject(objectId) {
         var registeredObject = omm_annotation.registeredObjects[objectId];
         if (registeredObject)
             return Promise.resolve(registeredObject);
@@ -111,18 +110,18 @@ var MeteorPersistence = (function () {
                 throw new Error("Path needs to be a string");
             var sPath = new SerializationPath_1.SerializationPath(objectId);
             var collectionName = sPath.getCollectionName();
-            var collection = collectionName ? Collection_1.default.getByName(collectionName) : undefined;
+            var collection = collectionName ? Collection_1.Collection.getByName(collectionName) : undefined;
             if (collection) {
-                return collection.getById(sPath.getId()).then(function (o) {
+                return collection.getById(sPath.getId()).then((o) => {
                     return sPath.getSubObject(o);
                 });
             }
             else
                 Promise.reject("No collection found to retrieve object. Key:" + objectId);
         }
-    };
+    }
     // converts parameters given to the web method from documents to objects
-    MeteorPersistence.convertWebMethodParameters = function (args, classNames) {
+    static convertWebMethodParameters(args, classNames) {
         for (var i = 0; i < args.length; i++) {
             if (classNames && classNames.length > i) {
                 var cls = omm_annotation.PersistenceAnnotation.getEntityClassByName(classNames[i]);
@@ -134,35 +133,28 @@ var MeteorPersistence = (function () {
                 }
             }
         }
-    };
-    MeteorPersistence.createWebMethod = function (options) {
+    }
+    static createWebMethod(options) {
         console.log("Creating web methods ", options.name);
         // patch the objects function to call the web method
-        MeteorPersistence.monkeyPatch(options.parentObject, options.name, function (originalFunction) {
-            var a = [];
-            for (var _i = 1; _i < arguments.length; _i++) {
-                a[_i - 1] = arguments[_i];
-            }
+        MeteorPersistence.monkeyPatch(options.parentObject, options.name, function (originalFunction, ...a) {
             console.log("Running replacer function of a function that is also a web method. Name:" + options.name);
             var key = omm_annotation.isRegisteredWithKey(this) || (this._serializationPath ? this._serializationPath.toString() : undefined);
             var r;
-            var isServer = (this._serializationPath && !this._serializationPath.isClient);
-            if (!options.serverOnly || isServer || !key) {
+            // this is a more elaborate than necessary. "isServer()" should be enough but then the tests would not work properly.
+            var isServ = (!this._serializationPath && isServer()) || (this._serializationPath && !this._serializationPath.isClient);
+            if (!options.serverOnly || isServ || !key) {
                 console.log("Running original function of web method " + options.name);
                 r = originalFunction.apply(this, a);
             }
-            if (!isServer && key) {
+            if (!isServ && key) {
                 r = call(options.name, key, a);
             }
             return r;
         });
         // register the web method
         if (MeteorPersistence.serverWebMethods) {
-            MeteorPersistence.serverWebMethods.add(options.name, function () {
-                var args = [];
-                for (var _i = 0; _i < arguments.length; _i++) {
-                    args[_i - 0] = arguments[_i];
-                }
+            MeteorPersistence.serverWebMethods.add(options.name, (...args) => {
                 console.log("Web method " + options.name);
                 // the object id is the first parameter
                 var objectId = args.shift();
@@ -170,10 +162,10 @@ var MeteorPersistence = (function () {
                 MeteorPersistence.convertWebMethodParameters(args, options.parameterTypes);
                 // load object based on the object id. this could either be a registered object or an object form a collection
                 var p = MeteorPersistence.retrieveObject(objectId)
-                    .then(function (object) {
+                    .then((object) => {
                     return object[options.name].originalFunction.apply(object, args);
                 })
-                    .then(function (result) {
+                    .then((result) => {
                     MeteorPersistence.attachClassName(result);
                     var r = MeteorPersistence.serializer.toDocument(result);
                     console.log("Result of web method " + options.name + " is ", r);
@@ -183,21 +175,17 @@ var MeteorPersistence = (function () {
                 return p;
             });
         }
-    };
+    }
     /**
      * This patches the functions that are collection updates.
      * It also emits update events: pre:<FunctionName> post:<FunctionName>.
      * @param c
      */
-    MeteorPersistence.wrapClass = function (entityClass) {
+    static wrapClass(entityClass) {
         //var className = omm_annotation.className(c);
         var that = this;
         omm_annotation.PersistenceAnnotation.getCollectionUpdateFunctionNames(entityClass).forEach(function (functionName) {
-            MeteorPersistence.monkeyPatch(entityClass.prototype, functionName, function (originalFunction) {
-                var args = [];
-                for (var _i = 1; _i < arguments.length; _i++) {
-                    args[_i - 1] = arguments[_i];
-                }
+            MeteorPersistence.monkeyPatch(entityClass.prototype, functionName, function (originalFunction, ...args) {
                 //console.log("updating object:",this, "original function :"+originalFunction);
                 var _serializationPath = this._serializationPath;
                 if (!_serializationPath || _serializationPath.isClient) {
@@ -209,13 +197,13 @@ var MeteorPersistence = (function () {
                 var objectPromise;
                 var rootObjectPromise;
                 // get the responsible collection
-                collection = Collection_1.default.getByName(_serializationPath.getCollectionName());
+                collection = Collection_1.Collection.getByName(_serializationPath.getCollectionName());
                 // load the object
                 rootObjectPromise = collection.getById(_serializationPath.getId());
-                objectPromise = rootObjectPromise.then(function (rootObject) {
+                objectPromise = rootObjectPromise.then((rootObject) => {
                     return object = _serializationPath.getSubObject(rootObject);
                 });
-                return Promise.all([objectPromise, rootObjectPromise]).then(function (values) {
+                return Promise.all([objectPromise, rootObjectPromise]).then((values) => {
                     var object = values[0];
                     var rootObject = values[1];
                     // create the event context
@@ -232,56 +220,30 @@ var MeteorPersistence = (function () {
                         return Promise.reject(ctx.cancelledWithError());
                     }
                     else {
-                        var resultPromise = collection.update(object._serializationPath.getId(), function (o) {
-                            var subObject = object._serializationPath.getSubObject(o);
+                        var resultPromise = collection.update(object._serializationPath, function (subObject) {
                             var r2 = originalFunction.apply(subObject, args);
                             return r2;
+                        }).then((r) => {
+                            debugger;
+                            console.log("Events collected during updating ", r.events);
+                            collection.sendEventsCollectedDuringUpdate(r.object, r.object, r.rootObject, functionName, object._serializationPath, r.events);
+                            return r.result;
                         });
-                        // if( resetUpdateCollection ){
-                        //     Status.updateInProgress = false;
-                        // }
-                        // TODO this might potentially catch updates of something that happened between the update and now. Small timeframe but still relevant. Also the extra load should be avoided.
-                        console.log("events missing");
-                        // if( updateCollection ){
-                        //     rootObject = collection.getById(_serializationPath.getId());
-                        //     object =_serializationPath.getSubObject(rootObject);
-                        // }
-                        //
-                        // var ctx = new omm_annotation.EventContext( object, collection );
-                        // ctx.preUpdate = preUpdateObject;
-                        // ctx.methodContext = Status.methodContext;
-                        // ctx.functionName = functionName;
-                        // ctx.serializationPath = _serializationPath;
-                        // ctx.rootObject = rootObject;
-                        // //ctx.ob
-                        //
-                        // if( omm_event.getQueue() ){
-                        //     omm_event.getQueue().forEach(function(t){
-                        //         //console.log( 'emitting event:'+t.topic );
-                        //         omm_event.callEventListeners( entityClass, t.topic, ctx, t.data );
-                        //     });
-                        // }
-                        //
-                        // omm_event.callEventListeners( entityClass, "post:"+functionName, ctx );
-                        // omm_event.callEventListeners( entityClass, "post", ctx );
-                        // if( resetUpdateCollection ){
-                        //     omm_event.deleteQueue();
-                        // }
                         return resultPromise;
                     }
                 });
             });
         });
-    };
+    }
     // todo  make the persistencePath enumerable:false everywhere it is set
-    MeteorPersistence.getClassName = function (o) {
+    static getClassName(o) {
         if (typeof o == "object" && omm_annotation.PersistenceAnnotation.getClass(o)) {
             return omm_annotation.className(omm_annotation.PersistenceAnnotation.getClass(o));
         }
         else
             return typeof o;
-    };
-    MeteorPersistence.monkeyPatch = function (object, functionName, patchFunction) {
+    }
+    static monkeyPatch(object, functionName, patchFunction) {
         var originalFunction = object[functionName];
         object[functionName] = function monkeyPatchFunction() {
             var args = [];
@@ -292,12 +254,11 @@ var MeteorPersistence = (function () {
             return patchFunction.apply(this, args);
         };
         object[functionName].originalFunction = originalFunction;
-    };
-    MeteorPersistence.wrappedCallInProgress = false;
-    MeteorPersistence.initialized = false;
-    MeteorPersistence.webMethodInProgress = false;
-    return MeteorPersistence;
-}());
+    }
+}
+MeteorPersistence.wrappedCallInProgress = false;
+MeteorPersistence.initialized = false;
+MeteorPersistence.webMethodInProgress = false;
 exports.MeteorPersistence = MeteorPersistence;
 var endpointUrl;
 function load(cls, id) {
@@ -307,7 +268,7 @@ function load(cls, id) {
         throw new Error("Given class is not a root entity");
     }
     var className = omm_annotation.className(cls);
-    return webMethods.call("get", className, id).then(function (doc) {
+    return webMethods.call("get", className, id).then((doc) => {
         var o = serializer.toObject(doc, cls);
         var collectionName = omm_annotation.PersistenceAnnotation.getCollectionName(cls);
         var sp = new SerializationPath_1.SerializationPath(collectionName, id);
@@ -320,12 +281,12 @@ function load(cls, id) {
 exports.load = load;
 function registerGetter(webMethods) {
     var serializer = new Serializer_1.default();
-    webMethods.add("get", function (className, objectId) {
+    webMethods.add("get", (className, objectId) => {
         console.log("Getter " + className, objectId);
         var type = omm_annotation.entityClasses[className];
         var collectionName = type ? omm_annotation.PersistenceAnnotation.getCollectionName(type) : undefined;
         var objPromise = collectionName ? MeteorPersistence.retrieveObject(collectionName + "[" + objectId + "]") : undefined;
-        return objPromise.then(function (obj) {
+        return objPromise.then((obj) => {
             return obj ? serializer.toDocument(obj) : undefined;
         });
     });
@@ -336,8 +297,12 @@ function init(host, port) {
     MeteorPersistence.init();
 }
 exports.init = init;
+function isServer() {
+    return !!MeteorPersistence.db;
+}
+exports.isServer = isServer;
 function startServer(mongoUrl, port) {
-    return mongodb.MongoClient.connect(mongoUrl, { promiseLibrary: Promise }).then(function (db) {
+    return mongodb.MongoClient.connect(mongoUrl, { promiseLibrary: Promise }).then((db) => {
         MeteorPersistence.db = db;
         MeteorPersistence.serverWebMethods = new wm.WebMethods("http://localhost:" + port + "/methods");
         registerGetter(MeteorPersistence.serverWebMethods);

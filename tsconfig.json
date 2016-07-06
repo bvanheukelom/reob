@@ -2,7 +2,7 @@
     "compilerOptions": {
         "module": "commonjs",
         "declaration": false,
-        "target": "es5",
+        "target": "es2015",
         "sourceMap": true,
         "experimentalDecorators": true,
         "removeComments": false,
@@ -27,7 +27,6 @@
         "src/omm.ts",
         "src/omm/Collection.ts",
         "src/omm/Config.ts",
-        "src/omm/MeteorObjectRetriever.ts",
         "src/omm/MeteorPersistable.ts",
         "src/omm/MeteorPersistence.ts",
         "src/omm/SerializationPath.ts",

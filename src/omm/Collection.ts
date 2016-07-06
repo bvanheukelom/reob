@@ -11,7 +11,7 @@ import Status from "./Status"
 import * as Config from "./Config"
 import * as mongodb from "mongodb"
 
-export default class Collection<T extends Object>
+export class Collection<T extends Object>
 {
     private mongoCollection:mongodb.Collection;
     private theClass:omm.TypeClass<T>;
@@ -205,56 +205,102 @@ export default class Collection<T extends Object>
         omm_sp.SerializationPath.updateSerializationPaths(p);
         return p;
     }
-    
-    private updateOnce(id:string, updateFunction:(o:T)=>void, attempt:number):Promise<any> {
-        var valuePromise = this.mongoCollection.find({
-            _id: id
+
+
+    sendEventsCollectedDuringUpdate( preUpdateObject, postUpdateObject, rootObject, functionName:string, serializationPath:omm.SerializationPath, events:Array<any> ){
+        var ctx = new omm.EventContext( postUpdateObject, this );
+        ctx.preUpdate = preUpdateObject;
+        ctx.functionName = functionName;
+        ctx.serializationPath = serializationPath;
+        ctx.rootObject = rootObject;
+        //ctx.ob
+
+        var entityClass = omm.PersistenceAnnotation.getClass(postUpdateObject);
+
+        events.forEach(function(t){
+                //console.log( 'emitting event:'+t.topic );
+            omm_event.callEventListeners( entityClass, t.topic, ctx, t.data );
+        });
+
+        omm_event.callEventListeners( entityClass, "post:"+functionName, ctx );
+        omm_event.callEventListeners( entityClass, "post", ctx );
+    }
+
+
+
+
+    private updateOnce(sp:omm.SerializationPath, updateFunction:(o:T)=>void, attempt:number):Promise<CollectionUpdateResult> {
+        var documentPromise = this.mongoCollection.find({
+            _id: sp.getId()
         }).toArray().then((documents:Document[])=> {
             var document = documents[0];
             if (!document) {
-                return Promise.reject("No document found for id: " + id);
+                return Promise.reject("No document found for id: " + sp.getId());
             }
+            return document;
+        });
+        var currentSerialPromise = documentPromise.then((doc)=>{
+            return doc.serial;
+        });
 
-            var currentSerial = document.serial;
+        var rootObjectPromise = documentPromise.then((doc)=>{
+            return this.documentToObject(doc);
+        });
+        var objectPromise = rootObjectPromise.then((rootObject)=>{
+            return sp.getSubObject(rootObject);
+        });
 
+        var resultPromise = objectPromise.then( (object:any)=>{
+            debugger;
             omm_event.resetQueue();
             // call the update function
-            var object:T = this.documentToObject(document);
-            var result = updateFunction(object);
-
+            var result:any = {};
+            result.result = updateFunction(object);
+            result.events = omm_event.getQueue();
+            result.object = object;
+            omm_event.resetQueue();
             omm_sp.SerializationPath.updateSerializationPaths(object);
-            return {currentSerial:currentSerial, object:object, result:result};
+            return result;
         });
-        var updatePromise = valuePromise.then((data:{currentSerial:number, object:any, result:any})=>{
-
-            var ctx = new omm.EventContext(data.object, this);
+        
+        var updatePromise = Promise.all([objectPromise, currentSerialPromise, resultPromise, rootObjectPromise]).then((values:any)=>{
+            var object = values[0];
+            var currentSerial:number = values[1];
+            var result = values[2];
+            var rootObject = values[3];
+            var ctx = new omm.EventContext( object, this);
             omm_event.callEventListeners(this.getEntityClass(), "preSave", ctx);
 
-            var documentToSave:Document = this.serializer.toDocument(data.object);
-            documentToSave.serial = (data.currentSerial || 0) + 1;
+            var documentToSave:Document = this.serializer.toDocument(rootObject);
+            documentToSave.serial = (currentSerial || 0) + 1;
 
             // update the collection
             //console.log("writing document ", documentToSave);
 
             return this.mongoCollection.updateOne({
-                _id: id,
-                serial: data.currentSerial
+                _id: omm.getId(rootObject),
+                serial: currentSerial
             }, documentToSave);
         });
-        return Promise.all([valuePromise, updatePromise]).then( (values:any[]) => {
 
-            var data:{currentSerial:number, object:any, result:any} = values[0];
+        return Promise.all([resultPromise, updatePromise, rootObjectPromise]).then( (values:any[]) => {
+            var result= values[0];
             var updateResult:any = values[1];
+            var rootObject:any = values[2];
             // verify that that went well
             if (updateResult.modifiedCount == 1) {
-                // return result; // we're done
-
-                return Promise.resolve(data.result);
+                var cr:CollectionUpdateResult = {
+                    events : result.events,
+                    rootObject: rootObject,
+                    object : result.object,
+                    result : result.result
+                };
+                return cr;
             }
             else if (updateResult.modifiedCount > 1) {
                 return Promise.reject("verifiedUpdate should only update one document");
             } else if( attempt<10 ) {
-                return this.updateOnce(id, updateFunction, attempt+1 );
+                return this.updateOnce(sp, updateFunction, attempt+1 );
                 //console.log("rerunning verified update ");
                 // we need to do this again
             } else {
@@ -269,12 +315,12 @@ export default class Collection<T extends Object>
      * @param id - the id of the object
      * @param updateFunction - the function that alters the loaded object
      */
-    update(id:string, updateFunction:(o:T)=>void):Promise<any>
+    update(sp:omm.SerializationPath, updateFunction:(o:T)=>void):Promise<CollectionUpdateResult>
     {
-        if (!id || !updateFunction)
+        if (!sp || !updateFunction)
             return Promise.reject("parameter missing");
 
-        return this.updateOnce(id, updateFunction,0);
+        return this.updateOnce(sp, updateFunction,0);
     }
 
 
@@ -332,6 +378,11 @@ export default class Collection<T extends Object>
         return this.theClass;
     }
 }
+export interface CollectionUpdateResult{
+    result:any; // what the update function has returned
+    events:Array<any>; // the events emitted with omm.emit during the update that went through
+    object:any; // the updated object
+    rootObject:any; // the root object
 
-
+}
 

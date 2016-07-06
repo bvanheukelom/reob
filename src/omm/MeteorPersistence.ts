@@ -1,6 +1,6 @@
 
 import Status from "./Status"
-import Collection from "./Collection"
+import {Collection, CollectionUpdateResult} from "./Collection"
 import Serializer from "../serializer/Serializer"
 import ObjectRetriever from "../serializer/ObjectRetriever"
 import { SerializationPath } from "./SerializationPath"
@@ -50,9 +50,10 @@ function call( methodName:string, objectId:string, args:any[]  ):Promise<any>{
     // prepend
     args.unshift( objectId );
     args.unshift( methodName );
-
+    debugger;
     var p:Promise<any> = MeteorPersistence.clientWebMethods.call.apply(MeteorPersistence.clientWebMethods, args);
     return p.then((result:any)=>{
+        console.log( "web method returned "+ result );
         // convert the result from json to an object
         if( result ) {
             var serializationPath = result.serializationPath;
@@ -180,13 +181,15 @@ export class MeteorPersistence {
             console.log("Running replacer function of a function that is also a web method. Name:"+options.name );
             var key = omm_annotation.isRegisteredWithKey(this) || ( this._serializationPath ? this._serializationPath.toString() : undefined );
             var r:any;
-            var isServer:boolean = (this._serializationPath && !this._serializationPath.isClient);
 
-            if( !options.serverOnly || isServer || !key ){
+            // this is a more elaborate than necessary. "isServer()" should be enough but then the tests would not work properly.
+            var isServ:boolean = (!this._serializationPath && isServer()) || (this._serializationPath && !this._serializationPath.isClient);
+
+            if( !options.serverOnly || isServ || !key ){
                 console.log( "Running original function of web method "+options.name);
                 r = originalFunction.apply(this, a);
             }
-            if( !isServer && key ) {
+            if( !isServ && key ) {
                 r = call(options.name, key, a);
             }
             return r;
@@ -280,44 +283,16 @@ export class MeteorPersistence {
                     if( ctx.cancelledWithError() ){
                         return Promise.reject(ctx.cancelledWithError());
                     } else {
-                        var resultPromise = collection.update( object._serializationPath.getId(), function (o) {
-                            var subObject = object._serializationPath.getSubObject(o);
+                        var resultPromise:Promise<CollectionUpdateResult> = collection.update( object._serializationPath, function (subObject) {
                             var r2 = originalFunction.apply(subObject, args);
                             return r2;
+                        }).then((r:CollectionUpdateResult)=>{
+                            debugger;
+                            console.log("Events collected during updating ", r.events);
+                            collection.sendEventsCollectedDuringUpdate( r.object, r.object, r.rootObject,functionName, object._serializationPath, r.events );
+                            return r.result;
                         });
 
-                        // if( resetUpdateCollection ){
-                        //     Status.updateInProgress = false;
-                        // }
-
-                        // TODO this might potentially catch updates of something that happened between the update and now. Small timeframe but still relevant. Also the extra load should be avoided.
-
-                        console.log("events missing");
-                        // if( updateCollection ){
-                        //     rootObject = collection.getById(_serializationPath.getId());
-                        //     object =_serializationPath.getSubObject(rootObject);
-                        // }
-                        //
-                        // var ctx = new omm_annotation.EventContext( object, collection );
-                        // ctx.preUpdate = preUpdateObject;
-                        // ctx.methodContext = Status.methodContext;
-                        // ctx.functionName = functionName;
-                        // ctx.serializationPath = _serializationPath;
-                        // ctx.rootObject = rootObject;
-                        // //ctx.ob
-                        //
-                        // if( omm_event.getQueue() ){
-                        //     omm_event.getQueue().forEach(function(t){
-                        //         //console.log( 'emitting event:'+t.topic );
-                        //         omm_event.callEventListeners( entityClass, t.topic, ctx, t.data );
-                        //     });
-                        // }
-                        //
-                        // omm_event.callEventListeners( entityClass, "post:"+functionName, ctx );
-                        // omm_event.callEventListeners( entityClass, "post", ctx );
-                        // if( resetUpdateCollection ){
-                        //     omm_event.deleteQueue();
-                        // }
                         return resultPromise;
                     }
                 })
@@ -394,6 +369,10 @@ export function init( host:string, port:number ){
     MeteorPersistence.clientWebMethods = new wm.WebMethods(endpointUrl);
     MeteorPersistence.init();
 
+}
+
+export function isServer():boolean{
+    return !!MeteorPersistence.db;
 }
 
 export function startServer( mongoUrl:string, port:number ):Promise<any>{

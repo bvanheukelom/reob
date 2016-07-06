@@ -1,11 +1,11 @@
 "use strict";
-var omm = require("../omm");
-var omm_sp = require("./SerializationPath");
-var Serializer_1 = require("../serializer/Serializer");
-var omm_event = require("../event/OmmEvent");
-var Status_1 = require("./Status");
-var mongodb = require("mongodb");
-var Collection = (function () {
+const omm = require("../omm");
+const omm_sp = require("./SerializationPath");
+const Serializer_1 = require("../serializer/Serializer");
+const omm_event = require("../event/OmmEvent");
+const Status_1 = require("./Status");
+const mongodb = require("mongodb");
+class Collection {
     /**
      * Represents a Mongo collection that contains entities.
      * @param c {function} The constructor function of the entity class.
@@ -13,7 +13,7 @@ var Collection = (function () {
      * @class
      * @memberof omm
      */
-    function Collection(entityClass, collectionName) {
+    constructor(entityClass, collectionName) {
         this.eventListeners = {};
         this.serializer = new Serializer_1.default();
         //var collectionName = omm.PersistenceAnnotation.getCollectionName(persistableClass);
@@ -28,54 +28,54 @@ var Collection = (function () {
         this.mongoCollection = omm.MeteorPersistence.db.collection(this.name);
         this.theClass = entityClass;
     }
-    Collection.prototype.removeAllListeners = function () {
+    removeAllListeners() {
         this.eventListeners = {};
-    };
-    Collection.getByName = function (s) {
+    }
+    static getByName(s) {
         return Collection.collections[s];
-    };
-    Collection.prototype.preSave = function (f) {
+    }
+    preSave(f) {
         this.addListener("preSave", f);
-    };
-    Collection.prototype.onRemove = function (f) {
+    }
+    onRemove(f) {
         this.addListener("didRemove", f);
-    };
-    Collection.prototype.preRemove = function (f) {
+    }
+    preRemove(f) {
         this.addListener("willRemove", f);
-    };
-    Collection.prototype.onInsert = function (f) {
+    }
+    onInsert(f) {
         this.addListener("didInsert", f);
-    };
-    Collection.prototype.preInsert = function (f) {
+    }
+    preInsert(f) {
         this.addListener("willInsert", f);
-    };
-    Collection.prototype.addListener = function (topic, f) {
+    }
+    addListener(topic, f) {
         if (!this.eventListeners[topic])
             this.eventListeners[topic] = [];
         this.eventListeners[topic].push(f);
-    };
-    Collection.prototype.emit = function (topic, data) {
+    }
+    emit(topic, data) {
         if (this.queue)
             this.queue.push({ topic: topic, data: data });
-    };
-    Collection.prototype.emitNow = function (t, evtCtx, data) {
+    }
+    emitNow(t, evtCtx, data) {
         if (this.eventListeners[t]) {
             this.eventListeners[t].forEach(function (listener) {
                 listener(evtCtx, data);
             });
         }
-    };
-    Collection.prototype.flushQueue = function () {
+    }
+    flushQueue() {
         if (this.queue) {
             this.queue.forEach(function (evt) {
                 this.emitNow(evt.topic, evt.data);
             });
             this.queue = undefined;
         }
-    };
-    Collection.prototype.resetQueue = function () {
+    }
+    resetQueue() {
         this.queue = [];
-    };
+    }
     // private static _getMeteorCollection( name?:string ) {
     //     if( !Collection.meteorCollections[name] ) {
     //         Collection.meteorCollections[name] = (Config.getMongo()).;
@@ -86,59 +86,57 @@ var Collection = (function () {
      * Gets the name of the collection.
      * @returns {string}
      */
-    Collection.prototype.getName = function () {
+    getName() {
         return this.name;
-    };
+    }
     /**
      * Returns the underlying mongo collection.
      * @returns {any}
      */
-    Collection.prototype.getMeteorCollection = function () {
+    getMeteorCollection() {
         return this.mongoCollection;
-    };
+    }
     /**
      * Loads an object from the collection by its id.
      * @param id {string} the id
      * @returns {T} the object or undefined if it wasn't found
      */
-    Collection.prototype.getById = function (id) {
+    getById(id) {
         return this.find({
             "_id": id
-        }).then(function (values) {
+        }).then((values) => {
             return values.length ? values[0] : undefined;
         });
-    };
+    }
     /**
      * Finds objects based on a selector.
      * @param {object} findCriteria the mongo selector
      * @returns {Array<T>}
      * @protected
      */
-    Collection.prototype.find = function (findCriteria) {
-        var _this = this;
-        return this.mongoCollection.find(findCriteria).toArray().then(function (documents) {
+    find(findCriteria) {
+        return this.mongoCollection.find(findCriteria).toArray().then((documents) => {
             var objects = [];
             for (var i = 0; i < documents.length; i++) {
                 var document = documents[i];
-                objects[i] = _this.documentToObject(document);
+                objects[i] = this.documentToObject(document);
             }
             return objects;
         });
-    };
+    }
     /**
      * Gets all objects in a collection.
      * @returns {Array<T>}
      */
-    Collection.prototype.getAll = function () {
+    getAll() {
         return this.find({});
-    };
+    }
     /**
      * Removes an entry from a collection
      * @param id {string} the id of the object to be removed from the collection
      * @callback cb the callback that's called once the object is removed or an error happend
      */
-    Collection.prototype.remove = function (id) {
-        var _this = this;
+    remove(id) {
         var ctx = new omm.EventContext(undefined, this);
         ctx.objectId = id;
         ctx.methodContext = Status_1.default.methodContext;
@@ -150,68 +148,107 @@ var Collection = (function () {
             return Promise.reject("Trying to remove an object that does not have an id.");
         }
         else {
-            return this.mongoCollection.remove({ _id: id }).then(function (result) {
-                var c2 = new omm.EventContext(undefined, _this);
+            return this.mongoCollection.remove({ _id: id }).then((result) => {
+                var c2 = new omm.EventContext(undefined, this);
                 c2.objectId = id;
                 c2.methodContext = Status_1.default.methodContext;
-                _this.emitNow("didRemove", c2);
+                this.emitNow("didRemove", c2);
                 return result;
             });
         }
-    };
-    Collection.prototype.documentToObject = function (doc) {
+    }
+    documentToObject(doc) {
         var p = this.serializer.toObject(doc, this.theClass);
         omm_sp.SerializationPath.updateSerializationPaths(p);
         return p;
-    };
-    Collection.prototype.updateOnce = function (id, updateFunction, attempt) {
-        var _this = this;
-        var valuePromise = this.mongoCollection.find({
-            _id: id
-        }).toArray().then(function (documents) {
+    }
+    sendEventsCollectedDuringUpdate(preUpdateObject, postUpdateObject, rootObject, functionName, serializationPath, events) {
+        var ctx = new omm.EventContext(postUpdateObject, this);
+        ctx.preUpdate = preUpdateObject;
+        ctx.functionName = functionName;
+        ctx.serializationPath = serializationPath;
+        ctx.rootObject = rootObject;
+        //ctx.ob
+        var entityClass = omm.PersistenceAnnotation.getClass(postUpdateObject);
+        events.forEach(function (t) {
+            //console.log( 'emitting event:'+t.topic );
+            omm_event.callEventListeners(entityClass, t.topic, ctx, t.data);
+        });
+        omm_event.callEventListeners(entityClass, "post:" + functionName, ctx);
+        omm_event.callEventListeners(entityClass, "post", ctx);
+    }
+    updateOnce(sp, updateFunction, attempt) {
+        var documentPromise = this.mongoCollection.find({
+            _id: sp.getId()
+        }).toArray().then((documents) => {
             var document = documents[0];
             if (!document) {
-                return Promise.reject("No document found for id: " + id);
+                return Promise.reject("No document found for id: " + sp.getId());
             }
-            var currentSerial = document.serial;
+            return document;
+        });
+        var currentSerialPromise = documentPromise.then((doc) => {
+            return doc.serial;
+        });
+        var rootObjectPromise = documentPromise.then((doc) => {
+            return this.documentToObject(doc);
+        });
+        var objectPromise = rootObjectPromise.then((rootObject) => {
+            return sp.getSubObject(rootObject);
+        });
+        var resultPromise = objectPromise.then((object) => {
+            debugger;
             omm_event.resetQueue();
             // call the update function
-            var object = _this.documentToObject(document);
-            var result = updateFunction(object);
+            var result = {};
+            result.result = updateFunction(object);
+            result.events = omm_event.getQueue();
+            result.object = object;
+            omm_event.resetQueue();
             omm_sp.SerializationPath.updateSerializationPaths(object);
-            return { currentSerial: currentSerial, object: object, result: result };
+            return result;
         });
-        var updatePromise = valuePromise.then(function (data) {
-            var ctx = new omm.EventContext(data.object, _this);
-            omm_event.callEventListeners(_this.getEntityClass(), "preSave", ctx);
-            var documentToSave = _this.serializer.toDocument(data.object);
-            documentToSave.serial = (data.currentSerial || 0) + 1;
+        var updatePromise = Promise.all([objectPromise, currentSerialPromise, resultPromise, rootObjectPromise]).then((values) => {
+            var object = values[0];
+            var currentSerial = values[1];
+            var result = values[2];
+            var rootObject = values[3];
+            var ctx = new omm.EventContext(object, this);
+            omm_event.callEventListeners(this.getEntityClass(), "preSave", ctx);
+            var documentToSave = this.serializer.toDocument(rootObject);
+            documentToSave.serial = (currentSerial || 0) + 1;
             // update the collection
             //console.log("writing document ", documentToSave);
-            return _this.mongoCollection.updateOne({
-                _id: id,
-                serial: data.currentSerial
+            return this.mongoCollection.updateOne({
+                _id: omm.getId(rootObject),
+                serial: currentSerial
             }, documentToSave);
         });
-        return Promise.all([valuePromise, updatePromise]).then(function (values) {
-            var data = values[0];
+        return Promise.all([resultPromise, updatePromise, rootObjectPromise]).then((values) => {
+            var result = values[0];
             var updateResult = values[1];
+            var rootObject = values[2];
             // verify that that went well
             if (updateResult.modifiedCount == 1) {
-                // return result; // we're done
-                return Promise.resolve(data.result);
+                var cr = {
+                    events: result.events,
+                    rootObject: rootObject,
+                    object: result.object,
+                    result: result.result
+                };
+                return cr;
             }
             else if (updateResult.modifiedCount > 1) {
                 return Promise.reject("verifiedUpdate should only update one document");
             }
             else if (attempt < 10) {
-                return _this.updateOnce(id, updateFunction, attempt + 1);
+                return this.updateOnce(sp, updateFunction, attempt + 1);
             }
             else {
                 return Promise.reject("tried 10 times to update the document");
             }
         });
-    };
+    }
     /**
      * Performs an update on an object in the collection. After the update the object is attempted to be saved to
      * the collection. If the object has changed between the time it was loaded and the time it is saved, the whole
@@ -219,25 +256,24 @@ var Collection = (function () {
      * @param id - the id of the object
      * @param updateFunction - the function that alters the loaded object
      */
-    Collection.prototype.update = function (id, updateFunction) {
-        if (!id || !updateFunction)
+    update(sp, updateFunction) {
+        if (!sp || !updateFunction)
             return Promise.reject("parameter missing");
-        return this.updateOnce(id, updateFunction, 0);
-    };
+        return this.updateOnce(sp, updateFunction, 0);
+    }
     /**
      * Inserts an object into the collection
      * @param p the object
      * @param {omm.Collection~insertCallback} callback
      * @returns {string} the id of the new object
      */
-    Collection.prototype.insert = function (p) {
-        var _this = this;
+    insert(p) {
         var ctx = new omm.EventContext(p, this);
         ctx.methodContext = Status_1.default.methodContext;
         this.emitNow("willInsert", ctx);
         //console.log("inserting 2n");
         if (ctx.cancelledWithError()) {
-            return new Promise(function (resolve, reject) {
+            return new Promise((resolve, reject) => {
                 reject(ctx.cancelledWithError());
             });
         }
@@ -253,28 +289,26 @@ var Collection = (function () {
             var doc = this.serializer.toDocument(p);
             doc.serial = 0;
             //console.log( "inserting document: ", doc);
-            return this.mongoCollection.insert(doc).then(function () {
+            return this.mongoCollection.insert(doc).then(() => {
                 omm_sp.SerializationPath.updateSerializationPaths(p);
                 //console.log("didInsert");
-                var ctx2 = new omm.EventContext(p, _this);
+                var ctx2 = new omm.EventContext(p, this);
                 ctx2.methodContext = Status_1.default.methodContext;
-                _this.emitNow("didInsert", ctx2);
+                this.emitNow("didInsert", ctx2);
                 return id;
             });
         }
-    };
+    }
     /**
      * called once the objects are removed or an error happens
      * @callback omm.Collection~resetAllCallback
      * @param error {any=} if an error occured it is passed to the callback
      */
-    Collection.prototype.getEntityClass = function () {
+    getEntityClass() {
         return this.theClass;
-    };
-    Collection.meteorCollections = {};
-    Collection.collections = {};
-    return Collection;
-}());
-Object.defineProperty(exports, "__esModule", { value: true });
-exports.default = Collection;
+    }
+}
+Collection.meteorCollections = {};
+Collection.collections = {};
+exports.Collection = Collection;
 //# sourceMappingURL=Collection.js.map
