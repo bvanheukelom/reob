@@ -1028,19 +1028,5 @@ describe("Omm both on client and server", function () {
             done();
         });
     });
-    //
-    //    // test for omm.PersistenceAnnotation.getPropertyClass(omm.entityClasses["TestCar"], "wheels")
-    //
-    //    // test regarding a number as an id property
-    //
-    //    // test regarding a different property than the _id property as the id property
-    //
-    //    // test that shows that root entities can be passed as parameters
-    //
-    //    // test that shows that entities can be passed as parameters
-    //
-    //    // test that shows that the subobjectpath class can handle array index lookups
-    //
-    //
 });
 //# sourceMappingURL=Tests.spec.js.map

@@ -1,6 +1,6 @@
 {
-  "name": "o-m-m",
-  "version": "0.0.33",
+  "name": "@bvanheukelom/o-m-m",
+  "version": "0.1.0",
   "main": "dist/src/omm.js",
   "typings": "dist/src/omm.d.ts",
   "scripts": {
@@ -19,12 +19,12 @@
     "grunt-nodemon": "^0.4.0",
     "grunt-ts": "^5.5.0-beta.2",
     "typescript": "^1.8.10",
-    "underscore": "^1.8.3"
+    "underscore": "^1.8.3",
+    "co": "^4.6.0"
   },
   "dependencies": {
     "@bvanheukelom/web-methods": "*",
     "bluebird": "^3.4.1",
-    "co": "^4.6.0",
     "mongodb": "^2.1.18"
   }
 }
