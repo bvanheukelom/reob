@@ -2,7 +2,6 @@
 const omm = require("../omm");
 const omm_sp = require("./SerializationPath");
 const omm_event = require("../event/OmmEvent");
-const Status_1 = require("./Status");
 const mongodb = require("mongodb");
 class Collection {
     /**
@@ -131,7 +130,6 @@ class Collection {
     remove(id) {
         var ctx = new omm.EventContext(undefined, this);
         ctx.objectId = id;
-        ctx.methodContext = Status_1.default.methodContext;
         this.emitNow("willRemove", ctx);
         if (ctx.cancelledWithError()) {
             return Promise.reject(ctx.cancelledWithError());
@@ -143,7 +141,6 @@ class Collection {
             return this.mongoCollection.remove({ _id: id }).then((result) => {
                 var c2 = new omm.EventContext(undefined, this);
                 c2.objectId = id;
-                c2.methodContext = Status_1.default.methodContext;
                 this.emitNow("didRemove", c2);
                 return result;
             });
@@ -260,7 +257,6 @@ class Collection {
      */
     insert(p) {
         var ctx = new omm.EventContext(p, this);
-        ctx.methodContext = Status_1.default.methodContext;
         this.emitNow("willInsert", ctx);
         //console.log("inserting 2n");
         if (ctx.cancelledWithError()) {
@@ -284,7 +280,6 @@ class Collection {
                 omm_sp.SerializationPath.updateObjectContexts(p, this);
                 //console.log("didInsert");
                 var ctx2 = new omm.EventContext(p, this);
-                ctx2.methodContext = Status_1.default.methodContext;
                 this.emitNow("didInsert", ctx2);
                 return id;
             });

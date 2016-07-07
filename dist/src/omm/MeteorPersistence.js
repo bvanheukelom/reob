@@ -2,14 +2,14 @@
 const SerializationPath_1 = require("./SerializationPath");
 const omm_annotation = require("../annotations/PersistenceAnnotation");
 const omm = require("../omm");
-function registerObject(key, o) {
-    omm_annotation.registeredObjects[key] = o;
-}
-exports.registerObject = registerObject;
-function getRegisteredObject(key) {
-    return omm_annotation.registeredObjects[key];
-}
-exports.getRegisteredObject = getRegisteredObject;
+// export var methodContext:any;
+// export function registerObject<O extends Object>( key:string, o:O ){
+//     omm_annotation.registeredObjects[key] = o;
+// }
+//
+// export function getRegisteredObject( key:string ):any{
+//     return omm_annotation.registeredObjects[key];
+// }
 class MeteorPersistence {
     static init() {
         if (!MeteorPersistence.initialized) {
@@ -54,9 +54,9 @@ class MeteorPersistence {
         return MeteorPersistence.initialized;
     }
     // TODO new name
-    static objectsClassName(o) {
-        return omm_annotation.className(o.constructor);
-    }
+    // static objectsClassName(o:any):string {
+    //     return omm_annotation.className(o.constructor);
+    // }
     getKey(object) {
         if (object._ommObjectContext.serializationPath)
             return object._ommObjectContext.serializationPath.toString();
@@ -72,14 +72,14 @@ class MeteorPersistence {
             }
         }
     }
-    // todo  make the persistencePath enumerable:false everywhere it is set
-    static getClassName(o) {
-        if (typeof o == "object" && omm_annotation.PersistenceAnnotation.getClass(o)) {
-            return omm_annotation.className(omm_annotation.PersistenceAnnotation.getClass(o));
-        }
-        else
-            return typeof o;
-    }
+    // // todo  make the persistencePath enumerable:false everywhere it is set
+    // private static getClassName(o:Object):string {
+    //     if( typeof o =="object" && omm_annotation.PersistenceAnnotation.getClass( o )) {
+    //         return omm_annotation.className( omm_annotation.PersistenceAnnotation.getClass( o ) );
+    //     }
+    //     else
+    //         return typeof o;
+    // }
     static monkeyPatch(object, functionName, patchFunction) {
         var originalFunction = object[functionName];
         object[functionName] = function monkeyPatchFunction() {

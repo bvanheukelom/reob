@@ -7,7 +7,6 @@ import * as omm_sp from "./SerializationPath"
 import Document from "../serializer/Document"
 import {TypeClass as TypeClass } from "../annotations/PersistenceAnnotation"
 import * as omm_event from "../event/OmmEvent"
-import Status from "./Status"
 import * as Config from "./Config"
 import * as mongodb from "mongodb"
 
@@ -172,7 +171,6 @@ export class Collection<T extends Object> implements omm.Handler
     {
         var ctx = new omm.EventContext( undefined, this );
         ctx.objectId = id;
-        ctx.methodContext = Status.methodContext;
         this.emitNow( "willRemove", ctx );
         if( ctx.cancelledWithError() ) {
             return Promise.reject(ctx.cancelledWithError());
@@ -182,7 +180,6 @@ export class Collection<T extends Object> implements omm.Handler
             return this.mongoCollection.remove({_id:id }).then((result)=>{
                 var c2 = new omm.EventContext(undefined, this);
                 c2.objectId = id;
-                c2.methodContext = Status.methodContext;
                 this.emitNow("didRemove", c2 );
                 return result;
             });
@@ -321,7 +318,6 @@ export class Collection<T extends Object> implements omm.Handler
     {
 
         var ctx = new omm.EventContext(p, this);
-        ctx.methodContext = Status.methodContext;
         this.emitNow("willInsert", ctx);
         //console.log("inserting 2n");
         if( ctx.cancelledWithError() ){
@@ -347,7 +343,6 @@ export class Collection<T extends Object> implements omm.Handler
 
                 //console.log("didInsert");
                 var ctx2 =  new omm.EventContext( p, this);
-                ctx2.methodContext = Status.methodContext;
                 this.emitNow("didInsert", ctx2);
                 return id;
             });

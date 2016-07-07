@@ -9,7 +9,6 @@ export class TestTreeCollection extends omm.Collection<Tests.TestTree> {
 
     constructor( db:any ) {
         super( db, Tests.TestTree,"TheTreeCollection");
-        omm.registerObject( "TheTreeCollection", this);
     }
 
     @omm.MeteorMethod({  replaceWithCall:true, serverOnly:true, parameterTypes:["number","callback"]})

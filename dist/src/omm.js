@@ -8,8 +8,6 @@ function __export(m) {
 __export(require("./annotations/PersistenceAnnotation"));
 __export(require("./event/OmmEvent"));
 __export(require("./omm/SerializationPath"));
-var Status_1 = require("./omm/Status");
-exports.Status = Status_1.default;
 __export(require("./omm/Collection"));
 __export(require("./omm/MeteorPersistence"));
 __export(require("./omm/Client"));

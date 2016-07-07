@@ -8,7 +8,6 @@ export * from "./event/OmmEvent"
 
 export * from "./omm/SerializationPath"
 export * from "./omm/OmmObject"
-export { default as Status } from "./omm/Status"
 export * from "./omm/Collection"
 export * from "./omm/Handler"
 export * from "./omm/ObjectContext"

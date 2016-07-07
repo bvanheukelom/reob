@@ -1,26 +1,20 @@
 
-import Status from "./Status"
-import {Collection, CollectionUpdateResult} from "./Collection"
-import ObjectRetriever from "../serializer/ObjectRetriever"
 import { SerializationPath } from "./SerializationPath"
 import { OmmObject } from "./OmmObject"
 import * as omm_annotation from "../annotations/PersistenceAnnotation"
-import * as omm_event from "../event/OmmEvent"
+
 import * as omm from "../omm"
-import * as Config from "./Config"
-import * as mongodb from "mongodb"
-import * as wm from "@bvanheukelom/web-methods"
-import * as Promise from "bluebird"
 
-export var methodContext:any;
 
-export function registerObject<O extends Object>( key:string, o:O ){
-    omm_annotation.registeredObjects[key] = o;
-}
+// export var methodContext:any;
 
-export function getRegisteredObject( key:string ):any{
-    return omm_annotation.registeredObjects[key];
-}
+// export function registerObject<O extends Object>( key:string, o:O ){
+//     omm_annotation.registeredObjects[key] = o;
+// }
+//
+// export function getRegisteredObject( key:string ):any{
+//     return omm_annotation.registeredObjects[key];
+// }
 
 
 
@@ -78,9 +72,9 @@ export class MeteorPersistence {
 
 
     // TODO new name
-    static objectsClassName(o:any):string {
-        return omm_annotation.className(o.constructor);
-    }
+    // static objectsClassName(o:any):string {
+    //     return omm_annotation.className(o.constructor);
+    // }
 
     getKey(object:OmmObject):string {
         if (object._ommObjectContext.serializationPath)
@@ -104,14 +98,14 @@ export class MeteorPersistence {
 
 
 
-    // todo  make the persistencePath enumerable:false everywhere it is set
-    private static getClassName(o:Object):string {
-        if( typeof o =="object" && omm_annotation.PersistenceAnnotation.getClass( o )) {
-            return omm_annotation.className( omm_annotation.PersistenceAnnotation.getClass( o ) );
-        }
-        else
-            return typeof o;
-    }
+    // // todo  make the persistencePath enumerable:false everywhere it is set
+    // private static getClassName(o:Object):string {
+    //     if( typeof o =="object" && omm_annotation.PersistenceAnnotation.getClass( o )) {
+    //         return omm_annotation.className( omm_annotation.PersistenceAnnotation.getClass( o ) );
+    //     }
+    //     else
+    //         return typeof o;
+    // }
 
     static monkeyPatch( object:any, functionName:string, patchFunction:(original:Function, ...arg:any[])=>any) {
         var originalFunction = object[functionName];

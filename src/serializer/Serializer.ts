@@ -1,4 +1,4 @@
-import ObjectRetriever from "./ObjectRetriever"
+
 import Document from "./Document"
 import * as omm from "../omm"
 import SubObjectPath from "./SubObjectPath"

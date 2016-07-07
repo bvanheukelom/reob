@@ -13,7 +13,6 @@ const Tests = require("./Tests");
 class TestTreeCollection extends omm.Collection {
     constructor(db) {
         super(db, Tests.TestTree, "TheTreeCollection");
-        omm.registerObject("TheTreeCollection", this);
     }
     newTree(initialHeight) {
         var t = new Tests.TestTree(initialHeight);
