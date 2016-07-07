@@ -863,7 +863,7 @@ describe("Omm both on client and server", function () {
             return growPromise;
         })
             .then((s) => {
-            return treeCollection.getById(treeId);
+            return client.load(Tests.TestTree, treeId);
         })
             .then((tree) => {
             expect(tree.getHeight()).toBe(21);

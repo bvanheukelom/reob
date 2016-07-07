@@ -81,7 +81,7 @@ export class Collection<T extends Object> implements omm.Handler
      * @class
      * @memberof omm
      */
-    constructor( db:mongodb.Db, entityClass:omm.TypeClass<T>, collectionName?:string ) {
+    constructor( db:any, entityClass:omm.TypeClass<T>, collectionName?:string ) {
         this.serializer = new omm.Serializer();
         if( !collectionName )
             collectionName = omm.getDefaultCollectionName(entityClass);

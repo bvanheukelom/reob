@@ -1,7 +1,6 @@
 import * as omm from "../omm";
 import Document from "../serializer/Document";
 import { TypeClass as TypeClass } from "../annotations/PersistenceAnnotation";
-import * as mongodb from "mongodb";
 export declare class Collection<T extends Object> implements omm.Handler {
     private mongoCollection;
     private theClass;
@@ -27,7 +26,7 @@ export declare class Collection<T extends Object> implements omm.Handler {
      * @class
      * @memberof omm
      */
-    constructor(db: mongodb.Db, entityClass: omm.TypeClass<T>, collectionName?: string);
+    constructor(db: any, entityClass: omm.TypeClass<T>, collectionName?: string);
     /**
      * Gets the name of the collection.
      * @returns {string}
