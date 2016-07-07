@@ -1,7 +1,8 @@
-import { MeteorPersistable } from "./MeteorPersistable";
+import { ObjectContext } from "./ObjectContext";
+import { Handler } from "./Handler";
+import { OmmObject } from "./OmmObject";
 export declare class SerializationPath {
     private path;
-    isClient: boolean;
     constructor(collectionName: string, id?: string);
     clone(): SerializationPath;
     getCollectionName(): string;
@@ -11,6 +12,7 @@ export declare class SerializationPath {
     appendArrayOrMapLookup(name: string, id: string): void;
     appendPropertyLookup(name: string): void;
     toString(): string;
-    static setSerializationPath(o: MeteorPersistable, pPath: SerializationPath): void;
-    static updateSerializationPaths(object: MeteorPersistable, visited?: Array<Object>): void;
+    static setObjectContext(object: OmmObject, sp: SerializationPath, handler: Handler): void;
+    static getObjectContext(object: OmmObject): ObjectContext;
+    static updateObjectContexts(object: OmmObject, handler?: Handler, visited?: Array<Object>): void;
 }

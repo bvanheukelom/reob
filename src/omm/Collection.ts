@@ -3,7 +3,7 @@
 import * as omm from "../omm"
 
 import * as omm_sp from "./SerializationPath"
-import Serializer from "../serializer/Serializer"
+
 import Document from "../serializer/Document"
 import {TypeClass as TypeClass } from "../annotations/PersistenceAnnotation"
 import * as omm_event from "../event/OmmEvent"
@@ -11,26 +11,19 @@ import Status from "./Status"
 import * as Config from "./Config"
 import * as mongodb from "mongodb"
 
-export class Collection<T extends Object>
+export class Collection<T extends Object> implements omm.Handler
 {
     private mongoCollection:mongodb.Collection;
     private theClass:omm.TypeClass<T>;
     private name:string;
-    private serializer:Serializer;
+    private serializer:omm.Serializer;
     private eventListeners:{ [index:string]:Array< ( i:omm.EventContext<T>, data?:any )=>void > } = {};
-    private db:mongodb.Db;
-    private static meteorCollections:{[index:string]:any} = { };
 
-    private static collections:{[index:string]:Collection<any>} = {};
 
     private queue:Array<any>;
 
     removeAllListeners():void{
         this.eventListeners = {};
-    }
-
-    static getByName( s:string ){
-        return Collection.collections[s];
     }
 
     preSave( f:( evtCtx:omm.EventContext<T>, data:any )=>void ){
@@ -89,20 +82,17 @@ export class Collection<T extends Object>
      * @class
      * @memberof omm
      */
-    constructor(  entityClass:omm.TypeClass<T>, collectionName?:string ) {
-        this.serializer = new Serializer();
-        //var collectionName = omm.PersistenceAnnotation.getCollectionName(persistableClass);
+    constructor( db:mongodb.Db, entityClass:omm.TypeClass<T>, collectionName?:string ) {
+        this.serializer = new omm.Serializer();
         if( !collectionName )
             collectionName = omm.getDefaultCollectionName(entityClass);
+
+        // this might have to go away
         omm.addCollectionRoot(entityClass, collectionName);
+
         this.name = collectionName;
 
-        if( !Collection.getByName( collectionName ) ) {
-            // as it doesnt really matter which base collection is used in meteor-calls, we're just using the first that is created
-            Collection.collections[collectionName] = this;
-        }
-
-        this.mongoCollection = omm.MeteorPersistence.db.collection( this.name );
+        this.mongoCollection = db.collection( this.name );
         this.theClass = entityClass;
     }
 
@@ -201,8 +191,8 @@ export class Collection<T extends Object>
 
     protected documentToObject( doc:Document ):T
     {
-        var p:T = this.serializer.toObject<T>(doc, this.theClass);
-        omm_sp.SerializationPath.updateSerializationPaths(p);
+        var p:T = this.serializer.toObject<T>(doc, this.theClass, this);
+        
         return p;
     }
 
@@ -225,9 +215,6 @@ export class Collection<T extends Object>
         omm_event.callEventListeners( entityClass, "post:"+functionName, ctx );
         omm_event.callEventListeners( entityClass, "post", ctx );
     }
-
-
-
 
     private updateOnce(sp:omm.SerializationPath, updateFunction:(o:T)=>void, attempt:number):Promise<CollectionUpdateResult> {
         var documentPromise = this.mongoCollection.find({
@@ -259,7 +246,7 @@ export class Collection<T extends Object>
             result.events = omm_event.getQueue();
             result.object = object;
             omm_event.resetQueue();
-            omm_sp.SerializationPath.updateSerializationPaths(object);
+            omm_sp.SerializationPath.updateObjectContexts(object, this);
             return result;
         });
         
@@ -356,7 +343,7 @@ export class Collection<T extends Object>
             //console.log( "inserting document: ", doc);
 
             return this.mongoCollection.insert(doc).then(()=>{
-                omm_sp.SerializationPath.updateSerializationPaths(p);
+                omm_sp.SerializationPath.updateObjectContexts(p, this);
 
                 //console.log("didInsert");
                 var ctx2 =  new omm.EventContext( p, this);
@@ -367,16 +354,60 @@ export class Collection<T extends Object>
         }
     }
 
-    /**
-     * called once the objects are removed or an error happens
-     * @callback omm.Collection~resetAllCallback
-     * @param error {any=} if an error occured it is passed to the callback
-     */
-
-
     getEntityClass():TypeClass<T>{
         return this.theClass;
     }
+
+    // the handler function for the collection updates of objects loaded via this collection
+    collectionUpdate(entityClass:omm.TypeClass<any>, functionName:string, object:omm.OmmObject, originalFunction:Function, args:any[] ):any{
+        console.log( 'doing a collection upate in the collection for '+functionName );
+
+        var rootObject;
+        var objectPromise:Promise<any>;
+
+        var rootObjectPromise:Promise<any>;
+
+        var objectContext = omm.SerializationPath.getObjectContext(object);
+        var sp = objectContext.serializationPath;
+
+        rootObjectPromise =  this.getById(sp.getId());
+        objectPromise = rootObjectPromise.then((rootObject:any)=>{
+            return sp.getSubObject(rootObject);
+        });
+        
+        return Promise.all([objectPromise,rootObjectPromise]).then((values:any[])=>{
+            var object:any = values[0];
+            var rootObject:any = values[1];
+
+            // create the event context
+            var ctx = new omm.EventContext( object, this );
+            ctx.functionName = functionName;
+            ctx.serializationPath = sp;
+            ctx.rootObject = rootObject;
+
+            // emit the pre-event
+            omm_event.callEventListeners( entityClass, "pre:"+functionName, ctx );
+            omm_event.callEventListeners( entityClass, "pre", ctx );
+
+            var preUpdateObject = object;
+
+            if( ctx.cancelledWithError() ){
+                return Promise.reject(ctx.cancelledWithError());
+            } else {
+                var resultPromise:Promise<CollectionUpdateResult> = this.update( sp, function (subObject) {
+                    var r2 = originalFunction.apply(subObject, args);
+                    return r2;
+                }).then((r:CollectionUpdateResult)=>{
+                    console.log("Events collected during updating ", r.events);
+                    this.sendEventsCollectedDuringUpdate( r.object, r.object, r.rootObject,functionName, object._serializationPath, r.events );
+                    return r.result;
+                });
+
+                return resultPromise;
+            }
+        });
+    }
+
 }
 export interface CollectionUpdateResult{
     result:any; // what the update function has returned

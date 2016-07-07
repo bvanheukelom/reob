@@ -1,7 +1,6 @@
 "use strict";
 const omm = require("../omm");
 const omm_sp = require("./SerializationPath");
-const Serializer_1 = require("../serializer/Serializer");
 const omm_event = require("../event/OmmEvent");
 const Status_1 = require("./Status");
 const mongodb = require("mongodb");
@@ -13,26 +12,19 @@ class Collection {
      * @class
      * @memberof omm
      */
-    constructor(entityClass, collectionName) {
+    constructor(db, entityClass, collectionName) {
         this.eventListeners = {};
-        this.serializer = new Serializer_1.default();
-        //var collectionName = omm.PersistenceAnnotation.getCollectionName(persistableClass);
+        this.serializer = new omm.Serializer();
         if (!collectionName)
             collectionName = omm.getDefaultCollectionName(entityClass);
+        // this might have to go away
         omm.addCollectionRoot(entityClass, collectionName);
         this.name = collectionName;
-        if (!Collection.getByName(collectionName)) {
-            // as it doesnt really matter which base collection is used in meteor-calls, we're just using the first that is created
-            Collection.collections[collectionName] = this;
-        }
-        this.mongoCollection = omm.MeteorPersistence.db.collection(this.name);
+        this.mongoCollection = db.collection(this.name);
         this.theClass = entityClass;
     }
     removeAllListeners() {
         this.eventListeners = {};
-    }
-    static getByName(s) {
-        return Collection.collections[s];
     }
     preSave(f) {
         this.addListener("preSave", f);
@@ -158,8 +150,7 @@ class Collection {
         }
     }
     documentToObject(doc) {
-        var p = this.serializer.toObject(doc, this.theClass);
-        omm_sp.SerializationPath.updateSerializationPaths(p);
+        var p = this.serializer.toObject(doc, this.theClass, this);
         return p;
     }
     sendEventsCollectedDuringUpdate(preUpdateObject, postUpdateObject, rootObject, functionName, serializationPath, events) {
@@ -205,7 +196,7 @@ class Collection {
             result.events = omm_event.getQueue();
             result.object = object;
             omm_event.resetQueue();
-            omm_sp.SerializationPath.updateSerializationPaths(object);
+            omm_sp.SerializationPath.updateObjectContexts(object, this);
             return result;
         });
         var updatePromise = Promise.all([objectPromise, currentSerialPromise, resultPromise, rootObjectPromise]).then((values) => {
@@ -290,7 +281,7 @@ class Collection {
             doc.serial = 0;
             //console.log( "inserting document: ", doc);
             return this.mongoCollection.insert(doc).then(() => {
-                omm_sp.SerializationPath.updateSerializationPaths(p);
+                omm_sp.SerializationPath.updateObjectContexts(p, this);
                 //console.log("didInsert");
                 var ctx2 = new omm.EventContext(p, this);
                 ctx2.methodContext = Status_1.default.methodContext;
@@ -299,16 +290,49 @@ class Collection {
             });
         }
     }
-    /**
-     * called once the objects are removed or an error happens
-     * @callback omm.Collection~resetAllCallback
-     * @param error {any=} if an error occured it is passed to the callback
-     */
     getEntityClass() {
         return this.theClass;
     }
+    // the handler function for the collection updates of objects loaded via this collection
+    collectionUpdate(entityClass, functionName, object, originalFunction, args) {
+        console.log('doing a collection upate in the collection for ' + functionName);
+        var rootObject;
+        var objectPromise;
+        var rootObjectPromise;
+        var objectContext = omm.SerializationPath.getObjectContext(object);
+        var sp = objectContext.serializationPath;
+        rootObjectPromise = this.getById(sp.getId());
+        objectPromise = rootObjectPromise.then((rootObject) => {
+            return sp.getSubObject(rootObject);
+        });
+        return Promise.all([objectPromise, rootObjectPromise]).then((values) => {
+            var object = values[0];
+            var rootObject = values[1];
+            // create the event context
+            var ctx = new omm.EventContext(object, this);
+            ctx.functionName = functionName;
+            ctx.serializationPath = sp;
+            ctx.rootObject = rootObject;
+            // emit the pre-event
+            omm_event.callEventListeners(entityClass, "pre:" + functionName, ctx);
+            omm_event.callEventListeners(entityClass, "pre", ctx);
+            var preUpdateObject = object;
+            if (ctx.cancelledWithError()) {
+                return Promise.reject(ctx.cancelledWithError());
+            }
+            else {
+                var resultPromise = this.update(sp, function (subObject) {
+                    var r2 = originalFunction.apply(subObject, args);
+                    return r2;
+                }).then((r) => {
+                    console.log("Events collected during updating ", r.events);
+                    this.sendEventsCollectedDuringUpdate(r.object, r.object, r.rootObject, functionName, object._serializationPath, r.events);
+                    return r.result;
+                });
+                return resultPromise;
+            }
+        });
+    }
 }
-Collection.meteorCollections = {};
-Collection.collections = {};
 exports.Collection = Collection;
 //# sourceMappingURL=Collection.js.map

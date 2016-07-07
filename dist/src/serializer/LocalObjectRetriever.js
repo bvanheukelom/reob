@@ -1,6 +1,5 @@
 "use strict";
 const SubObjectPath_1 = require("./SubObjectPath");
-const Serializer_1 = require("./Serializer");
 class LocalObjectRetriever {
     constructor() {
     }
@@ -30,7 +29,7 @@ class LocalObjectRetriever {
     }
     postToObject(o) {
         var that = this;
-        Serializer_1.default.forEachTypedObject(o, function (path, subO) {
+        Serializer.forEachTypedObject(o, function (path, subO) {
             that.setQuietProperty(subO, "rootObject", o);
         });
     }

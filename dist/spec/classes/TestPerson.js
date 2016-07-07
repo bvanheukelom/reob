@@ -9,9 +9,7 @@ const omm = require("../../src/omm");
 let TestPerson = class TestPerson {
     constructor(id, name) {
         this.addresses = [];
-        this.
-        // @omm.AsForeignKeys
-        trees = [];
+        this.trees = [];
         this.phoneBook = {};
         this.
         // @omm.AsForeignKeys

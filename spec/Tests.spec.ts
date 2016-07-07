@@ -6,7 +6,6 @@ import * as omm from "../src/omm"
 import * as Tests from "./classes/Tests"
 import * as mongodb from "mongodb"
 import * as Promise from "bluebird"
-import * as wm from "@bvanheukelom/web-methods"
 var co = require("co");
 
 import "./classes/TestLeaf"
@@ -15,15 +14,33 @@ describe("Omm both on client and server", function () {
 
     var personCollection:Tests.TestPersonCollection;
     var treeCollection:Tests.TestTreeCollection;
+    var clientPersonCollection:Tests.TestPersonCollection;
+    var clientTreeCollection:Tests.TestTreeCollection;
+    var server:omm.Server;
+    var client:omm.Client;
+    var db:any;
 
     beforeAll((done)=>{
-        // jasmine.DEFAULT_TIMEOUT_INTERVAL = 10000000;
-        omm.startServer( 'mongodb://localhost:27017/test', 7000 ).then(()=>{
-            omm.init("localhost", 7000);
-            done();
-        }).catch((err)=>{
-            fail(err);
-            done();
+        jasmine.DEFAULT_TIMEOUT_INTERVAL = 10000000;
+        omm.init();
+        mongodb.MongoClient.connect( "mongodb://localhost/test", {promiseLibrary:Promise}).then((d:mongodb.Db)=>{
+            db = d;
+            personCollection = new Tests.TestPersonCollection(db);
+            treeCollection = new Tests.TestTreeCollection(db);
+            server = new omm.Server();
+
+            server.addCollection(personCollection);
+            server.addCollection(treeCollection);
+
+            server.addSingleton("pc", personCollection);
+            server.addSingleton("tc", treeCollection);
+
+            server.start(7000).then(()=>{
+                done();
+            });
+
+            client = new omm.Client('localhost', 7000);
+
         });
         Promise.onPossiblyUnhandledRejection((reason: any) => {
             console.log("possibly unhandled rejection ", reason);
@@ -31,58 +48,12 @@ describe("Omm both on client and server", function () {
         });
     });
 
-    beforeEach(function () {
+    beforeEach(()=>{
+        personCollection.removeAllListeners();
+        treeCollection.removeAllListeners();
         omm.removeAllUpdateEventListeners();
-        personCollection = new Tests.TestPersonCollection();
-        treeCollection = new Tests.TestTreeCollection();
     });
 
-    function onlyOnce(f:Function):any {
-        var counter = 0;
-        return function () {
-            if (counter > 0) {
-                throw new Error("Function called twice");
-            }
-            counter = 1;
-            f.apply(this, arguments);
-        }
-    }
-
-    it("can load trees ", function (done) {
-        treeCollection.newTree(20)
-            .then((tree:Tests.TestTree)=>{
-                console.log("Tree id", tree.treeId);
-                return omm.load( Tests.TestTree, tree.treeId );
-            })
-            .then((tree:Tests.TestTree)=>{
-                expect( tree ).toBeDefined();
-                done();
-            });
-    });
-    //fit
-    it("can load trees and call stuff on it", function (done) {
-        var treeId;
-        treeCollection.newTree(20)
-            .then((tree:Tests.TestTree)=>{
-                console.log("Tree id", tree.treeId);
-                treeId = tree.treeId;
-                expect( tree.getHeight() ).toBe(20);
-                return omm.load( Tests.TestTree, tree.treeId );
-            })
-            .then((tree:Tests.TestTree)=>{
-                expect( tree ).toBeDefined();
-                expect( tree.getHeight() ).toBe(20);
-                var growPromise = tree.grow();
-                return growPromise;
-            })
-            .then((s:string)=>{
-                return treeCollection.getById(treeId);
-            })
-            .then((tree:Tests.TestTree)=>{
-                expect( tree.getHeight() ).toBe(21);
-                done();
-            });
-    });
 
     it("knows the difference between root entities and subdocument entities ", function () {
         expect(omm.PersistenceAnnotation.getCollectionName(Tests.TestPerson)).toBe("TestPerson");
@@ -128,73 +99,90 @@ describe("Omm both on client and server", function () {
         expect(omm.PersistenceAnnotation.getTypedPropertyNames(Tests.TestTree)).toContain('leaves');
     });
 
-    it("can do basic inserts", function (done) {
-        treeCollection.newTree(20).then((tree:Tests.TestTree)=>{
-            expect(tree).toBeDefined();
-            expect((<any>tree)._serializationPath).toBeDefined();
-            expect(tree instanceof Tests.TestTree).toBeTruthy();
-            expect(tree.treeId).toBeDefined();
-            expect(tree.getHeight()).toBe(20);
-            return treeCollection.getById(tree.treeId);
-        }).then(( tree:Tests.TestTree )=>{
-            expect(tree).toBeDefined();
-            expect(tree.treeId).toBeDefined();
-            expect(tree.getHeight()).toBe(20);
-            done();
-        }).catch((ee)=>{
-            fail(ee);
-            done();
-        });
+    it("uses persistence paths to return undefined for non existent subobjects ", function () {
+        var t1:Tests.TestTree = new Tests.TestTree(10);
+        var pp:omm.SerializationPath = new omm.SerializationPath( "TestTree", "tree1");
+        pp.appendArrayOrMapLookup("leaves", "nonexistentLeaf");
+        expect(pp.getSubObject(t1)).toBeUndefined();
     });
 
-    it("updates the collection", function (done) {
-        var id;
-        personCollection.newPerson('bert').then((e:Tests.TestPerson)=> {
-            id = e.getId();
-            return e.collectionUpdateRename("klaus");
-        }).then( (n:string)=>{
-            return personCollection.getById(id);
-        }).then((p:Tests.TestPerson)=>{
-            expect(p.getName()).toBe("Collection Update:klaus");
-            done();
-        }).catch((e)=>{
-            fail(e);
-            done();
-        });
+    it("uses persistence paths on root documents", function () {
+        var t1:Tests.TestTree = new Tests.TestTree(123);
+        t1.treeId = "tree1";
+        t1.grow();
+        // debugger;
+        omm.SerializationPath.updateObjectContexts(t1);
+        var sp = omm.SerializationPath.getObjectContext(t1).serializationPath;
+        expect( sp ).toBeDefined();
+        expect( sp.toString()).toBe("TheTreeCollection[tree1]");
+        expect(omm.SerializationPath.getObjectContext(t1.leaves[0]).serializationPath.toString()).toBe("TheTreeCollection[tree1].leaves|leaf124");
     });
 
-    it("can save foreign keys in a map", function (done) {
-        var personPromise = personCollection.newPerson("Held");
-        var tree1Promise = treeCollection.newTree(13);
-        var tree2Promise = treeCollection.newTree(12);
-        Promise.all( [tree1Promise,tree2Promise,personPromise] ).then((values:any)=>{
-            var t1 = values[0];
-            var t2 = values[1];
-            var held = values[2];
-            var ap1 = (<any>held.addToWood(t1, "peterKey")).then((r)=>{
-                return r;
-            });
-            var ap2 = (<any>held.addToWood(t2, "klausKey")).then((r)=>{
-                return r;
-            });
-            return Promise.all([ap1,ap2]);
-        }).then((arr:any)=>{
-            return Promise.all([personPromise.then((held:Tests.TestPerson)=>{
-                return personCollection.getById(held.getId());
-            }), tree1Promise]);
-        }).then((arr)=>{
-            var held:Tests.TestPerson = arr[0];
-            var peter = arr[1];
-            expect(held).toBeDefined();
-            // expect(omm.Serializer.needsLazyLoading(held, "wood")).toBeTruthy();
-            expect(held.wood).toBeDefined();
-            // expect(omm.Serializer.needsLazyLoading(held, "wood")).toBeFalsy();
-            expect(typeof held.wood).toBe("object");
-            expect(held.wood["peterKey"]).toBeDefined();
-            expect(held.wood["peterKey"] instanceof Tests.TestTree).toBeTruthy();
-            expect(held.wood["peterKey"].treeId).toBe(peter.treeId);
-            done();
-        });
+    it("uses persistence paths on sub documents", function () {
+        var tp:Tests.TestPerson = new Tests.TestPerson("tp1");
+        tp.phoneNumber = new Tests.TestPhoneNumber("12345");
+        omm.SerializationPath.updateObjectContexts(tp);
+        var sp = omm.SerializationPath.getObjectContext( tp.phoneNumber).serializationPath;
+        expect(sp).toBeDefined();
+        expect(sp.toString()).toBe("TestPerson[tp1].phoneNumber");
+    });
+    //
+    it("can call wrapped functions that are not part of a collection", function () {
+        var t1:Tests.TestTree = new Tests.TestTree(10);
+        t1.grow();
+        expect(t1.getLeaves().length).toBe(1);
+    });
+    //
+    it("uses persistence paths on subdocuments in arrays", function () {
+        var t1:Tests.TestTree = new Tests.TestTree(10);
+        t1.treeId = "tree1";
+        t1.grow();
+        omm.SerializationPath.updateObjectContexts(t1);
+
+        expect(t1.getLeaves().length).toBe(1);
+        var sp = omm.SerializationPath.getObjectContext( t1.getLeaves()[0] ).serializationPath;
+        expect(sp).toBeDefined();
+        expect(sp.toString()).toBe("TheTreeCollection[tree1].leaves|leaf11");
+    });
+    //
+    it("serializes basic objects", function () {
+        var t1:Tests.TestPerson = new Tests.TestPerson("tp1");
+        t1.phoneNumber = new Tests.TestPhoneNumber("12345");
+        var doc = new omm.Serializer().toDocument(t1);
+        expect(doc._id).toBe("tp1");
+        expect(doc["phoneNumber"]["pn"]).toBe("12345");
+    });
+    // //
+    it("deserializes basic objects", function () {
+        var serializer:omm.Serializer = new omm.Serializer();
+        var t1:Tests.TestPerson = new Tests.TestPerson("tp1");
+        t1.phoneNumber = new Tests.TestPhoneNumber("12345");
+        var doc = serializer.toDocument(t1);
+        var t1:Tests.TestPerson = serializer.toObject(doc, Tests.TestPerson);
+        expect(t1.getId()).toBe("tp1");
+        expect(t1.phoneNumber instanceof Tests.TestPhoneNumber).toBeTruthy();
+        expect(t1.phoneNumber.getNumber()).toBe("12345");
+    });
+
+    it("deserializes objects that have subobjects", function () {
+        var serializer:omm.Serializer = new omm.Serializer();
+        var t1:Tests.TestTree = new Tests.TestTree(123);
+        t1.treeId = "t1";
+        t1.grow();
+
+        var doc = serializer.toDocument(t1);
+        var t1:Tests.TestTree = serializer.toObject(doc, Tests.TestTree);
+        expect(t1.treeId).toBe("t1");
+        expect(t1.getLeaves()[0] instanceof Tests.TestLeaf).toBeTruthy();
+    });
+
+    it("deserializes objects that have document names", function () {
+        var serializer:omm.Serializer = new omm.Serializer();
+        var t1:Tests.TestTree = new Tests.TestTree(123);
+        t1.treeId = "t1";
+        t1.grow();
+        var doc:any = serializer.toDocument(t1);
+        expect(doc.thoseGreenThings[0].greenIndex).toBe(t1.getLeaves()[0].greenNess);
     });
 
     it("knows the difference between root entities and subdocument entities ", function () {
@@ -239,207 +227,6 @@ describe("Omm both on client and server", function () {
         x.hello(20);
         expect(x.c).toBe(21)
     });
-
-    it("uses persistence paths to return undefined for non existent subobjects ", function () {
-        var t1:Tests.TestTree = new Tests.TestTree(10);
-        var pp:omm.SerializationPath = new omm.SerializationPath( "TestTree", "tree1");
-        pp.appendArrayOrMapLookup("leaves", "nonexistentLeaf");
-        expect(pp.getSubObject(t1)).toBeUndefined();
-    });
-
-    it("can do basic removes", function (done) {
-        var treeId;
-        treeCollection.newTree(20).then( ( t:Tests.TestTree) => {
-            treeId = t.treeId;
-        }).then(()=>{
-            return treeCollection.getById(treeId);
-        }).then(( t:Tests.TestTree )=>{
-            expect( t ).toBeDefined();
-            return treeCollection.deleteTree(treeId);
-        }).then(()=>{
-            return treeCollection.getById(treeId);
-        }).then(( t:Tests.TestTree )=>{
-            expect( t ).toBeUndefined();
-            done();
-        }).catch((err)=>{
-            fail(err);
-            done();
-        });
-    });
-    // //
-    it("uses persistence paths on root documents", function () {
-        var t1:Tests.TestTree = new Tests.TestTree(123);
-        t1.treeId = "tree1";
-        t1.grow();
-        // debugger;
-        omm.SerializationPath.updateSerializationPaths(t1);
-        expect(t1["_serializationPath"]).toBeDefined();
-        expect(t1["_serializationPath"].toString()).toBe("TheTreeCollection[tree1]");
-        expect(t1.leaves[0]["_serializationPath"].toString()).toBe("TheTreeCollection[tree1].leaves|leaf124");
-    });
-
-    it("uses persistence paths on sub documents", function () {
-        var tp:Tests.TestPerson = new Tests.TestPerson("tp1");
-        tp.phoneNumber = new Tests.TestPhoneNumber("12345");
-        omm.SerializationPath.updateSerializationPaths(tp);
-        expect(tp.phoneNumber["_serializationPath"]).toBeDefined();
-        expect(tp.phoneNumber["_serializationPath"].toString()).toBe("TestPerson[tp1].phoneNumber");
-    });
-    //
-    it("can call wrapped functions that are not part of a collection", function () {
-        var t1:Tests.TestTree = new Tests.TestTree(10);
-        t1.grow();
-        expect(t1.getLeaves().length).toBe(1);
-    });
-    //
-    it("uses persistence paths on subdocuments in arrays", function () {
-        var t1:Tests.TestTree = new Tests.TestTree(10);
-        t1.treeId = "tree1";
-        t1.grow();
-        omm.SerializationPath.updateSerializationPaths(t1);
-
-        expect(t1.getLeaves().length).toBe(1);
-        expect(t1.getLeaves()[0]["_serializationPath"]).toBeDefined();
-        expect(t1.getLeaves()[0]["_serializationPath"].toString()).toBe("TheTreeCollection[tree1].leaves|leaf11");
-    });
-    //
-    it("serializes basic objects", function () {
-        var t1:Tests.TestPerson = new Tests.TestPerson("tp1");
-        t1.phoneNumber = new Tests.TestPhoneNumber("12345");
-        var doc = new omm.Serializer().toDocument(t1);
-        expect(doc._id).toBe("tp1");
-        expect(doc["phoneNumber"]["pn"]).toBe("12345");
-    });
-    // //
-    it("deserializes basic objects", function () {
-        var serializer:omm.Serializer = new omm.Serializer();
-        var t1:Tests.TestPerson = new Tests.TestPerson("tp1");
-        t1.phoneNumber = new Tests.TestPhoneNumber("12345");
-        var doc = serializer.toDocument(t1);
-        var t1:Tests.TestPerson = serializer.toObject(doc, Tests.TestPerson);
-        expect(t1.getId()).toBe("tp1");
-        expect(t1.phoneNumber instanceof Tests.TestPhoneNumber).toBeTruthy();
-        expect(t1.phoneNumber.getNumber()).toBe("12345");
-    });
-
-    it("deserializes objects that have subobjects", function () {
-        var serializer:omm.Serializer = new omm.Serializer();
-        var t1:Tests.TestTree = new Tests.TestTree(123);
-        t1.treeId = "t1";
-        t1.grow();
-
-        var doc = serializer.toDocument(t1);
-        var t1:Tests.TestTree = serializer.toObject(doc, Tests.TestTree);
-        expect(t1.treeId).toBe("t1");
-        expect(t1.getLeaves()[0] instanceof Tests.TestLeaf).toBeTruthy();
-    });
-
-    it("deserializes objects that have document names", function () {
-        var serializer:omm.Serializer = new omm.Serializer();
-        var t1:Tests.TestTree = new Tests.TestTree(123);
-        t1.treeId = "t1";
-        t1.grow();
-        var doc:any = serializer.toDocument(t1);
-        expect(doc.thoseGreenThings[0].greenIndex).toBe(t1.getLeaves()[0].greenNess);
-    });
-
-    it("removes all", function () {
-        // this test tests the before all thing
-        expect(true).toBeTruthy();
-    });
-    //
-    // //test that properties that need lazy loading are not loaded during serialization
-    //
-    // it("can use persistence paths on objects that have foreign key properties", function () {
-    //     var t1:Tests.TestTree = new Tests.TestTree(12);
-    //     t1.treeId = "dfdf";
-    //     var tp:Tests.TestPerson = new Tests.TestPerson("tp");
-    //     tp.tree = t1;
-    //     new omm.MeteorObjectRetriever().updateSerializationPaths(tp);
-    // });
-    //
-    // it("can serialize objects that have foreign key properties", function () {
-    //     var t1:Tests.TestTree = new Tests.TestTree(122);
-    //     t1.treeId = "tree1";
-    //     var tp:Tests.TestPerson = new Tests.TestPerson("tp");
-    //     tp.tree = t1;
-    //     var doc = new omm.Serializer(new omm.MeteorObjectRetriever()).toDocument(tp);
-    //     expect(doc["tree"]).toBe("TheTreeCollection[tree1]");
-    // });
-    //
-    // it("can save objects that have foreign key properties", function (done) {
-    //     var c = 0;
-    //     personCollection.newPerson("jake").then( (jake:Tests.TestPerson) =>{
-    //         c++;
-    //         expect(c).toBe(1);
-    //         expect(jake).toBeDefined();
-    //         treeCollection.newTree(12, function (error, t:Tests.TestTree) {
-    //             c++;
-    //             expect(c).toBe(2);
-    //             jake.chooseTree(t);
-    //             var loadedJake = personCollection.getById(jake.getId());
-    //             expect(loadedJake).toBeDefined();
-    //             expect(loadedJake.tree).toBeDefined();
-    //             done();
-    //         });
-    //     }).catch((err)=>{
-    //         fail();
-    //         done();
-    //     });
-    // });
-    // //
-    // //
-    // it("can save objects that have subobjects which are subobjects of other root objects", function (done) {
-    //     var c = 0;
-    //     treeCollection.newTree(10, function (err, t:Tests.TestTree) {
-    //         c++;
-    //         expect(c).toBe(1);
-    //         //expect(t).toBeDefined();
-    //         t.grow();
-    //         personCollection.newPerson("girl").then((tp:Tests.TestPerson) =>{
-    //             c++;
-    //             if (c != 2)
-    //                 debugger;
-    //             expect(c).toBe(2);
-    //             omm.callHelper(tp, function (err, res) {
-    //                 omm.callHelper(tp, function (err, res) {
-    //                     expect(personCollection.getById(tp.getId()).leaf).toBeDefined();
-    //                     expect(personCollection.getById(tp.getId()).leaf.getId() + "!").toBe(treeCollection.getById(t.treeId).getLeaves()[0].getId() + "!");
-    //                     done();
-    //                 }).collectLeaf();
-    //             }).chooseTree(t);
-    //
-    //         });
-    //     });
-    // });
-    // //
-    // it("can save objects that have subobjects which are one of many elements in a subobject-array of another root object", function (done) {
-    //     var c = 0;
-    //     treeCollection.newTree(10, function (err, t1:Tests.TestTree) {
-    //         c++;
-    //         if (c > 1)
-    //             fail();
-    //         //expect(t1).toBeDefined();
-    //         for (var i = 0; i < 5; i++)
-    //             treeCollection.getById(t1.treeId).grow();
-    //         t1 = treeCollection.getById(t1.treeId);
-    //         expect(t1.getLeaves().length).toBe(5);
-    //         personCollection.newPerson("girl").then((tp:Tests.TestPerson) =>{
-    //             c++;
-    //             if (c > 2)
-    //                 fail();
-    //             expect(t1.getLeaves()[3]).toBeDefined();
-    //             tp.chooseLeaf(t1.getLeaves()[3]);
-    //             expect(personCollection.getById(tp.getId()).leaf).toBeDefined();
-    //             //expect(personCollection.getById(tp.getId()).leaf.getId()).toBe(t1.getLeaves()[5].getId());
-    //             //expect(personCollection.getById(tp.getId()).leaf.greenNess).toBe(t1.getLeaves()[5].greenNess);
-    //             done();
-    //         });
-    //     });
-    //
-    // });
-    //
-    //
     it("serializes objects to plain objects", function () {
         var tp = new Tests.TestPerson("tp");
         tp.tree = new Tests.TestTree(12);
@@ -461,61 +248,7 @@ describe("Omm both on client and server", function () {
         expect(doc.phoneBook["klaus"]).toBeDefined();
         expect(doc.phoneBook["klaus"].pn).toBeDefined();
     });
-    //
-    // it("can serialize object in a map as foreign key", function (done) {
-    //     treeCollection.newTree(12, function (e:any, klaus:Tests.TestTree) {
-    //         treeCollection.newTree(13, function (e:any, peter:Tests.TestTree) {
-    //             personCollection.newPerson("Held").then((held:Tests.TestPerson) =>{
-    //                 held.addToWood(klaus, "xxx");
-    //                 held.addToWood(peter, "yyy");
-    //                 held = personCollection.getById(held.getId());
-    //                 var doc:any = new omm.Serializer(new omm.MeteorObjectRetriever()).toDocument(held);
-    //                 expect(doc).toBeDefined();
-    //                 expect(doc.wood).toBeDefined();
-    //                 expect(doc.wood["xxx"]).toBeDefined();
-    //                 expect(doc.wood["xxx"]).toBe("TheTreeCollection[" + klaus.treeId + "]");
-    //                 expect(doc.wood["yyy"]).toBe("TheTreeCollection[" + peter.treeId + "]");
-    //                 done();
-    //             });
-    //         });
-    //     });
-    // });
-    //
-    // //
 
-    // //xxx
-    // it("can save objects with a dictionary to objects in the same collection", function (done) {
-    //     Promise.all( [personCollection.newPerson("mom"),personCollection.newPerson("dad")] ).then((parents:Array<Tests.TestPerson>) =>{
-    //         var mom = parents[0];
-    //         var dad = parents[1];
-    //         personCollection.haveBaby(mom, dad ).then( (kid:Tests.TestPerson) => {
-    //             expect(personCollection.getById(kid.getId()).family["mom"].getId()).toBe(mom.getId());
-    //             expect(personCollection.getById(kid.getId()).family["dad"].getId()).toBe(dad.getId());
-    //             done();
-    //         });
-    //     });
-    // });
-    // //
-    // //
-    //
-    // //
-    // it("stores something as a foreign key turns undefined after the foreign object is deleted", function (done) {
-    //     Promise.all( [personCollection.newPerson("mom"),personCollection.newPerson("dad")] ).then((parents:Array<Tests.TestPerson>) =>{
-    //         var mom = parents[0];
-    //         var dad = parents[1];
-    //         personCollection.haveBaby(mom, dad ).then( (kid:Tests.TestPerson) => {
-    //             expect(personCollection.getById(kid.getId()).family["mom"].getId()).toBe(mom.getId());
-    //             expect(personCollection.getById(kid.getId()).family["dad"].getId()).toBe(dad.getId());
-    //             personCollection.removePerson(mom.getId()).then(()=>{
-    //                 expect(personCollection.getById(kid.getId()).family["mom"]).toBeUndefined();
-    //                 done();
-    //             });
-    //         });
-    //     });
-    //
-    // });
-    //
-    //
     it("serializes the classname of unexpected objects", function () {
         var t:Tests.TestPerson = new Tests.TestPerson("id1", "jake");
         t.addresses.push(<any>new Tests.TestLeaf("leafId1"));
@@ -549,11 +282,6 @@ describe("Omm both on client and server", function () {
         expect(doc.brand).toBe("VW");
         expect(doc.wheel.radius).toBe(10);
         expect(doc instanceof Tests.TestCar).toBeFalsy();
-
-        // also there are no added properties in there
-        for (var propertyName in otherCar) {
-            expect(["wheel", "wheels", "brand"].indexOf(propertyName) != -1).toBeTruthy();
-        }
     });
     //
     it("serializes local objects", function () {
@@ -666,15 +394,110 @@ describe("Omm both on client and server", function () {
         expect(doc.ignoredOther).toBeUndefined();
         expect(child2.ignoredOther).toBeUndefined();
     });
-    //
-    // it("stores properties as keys that need to be stores as key on parent properties", function () {
-    //     var s = new omm.Serializer(new omm.MeteorObjectRetriever());
-    //     var child:Tests.TestInheritanceChild = new Tests.TestInheritanceChild();
-    //     child.person = new Tests.TestPerson('p1', 'pete');
-    //     var doc:any = s.toDocument(child);
-    //     expect(typeof doc.person).toBe("string");
-    // });
-    //
+
+
+
+    it("can do basic inserts", function (done) {
+        debugger;
+        treeCollection.newTree(20).then((tree:Tests.TestTree)=>{
+            expect(tree).toBeDefined();
+            expect(tree instanceof Tests.TestTree).toBeTruthy();
+            expect(tree.treeId).toBeDefined();
+            expect(tree.getHeight()).toBe(20);
+            return treeCollection.getById(tree.treeId);
+        }).then(( tree:Tests.TestTree )=>{
+            expect(tree).toBeDefined();
+            expect(tree.treeId).toBeDefined();
+            expect(tree.getHeight()).toBe(20);
+            done();
+        }).catch((ee)=>{
+            fail(ee);
+            done();
+        });
+    });
+
+
+
+    it("updates the collection", function (done) {
+        var id;
+        personCollection.newPerson('bert').then((e:Tests.TestPerson)=> {
+            id = e.getId();
+            return e.collectionUpdateRename("klaus");
+        }).then( (n:string)=>{
+            return personCollection.getById(id);
+        }).then((p:Tests.TestPerson)=>{
+            expect(p.getName()).toBe("Collection Update:klaus");
+            done();
+        }).catch((e)=>{
+            fail(e);
+            done();
+        });
+    });
+
+
+    it("can save foreign keys in a map", function (done) {
+        var personPromise = personCollection.newPerson("Held");
+        var tree1Promise = treeCollection.newTree(13);
+        var tree2Promise = treeCollection.newTree(12);
+        debugger;
+        Promise.all( [tree1Promise,tree2Promise,personPromise] ).then((values:any)=>{
+            var t1 = values[0];
+            var t2 = values[1];
+            var held = values[2];
+            var ap1 = (<any>held.addToWood(t1, "peterKey")).then((r)=>{
+                return r;
+            });
+            var ap2 = (<any>held.addToWood(t2, "klausKey")).then((r)=>{
+                return r;
+            });
+            return Promise.all([ap1,ap2]);
+        }).then((arr:any)=>{
+            return Promise.all([personPromise.then((held:Tests.TestPerson)=>{
+                return personCollection.getById(held.getId());
+            }), tree1Promise]);
+        }).then((arr)=>{
+            debugger;
+            var held:Tests.TestPerson = arr[0];
+            var peter = arr[1];
+            expect(held).toBeDefined();
+            // expect(omm.Serializer.needsLazyLoading(held, "wood")).toBeTruthy();
+            expect(held.wood).toBeDefined();
+            // expect(omm.Serializer.needsLazyLoading(held, "wood")).toBeFalsy();
+            expect(typeof held.wood).toBe("object");
+            expect(held.wood["peterKey"]).toBeDefined();
+            expect(held.wood["peterKey"] instanceof Tests.TestTree).toBeTruthy();
+            // expect(held.wood["peterKey"].treeId).toBe(peter.treeId);
+            done();
+        });
+    });
+
+
+
+    it("can do basic removes", function (done) {
+        var treeId;
+        treeCollection.newTree(20).then( ( t:Tests.TestTree) => {
+            treeId = t.treeId;
+        }).then(()=>{
+            return treeCollection.getById(treeId);
+        }).then(( t:Tests.TestTree )=>{
+            expect( t ).toBeDefined();
+            return treeCollection.deleteTree(treeId);
+        }).then(()=>{
+            return treeCollection.getById(treeId);
+        }).then(( t:Tests.TestTree )=>{
+            expect( t ).toBeUndefined();
+            done();
+        }).catch((err)=>{
+            fail(err);
+            done();
+        });
+    });
+
+    it("removes all", function () {
+        // this test tests the before all thing
+        expect(true).toBeTruthy();
+    });
+
     it("deserializes objects of different classes in an array", function () {
         var s:omm.Serializer = new omm.Serializer();
         var person:Tests.TestPerson = new Tests.TestPerson('p1', 'pete');
@@ -731,14 +554,14 @@ describe("Omm both on client and server", function () {
         //fail();
         //done();
     });
-    //
+
     it("can cancel inserts", function (done) {
         var l:any = {};
         l.listener = function (event:omm.EventContext<Tests.TestTree>) {
             event.cancel("Not allowed");
         };
         spyOn(l, 'listener').and.callThrough();
-        treeCollection.preInsert(l.listener);
+        treeCollection.preInsert( l.listener );
 
         var previousSize;
         var previousSizePromise = treeCollection.getAll().then((arr:Array<any>)=>{
@@ -758,9 +581,8 @@ describe("Omm both on client and server", function () {
         });
     });
 
-    //
     it("can handle thrown errors", function (done) {
-        treeCollection.newTree(10).then((tree)=>{
+        treeCollection.newTree(10).then((tree:Tests.TestTree)=>{
             return tree.thisThrowsAnError();
         }).catch((err)=>{
                 expect(err).toBeDefined();
@@ -768,7 +590,8 @@ describe("Omm both on client and server", function () {
                 done();
         });
     });
-    //
+
+
     it("invokes deletition events", function (done) {
         var l:any = {};
         l.listener = function (event:omm.EventContext<Tests.TestTree>) {
@@ -913,6 +736,7 @@ describe("Omm both on client and server", function () {
         });
     });
 
+
     //
     it("can return errors in a promise ", function (done) {
         co( function* (){
@@ -926,7 +750,8 @@ describe("Omm both on client and server", function () {
             }
         });
     });
-    //
+
+
     it("can cancel deletes ", function (done) {
         var l:any = {};
         l.listener = function (event:omm.EventContext<Tests.TestTree>) {
@@ -948,7 +773,10 @@ describe("Omm both on client and server", function () {
         });
 
     });
-    //
+
+
+
+
     it("can register for pre update events", function (done) {
         var l:any = {};
         l.listener = function (event:omm.EventContext<Tests.TestTree>) {
@@ -1087,7 +915,9 @@ describe("Omm both on client and server", function () {
             done();
         });
     });
-    //
+
+
+
     it("can register to all update events", function (done) {
         var l:any = {};
         var n:Array<string> = [];
@@ -1106,5 +936,40 @@ describe("Omm both on client and server", function () {
 
         });
     });
+    it("can load trees ", function (done) {
+        treeCollection.newTree(20)
+            .then((tree:Tests.TestTree)=>{
+                console.log("Tree id", tree.treeId);
+                debugger;
+                return client.load( Tests.TestTree, tree.treeId );
+            })
+            .then((tree:Tests.TestTree)=>{
+                expect( tree ).toBeDefined();
+                done();
+            });
+    });
 
+    it("can load trees and call stuff on it", function (done) {
+        var treeId;
+        treeCollection.newTree(20)
+            .then((tree:Tests.TestTree)=>{
+                console.log("Tree id", tree.treeId);
+                treeId = tree.treeId;
+                expect( tree.getHeight() ).toBe(20);
+                return client.load( Tests.TestTree, tree.treeId );
+            })
+            .then((tree:Tests.TestTree)=>{
+                expect( tree ).toBeDefined();
+                expect( tree.getHeight() ).toBe(20);
+                var growPromise = tree.grow();
+                return growPromise;
+            })
+            .then((s:string)=>{
+                return treeCollection.getById(treeId);
+            })
+            .then((tree:Tests.TestTree)=>{
+                expect( tree.getHeight() ).toBe(21);
+                done();
+            });
+    });
 });

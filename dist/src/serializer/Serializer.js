@@ -1,4 +1,5 @@
 "use strict";
+const omm = require("../omm");
 const SubObjectPath_1 = require("./SubObjectPath");
 const PersistenceAnnotation_1 = require("../annotations/PersistenceAnnotation");
 class Serializer {
@@ -71,7 +72,7 @@ class Serializer {
             //}
         });
     }
-    toObject(doc, f) {
+    toObject(doc, f, handler) {
         var o;
         if (Array.isArray(doc)) {
             var r = [];
@@ -84,6 +85,7 @@ class Serializer {
             o = doc;
         else
             o = this.toObjectRecursive(doc, undefined, f);
+        omm.SerializationPath.updateObjectContexts(o, handler);
         return o;
     }
     toObjectRecursive(doc, parent, f) {
@@ -218,6 +220,5 @@ class Serializer {
         return doc;
     }
 }
-Object.defineProperty(exports, "__esModule", { value: true });
-exports.default = Serializer;
+exports.Serializer = Serializer;
 //# sourceMappingURL=Serializer.js.map

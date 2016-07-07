@@ -4,7 +4,7 @@
 import * as omm from "../../src/omm";
 import * as Tests from "./Tests";
 export declare class TestTreeCollection extends omm.Collection<Tests.TestTree> {
-    constructor();
+    constructor(db: any);
     newTree(initialHeight: number): Promise<Tests.TestTree>;
     errorMethod(initialHeight: number): Promise<any>;
     deleteTree(treeId: string): Promise<void>;

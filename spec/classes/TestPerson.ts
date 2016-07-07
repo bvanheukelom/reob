@@ -24,7 +24,6 @@ export class TestPerson
     leaf:Tests.TestLeaf;
 
     @omm.ArrayOrMap("TestLeaf")
-    // @omm.AsForeignKeys
     trees:Array<Tests.TestTree> = [];
 
     @omm.ArrayOrMap("TestPhoneNumber")

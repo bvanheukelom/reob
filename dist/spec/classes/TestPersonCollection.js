@@ -8,9 +8,8 @@ var __decorate = (this && this.__decorate) || function (decorators, target, key,
 const omm = require("../../src/omm");
 const Tests = require("./Tests");
 class TestPersonCollection extends omm.Collection {
-    constructor() {
-        super(Tests.TestPerson);
-        omm.registerObject("TestPersonCollection", this);
+    constructor(db) {
+        super(db, Tests.TestPerson);
     }
     newPerson(n) {
         var p = new Tests.TestPerson();
@@ -19,14 +18,6 @@ class TestPersonCollection extends omm.Collection {
             return this.getById(id);
         });
     }
-    // @omm.MeteorMethod({object:'TestPersonCollection'})
-    // insertPerson(n:string):Tests.TestPerson {
-    //     var p:Tests.TestPerson = new Tests.TestPerson();
-    //     p.name = n;
-    //     var that = this;
-    //     var id = this.insert(p);
-    //     return this.getById(id);
-    // }
     haveBaby(mom, dad) {
         //console.log("mom: ", mom);
         //console.log("dad: ", dad);
@@ -58,5 +49,4 @@ __decorate([
     omm.MeteorMethod({ serverOnly: true, parameterTypes: ["callback"] })
 ], TestPersonCollection.prototype, "removeAllPersons", null);
 exports.TestPersonCollection = TestPersonCollection;
-// omm.registerObject('TestPersonCollection', new TestPersonCollection());
 //# sourceMappingURL=TestPersonCollection.js.map

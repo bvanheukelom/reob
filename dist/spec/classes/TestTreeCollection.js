@@ -11,8 +11,8 @@ var __decorate = (this && this.__decorate) || function (decorators, target, key,
 const omm = require("../../src/omm");
 const Tests = require("./Tests");
 class TestTreeCollection extends omm.Collection {
-    constructor() {
-        super(Tests.TestTree, "TheTreeCollection");
+    constructor(db) {
+        super(db, Tests.TestTree, "TheTreeCollection");
         omm.registerObject("TheTreeCollection", this);
     }
     newTree(initialHeight) {

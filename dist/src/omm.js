@@ -12,11 +12,11 @@ var Status_1 = require("./omm/Status");
 exports.Status = Status_1.default;
 __export(require("./omm/Collection"));
 __export(require("./omm/MeteorPersistence"));
+__export(require("./omm/Client"));
+__export(require("./omm/Server"));
 __export(require("./serializer/Cloner"));
-var LocalObjectRetriever_1 = require("./serializer/LocalObjectRetriever");
-exports.LocalObjectRetriever = LocalObjectRetriever_1.default;
-var Serializer_1 = require("./serializer/Serializer");
-exports.Serializer = Serializer_1.default;
+// export { default as ObjectRetriver  }from "./serializer/ObjectRetriever"
+__export(require("./serializer/Serializer"));
 var SubObjectPath_1 = require("./serializer/SubObjectPath");
 exports.SubObjectPath = SubObjectPath_1.default;
 //# sourceMappingURL=omm.js.map

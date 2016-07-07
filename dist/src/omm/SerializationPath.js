@@ -13,7 +13,6 @@ class SerializationPath {
     }
     clone() {
         var sp = new SerializationPath(this.path);
-        sp.isClient = this.isClient;
         return sp;
     }
     getCollectionName() {
@@ -75,11 +74,14 @@ class SerializationPath {
     toString() {
         return this.path;
     }
-    static setSerializationPath(o, pPath) {
-        PersistenceAnnotation.setNonEnumerableProperty(o, "_serializationPath", pPath);
+    static setObjectContext(object, sp, handler) {
+        PersistenceAnnotation.setNonEnumerableProperty(object, "_ommObjectContext", { serializationPath: sp, handler: handler });
+    }
+    static getObjectContext(object) {
+        return object._ommObjectContext;
     }
     // if I could I would make this package protected
-    static updateSerializationPaths(object, visited) {
+    static updateObjectContexts(object, handler, visited) {
         var that = this;
         if (!visited)
             visited = [];
@@ -90,14 +92,16 @@ class SerializationPath {
         visited.push(object);
         var objectClass = PersistenceAnnotation.PersistenceAnnotation.getClass(object);
         if (PersistenceAnnotation.PersistenceAnnotation.isRootEntity(objectClass)) {
-            if (!object._serializationPath) {
+            if (!object._ommObjectContext || !object._ommObjectContext.serializationPath) {
                 var idPropertyName = PersistenceAnnotation.PersistenceAnnotation.getIdPropertyName(objectClass);
                 var id = object[idPropertyName];
-                if (id)
-                    SerializationPath.setSerializationPath(object, new SerializationPath(PersistenceAnnotation.PersistenceAnnotation.getCollectionName(objectClass), id));
+                if (id) {
+                    var sp = new SerializationPath(PersistenceAnnotation.PersistenceAnnotation.getCollectionName(objectClass), id);
+                    SerializationPath.setObjectContext(object, sp, handler);
+                }
             }
         }
-        if (!object._serializationPath)
+        if (!object._ommObjectContext)
             return; // we're done here
         PersistenceAnnotation.PersistenceAnnotation.getTypedPropertyNames(objectClass).forEach(function (typedPropertyName) {
             // if (!PersistenceAnnotation.isStoredAsForeignKeys(objectClass, typedPropertyName)) {
@@ -113,17 +117,18 @@ class SerializationPath {
                             if (PersistenceAnnotation.getId(e))
                                 index = PersistenceAnnotation.getId(e);
                             //console.log("updating persistnece path for isArrayOrMap " + typedPropertyName + "  key:" + i + " value:", e, "object: ", object);
-                            that.setSerializationPath(e, object._serializationPath.clone());
-                            e._serializationPath.appendArrayOrMapLookup(typedPropertyName, index);
-                            that.updateSerializationPaths(e, visited);
+                            var sp = object._ommObjectContext.serializationPath.clone();
+                            sp.appendArrayOrMapLookup(typedPropertyName, index);
+                            SerializationPath.setObjectContext(e, sp, handler);
+                            that.updateObjectContexts(e, handler, visited);
                         }
                     }
                 }
                 else {
                     //console.log("updating foreignkey property direct property " + typedPropertyName);
-                    that.setSerializationPath(v, object._serializationPath.clone());
-                    v._serializationPath.appendPropertyLookup(typedPropertyName);
-                    that.updateSerializationPaths(v, visited);
+                    var sp = object._ommObjectContext.serializationPath.clone();
+                    sp.appendPropertyLookup(typedPropertyName);
+                    SerializationPath.setObjectContext(v, sp, handler);
                 }
             }
         });

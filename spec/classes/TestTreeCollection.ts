@@ -7,8 +7,8 @@ import * as Tests from "./Tests"
 
 export class TestTreeCollection extends omm.Collection<Tests.TestTree> {
 
-    constructor( ) {
-        super( Tests.TestTree,"TheTreeCollection");
+    constructor( db:any ) {
+        super( db, Tests.TestTree,"TheTreeCollection");
         omm.registerObject( "TheTreeCollection", this);
     }
 

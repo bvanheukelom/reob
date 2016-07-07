@@ -1,18 +1,15 @@
 import * as omm from "../omm";
 import Document from "../serializer/Document";
 import { TypeClass as TypeClass } from "../annotations/PersistenceAnnotation";
-export declare class Collection<T extends Object> {
+import * as mongodb from "mongodb";
+export declare class Collection<T extends Object> implements omm.Handler {
     private mongoCollection;
     private theClass;
     private name;
     private serializer;
     private eventListeners;
-    private db;
-    private static meteorCollections;
-    private static collections;
     private queue;
     removeAllListeners(): void;
-    static getByName(s: string): Collection<any>;
     preSave(f: (evtCtx: omm.EventContext<T>, data: any) => void): void;
     onRemove(f: (evtCtx: omm.EventContext<T>, data: any) => void): void;
     preRemove(f: (evtCtx: omm.EventContext<T>, data: any) => void): void;
@@ -30,7 +27,7 @@ export declare class Collection<T extends Object> {
      * @class
      * @memberof omm
      */
-    constructor(entityClass: omm.TypeClass<T>, collectionName?: string);
+    constructor(db: mongodb.Db, entityClass: omm.TypeClass<T>, collectionName?: string);
     /**
      * Gets the name of the collection.
      * @returns {string}
@@ -83,12 +80,8 @@ export declare class Collection<T extends Object> {
      * @returns {string} the id of the new object
      */
     insert(p: T): Promise<String>;
-    /**
-     * called once the objects are removed or an error happens
-     * @callback omm.Collection~resetAllCallback
-     * @param error {any=} if an error occured it is passed to the callback
-     */
     getEntityClass(): TypeClass<T>;
+    collectionUpdate(entityClass: omm.TypeClass<any>, functionName: string, object: omm.OmmObject, originalFunction: Function, args: any[]): any;
 }
 export interface CollectionUpdateResult {
     result: any;

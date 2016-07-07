@@ -1,9 +1,10 @@
 import ObjectRetriever from "./ObjectRetriever"
 import Document from "./Document"
+import * as omm from "../omm"
 import SubObjectPath from "./SubObjectPath"
 import {TypeClass, PersistenceAnnotation, getId, setNonEnumerableProperty, className } from "../annotations/PersistenceAnnotation"
 
-export default class Serializer {
+export class Serializer {
 
     constructor(){
     }
@@ -80,7 +81,7 @@ export default class Serializer {
         });
     }
 
-    toObject<T extends Object>(doc:Document, f?:TypeClass<T>):T {
+    toObject<T extends Object>(doc:Document, f?:TypeClass<T>, handler?:any):T {
         var o:T;
         if(Array.isArray(doc)){
             var r = [];
@@ -92,6 +93,9 @@ export default class Serializer {
             o =  <T>doc;
         else
             o =  this.toObjectRecursive(doc,undefined, f);
+
+        omm.SerializationPath.updateObjectContexts( o, handler );
+        
         return o;
     }
 
