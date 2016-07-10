@@ -768,12 +768,14 @@ describe("Omm both on client and server", function () {
         };
         spyOn(l, 'listener').and.callThrough();
         omm.on(Tests.TestLeaf, "fluttering", l.listener);
-        co( function* (){
-            var tree = yield treeCollection.newTree(10);
-            yield tree.grow();
-            var tree2 = yield treeCollection.getById(tree.treeId);
+        treeCollection.newTree(10).then((t)=> {
+            return Promise.cast(t.grow()).thenReturn(t);
+        }).then((tree)=>{
+            return treeCollection.getById(tree.treeId);
+        }).then((tree2)=> {
             expect(l.listener).not.toHaveBeenCalled();
-            yield tree2.getLeaves()[0].flutter();
+            return tree2.getLeaves()[0].flutter();
+        }).then(()=>{
             expect(l.listener).toHaveBeenCalled();
             done()
         });
@@ -782,15 +784,11 @@ describe("Omm both on client and server", function () {
 
     //
     it("can return errors in a promise ", function (done) {
-        co( function* (){
-            try {
-                var err = yield treeCollection.errorMethod(10);
-                fail();
-                done();
-            }catch( err ) {
-                expect(err).toBe("the error");
-                done();
-            }
+        treeCollection.errorMethod(10).then(()=>{
+            fail();
+        }).catch((err)=>{
+            expect(err).toBe("the error");
+            done();
         });
     });
 
@@ -1078,4 +1076,29 @@ describe("Omm both on client and server", function () {
         }).then(done);
     });
     
+    it("eventlisteners return a promise", function (done) {
+        var l:any = {};
+        var n:Array<string> = [];
+        client.setUserData({user:"bert", foo:"bar", solution:42});
+        l.listener = function (ctx:omm.EventContext<Tests.TestTree>, data:any) {
+            expect( ctx.functionName ).toBe('flutter');
+            expect( ctx.object instanceof Tests.TestLeaf ).toBeTruthy( );
+        };
+        spyOn(l, 'listener').and.callThrough();
+
+        var treeId;
+        clientTreeService.insertTree(5).then((t:Tests.TestTree)=>{
+            treeId = t.treeId;
+            return t.grow();
+        }).then(()=>{
+            return client.load(Tests.TestTree,treeId);
+        }).then((t:Tests.TestTree)=>{
+            treeCollection.preUpdate(l.listener);
+            debugger;
+            return  t.getLeaves()[0].flutter() ;
+        }).then(()=>{
+            expect( l.listener ).toHaveBeenCalled();
+        }).then(done);
+    });
+
 });

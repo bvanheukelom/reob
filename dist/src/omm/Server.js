@@ -2,10 +2,10 @@
  * Created by bert on 07.07.16.
  */
 "use strict";
-const omm = require("../omm");
-const wm = require("@bvanheukelom/web-methods");
-class Server {
-    constructor() {
+var omm = require("../omm");
+var wm = require("@bvanheukelom/web-methods");
+var Server = (function () {
+    function Server() {
         this.collections = {};
         this.singletons = {};
         this.webMethods = new wm.WebMethods();
@@ -13,19 +13,24 @@ class Server {
         this.addAllWebMethods();
         this.registerGetter();
     }
-    addCollection(c) {
+    Server.prototype.addCollection = function (c) {
         this.collections[c.getName()] = c;
-    }
-    addSingleton(name, singleton) {
+    };
+    Server.prototype.addSingleton = function (name, singleton) {
         this.singletons[name] = singleton;
         omm.SerializationPath.updateObjectContexts(singleton, this);
-    }
-    addAllWebMethods() {
+    };
+    Server.prototype.addAllWebMethods = function () {
+        var _this = this;
         console.log("adding web methods ");
-        omm.PersistenceAnnotation.getAllMethodFunctionNames().forEach((functionName) => {
+        omm.PersistenceAnnotation.getAllMethodFunctionNames().forEach(function (functionName) {
             var options = omm.PersistenceAnnotation.getMethodOptions(functionName);
             console.log("Adding Web method " + options.name);
-            this.webMethods.add(options.name, (...args) => {
+            _this.webMethods.add(options.name, function () {
+                var args = [];
+                for (var _i = 0; _i < arguments.length; _i++) {
+                    args[_i - 0] = arguments[_i];
+                }
                 console.log("Web method " + options.name);
                 // the object id is the first parameter
                 var objectId = args.shift();
@@ -33,17 +38,17 @@ class Server {
                 var userData = args.shift();
                 console.log("User data ", userData);
                 // convert parameters given to the web method from documents to objects
-                this.convertWebMethodParameters(args, options.parameterTypes);
+                _this.convertWebMethodParameters(args, options.parameterTypes);
                 // load object based on the object id. this could either be a registered object or an object form a collection
-                var p = this.retrieveObject(objectId)
-                    .then((object) => {
+                var p = _this.retrieveObject(objectId)
+                    .then(function (object) {
                     // this might be the collection update or another function that is called directly
                     Server.userData = userData;
                     var r = object[options.name].apply(object, args);
                     Server.userData = undefined;
                     return r;
                 })
-                    .then((result) => {
+                    .then(function (result) {
                     var res = {};
                     var className = omm.className(result);
                     if (className && omm.PersistenceAnnotation.getEntityClassByName(className)) {
@@ -52,7 +57,7 @@ class Server {
                     var objectContext = omm.SerializationPath.getObjectContext(result);
                     if (objectContext && objectContext.serializationPath)
                         res.serializationPath = objectContext.serializationPath.toString();
-                    res.document = this.serializer.toDocument(result);
+                    res.document = _this.serializer.toDocument(result);
                     console.log("Result of web method " + options.name + " is ", res);
                     return res;
                 });
@@ -60,11 +65,11 @@ class Server {
                 return p;
             });
         });
-    }
-    start(expressOrPort) {
+    };
+    Server.prototype.start = function (expressOrPort) {
         return this.webMethods.start(expressOrPort);
-    }
-    retrieveObject(objectId) {
+    };
+    Server.prototype.retrieveObject = function (objectId) {
         var singleton = this.singletons[objectId];
         if (singleton)
             return Promise.resolve(singleton);
@@ -75,35 +80,36 @@ class Server {
             var collectionName = sPath.getCollectionName();
             var collection = collectionName ? this.collections[collectionName] : undefined;
             if (collection) {
-                return collection.getById(sPath.getId()).then((o) => {
+                return collection.getById(sPath.getId()).then(function (o) {
                     return sPath.getSubObject(o);
                 });
             }
             else
                 Promise.reject("No collection found to retrieve object. Key:" + objectId);
         }
-    }
-    attachClassName(o) {
+    };
+    Server.prototype.attachClassName = function (o) {
         var className = omm.className(o);
         if (className && omm.entityClasses[className]) {
             o.className = className;
         }
         if (o._serializationPath)
             o.serializationPath = o._serializationPath.toString();
-    }
-    registerGetter() {
-        this.webMethods.add("get", (className, objectId) => {
+    };
+    Server.prototype.registerGetter = function () {
+        var _this = this;
+        this.webMethods.add("get", function (className, objectId) {
             console.log("Getter " + className, objectId);
             var type = omm.entityClasses[className];
             var collectionName = type ? omm.PersistenceAnnotation.getCollectionName(type) : undefined;
-            var objPromise = collectionName ? this.retrieveObject(collectionName + "[" + objectId + "]") : undefined;
-            return objPromise.then((obj) => {
-                return obj ? this.serializer.toDocument(obj) : undefined;
+            var objPromise = collectionName ? _this.retrieveObject(collectionName + "[" + objectId + "]") : undefined;
+            return objPromise.then(function (obj) {
+                return obj ? _this.serializer.toDocument(obj) : undefined;
             });
         });
-    }
+    };
     // converts parameters given to the web method from documents to objects
-    convertWebMethodParameters(args, classNames) {
+    Server.prototype.convertWebMethodParameters = function (args, classNames) {
         for (var i = 0; i < args.length; i++) {
             if (classNames && classNames.length > i) {
                 var cls = omm.PersistenceAnnotation.getEntityClassByName(classNames[i]);
@@ -115,7 +121,8 @@ class Server {
                 }
             }
         }
-    }
-}
+    };
+    return Server;
+}());
 exports.Server = Server;
 //# sourceMappingURL=Server.js.map

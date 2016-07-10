@@ -8,38 +8,39 @@ var __decorate = (this && this.__decorate) || function (decorators, target, key,
     else for (var i = decorators.length - 1; i >= 0; i--) if (d = decorators[i]) r = (c < 3 ? d(r) : c > 3 ? d(target, key, r) : d(target, key)) || r;
     return c > 3 && r && Object.defineProperty(target, key, r), r;
 };
-const omm = require("../../src/omm");
-let TestLeaf = class TestLeaf {
-    constructor(id, parent) {
+var omm = require("../../src/omm");
+var TestLeaf = (function () {
+    function TestLeaf(id, parent) {
         this._id = id;
         this.greenNess = 1;
         this.parent = parent;
     }
-    getId() {
+    TestLeaf.prototype.getId = function () {
         return this._id;
-    }
-    grow() {
+    };
+    TestLeaf.prototype.grow = function () {
         this.greenNess++;
-    }
-    getTree() {
+    };
+    TestLeaf.prototype.getTree = function () {
         return this.parent;
-    }
-    flutter() {
+    };
+    TestLeaf.prototype.flutter = function () {
         this.greenNess++;
         omm.emit("fluttering");
-    }
-};
-__decorate([
-    omm.DocumentName("greenIndex")
-], TestLeaf.prototype, "greenNess", void 0);
-__decorate([
-    omm.Parent
-], TestLeaf.prototype, "parent", void 0);
-__decorate([
-    omm.Wrap
-], TestLeaf.prototype, "flutter", null);
-TestLeaf = __decorate([
-    omm.Entity
-], TestLeaf);
+    };
+    __decorate([
+        omm.DocumentName("greenIndex")
+    ], TestLeaf.prototype, "greenNess", void 0);
+    __decorate([
+        omm.Parent
+    ], TestLeaf.prototype, "parent", void 0);
+    __decorate([
+        omm.Wrap
+    ], TestLeaf.prototype, "flutter", null);
+    TestLeaf = __decorate([
+        omm.Entity
+    ], TestLeaf);
+    return TestLeaf;
+}());
 exports.TestLeaf = TestLeaf;
 //# sourceMappingURL=TestLeaf.js.map

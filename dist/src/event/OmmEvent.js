@@ -2,7 +2,7 @@
  * Created by bert on 06.03.16.
  */
 "use strict";
-const omm = require("../annotations/PersistenceAnnotation");
+var omm = require("../annotations/PersistenceAnnotation");
 function on(t, topic, f) {
     var className = omm.className(t);
     if (typeof topic == "function") {

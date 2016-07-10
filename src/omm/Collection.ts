@@ -10,13 +10,16 @@ import * as omm_event from "../event/OmmEvent"
 import * as Config from "./Config"
 import * as mongodb from "mongodb"
 
+interface EventListener<T>{
+    ( evtCtx:omm.EventContext<T>, data?:any ) : void
+}
 export class Collection<T extends Object> implements omm.Handler
 {
     private mongoCollection:mongodb.Collection;
     private theClass:omm.TypeClass<T>;
     private name:string;
     private serializer:omm.Serializer;
-    private eventListeners:{ [index:string]:Array< ( i:omm.EventContext<T>, data?:any )=>void > } = {};
+    private eventListeners:{ [index:string]:Array<EventListener<T>> } = {};
 
 
     private queue:Array<any>;
@@ -25,30 +28,30 @@ export class Collection<T extends Object> implements omm.Handler
         this.eventListeners = {};
     }
 
-    preSave( f:( evtCtx:omm.EventContext<T>, data:any )=>void ){
+    preSave( f:EventListener<T> ){
         this.addListener("preSave", f);
     }
 
-    onRemove( f:( evtCtx:omm.EventContext<T>, data:any )=>void ){
+    onRemove( f:EventListener<T> ){
         this.addListener("didRemove", f);
     }
-    preRemove( f:( evtCtx:omm.EventContext<T>, data:any )=>void ){
+    preRemove( f:EventListener<T> ){
         this.addListener("willRemove", f);
     }
-    onInsert( f:( evtCtx:omm.EventContext<T>, data:any )=>void ){
+    onInsert( f:EventListener<T> ){
         this.addListener("didInsert", f);
     }
-    preUpdate( f:( evtCtx:omm.EventContext<T>, data:any )=>void ){
+    preUpdate( f:EventListener<T> ){
         this.addListener("willUpdate", f);
     }
-    onUpdate( f:( evtCtx:omm.EventContext<T>, data:any )=>void ){
+    onUpdate( f:EventListener<T> ){
         this.addListener("didUpdate", f);
     }
-    preInsert( f:( evtCtx:omm.EventContext<T>, data:any )=>void ){
+    preInsert( f:EventListener<T> ){
         this.addListener("willInsert", f);
     }
 
-    private addListener( topic:string, f:( evtCtx:omm.EventContext<T>, data:any )=>void ){
+    private addListener( topic:string, f:EventListener<T> ){
         if( !this.eventListeners[topic] )
             this.eventListeners[topic] = [];
         this.eventListeners[topic].push(f);

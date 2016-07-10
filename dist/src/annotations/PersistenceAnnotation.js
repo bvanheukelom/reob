@@ -1,19 +1,20 @@
 "use strict";
-class EventContext {
-    constructor(o, coll /*omm.Collection<T>*/) {
+var EventContext = (function () {
+    function EventContext(o, coll /*omm.Collection<T>*/) {
         this.cancelledError = false;
         this.object = o;
         if (o)
             this.objectId = getId(o);
         this.collection = coll;
     }
-    cancel(err) {
+    EventContext.prototype.cancel = function (err) {
         this.cancelledError = err;
-    }
-    cancelledWithError() {
+    };
+    EventContext.prototype.cancelledWithError = function () {
         return this.cancelledError;
-    }
-}
+    };
+    return EventContext;
+}());
 exports.EventContext = EventContext;
 function isRegisteredWithKey(o) {
     for (var i in exports.registeredObjects) {
@@ -284,11 +285,11 @@ function className(cls) {
         return cls['_ommClassName'];
     }
     else {
-        if (cls.name) {
-            return cls.name;
+        if (cls['name']) {
+            return cls['name'];
         }
-        else if (cls.constructor && cls.constructor.name) {
-            return cls.constructor.name;
+        else if (cls.constructor && cls.constructor['name']) {
+            return cls.constructor['name'];
         }
         else {
             var n = cls.toString();
@@ -325,15 +326,17 @@ function MeteorMethod(p1, p2) {
     }
 }
 exports.MeteorMethod = MeteorMethod;
-class PersistenceAnnotation {
-    static getMethodOptions(functionName) {
+var PersistenceAnnotation = (function () {
+    function PersistenceAnnotation() {
+    }
+    PersistenceAnnotation.getMethodOptions = function (functionName) {
         for (var i = 0; i < exports.meteorMethodFunctions.length; i++) {
             if (exports.meteorMethodFunctions[i].name == functionName)
                 return exports.meteorMethodFunctions[i];
         }
         return undefined;
-    }
-    static getMethodFunctionNames(c) {
+    };
+    PersistenceAnnotation.getMethodFunctionNames = function (c) {
         var ret = [];
         for (var i = 0; i < exports.meteorMethodFunctions.length; i++) {
             var methodOptions = exports.meteorMethodFunctions[i];
@@ -341,8 +344,8 @@ class PersistenceAnnotation {
                 ret.push(methodOptions.name);
         }
         return ret;
-    }
-    static getMethodFunctionNamesByObject(o) {
+    };
+    PersistenceAnnotation.getMethodFunctionNamesByObject = function (o) {
         var ret = [];
         for (var i = 0; i < exports.meteorMethodFunctions.length; i++) {
             var methodOptions = exports.meteorMethodFunctions[i];
@@ -350,25 +353,25 @@ class PersistenceAnnotation {
                 ret.push(exports.meteorMethodFunctions[i].name);
         }
         return ret;
-    }
-    static getAllMethodFunctionNames() {
+    };
+    PersistenceAnnotation.getAllMethodFunctionNames = function () {
         var ret = [];
         for (var i = 0; i < exports.meteorMethodFunctions.length; i++) {
             ret.push(exports.meteorMethodFunctions[i].name);
         }
         return ret;
-    }
-    static getClass(o) {
+    };
+    PersistenceAnnotation.getClass = function (o) {
         if (o)
             return o.constructor;
         else
             return undefined;
-    }
+    };
     // ---- Entity ----
-    static getEntityClassByName(className) {
+    PersistenceAnnotation.getEntityClassByName = function (className) {
         return exports.entityClasses[className];
-    }
-    static getCollectionClasses() {
+    };
+    PersistenceAnnotation.getCollectionClasses = function () {
         var result = [];
         for (var i in exports.entityClasses) {
             var entityClass = exports.entityClasses[i];
@@ -376,42 +379,42 @@ class PersistenceAnnotation {
                 result.push(entityClass);
         }
         return result;
-    }
-    static getEntityClasses() {
+    };
+    PersistenceAnnotation.getEntityClasses = function () {
         var result = [];
         for (var i in exports.entityClasses) {
             var entityClass = exports.entityClasses[i];
             result.push(entityClass);
         }
         return result;
-    }
-    static getCollectionName(f) {
+    };
+    PersistenceAnnotation.getCollectionName = function (f) {
         return getMetadata("persistence:collectionName", f);
-    }
-    static isRootEntity(f) {
+    };
+    PersistenceAnnotation.isRootEntity = function (f) {
         return !!PersistenceAnnotation.getCollectionName(f);
-    }
-    static isEntity(f) {
+    };
+    PersistenceAnnotation.isEntity = function (f) {
         return !!exports.entityClasses[className(f)];
-    }
-    static getDocumentPropertyName(typeClass, objectPropertyName) {
+    };
+    PersistenceAnnotation.getDocumentPropertyName = function (typeClass, objectPropertyName) {
         var documentNames = getMetadata("documentNames", typeClass.prototype);
         return documentNames ? documentNames[objectPropertyName] : undefined;
-    }
-    static getObjectPropertyName(typeClass, documentPropertyName) {
+    };
+    PersistenceAnnotation.getObjectPropertyName = function (typeClass, documentPropertyName) {
         var objectNames = getMetadata("objectNames", typeClass.prototype);
         return objectNames ? objectNames[documentPropertyName] : undefined;
-    }
-    static isArrayOrMap(f, propertyName) {
+    };
+    PersistenceAnnotation.isArrayOrMap = function (f, propertyName) {
         while (f != Object) {
             if (PersistenceAnnotation.getPropertyProperty(f, propertyName, "arrayOrMap"))
                 return true;
             f = PersistenceAnnotation.getParentClass(f);
         }
         return false;
-    }
+    };
     // ---- typed properties ----
-    static getPropertyClass(f, propertyName) {
+    PersistenceAnnotation.getPropertyClass = function (f, propertyName) {
         while (f != Object) {
             var classNameOfF = PersistenceAnnotation.getPropertyProperty(f, propertyName, "type");
             if (classNameOfF) {
@@ -424,8 +427,8 @@ class PersistenceAnnotation {
             f = PersistenceAnnotation.getParentClass(f);
         }
         return undefined;
-    }
-    static getTypedPropertyNames(f) {
+    };
+    PersistenceAnnotation.getTypedPropertyNames = function (f) {
         var result = [];
         while (f != Object) {
             var props = getMetadata("property_properties", f);
@@ -436,8 +439,8 @@ class PersistenceAnnotation {
             f = PersistenceAnnotation.getParentClass(f);
         }
         return result;
-    }
-    static setPropertyProperty(cls, propertyName, property, value) {
+    };
+    PersistenceAnnotation.setPropertyProperty = function (cls, propertyName, property, value) {
         var arr = getMetadata("property_properties", cls.constructor);
         if (!arr) {
             arr = {};
@@ -449,12 +452,12 @@ class PersistenceAnnotation {
             arr[propertyName] = propProps;
         }
         propProps[property] = value;
-    }
-    static getPropertyNamesOfPropertiesThatHaveProperties(cls) {
+    };
+    PersistenceAnnotation.getPropertyNamesOfPropertiesThatHaveProperties = function (cls) {
         return Object.keys(getMetadata("property_properties", cls));
-    }
+    };
     // this is i.e. good to find all properties on a class that have a "type" property
-    static getPropertyNamesOfPropertiesThatHaveAProperty(cls, propertyPropertyName) {
+    PersistenceAnnotation.getPropertyNamesOfPropertiesThatHaveAProperty = function (cls, propertyPropertyName) {
         var r = [];
         var props = getMetadata("property_properties", cls);
         for (var i in props) {
@@ -463,20 +466,20 @@ class PersistenceAnnotation {
             }
         }
         return r;
-    }
-    static getPropertyProperty(cls, propertyName, propertyProperty) {
+    };
+    PersistenceAnnotation.getPropertyProperty = function (cls, propertyName, propertyProperty) {
         var arr = getMetadata("property_properties", cls);
         if (arr && arr[propertyName]) {
             return arr[propertyName][propertyProperty];
         }
         return undefined;
-    }
-    static getParentClass(t) {
+    };
+    PersistenceAnnotation.getParentClass = function (t) {
         return Object.getPrototypeOf(t.prototype).constructor;
-    }
-    static getIdPropertyName(t) {
+    };
+    PersistenceAnnotation.getIdPropertyName = function (t) {
         return PersistenceAnnotation.getObjectPropertyName(t, "_id") || "_id";
-    }
+    };
     // ---- AsForeignKeys ----
     // static isStoredAsForeignKeys(f:TypeClass<any>, propertyName:string):boolean {
     //     while (f != Object) {
@@ -487,7 +490,7 @@ class PersistenceAnnotation {
     //     }
     //     return false;
     // }
-    static isIgnored(f, propertyName) {
+    PersistenceAnnotation.isIgnored = function (f, propertyName) {
         //return PersistenceAnnotation.getPropertyProperty(typeClass, propertyName, "ignore");
         while (f != Object) {
             if (PersistenceAnnotation.getPropertyProperty(f, propertyName, "ignore"))
@@ -495,8 +498,8 @@ class PersistenceAnnotation {
             f = PersistenceAnnotation.getParentClass(f);
         }
         return false;
-    }
-    static isParent(f, propertyName) {
+    };
+    PersistenceAnnotation.isParent = function (f, propertyName) {
         //return PersistenceAnnotation.getPropertyProperty(typeClass, propertyName, "ignore");
         while (f != Object) {
             if (PersistenceAnnotation.getPropertyProperty(f, propertyName, "parent"))
@@ -504,21 +507,21 @@ class PersistenceAnnotation {
             f = PersistenceAnnotation.getParentClass(f);
         }
         return false;
-    }
-    static getParentPropertyNames(f) {
+    };
+    PersistenceAnnotation.getParentPropertyNames = function (f) {
         return PersistenceAnnotation.getPropertyNamesOfPropertiesThatHaveAProperty(f, 'parent');
-    }
+    };
     // ---- Wrap ----
-    static getWrappedFunctionNames(f) {
+    PersistenceAnnotation.getWrappedFunctionNames = function (f) {
         return PersistenceAnnotation.getPropertyNamesByMetaData(f.prototype, "persistence:wrap");
-    }
-    static getCollectionUpdateOptions(cls, functionName) {
+    };
+    PersistenceAnnotation.getCollectionUpdateOptions = function (cls, functionName) {
         return PersistenceAnnotation.getPropertyProperty(cls.prototype, functionName, "collectionUpdate");
-    }
-    static getCollectionUpdateFunctionNames(f) {
+    };
+    PersistenceAnnotation.getCollectionUpdateFunctionNames = function (f) {
         return PersistenceAnnotation.getPropertyNamesOfPropertiesThatHaveAProperty(f, 'collectionUpdate');
-    }
-    static getPropertyNamesByMetaData(o, metaData) {
+    };
+    PersistenceAnnotation.getPropertyNamesByMetaData = function (o, metaData) {
         var result = [];
         for (var i in o) {
             var value = o[i];
@@ -527,8 +530,9 @@ class PersistenceAnnotation {
                 result.push(i);
         }
         return result;
-    }
-}
+    };
+    return PersistenceAnnotation;
+}());
 exports.PersistenceAnnotation = PersistenceAnnotation;
 (function () {
     var data;

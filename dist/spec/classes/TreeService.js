@@ -8,21 +8,22 @@ var __decorate = (this && this.__decorate) || function (decorators, target, key,
 /**
  * Created by bert on 10.07.16.
  */
-const Tests = require("./Tests");
-const omm = require("../../src/omm");
-class TreeService {
-    constructor(ttc) {
+var Tests = require("./Tests");
+var omm = require("../../src/omm");
+var TreeService = (function () {
+    function TreeService(ttc) {
         this.treeCollection = ttc;
     }
-    insertTree(height) {
+    TreeService.prototype.insertTree = function (height) {
         var t = new Tests.TestTree(height);
-        return this.treeCollection.insert(t).then((id) => {
+        return this.treeCollection.insert(t).then(function (id) {
             return t;
         });
-    }
-}
-__decorate([
-    omm.MeteorMethod({ serverOnly: true, resultType: "TestTree" })
-], TreeService.prototype, "insertTree", null);
+    };
+    __decorate([
+        omm.MeteorMethod({ serverOnly: true, resultType: "TestTree" })
+    ], TreeService.prototype, "insertTree", null);
+    return TreeService;
+}());
 exports.TreeService = TreeService;
 //# sourceMappingURL=TreeService.js.map

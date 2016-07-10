@@ -1,16 +1,22 @@
 "use strict";
-const SerializationPath_1 = require("./SerializationPath");
-const omm_annotation = require("../annotations/PersistenceAnnotation");
-const omm = require("../omm");
-class MeteorPersistence {
-    static init() {
+var SerializationPath_1 = require("./SerializationPath");
+var omm_annotation = require("../annotations/PersistenceAnnotation");
+var omm = require("../omm");
+var MeteorPersistence = (function () {
+    function MeteorPersistence() {
+    }
+    MeteorPersistence.init = function () {
         if (!MeteorPersistence.initialized) {
             // collection updates
             omm_annotation.PersistenceAnnotation.getEntityClasses().forEach(function (entityClass) {
                 //var className = omm_annotation.className(c);
                 var that = this;
                 omm_annotation.PersistenceAnnotation.getCollectionUpdateFunctionNames(entityClass).forEach(function (functionName) {
-                    MeteorPersistence.monkeyPatch(entityClass.prototype, functionName, function (originalFunction, ...args) {
+                    MeteorPersistence.monkeyPatch(entityClass.prototype, functionName, function (originalFunction) {
+                        var args = [];
+                        for (var _i = 1; _i < arguments.length; _i++) {
+                            args[_i - 1] = arguments[_i];
+                        }
                         var _ommObjectContext = this._ommObjectContext;
                         if (!_ommObjectContext || !_ommObjectContext.handler || !_ommObjectContext.handler.collectionUpdate) {
                             console.log("Collection update function " + functionName + ". Calling original function. No handler found. ", args);
@@ -24,9 +30,13 @@ class MeteorPersistence {
                 });
             });
             // web methods
-            omm_annotation.PersistenceAnnotation.getAllMethodFunctionNames().forEach((functionName) => {
+            omm_annotation.PersistenceAnnotation.getAllMethodFunctionNames().forEach(function (functionName) {
                 var methodOptions = omm_annotation.PersistenceAnnotation.getMethodOptions(functionName);
-                MeteorPersistence.monkeyPatch(methodOptions.parentObject, functionName, function (originalFunction, ...args) {
+                MeteorPersistence.monkeyPatch(methodOptions.parentObject, functionName, function (originalFunction) {
+                    var args = [];
+                    for (var _i = 1; _i < arguments.length; _i++) {
+                        args[_i - 1] = arguments[_i];
+                    }
                     //console.log("updating object:",this, "original function :"+originalFunction);
                     var _ommObjectContext = this._ommObjectContext;
                     if (!_ommObjectContext || !_ommObjectContext.handler || !_ommObjectContext.handler.webMethod) {
@@ -41,15 +51,15 @@ class MeteorPersistence {
             });
             MeteorPersistence.initialized = true;
         }
-    }
-    static isInitialized() {
+    };
+    MeteorPersistence.isInitialized = function () {
         return MeteorPersistence.initialized;
-    }
+    };
     // TODO new name
     // static objectsClassName(o:any):string {
     //     return omm_annotation.className(o.constructor);
     // }
-    getKey(object) {
+    MeteorPersistence.prototype.getKey = function (object) {
         if (object._ommObjectContext.serializationPath)
             return object._ommObjectContext.serializationPath.toString();
         else {
@@ -63,7 +73,7 @@ class MeteorPersistence {
                 throw new Error("Error while 'toString'. Objects that should be stored as foreign keys need to be persisted beforehand or be the root entity of a collection and have an id.");
             }
         }
-    }
+    };
     // // todo  make the persistencePath enumerable:false everywhere it is set
     // private static getClassName(o:Object):string {
     //     if( typeof o =="object" && omm_annotation.PersistenceAnnotation.getClass( o )) {
@@ -72,7 +82,7 @@ class MeteorPersistence {
     //     else
     //         return typeof o;
     // }
-    static monkeyPatch(object, functionName, patchFunction) {
+    MeteorPersistence.monkeyPatch = function (object, functionName, patchFunction) {
         var originalFunction = object[functionName];
         object[functionName] = function monkeyPatchFunction() {
             var args = [];
@@ -83,9 +93,10 @@ class MeteorPersistence {
             return patchFunction.apply(this, args);
         };
         object[functionName].originalFunction = originalFunction;
-    }
-}
-MeteorPersistence.initialized = false;
+    };
+    MeteorPersistence.initialized = false;
+    return MeteorPersistence;
+}());
 exports.MeteorPersistence = MeteorPersistence;
 var endpointUrl;
 function init() {

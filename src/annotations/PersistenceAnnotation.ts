@@ -328,10 +328,10 @@ export interface IMethodOptions{
         }else if( cls['_ommClassName'] ){
             return cls['_ommClassName'];
         }else{
-            if( cls.name ) {
-                return cls.name;
-            }else if( cls.constructor && cls.constructor.name ){
-                    return cls.constructor.name;
+            if( cls['name'] ) {
+                return cls['name'];
+            }else if( cls.constructor && cls.constructor['name'] ){
+                    return cls.constructor['name'];
             }else {
                 var n = cls.toString();
                 n = n.substr('function '.length);

@@ -1,13 +1,13 @@
 "use strict";
-const omm_annotations = require("../annotations/PersistenceAnnotation");
-class SubObjectPath {
-    constructor(s) {
+var omm_annotations = require("../annotations/PersistenceAnnotation");
+var SubObjectPath = (function () {
+    function SubObjectPath(s) {
         this.path = s || "";
     }
-    clone() {
+    SubObjectPath.prototype.clone = function () {
         return new SubObjectPath(this.path);
-    }
-    forEachPathEntry(iterator) {
+    };
+    SubObjectPath.prototype.forEachPathEntry = function (iterator) {
         if (this.path.length > 0)
             this.path.split(".").forEach(function (entry) {
                 var propertyName = entry;
@@ -18,8 +18,8 @@ class SubObjectPath {
                 }
                 iterator(propertyName, id);
             });
-    }
-    getSubObject(rootObject) {
+    };
+    SubObjectPath.prototype.getSubObject = function (rootObject) {
         var o = rootObject;
         this.forEachPathEntry(function (propertyName, id) {
             if (typeof o != "undefined") {
@@ -41,21 +41,22 @@ class SubObjectPath {
             }
         });
         return o;
-    }
-    appendArrayOrMapLookup(name, id) {
+    };
+    SubObjectPath.prototype.appendArrayOrMapLookup = function (name, id) {
         if (this.path.length > 0)
             this.path += ".";
         this.path += name + "|" + id;
-    }
-    appendPropertyLookup(name) {
+    };
+    SubObjectPath.prototype.appendPropertyLookup = function (name) {
         if (this.path.length > 0)
             this.path += ".";
         this.path += name;
-    }
-    toString() {
+    };
+    SubObjectPath.prototype.toString = function () {
         return this.path;
-    }
-}
+    };
+    return SubObjectPath;
+}());
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.default = SubObjectPath;
 //# sourceMappingURL=SubObjectPath.js.map

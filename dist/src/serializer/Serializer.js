@@ -1,14 +1,14 @@
 "use strict";
-const omm = require("../omm");
-const SubObjectPath_1 = require("./SubObjectPath");
-const PersistenceAnnotation_1 = require("../annotations/PersistenceAnnotation");
-class Serializer {
-    constructor() {
+var omm = require("../omm");
+var SubObjectPath_1 = require("./SubObjectPath");
+var PersistenceAnnotation_1 = require("../annotations/PersistenceAnnotation");
+var Serializer = (function () {
+    function Serializer() {
     }
-    static forEachTypedObject(object, cb) {
+    Serializer.forEachTypedObject = function (object, cb) {
         this.forEachTypedObjectRecursive(object, object, new SubObjectPath_1.default(), [], cb);
-    }
-    static forEachTypedObjectRecursive(rootObject, object, path, visited, cb) {
+    };
+    Serializer.forEachTypedObjectRecursive = function (rootObject, object, path, visited, cb) {
         var that = this;
         if (visited.indexOf(object) != -1)
             return;
@@ -71,8 +71,8 @@ class Serializer {
             //    }
             //}
         });
-    }
-    toObject(doc, f, handler) {
+    };
+    Serializer.prototype.toObject = function (doc, f, handler) {
         var o;
         if (Array.isArray(doc)) {
             var r = [];
@@ -87,8 +87,8 @@ class Serializer {
             o = this.toObjectRecursive(doc, undefined, f);
         omm.SerializationPath.updateObjectContexts(o, handler);
         return o;
-    }
-    toObjectRecursive(doc, parent, f) {
+    };
+    Serializer.prototype.toObjectRecursive = function (doc, parent, f) {
         var o;
         if (!doc)
             return doc;
@@ -143,11 +143,11 @@ class Serializer {
         // setNonEnumerableProperty(o, "_objectRetriever", this.objectRetriever);
         //o._objectRetriever = this.objectRetriever;
         return o;
-    }
-    toDocument(object) {
+    };
+    Serializer.prototype.toDocument = function (object) {
         return this.toDocumentRecursive(object);
-    }
-    toDocumentRecursive(object, rootClass, parentObject, propertyNameOnParentObject) {
+    };
+    Serializer.prototype.toDocumentRecursive = function (object, rootClass, parentObject, propertyNameOnParentObject) {
         var result;
         if (!object || typeof object == "string" || typeof object == "number" || typeof object == "date" || typeof object == "boolean")
             result = object;
@@ -178,8 +178,8 @@ class Serializer {
         }
         //console.log("returning document:",result);
         return result;
-    }
-    createDocument(object, rootClass, parentObject, propertyNameOnParentObject) {
+    };
+    Serializer.prototype.createDocument = function (object, rootClass, parentObject, propertyNameOnParentObject) {
         var doc = {};
         var objectClass = PersistenceAnnotation_1.PersistenceAnnotation.getClass(object);
         for (var property in object) {
@@ -218,7 +218,8 @@ class Serializer {
             }
         }
         return doc;
-    }
-}
+    };
+    return Serializer;
+}());
 exports.Serializer = Serializer;
 //# sourceMappingURL=Serializer.js.map

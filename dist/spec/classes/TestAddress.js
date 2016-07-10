@@ -8,21 +8,22 @@ var __decorate = (this && this.__decorate) || function (decorators, target, key,
 /**
  * Created by bert on 04.05.15.
  */
-const omm = require("../../src/omm");
-let TestAddress = class TestAddress {
-    constructor(street, person) {
+var omm = require("../../src/omm");
+var TestAddress = (function () {
+    function TestAddress(street, person) {
         this.street = street;
         this.person = person;
     }
-    getStreet() {
+    TestAddress.prototype.getStreet = function () {
         return this.street;
-    }
-};
-__decorate([
-    omm.Parent
-], TestAddress.prototype, "person", void 0);
-TestAddress = __decorate([
-    omm.Entity
-], TestAddress);
+    };
+    __decorate([
+        omm.Parent
+    ], TestAddress.prototype, "person", void 0);
+    TestAddress = __decorate([
+        omm.Entity
+    ], TestAddress);
+    return TestAddress;
+}());
 exports.TestAddress = TestAddress;
 //# sourceMappingURL=TestAddress.js.map

@@ -1,9 +1,9 @@
 "use strict";
-const PersistenceAnnotation = require("../annotations/PersistenceAnnotation");
-class SerializationPath {
+var PersistenceAnnotation = require("../annotations/PersistenceAnnotation");
+var SerializationPath = (function () {
     // this is used when lazy loading properties
     // private objectRetriever:ObjectRetriever;
-    constructor(collectionName, id) {
+    function SerializationPath(collectionName, id) {
         this.path = collectionName;
         // this.objectRetriever = objectRetriever;
         if (id)
@@ -11,17 +11,17 @@ class SerializationPath {
         if (!this.getId())
             throw new Error("id is undefined");
     }
-    clone() {
+    SerializationPath.prototype.clone = function () {
         var sp = new SerializationPath(this.path);
         return sp;
-    }
-    getCollectionName() {
+    };
+    SerializationPath.prototype.getCollectionName = function () {
         return this.path.split("[")[0];
-    }
-    getId() {
+    };
+    SerializationPath.prototype.getId = function () {
         return this.path.split("[")[1].split("]")[0];
-    }
-    forEachPathEntry(iterator) {
+    };
+    SerializationPath.prototype.forEachPathEntry = function (iterator) {
         if (this.path.indexOf(".") != -1)
             this.path.split("].")[1].split(".").forEach(function (entry) {
                 var propertyName = entry;
@@ -32,8 +32,8 @@ class SerializationPath {
                 }
                 iterator(propertyName, index);
             });
-    }
-    getSubObject(rootObject) {
+    };
+    SerializationPath.prototype.getSubObject = function (rootObject) {
         var o = rootObject;
         if (this.path.indexOf(".") != -1) {
             this.path.split("].")[1].split(".").forEach(function (entry) {
@@ -64,25 +64,25 @@ class SerializationPath {
             });
         }
         return o;
-    }
-    appendArrayOrMapLookup(name, id) {
+    };
+    SerializationPath.prototype.appendArrayOrMapLookup = function (name, id) {
         this.path += "." + name + "|" + id;
-    }
-    appendPropertyLookup(name) {
+    };
+    SerializationPath.prototype.appendPropertyLookup = function (name) {
         this.path += "." + name;
-    }
-    toString() {
+    };
+    SerializationPath.prototype.toString = function () {
         return this.path;
-    }
-    static setObjectContext(object, sp, handler) {
+    };
+    SerializationPath.setObjectContext = function (object, sp, handler) {
         if (object)
             PersistenceAnnotation.setNonEnumerableProperty(object, "_ommObjectContext", { serializationPath: sp, handler: handler });
-    }
-    static getObjectContext(object) {
+    };
+    SerializationPath.getObjectContext = function (object) {
         return object ? object._ommObjectContext : undefined;
-    }
+    };
     // if I could I would make this package protected
-    static updateObjectContexts(object, handler, visited) {
+    SerializationPath.updateObjectContexts = function (object, handler, visited) {
         var that = this;
         if (!visited)
             visited = [];
@@ -133,7 +133,8 @@ class SerializationPath {
                 }
             }
         });
-    }
-}
+    };
+    return SerializationPath;
+}());
 exports.SerializationPath = SerializationPath;
 //# sourceMappingURL=SerializationPath.js.map

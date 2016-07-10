@@ -25,7 +25,7 @@ export class Client implements omm.Handler{
         this.singletons[name] = singleton;
         omm.SerializationPath.setObjectContext( singleton, undefined, this );
     }
-
+    
     load<T>( cls:omm.TypeClass<T>, id:string ):Promise<T>{
         if( !omm.PersistenceAnnotation.isRootEntity(cls) ){
             throw new Error("Given class is not a root entity");

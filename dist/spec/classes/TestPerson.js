@@ -5,9 +5,9 @@ var __decorate = (this && this.__decorate) || function (decorators, target, key,
     else for (var i = decorators.length - 1; i >= 0; i--) if (d = decorators[i]) r = (c < 3 ? d(r) : c > 3 ? d(target, key, r) : d(target, key)) || r;
     return c > 3 && r && Object.defineProperty(target, key, r), r;
 };
-const omm = require("../../src/omm");
-let TestPerson = class TestPerson {
-    constructor(id, name) {
+var omm = require("../../src/omm");
+var TestPerson = (function () {
+    function TestPerson(id, name) {
         this.addresses = [];
         this.trees = [];
         this.phoneBook = {};
@@ -21,57 +21,57 @@ let TestPerson = class TestPerson {
         this._id = id;
         this.name = name;
     }
-    getId() {
+    TestPerson.prototype.getId = function () {
         return this._id;
-    }
-    setId(id) {
+    };
+    TestPerson.prototype.setId = function (id) {
         this._id = id;
-    }
+    };
     //rename(n:string):void
     //{
     //    this.name = n;
     //}
-    getName() {
+    TestPerson.prototype.getName = function () {
         return this.name;
-    }
-    getAddresses() {
+    };
+    TestPerson.prototype.getAddresses = function () {
         return this.addresses;
-    }
-    getTree() {
+    };
+    TestPerson.prototype.getTree = function () {
         return this.tree;
-    }
-    collectLeaf() {
+    };
+    TestPerson.prototype.collectLeaf = function () {
         //console.log("collecting leaf:",this.tree);
         this.leaf = this.tree.getLeaves()[0];
-    }
-    chooseTree(t) {
+    };
+    TestPerson.prototype.chooseTree = function (t) {
         //console.log("choosing tree:",t);
         this.tree = t;
-    }
-    chooseLeaf(l) {
+    };
+    TestPerson.prototype.chooseLeaf = function (l) {
         this.leaf = l;
-    }
-    rename(n) {
+    };
+    TestPerson.prototype.rename = function (n) {
         this.name = n;
         return this.name;
-    }
-    collectionUpdateRename(n) {
+    };
+    TestPerson.prototype.collectionUpdateRename = function (n) {
         this.name = "Collection Update:" + n;
         return this.name;
-    }
-    addAddress(a) {
+    };
+    TestPerson.prototype.addAddress = function (a) {
         //console.log("inside add address:", (a instanceof Tests.TestAddress));
         this.addresses.push(a);
         return a;
-    }
-    addAddresses(addresses) {
+    };
+    TestPerson.prototype.addAddresses = function (addresses) {
         var that = this;
         addresses.forEach(function (a) {
             //console.log('street:',a.getStreet());
             that.addresses.push(a);
         });
         return this.addresses;
-    }
+    };
     // @omm.MeteorMethod({parameterTypes:["callback"], replaceWithCall:true, serverOnly:true})
     // fromServer(cb:(error:any, r:any)=>void):void
     // {
@@ -79,87 +79,88 @@ let TestPerson = class TestPerson {
     //         throw new Error("though shall not be called on the client");
     //     cb(undefined, omm.getMeteor().isServer);
     // }
-    addToWood(t, s) {
+    TestPerson.prototype.addToWood = function (t, s) {
         this.trees.push(t);
         if (s)
             this.wood[s] = t;
-    }
-    addFamilyRelation(s, p) {
+    };
+    TestPerson.prototype.addFamilyRelation = function (s, p) {
         if (s)
             this.family[s] = p;
-    }
-    addPhoneNumber(s, p) {
+    };
+    TestPerson.prototype.addPhoneNumber = function (s, p) {
         this.phoneBook[s] = p;
-    }
-    tendToGarden() {
+    };
+    TestPerson.prototype.tendToGarden = function () {
         this.gardenState++;
         this.tree.grow();
         return this.tree.getHeight();
-    }
-};
-__decorate([
-    omm.Type("TestPhoneNumber")
-], TestPerson.prototype, "phoneNumber", void 0);
-__decorate([
-    omm.ArrayOrMap("TestAddress")
-], TestPerson.prototype, "addresses", void 0);
-__decorate([
-    omm.Type("TestTree")
-], TestPerson.prototype, "tree", void 0);
-__decorate([
-    omm.Type("TestLeaf")
-], TestPerson.prototype, "leaf", void 0);
-__decorate([
-    omm.ArrayOrMap("TestLeaf")
-], TestPerson.prototype, "trees", void 0);
-__decorate([
-    omm.ArrayOrMap("TestPhoneNumber")
-], TestPerson.prototype, "phoneBook", void 0);
-__decorate([
-    omm.ArrayOrMap("TestTree")
-], TestPerson.prototype, "wood", void 0);
-__decorate([
-    omm.ArrayOrMap("TestPerson")
-], TestPerson.prototype, "family", void 0);
-__decorate([
-    omm.Wrap
-], TestPerson.prototype, "collectLeaf", null);
-__decorate([
-    omm.Wrap
-], TestPerson.prototype, "chooseTree", null);
-__decorate([
-    omm.Wrap
-], TestPerson.prototype, "chooseLeaf", null);
-__decorate([
-    omm.CollectionUpdate,
-    omm.MeteorMethod
-], TestPerson.prototype, "rename", null);
-__decorate([
-    omm.CollectionUpdate,
-    omm.MeteorMethod
-], TestPerson.prototype, "collectionUpdateRename", null);
-__decorate([
-    omm.CollectionUpdate,
-    omm.MeteorMethod({ parameterTypes: ["TestAddress"], replaceWithCall: true })
-], TestPerson.prototype, "addAddress", null);
-__decorate([
-    omm.CollectionUpdate,
-    omm.MeteorMethod({ parameterTypes: ["TestAddress"], replaceWithCall: true })
-], TestPerson.prototype, "addAddresses", null);
-__decorate([
-    omm.Wrap
-], TestPerson.prototype, "addToWood", null);
-__decorate([
-    omm.Wrap
-], TestPerson.prototype, "addFamilyRelation", null);
-__decorate([
-    omm.Wrap
-], TestPerson.prototype, "addPhoneNumber", null);
-__decorate([
-    omm.Wrap
-], TestPerson.prototype, "tendToGarden", null);
-TestPerson = __decorate([
-    omm.Entity
-], TestPerson);
+    };
+    __decorate([
+        omm.Type("TestPhoneNumber")
+    ], TestPerson.prototype, "phoneNumber", void 0);
+    __decorate([
+        omm.ArrayOrMap("TestAddress")
+    ], TestPerson.prototype, "addresses", void 0);
+    __decorate([
+        omm.Type("TestTree")
+    ], TestPerson.prototype, "tree", void 0);
+    __decorate([
+        omm.Type("TestLeaf")
+    ], TestPerson.prototype, "leaf", void 0);
+    __decorate([
+        omm.ArrayOrMap("TestLeaf")
+    ], TestPerson.prototype, "trees", void 0);
+    __decorate([
+        omm.ArrayOrMap("TestPhoneNumber")
+    ], TestPerson.prototype, "phoneBook", void 0);
+    __decorate([
+        omm.ArrayOrMap("TestTree")
+    ], TestPerson.prototype, "wood", void 0);
+    __decorate([
+        omm.ArrayOrMap("TestPerson")
+    ], TestPerson.prototype, "family", void 0);
+    __decorate([
+        omm.Wrap
+    ], TestPerson.prototype, "collectLeaf", null);
+    __decorate([
+        omm.Wrap
+    ], TestPerson.prototype, "chooseTree", null);
+    __decorate([
+        omm.Wrap
+    ], TestPerson.prototype, "chooseLeaf", null);
+    __decorate([
+        omm.CollectionUpdate,
+        omm.MeteorMethod
+    ], TestPerson.prototype, "rename", null);
+    __decorate([
+        omm.CollectionUpdate,
+        omm.MeteorMethod
+    ], TestPerson.prototype, "collectionUpdateRename", null);
+    __decorate([
+        omm.CollectionUpdate,
+        omm.MeteorMethod({ parameterTypes: ["TestAddress"], replaceWithCall: true })
+    ], TestPerson.prototype, "addAddress", null);
+    __decorate([
+        omm.CollectionUpdate,
+        omm.MeteorMethod({ parameterTypes: ["TestAddress"], replaceWithCall: true })
+    ], TestPerson.prototype, "addAddresses", null);
+    __decorate([
+        omm.Wrap
+    ], TestPerson.prototype, "addToWood", null);
+    __decorate([
+        omm.Wrap
+    ], TestPerson.prototype, "addFamilyRelation", null);
+    __decorate([
+        omm.Wrap
+    ], TestPerson.prototype, "addPhoneNumber", null);
+    __decorate([
+        omm.Wrap
+    ], TestPerson.prototype, "tendToGarden", null);
+    TestPerson = __decorate([
+        omm.Entity
+    ], TestPerson);
+    return TestPerson;
+}());
 exports.TestPerson = TestPerson;
 //# sourceMappingURL=TestPerson.js.map
