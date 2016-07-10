@@ -19,4 +19,5 @@ __export(require("./TestTreeCollection"));
 __export(require("./TestInheritanceParent"));
 __export(require("./TestInheritanceChild"));
 __export(require("./TestInheritanceOther"));
+__export(require("./TreeService"));
 //# sourceMappingURL=Tests.js.map

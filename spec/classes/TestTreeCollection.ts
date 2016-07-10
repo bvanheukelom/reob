@@ -7,7 +7,7 @@ import * as Tests from "./Tests"
 
 export class TestTreeCollection extends omm.Collection<Tests.TestTree> {
 
-    constructor( db:any ) {
+    constructor( db?:any ) {
         super( db, Tests.TestTree,"TheTreeCollection");
     }
 
@@ -36,7 +36,7 @@ export class TestTreeCollection extends omm.Collection<Tests.TestTree> {
 
     @omm.MeteorMethod({object:'TestTreeCollection', replaceWithCall:true, parameterTypes:["callback"]})
     removeAllTrees( ) : Promise<void> {
-        return this.getMeteorCollection().remove({});
+        return this.getMongoCollection().remove({});
     }
 
 }

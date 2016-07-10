@@ -24,10 +24,10 @@ export interface IMethodOptions{
         private  cancelledError:any = false;
         preUpdate:T;
         object:T;
+        userData:any;
         objectId:string;
         collection:any; //omm.Collection<T>;
         rootObject:any;
-        methodContext:any;
         functionName:string;
         serializationPath:any; //omm.SerializationPath;
         topic:string;
@@ -571,16 +571,7 @@ export interface IMethodOptions{
         }
 
         static getParentPropertyNames<T extends Object>(f:TypeClass<T>):Array<string> {
-            var result:Array<string> = [];
-            while (f != <any>Object) {
-                var props = getMetadata("parent_property", f);
-                for (var i in props) {
-                    if (PersistenceAnnotation.isParent(f, i))
-                        result.push(i);
-                }
-                f = PersistenceAnnotation.getParentClass(f);
-            }
-            return result;
+            return PersistenceAnnotation.getPropertyNamesOfPropertiesThatHaveAProperty(f, 'parent' );
         }
 
 

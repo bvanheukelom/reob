@@ -30,7 +30,7 @@ class TestTreeCollection extends omm.Collection {
         return "Hello " + treeId + "!";
     }
     removeAllTrees() {
-        return this.getMeteorCollection().remove({});
+        return this.getMongoCollection().remove({});
     }
 }
 __decorate([

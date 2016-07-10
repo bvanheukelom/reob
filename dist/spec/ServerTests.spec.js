@@ -1,5 +1,4 @@
 "use strict";
-const Tests = require("./classes/Tests");
 xdescribe("Omm on the server", function () {
     var personCollection;
     var treeCollection;
@@ -12,46 +11,6 @@ xdescribe("Omm on the server", function () {
         // personCollection = new Tests.TestPersonCollection();
         // treeCollection = new Tests.TestTreeCollection();
         // done();
-    });
-    it("can load objects that have sub objects", function () {
-        var id = Date.now() + "t444";
-        var t1 = new Tests.TestPerson(id);
-        t1.phoneNumber = new Tests.TestPhoneNumber("1212");
-        personCollection.insert(t1).then((id) => {
-            return personCollection.getById(id);
-        }).then((p) => {
-            expect(p).toBeDefined();
-            expect(p.phoneNumber instanceof Tests.TestPhoneNumber).toBeTruthy();
-        });
-    });
-    it("can load objects that have sub objects (in an array) which have a parent reference ", function () {
-        var t1 = new Tests.TestTree(10);
-        var i;
-        treeCollection.insert(t1).then((id) => {
-            i = id;
-            return treeCollection.getById(id);
-        }).then((t) => {
-            return t1.grow();
-        }).then(() => {
-            return treeCollection.getById(i);
-        }).then((t) => {
-            treeCollection;
-            expect(t).toBeDefined();
-            expect(t.getLeaves()[0] instanceof Tests.TestLeaf).toBeTruthy();
-            expect(t.getLeaves()[0].getTree() instanceof Tests.TestTree).toBeTruthy();
-        });
-    });
-    it("can save objects that have sub objects (in an array) which have a parent reference", function () {
-        var t1 = new Tests.TestTree(10);
-        t1.grow();
-        var i;
-        treeCollection.insert(t1).then((id) => {
-            i = id;
-            return treeCollection.getById(id);
-        }).then((t) => {
-            expect(t).toBeDefined();
-            expect(t.getLeaves()[0] instanceof Tests.TestLeaf).toBeTruthy();
-        });
     });
     // it("can call wrapped functions", function (done) {
     //     treeCollection.newTree(24, function (err:any, t:Tests.TestTree) {

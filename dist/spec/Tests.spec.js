@@ -11,8 +11,8 @@ require("./classes/TestLeaf");
 describe("Omm both on client and server", function () {
     var personCollection;
     var treeCollection;
-    var clientPersonCollection;
-    var clientTreeCollection;
+    var treeService;
+    var clientTreeService;
     var server;
     var client;
     var db;
@@ -24,14 +24,16 @@ describe("Omm both on client and server", function () {
             personCollection = new Tests.TestPersonCollection(db);
             treeCollection = new Tests.TestTreeCollection(db);
             server = new omm.Server();
+            treeService = new Tests.TreeService(treeCollection);
+            clientTreeService = new Tests.TreeService();
             server.addCollection(personCollection);
             server.addCollection(treeCollection);
-            server.addSingleton("pc", personCollection);
-            server.addSingleton("tc", treeCollection);
+            server.addSingleton("ts", treeService);
             server.start(7000).then(() => {
                 done();
             });
             client = new omm.Client('localhost', 7000);
+            client.addSingleton("ts", clientTreeService);
         });
         Promise.onPossiblyUnhandledRejection((reason) => {
             console.log("possibly unhandled rejection ", reason);
@@ -68,6 +70,46 @@ describe("Omm both on client and server", function () {
         t1.grow();
         var clone = omm.clone(t1);
         expect(clone instanceof Tests.TestTree).toBeTruthy();
+    });
+    it("can load objects that have sub objects", function () {
+        var id = Date.now() + "t444";
+        var t1 = new Tests.TestPerson(id);
+        t1.phoneNumber = new Tests.TestPhoneNumber("1212");
+        personCollection.insert(t1).then((id) => {
+            return personCollection.getById(id);
+        }).then((p) => {
+            expect(p).toBeDefined();
+            expect(p.phoneNumber instanceof Tests.TestPhoneNumber).toBeTruthy();
+        });
+    });
+    it("can load objects that have sub objects (in an array) which have a parent reference ", function () {
+        var t1 = new Tests.TestTree(10);
+        var i;
+        treeCollection.insert(t1).then((id) => {
+            i = id;
+            return treeCollection.getById(id);
+        }).then((t) => {
+            return t1.grow();
+        }).then(() => {
+            return treeCollection.getById(i);
+        }).then((t) => {
+            treeCollection;
+            expect(t).toBeDefined();
+            expect(t.getLeaves()[0] instanceof Tests.TestLeaf).toBeTruthy();
+            expect(t.getLeaves()[0].getTree() instanceof Tests.TestTree).toBeTruthy();
+        });
+    });
+    it("can save objects that have sub objects (in an array) which have a parent reference", function () {
+        var t1 = new Tests.TestTree(10);
+        t1.grow();
+        var i;
+        treeCollection.insert(t1).then((id) => {
+            i = id;
+            return treeCollection.getById(id);
+        }).then((t) => {
+            expect(t).toBeDefined();
+            expect(t.getLeaves()[0] instanceof Tests.TestLeaf).toBeTruthy();
+        });
     });
     it("can serialize sub objects", function () {
         var t1 = new Tests.TestTree(10);
@@ -213,6 +255,15 @@ describe("Omm both on client and server", function () {
         expect(doc.phoneBook).toBeDefined();
         expect(doc.phoneBook["klaus"]).toBeDefined();
         expect(doc.phoneBook["klaus"].pn).toBeDefined();
+    });
+    it("can serialize object that have a parent object", function () {
+        var tp = new Tests.TestTree(23);
+        tp.grow();
+        var serializer = new omm.Serializer();
+        var doc = serializer.toDocument(tp);
+        var tp2 = serializer.toObject(doc, Tests.TestTree);
+        expect(tp2.getLeaves()[0].parent).toBeDefined();
+        expect(tp2.getLeaves()[0].parent).toBe(tp2);
     });
     it("serializes the classname of unexpected objects", function () {
         var t = new Tests.TestPerson("id1", "jake");
@@ -433,13 +484,12 @@ describe("Omm both on client and server", function () {
             expect(t).toBeDefined();
             return treeCollection.deleteTree(treeId);
         }).then(() => {
-            return treeCollection.getById(treeId);
-        }).then((t) => {
-            expect(t).toBeUndefined();
-            done();
-        }).catch((err) => {
-            fail(err);
-            done();
+            return treeCollection.getByIdOrFail(treeId).then(() => {
+                fail("tree was still there");
+                done();
+            }).catch(() => {
+                done();
+            });
         });
     });
     it("removes all", function () {
@@ -867,6 +917,25 @@ describe("Omm both on client and server", function () {
         })
             .then((tree) => {
             expect(tree.getHeight()).toBe(21);
+            done();
+        });
+    });
+    fit("transports user data", function (done) {
+        var l = {};
+        var n = [];
+        client.setUserData({ user: "bert", foo: "bar", solution: 42 });
+        l.listener = function (event, data) {
+        };
+        spyOn(l, 'listener').and.callThrough();
+        treeCollection.onInsert((ctx) => {
+            expect(ctx.userData).toBeDefined();
+            expect(ctx.userData.user).toBe("bert");
+            expect(ctx.userData.solution).toBe(42);
+        });
+        debugger;
+        clientTreeService.insertTree(5).then(done, (reason) => {
+            console.log("Failing because of ", reason);
+            fail(reason);
             done();
         });
     });

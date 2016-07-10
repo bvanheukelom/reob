@@ -52,7 +52,13 @@ class Collection {
     emitNow(t, evtCtx, data) {
         if (this.eventListeners[t]) {
             this.eventListeners[t].forEach(function (listener) {
-                listener(evtCtx, data);
+                try {
+                    listener(evtCtx, data);
+                }
+                catch (e) {
+                    console.log("Exception when emitting event! Topic:" + t, "Context:", evtCtx, "Data:", data);
+                    console.log(e);
+                }
             });
         }
     }
@@ -84,7 +90,7 @@ class Collection {
      * Returns the underlying mongo collection.
      * @returns {any}
      */
-    getMeteorCollection() {
+    getMongoCollection() {
         return this.mongoCollection;
     }
     /**
@@ -96,7 +102,10 @@ class Collection {
         return this.find({
             "_id": id
         }).then((values) => {
-            return values.length ? values[0] : undefined;
+            if (values.length)
+                return values[0];
+            else
+                return undefined;
         });
     }
     /**
@@ -106,7 +115,11 @@ class Collection {
      * @protected
      */
     find(findCriteria) {
-        return this.mongoCollection.find(findCriteria).toArray().then((documents) => {
+        return this.cursorToObjects(this.mongoCollection.find(findCriteria));
+    }
+    cursorToObjects(c) {
+        var cursor = c;
+        return cursor.toArray().then((documents) => {
             var objects = [];
             for (var i = 0; i < documents.length; i++) {
                 var document = documents[i];
@@ -121,6 +134,14 @@ class Collection {
      */
     getAll() {
         return this.find({});
+    }
+    getByIdOrFail(id) {
+        return this.getById(id).then((t) => {
+            if (!t)
+                return Promise.reject("Not found");
+            else
+                return t;
+        });
     }
     /**
      * Removes an entry from a collection
@@ -201,7 +222,8 @@ class Collection {
             var currentSerial = values[1];
             var result = values[2];
             var rootObject = values[3];
-            var ctx = new omm.EventContext(object, this);
+            var ctx = new omm.EventContext(rootObject, this);
+            ctx.functionName;
             omm_event.callEventListeners(this.getEntityClass(), "preSave", ctx);
             var documentToSave = this.serializer.toDocument(rootObject);
             documentToSave.serial = (currentSerial || 0) + 1;

@@ -104,6 +104,7 @@ export class Server{
 
         this.webMethods.add(options.name, (...args:any[])=> {
             console.log("Web method " + options.name);
+            debugger;
 
             // the object id is the first parameter
             var objectId = args.shift();

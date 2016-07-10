@@ -17,10 +17,10 @@ export declare class EventContext<T> {
     private cancelledError;
     preUpdate: T;
     object: T;
+    userData: any;
     objectId: string;
     collection: any;
     rootObject: any;
-    methodContext: any;
     functionName: string;
     serializationPath: any;
     topic: string;

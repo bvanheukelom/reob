@@ -15,7 +15,7 @@ class Client {
     }
     addSingleton(name, singleton) {
         this.singletons[name] = singleton;
-        omm.SerializationPath.updateObjectContexts(singleton, this);
+        omm.SerializationPath.setObjectContext(singleton, undefined, this);
     }
     load(cls, id) {
         if (!omm.PersistenceAnnotation.isRootEntity(cls)) {
@@ -72,7 +72,7 @@ class Client {
         debugger;
         console.log("On the client, running webMethod:" + functionName);
         var sp = object._ommObjectContext.serializationPath ? object._ommObjectContext.serializationPath : undefined;
-        var key = this.getSingletonKey(this) || (sp ? sp.toString() : undefined);
+        var key = this.getSingletonKey(object) || (sp ? sp.toString() : undefined);
         var r;
         var options = omm.PersistenceAnnotation.getMethodOptions(functionName);
         if (!options.serverOnly || !key) {
@@ -83,6 +83,8 @@ class Client {
             r = this.call(options.name, key, args);
         }
         return r;
+    }
+    setUserData(ud) {
     }
 }
 exports.Client = Client;

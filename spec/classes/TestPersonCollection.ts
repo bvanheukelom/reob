@@ -5,7 +5,7 @@ import * as mongodb from "mongodb"
 
 export class TestPersonCollection extends omm.Collection<Tests.TestPerson> {
 
-    constructor( db:any ) {
+    constructor( db?:any ) {
         super( db, Tests.TestPerson );
     }
 
@@ -38,7 +38,7 @@ export class TestPersonCollection extends omm.Collection<Tests.TestPerson> {
 
     @omm.MeteorMethod({ serverOnly:true, parameterTypes:["callback"]})
     removeAllPersons() : Promise<void> {
-        return this.getMeteorCollection().remove({});
+        return this.getMongoCollection().remove({});
     }
 
 }

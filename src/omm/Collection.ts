@@ -56,7 +56,14 @@ export class Collection<T extends Object> implements omm.Handler
     private emitNow( t:string, evtCtx:omm.EventContext<T>, data?:any ){
         if( this.eventListeners[t] ) {
             this.eventListeners[t].forEach(function (listener:Function) {
-                listener(evtCtx, data);
+                try {
+                    listener(evtCtx, data);
+                }catch( e ){
+                    console.log("Exception when emitting event! Topic:"+t, "Context:", evtCtx, "Data:",data);
+                    console.log(e);
+                    // if( e.stack )
+                    //     console.log(e.stack);
+                }
             });
         }
     }
@@ -114,7 +121,7 @@ export class Collection<T extends Object> implements omm.Handler
      * Returns the underlying mongo collection.
      * @returns {any}
      */
-    getMeteorCollection( ):any
+    getMongoCollection( ):any
     {
         return this.mongoCollection;
     }
@@ -129,7 +136,10 @@ export class Collection<T extends Object> implements omm.Handler
         return this.find({
             "_id": id
         }).then((values:[T])=>{
-            return values.length?values[0]:undefined;
+            if( values.length )
+                return values[0];
+            else
+                return undefined;
         });
 
     }
@@ -140,16 +150,21 @@ export class Collection<T extends Object> implements omm.Handler
      * @returns {Array<T>}
      * @protected
      */
-    protected find(findCriteria:any):Promise<Array<T>>
+    protected find(findCriteria:any ):Promise<Array<T>>
     {
-        return this.mongoCollection.find(findCriteria).toArray().then((documents:Array<Document>)=>{
+        return this.cursorToObjects( this.mongoCollection.find(findCriteria ) );
+    }
+
+    cursorToObjects( c:any ):Promise<Array<T>>{
+        var cursor:mongodb.Cursor = c;
+        return cursor.toArray().then((documents:Array<Document>)=>{
             var objects:Array<T> = [];
             for (var i = 0; i < documents.length; i++) {
                 var document:Document = documents[i];
                 objects[i] = this.documentToObject(document);
             }
             return objects;
-            
+
         });
     }
 
@@ -160,6 +175,15 @@ export class Collection<T extends Object> implements omm.Handler
     getAll():Promise<Array<T>>
     {
         return this.find({});
+    }
+
+    getByIdOrFail(id:string):Promise<T>{
+        return this.getById(id).then((t:T)=>{
+            if( !t )
+                return Promise.reject("Not found");
+            else
+                return t;
+        });
     }
 
     /**
@@ -252,7 +276,8 @@ export class Collection<T extends Object> implements omm.Handler
             var currentSerial:number = values[1];
             var result = values[2];
             var rootObject = values[3];
-            var ctx = new omm.EventContext( object, this);
+            var ctx = new omm.EventContext( rootObject, this);
+            ctx.functionName
             omm_event.callEventListeners(this.getEntityClass(), "preSave", ctx);
 
             var documentToSave:Document = this.serializer.toDocument(rootObject);

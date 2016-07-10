@@ -15,3 +15,4 @@ export * from "./TestTreeCollection";
 export * from "./TestInheritanceParent";
 export * from "./TestInheritanceChild";
 export * from "./TestInheritanceOther";
+export * from "./TreeService";

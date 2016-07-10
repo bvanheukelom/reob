@@ -22,7 +22,7 @@ export class Client implements omm.Handler{
 
     addSingleton( name:string, singleton:any ):void{
         this.singletons[name] = singleton;
-        omm.SerializationPath.updateObjectContexts( singleton, this );
+        omm.SerializationPath.setObjectContext( singleton, undefined, this );
     }
 
     load<T>( cls:omm.TypeClass<T>, id:string ):Promise<T>{
@@ -87,7 +87,7 @@ export class Client implements omm.Handler{
         console.log("On the client, running webMethod:"+functionName);
 
         var sp:omm.SerializationPath = object._ommObjectContext.serializationPath ?  object._ommObjectContext.serializationPath : undefined;
-        var key = this.getSingletonKey(this) || ( sp ? sp.toString() : undefined );
+        var key = this.getSingletonKey(object) || ( sp ? sp.toString() : undefined );
         var r:any;
         var options:omm.IMethodOptions = omm.PersistenceAnnotation.getMethodOptions(functionName);
 
@@ -99,6 +99,10 @@ export class Client implements omm.Handler{
             r = this.call(options.name, key, args);
         }
         return r;
+    }
+
+    setUserData( ud:any ){
+
     }
 }
 

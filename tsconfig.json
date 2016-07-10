@@ -34,18 +34,12 @@
         "src/omm/OmmObject.ts",
         "src/omm/SerializationPath.ts",
         "src/omm/Server.ts",
-        "src/omm/Status.ts",
         "src/serializer/Cloner.ts",
         "src/serializer/Document.ts",
-        "src/serializer/ObjectRetriever.ts",
         "src/serializer/Serializer.ts",
         "src/serializer/SubObjectPath.ts",
         "spec/ClientTests.spec.ts",
-        "spec/Mock.ts",
-        "spec/Mocks.ts",
-        "spec/ServerTests.spec.ts",
         "spec/Tests.spec.ts",
-        "spec/Tests.test.ts",
         "spec/classes/TestAddress.ts",
         "spec/classes/TestCar.ts",
         "spec/classes/TestInheritanceChild.ts",
@@ -58,6 +52,7 @@
         "spec/classes/TestTree.ts",
         "spec/classes/TestTreeCollection.ts",
         "spec/classes/TestWheel.ts",
-        "spec/classes/Tests.ts"
+        "spec/classes/Tests.ts",
+        "spec/classes/TreeService.ts"
     ]
 }

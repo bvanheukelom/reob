@@ -12,4 +12,5 @@ export declare class Client implements omm.Handler {
     call(methodName: string, objectId: string, args: any[]): Promise<any>;
     private getSingletonKey(o);
     webMethod(entityClass: omm.TypeClass<any>, functionName: string, object: omm.OmmObject, originalFunction: Function, args: any[]): any;
+    setUserData(ud: any): void;
 }

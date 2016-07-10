@@ -36,7 +36,7 @@ export declare class Collection<T extends Object> implements omm.Handler {
      * Returns the underlying mongo collection.
      * @returns {any}
      */
-    getMeteorCollection(): any;
+    getMongoCollection(): any;
     /**
      * Loads an object from the collection by its id.
      * @param id {string} the id
@@ -50,11 +50,13 @@ export declare class Collection<T extends Object> implements omm.Handler {
      * @protected
      */
     protected find(findCriteria: any): Promise<Array<T>>;
+    cursorToObjects(c: any): Promise<Array<T>>;
     /**
      * Gets all objects in a collection.
      * @returns {Array<T>}
      */
     getAll(): Promise<Array<T>>;
+    getByIdOrFail(id: string): Promise<T>;
     /**
      * Removes an entry from a collection
      * @param id {string} the id of the object to be removed from the collection

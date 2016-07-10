@@ -33,7 +33,7 @@ class TestPersonCollection extends omm.Collection {
         return this.remove(id);
     }
     removeAllPersons() {
-        return this.getMeteorCollection().remove({});
+        return this.getMongoCollection().remove({});
     }
 }
 __decorate([

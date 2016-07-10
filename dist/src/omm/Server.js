@@ -81,6 +81,7 @@ class Server {
         console.log("Creating web methods ", options.name);
         this.webMethods.add(options.name, (...args) => {
             console.log("Web method " + options.name);
+            debugger;
             // the object id is the first parameter
             var objectId = args.shift();
             // convert parameters given to the web method from documents to objects

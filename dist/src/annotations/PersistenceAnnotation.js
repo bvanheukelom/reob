@@ -494,16 +494,7 @@ class PersistenceAnnotation {
         return false;
     }
     static getParentPropertyNames(f) {
-        var result = [];
-        while (f != Object) {
-            var props = getMetadata("parent_property", f);
-            for (var i in props) {
-                if (PersistenceAnnotation.isParent(f, i))
-                    result.push(i);
-            }
-            f = PersistenceAnnotation.getParentClass(f);
-        }
-        return result;
+        return PersistenceAnnotation.getPropertyNamesOfPropertiesThatHaveAProperty(f, 'parent');
     }
     // ---- Wrap ----
     static getWrappedFunctionNames(f) {
