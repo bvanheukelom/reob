@@ -10,11 +10,11 @@ export declare class Server {
     constructor();
     addCollection(c: omm.Collection<any>): void;
     addSingleton(name: string, singleton: any): void;
+    static userData: any;
     private addAllWebMethods();
     start(expressOrPort: any): Promise<void>;
     private retrieveObject(objectId);
     private attachClassName(o);
-    private createWebMethod(options);
     registerGetter(): void;
     private convertWebMethodParameters(args, classNames);
 }

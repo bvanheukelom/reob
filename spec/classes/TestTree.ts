@@ -20,7 +20,6 @@ export class TestTree {
 
     @omm.Wrap
     grow():string {
-        debugger;
         this.height++;
         //console.log("Tree is growing to new heights: ", this.height+" on the "+(omm.getMeteor().isServer?"server":"client"));
         this.leaves.push(new Tests.TestLeaf("leaf" + this.getHeight(), this));

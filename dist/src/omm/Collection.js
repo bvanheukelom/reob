@@ -37,6 +37,12 @@ class Collection {
     onInsert(f) {
         this.addListener("didInsert", f);
     }
+    preUpdate(f) {
+        this.addListener("willUpdate", f);
+    }
+    onUpdate(f) {
+        this.addListener("didUpdate", f);
+    }
     preInsert(f) {
         this.addListener("willInsert", f);
     }
@@ -171,11 +177,12 @@ class Collection {
         var p = this.serializer.toObject(doc, this.theClass, this);
         return p;
     }
-    sendEventsCollectedDuringUpdate(preUpdateObject, postUpdateObject, rootObject, functionName, serializationPath, events) {
+    sendEventsCollectedDuringUpdate(preUpdateObject, postUpdateObject, rootObject, functionName, serializationPath, events, userData) {
         var ctx = new omm.EventContext(postUpdateObject, this);
         ctx.preUpdate = preUpdateObject;
         ctx.functionName = functionName;
         ctx.serializationPath = serializationPath;
+        ctx.userData = userData;
         ctx.rootObject = rootObject;
         //ctx.ob
         var entityClass = omm.PersistenceAnnotation.getClass(postUpdateObject);
@@ -206,7 +213,6 @@ class Collection {
             return sp.getSubObject(rootObject);
         });
         var resultPromise = objectPromise.then((object) => {
-            debugger;
             omm_event.resetQueue();
             // call the update function
             var result = {};
@@ -279,6 +285,8 @@ class Collection {
      */
     insert(p) {
         var ctx = new omm.EventContext(p, this);
+        var ud = omm.Server.userData;
+        ctx.userData = ud;
         this.emitNow("willInsert", ctx);
         //console.log("inserting 2n");
         if (ctx.cancelledWithError()) {
@@ -302,6 +310,7 @@ class Collection {
                 omm_sp.SerializationPath.updateObjectContexts(p, this);
                 //console.log("didInsert");
                 var ctx2 = new omm.EventContext(p, this);
+                ctx2.userData = ud;
                 this.emitNow("didInsert", ctx2);
                 return id;
             });
@@ -322,6 +331,7 @@ class Collection {
         objectPromise = rootObjectPromise.then((rootObject) => {
             return sp.getSubObject(rootObject);
         });
+        var ud = omm.Server.userData;
         return Promise.all([objectPromise, rootObjectPromise]).then((values) => {
             var object = values[0];
             var rootObject = values[1];
@@ -330,9 +340,8 @@ class Collection {
             ctx.functionName = functionName;
             ctx.serializationPath = sp;
             ctx.rootObject = rootObject;
-            // emit the pre-event
-            omm_event.callEventListeners(entityClass, "pre:" + functionName, ctx);
-            omm_event.callEventListeners(entityClass, "pre", ctx);
+            ctx.userData = ud;
+            this.emitNow("willUpdate", ctx);
             var preUpdateObject = object;
             if (ctx.cancelledWithError()) {
                 return Promise.reject(ctx.cancelledWithError());
@@ -343,7 +352,13 @@ class Collection {
                     return r2;
                 }).then((r) => {
                     console.log("Events collected during updating ", r.events);
-                    this.sendEventsCollectedDuringUpdate(r.object, r.object, r.rootObject, functionName, object._serializationPath, r.events);
+                    this.sendEventsCollectedDuringUpdate(r.object, r.object, r.rootObject, functionName, sp, r.events, ud);
+                    var ctx = new omm.EventContext(r.object, this);
+                    ctx.functionName = functionName;
+                    ctx.serializationPath = sp;
+                    ctx.rootObject = r.rootObject;
+                    ctx.userData = ud;
+                    this.emitNow("didUpdate", ctx);
                     return r.result;
                 });
                 return resultPromise;

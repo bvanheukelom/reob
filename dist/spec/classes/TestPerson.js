@@ -80,7 +80,6 @@ let TestPerson = class TestPerson {
     //     cb(undefined, omm.getMeteor().isServer);
     // }
     addToWood(t, s) {
-        debugger;
         this.trees.push(t);
         if (s)
             this.wood[s] = t;

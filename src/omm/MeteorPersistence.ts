@@ -6,19 +6,6 @@ import * as omm_annotation from "../annotations/PersistenceAnnotation"
 import * as omm from "../omm"
 
 
-// export var methodContext:any;
-
-// export function registerObject<O extends Object>( key:string, o:O ){
-//     omm_annotation.registeredObjects[key] = o;
-// }
-//
-// export function getRegisteredObject( key:string ):any{
-//     return omm_annotation.registeredObjects[key];
-// }
-
-
-
-
 export class MeteorPersistence {
     private static initialized = false;
 
@@ -33,7 +20,7 @@ export class MeteorPersistence {
                     MeteorPersistence.monkeyPatch(entityClass.prototype, functionName, function (originalFunction, ...args:any[]) {
                         var _ommObjectContext:omm.ObjectContext = this._ommObjectContext;
                         if( !_ommObjectContext || !_ommObjectContext.handler ||!_ommObjectContext.handler.collectionUpdate ){
-                            console.log("collection update function "+functionName+". Calling original function. No handler found. ", args);
+                            console.log("Collection update function "+functionName+". Calling original function. No handler found. ", args);
                             return originalFunction.apply(this, args);
                         }else{
                             console.log("collection update function "+functionName+". Calling handler. ", args);
@@ -42,8 +29,7 @@ export class MeteorPersistence {
                     });
                 });
             });
-
-
+            
             // web methods
             omm_annotation.PersistenceAnnotation.getAllMethodFunctionNames().forEach((functionName:string)=>{
                 var methodOptions:omm_annotation.IMethodOptions = omm_annotation.PersistenceAnnotation.getMethodOptions( functionName );
@@ -91,11 +77,6 @@ export class MeteorPersistence {
             }
         }
     }
-
-
-
-
-
 
 
     // // todo  make the persistencePath enumerable:false everywhere it is set

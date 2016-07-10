@@ -75,10 +75,11 @@ class SerializationPath {
         return this.path;
     }
     static setObjectContext(object, sp, handler) {
-        PersistenceAnnotation.setNonEnumerableProperty(object, "_ommObjectContext", { serializationPath: sp, handler: handler });
+        if (object)
+            PersistenceAnnotation.setNonEnumerableProperty(object, "_ommObjectContext", { serializationPath: sp, handler: handler });
     }
     static getObjectContext(object) {
-        return object._ommObjectContext;
+        return object ? object._ommObjectContext : undefined;
     }
     // if I could I would make this package protected
     static updateObjectContexts(object, handler, visited) {

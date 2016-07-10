@@ -38,6 +38,12 @@ export class Collection<T extends Object> implements omm.Handler
     onInsert( f:( evtCtx:omm.EventContext<T>, data:any )=>void ){
         this.addListener("didInsert", f);
     }
+    preUpdate( f:( evtCtx:omm.EventContext<T>, data:any )=>void ){
+        this.addListener("willUpdate", f);
+    }
+    onUpdate( f:( evtCtx:omm.EventContext<T>, data:any )=>void ){
+        this.addListener("didUpdate", f);
+    }
     preInsert( f:( evtCtx:omm.EventContext<T>, data:any )=>void ){
         this.addListener("willInsert", f);
     }
@@ -218,11 +224,12 @@ export class Collection<T extends Object> implements omm.Handler
     }
 
 
-    sendEventsCollectedDuringUpdate( preUpdateObject, postUpdateObject, rootObject, functionName:string, serializationPath:omm.SerializationPath, events:Array<any> ){
+    sendEventsCollectedDuringUpdate( preUpdateObject, postUpdateObject, rootObject, functionName:string, serializationPath:omm.SerializationPath, events:Array<any>, userData:any ){
         var ctx = new omm.EventContext( postUpdateObject, this );
         ctx.preUpdate = preUpdateObject;
         ctx.functionName = functionName;
         ctx.serializationPath = serializationPath;
+        ctx.userData = userData;
         ctx.rootObject = rootObject;
         //ctx.ob
 
@@ -259,7 +266,6 @@ export class Collection<T extends Object> implements omm.Handler
         });
 
         var resultPromise = objectPromise.then( (object:any)=>{
-            debugger;
             omm_event.resetQueue();
             // call the update function
             var result:any = {};
@@ -343,6 +349,8 @@ export class Collection<T extends Object> implements omm.Handler
     {
 
         var ctx = new omm.EventContext(p, this);
+        var ud = omm.Server.userData;
+        ctx.userData = ud;
         this.emitNow("willInsert", ctx);
         //console.log("inserting 2n");
         if( ctx.cancelledWithError() ){
@@ -368,6 +376,7 @@ export class Collection<T extends Object> implements omm.Handler
 
                 //console.log("didInsert");
                 var ctx2 =  new omm.EventContext( p, this);
+                ctx2.userData = ud;
                 this.emitNow("didInsert", ctx2);
                 return id;
             });
@@ -394,7 +403,8 @@ export class Collection<T extends Object> implements omm.Handler
         objectPromise = rootObjectPromise.then((rootObject:any)=>{
             return sp.getSubObject(rootObject);
         });
-        
+        var ud = omm.Server.userData;
+
         return Promise.all([objectPromise,rootObjectPromise]).then((values:any[])=>{
             var object:any = values[0];
             var rootObject:any = values[1];
@@ -404,10 +414,8 @@ export class Collection<T extends Object> implements omm.Handler
             ctx.functionName = functionName;
             ctx.serializationPath = sp;
             ctx.rootObject = rootObject;
-
-            // emit the pre-event
-            omm_event.callEventListeners( entityClass, "pre:"+functionName, ctx );
-            omm_event.callEventListeners( entityClass, "pre", ctx );
+            ctx.userData = ud;
+            this.emitNow( "willUpdate", ctx );
 
             var preUpdateObject = object;
 
@@ -419,7 +427,14 @@ export class Collection<T extends Object> implements omm.Handler
                     return r2;
                 }).then((r:CollectionUpdateResult)=>{
                     console.log("Events collected during updating ", r.events);
-                    this.sendEventsCollectedDuringUpdate( r.object, r.object, r.rootObject,functionName, object._serializationPath, r.events );
+                    this.sendEventsCollectedDuringUpdate( r.object, r.object, r.rootObject,functionName, sp, r.events, ud );
+
+                    var ctx = new omm.EventContext( r.object, this );
+                    ctx.functionName = functionName;
+                    ctx.serializationPath = sp;
+                    ctx.rootObject = r.rootObject;
+                    ctx.userData = ud;
+                    this.emitNow( "didUpdate", ctx );
                     return r.result;
                 });
 

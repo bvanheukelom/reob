@@ -101,15 +101,9 @@ export interface IMethodOptions{
         if (typeof entityNameOrP1 == "string") {
             entityName = entityNameOrP1;
         } else {
-            if( entityNameOrP1.name ){
-                entityName = entityNameOrP1.name;
-            }else {
-                var n = entityNameOrP1.toString();
-                n = n.substr('function '.length);
-                n = n.substr(0, n.indexOf('('));
-                entityName = n;
-            }
+            entityName = className(entityNameOrP1)
         }
+        console.log("Adding entity with name ",entityName)
         var f = function (p1:any) {
             var typeClass:TypeClass<Object> = <TypeClass<Object>>p1;
             defineMetadata("persistence:entity", true, typeClass);
@@ -328,8 +322,23 @@ export interface IMethodOptions{
             return o[idPropertyName];
     }
 
-    export function className(fun:TypeClass<Object>):string {
-        return typeof fun == "function" ? fun['_ommClassName'] : undefined;
+    export function className(cls:TypeClass<Object>):string {
+        if( !cls ){
+            return undefined;
+        }else if( cls['_ommClassName'] ){
+            return cls['_ommClassName'];
+        }else{
+            if( cls.name ) {
+                return cls.name;
+            }else if( cls.constructor && cls.constructor.name ){
+                    return cls.constructor.name;
+            }else {
+                var n = cls.toString();
+                n = n.substr('function '.length);
+                n = n.substr(0, n.indexOf('('));
+                return n;
+            }
+        }
     }
 
     export function MeteorMethod(p1:any, p2?:any) {

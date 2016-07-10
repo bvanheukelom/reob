@@ -13,6 +13,8 @@ export declare class Collection<T extends Object> implements omm.Handler {
     onRemove(f: (evtCtx: omm.EventContext<T>, data: any) => void): void;
     preRemove(f: (evtCtx: omm.EventContext<T>, data: any) => void): void;
     onInsert(f: (evtCtx: omm.EventContext<T>, data: any) => void): void;
+    preUpdate(f: (evtCtx: omm.EventContext<T>, data: any) => void): void;
+    onUpdate(f: (evtCtx: omm.EventContext<T>, data: any) => void): void;
     preInsert(f: (evtCtx: omm.EventContext<T>, data: any) => void): void;
     private addListener(topic, f);
     emit(topic: string, data: any): void;
@@ -64,7 +66,7 @@ export declare class Collection<T extends Object> implements omm.Handler {
      */
     protected remove(id: string): Promise<any>;
     protected documentToObject(doc: Document): T;
-    sendEventsCollectedDuringUpdate(preUpdateObject: any, postUpdateObject: any, rootObject: any, functionName: string, serializationPath: omm.SerializationPath, events: Array<any>): void;
+    sendEventsCollectedDuringUpdate(preUpdateObject: any, postUpdateObject: any, rootObject: any, functionName: string, serializationPath: omm.SerializationPath, events: Array<any>, userData: any): void;
     private updateOnce(sp, updateFunction, attempt);
     /**
      * Performs an update on an object in the collection. After the update the object is attempted to be saved to

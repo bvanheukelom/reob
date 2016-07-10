@@ -59,16 +59,9 @@ function Entity(entityNameOrP1) {
         entityName = entityNameOrP1;
     }
     else {
-        if (entityNameOrP1.name) {
-            entityName = entityNameOrP1.name;
-        }
-        else {
-            var n = entityNameOrP1.toString();
-            n = n.substr('function '.length);
-            n = n.substr(0, n.indexOf('('));
-            entityName = n;
-        }
+        entityName = className(entityNameOrP1);
     }
+    console.log("Adding entity with name ", entityName);
     var f = function (p1) {
         var typeClass = p1;
         defineMetadata("persistence:entity", true, typeClass);
@@ -283,8 +276,27 @@ function getId(o) {
         return o[idPropertyName];
 }
 exports.getId = getId;
-function className(fun) {
-    return typeof fun == "function" ? fun['_ommClassName'] : undefined;
+function className(cls) {
+    if (!cls) {
+        return undefined;
+    }
+    else if (cls['_ommClassName']) {
+        return cls['_ommClassName'];
+    }
+    else {
+        if (cls.name) {
+            return cls.name;
+        }
+        else if (cls.constructor && cls.constructor.name) {
+            return cls.constructor.name;
+        }
+        else {
+            var n = cls.toString();
+            n = n.substr('function '.length);
+            n = n.substr(0, n.indexOf('('));
+            return n;
+        }
+    }
 }
 exports.className = className;
 function MeteorMethod(p1, p2) {

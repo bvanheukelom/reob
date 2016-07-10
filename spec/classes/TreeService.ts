@@ -11,12 +11,10 @@ export class TreeService{
         this.treeCollection = ttc;
     }
 
-    @omm.MeteorMethod({serverOnly:true})
+    @omm.MeteorMethod({serverOnly:true, resultType:"TestTree"})
     insertTree( height:number ):Promise<Tests.TestTree>{
         var t = new Tests.TestTree(height);
-        debugger;
         return this.treeCollection.insert(t).then((id:string)=>{
-            debugger;
             return t;
         });
     }

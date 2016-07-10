@@ -30,50 +30,50 @@ export function on<O extends Object>( t:omm.TypeClass<O>, topic:string|omm.Event
 
 }
 
-export function onUpdate<O extends Object>(  t:omm.TypeClass<O>, functionName?:string|omm.EventListener, f?:omm.EventListener ):void {
-    var className = omm.className(t);
-    if( typeof functionName == "function" ){
-        f = <omm.EventListener>functionName;
-        functionName = null;
-    }
-
-    var e= omm.PersistenceAnnotation.getEntityClassByName(className);
-    if( !e )
-        throw new Error("Type is not an entity");
-    if( functionName && omm.PersistenceAnnotation.getCollectionUpdateFunctionNames(t).indexOf(<string>functionName)==-1 )
-        throw new Error("Function '"+functionName+"' is not a collection update function");
-
-    if( !omm.eventListeners[className] ){
-        omm.eventListeners[className] = {};
-    }
-    var topic = "post"+(functionName?":"+functionName:"");
-    if( !omm.eventListeners[className][topic] )
-        omm.eventListeners[className][topic] = [];
-    omm.eventListeners[className][topic].push(f);
-}
-
-export function preUpdate<O extends Object>(  t:omm.TypeClass<O>, functionName?:string|omm.EventListener, f?:omm.EventListener ):void {
-    var className = omm.className(t);
-    if( typeof functionName == "function" ){
-        f = <omm.EventListener>functionName;
-        functionName = null;
-    }
-
-    var e= omm.PersistenceAnnotation.getEntityClassByName(className);
-    if( !e )
-        throw new Error("Type is not an entity");
-    if( functionName && omm.PersistenceAnnotation.getCollectionUpdateFunctionNames(t).indexOf(<string>functionName)==-1 )
-        throw new Error("Function '"+functionName+"' is not a collection update function ");
-
-    if( !omm.eventListeners[className] ){
-        omm.eventListeners[className] = {};
-    }
-    var topic = "pre"+(typeof functionName =="string"?":"+functionName:"");
-    //console.log("topic:"+topic);
-    if( !omm.eventListeners[className][topic] )
-        omm.eventListeners[className][topic] = [];
-    omm.eventListeners[className][topic].push(f);
-}
+// export function onUpdate<O extends Object>(  t:omm.TypeClass<O>, functionName?:string|omm.EventListener, f?:omm.EventListener ):void {
+//     var className = omm.className(t);
+//     if( typeof functionName == "function" ){
+//         f = <omm.EventListener>functionName;
+//         functionName = null;
+//     }
+//
+//     var e= omm.PersistenceAnnotation.getEntityClassByName(className);
+//     if( !e )
+//         throw new Error("Type is not an entity");
+//     if( functionName && omm.PersistenceAnnotation.getCollectionUpdateFunctionNames(t).indexOf(<string>functionName)==-1 )
+//         throw new Error("Function '"+functionName+"' is not a collection update function");
+//
+//     if( !omm.eventListeners[className] ){
+//         omm.eventListeners[className] = {};
+//     }
+//     var topic = "post"+(functionName?":"+functionName:"");
+//     if( !omm.eventListeners[className][topic] )
+//         omm.eventListeners[className][topic] = [];
+//     omm.eventListeners[className][topic].push(f);
+// }
+//
+// export function preUpdate<O extends Object>(  t:omm.TypeClass<O>, functionName?:string|omm.EventListener, f?:omm.EventListener ):void {
+//     var className = omm.className(t);
+//     if( typeof functionName == "function" ){
+//         f = <omm.EventListener>functionName;
+//         functionName = null;
+//     }
+//
+//     var e= omm.PersistenceAnnotation.getEntityClassByName(className);
+//     if( !e )
+//         throw new Error("Type is not an entity");
+//     if( functionName && omm.PersistenceAnnotation.getCollectionUpdateFunctionNames(t).indexOf(<string>functionName)==-1 )
+//         throw new Error("Function '"+functionName+"' is not a collection update function ");
+//
+//     if( !omm.eventListeners[className] ){
+//         omm.eventListeners[className] = {};
+//     }
+//     var topic = "pre"+(typeof functionName =="string"?":"+functionName:"");
+//     //console.log("topic:"+topic);
+//     if( !omm.eventListeners[className][topic] )
+//         omm.eventListeners[className][topic] = [];
+//     omm.eventListeners[className][topic].push(f);
+// }
 
 export function callEventListeners<O extends Object>( t:omm.TypeClass<O>, topic:string, ctx:omm.EventContext<any>, data?:any ){
     var className = omm.className(t);

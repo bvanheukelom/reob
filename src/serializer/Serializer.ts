@@ -120,7 +120,7 @@ export class Serializer {
                 throw new Error("Could not determine class of document. Either the document needs to have a 'className' property or a class needs to be passed to the serializer. Document: "+ JSON.stringify( doc ) );
             // instantiate the new object
             o = Object.create(f.prototype);
-            debugger;
+
             PersistenceAnnotation.getParentPropertyNames(f).forEach(function (parentPropertyName:string) {
                 o[parentPropertyName] = parent;
             });

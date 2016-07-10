@@ -14,7 +14,6 @@ let TestTree = class TestTree {
         this.height = initialHeight || 10;
     }
     grow() {
-        debugger;
         this.height++;
         //console.log("Tree is growing to new heights: ", this.height+" on the "+(omm.getMeteor().isServer?"server":"client"));
         this.leaves.push(new Tests.TestLeaf("leaf" + this.getHeight(), this));

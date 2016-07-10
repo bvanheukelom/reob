@@ -1,7 +1,7 @@
 /**
  * Created by bert on 23.03.16.
  */
-
+import "./classes/TestLeaf"
 import * as omm from "../src/omm"
 import * as Tests from "./classes/Tests"
 import * as mongodb from "mongodb"
@@ -9,6 +9,8 @@ import * as Promise from "bluebird"
 var co = require("co");
 
 import "./classes/TestLeaf"
+
+jasmine.DEFAULT_TIMEOUT_INTERVAL = 10000000;
 
 describe("Omm both on client and server", function () {
 
@@ -21,7 +23,6 @@ describe("Omm both on client and server", function () {
     var db:any;
 
     beforeAll((done)=>{
-        jasmine.DEFAULT_TIMEOUT_INTERVAL = 10000000;
         omm.init();
         mongodb.MongoClient.connect( "mongodb://localhost/test", {promiseLibrary:Promise}).then((d:mongodb.Db)=>{
             db = d;
@@ -76,7 +77,6 @@ describe("Omm both on client and server", function () {
     });
 
     it("knows collection updates", function () {
-        debugger;
         expect(omm.PersistenceAnnotation.getCollectionUpdateFunctionNames(Tests.TestPerson)).toBeDefined();
         expect(omm.PersistenceAnnotation.getCollectionUpdateFunctionNames(Tests.TestPerson)).toContain("collectionUpdateRename");
     });
@@ -157,7 +157,6 @@ describe("Omm both on client and server", function () {
         var t1:Tests.TestTree = new Tests.TestTree(123);
         t1.treeId = "tree1";
         t1.grow();
-        // debugger;
         omm.SerializationPath.updateObjectContexts(t1);
         var sp = omm.SerializationPath.getObjectContext(t1).serializationPath;
         expect( sp ).toBeDefined();
@@ -455,7 +454,6 @@ describe("Omm both on client and server", function () {
 
 
     it("can do basic inserts", function (done) {
-        debugger;
         treeCollection.newTree(20).then((tree:Tests.TestTree)=>{
             expect(tree).toBeDefined();
             expect(tree instanceof Tests.TestTree).toBeTruthy();
@@ -496,7 +494,6 @@ describe("Omm both on client and server", function () {
         var personPromise = personCollection.newPerson("Held");
         var tree1Promise = treeCollection.newTree(13);
         var tree2Promise = treeCollection.newTree(12);
-        debugger;
         Promise.all( [tree1Promise,tree2Promise,personPromise] ).then((values:any)=>{
             var t1 = values[0];
             var t2 = values[1];
@@ -513,7 +510,6 @@ describe("Omm both on client and server", function () {
                 return personCollection.getById(held.getId());
             }), tree1Promise]);
         }).then((arr)=>{
-            debugger;
             var held:Tests.TestPerson = arr[0];
             var peter = arr[1];
             expect(held).toBeDefined();
@@ -624,7 +620,6 @@ describe("Omm both on client and server", function () {
             previousSize = arr.length;
         });
         previousSizePromise.then(()=>{
-            debugger;
           return treeCollection.newTree(10);
         }).then(()=>{
             fail('false success');
@@ -667,7 +662,6 @@ describe("Omm both on client and server", function () {
     it("trees have leaves", function (done) {
         var tId;
         treeCollection.newTree(10).then((t)=> {
-            debugger;
             tId = t.treeId;
             expect(t).toBeDefined();
             return t.grow();
@@ -697,7 +691,6 @@ describe("Omm both on client and server", function () {
             return treeCollection.getById(tId);
         }).then((t)=> {
             expect(l.listener).not.toHaveBeenCalled();
-            debugger;
             return t.getLeaves()[0].flutter();
         }).then(()=>{
             expect(l.listener).toHaveBeenCalled();
@@ -708,11 +701,9 @@ describe("Omm both on client and server", function () {
     it("can receive emitted events from a subobject even if another (the first) event listener throws an exception", function (done) {
         var l:any = {};
         l.listener1 = function (event:omm.EventContext<Tests.TestTree>) {
-            debugger;
             // throw "freekish error";
         };
         l.listener2 = function (event:omm.EventContext<Tests.TestTree>) {
-            debugger;
 
         };
         spyOn(l, 'listener1').and.callThrough();
@@ -778,13 +769,9 @@ describe("Omm both on client and server", function () {
         spyOn(l, 'listener').and.callThrough();
         omm.on(Tests.TestLeaf, "fluttering", l.listener);
         co( function* (){
-            debugger;
             var tree = yield treeCollection.newTree(10);
-            debugger;
             yield tree.grow();
-            debugger;
             var tree2 = yield treeCollection.getById(tree.treeId);
-            debugger;
             expect(l.listener).not.toHaveBeenCalled();
             yield tree2.getLeaves()[0].flutter();
             expect(l.listener).toHaveBeenCalled();
@@ -842,7 +829,7 @@ describe("Omm both on client and server", function () {
             expect(tt.getLeaves().length).toBe(0);
         };
         spyOn(l, 'listener').and.callThrough();
-        omm.preUpdate(Tests.TestTree, "grow", l.listener);
+        treeCollection.preUpdate( l.listener );
 
         var treePromise = treeCollection.newTree(10);
         treePromise.then((tree)=>{
@@ -860,7 +847,7 @@ describe("Omm both on client and server", function () {
             event.cancel("not happening");
         };
         spyOn(l, 'listener').and.callThrough();
-        omm.preUpdate(Tests.TestTree, l.listener);
+        treeCollection.preUpdate( l.listener );
 
         treeCollection.newTree(10).then((tree)=>{
             return tree.grow();
@@ -877,7 +864,7 @@ describe("Omm both on client and server", function () {
             event.cancel("not happening either");
         };
         spyOn(l, 'listener').and.callThrough();
-        omm.preUpdate(Tests.TestLeaf, l.listener);
+        treeCollection.preUpdate( l.listener );
         var treePromise = treeCollection.newTree(10);
         treePromise.then((tree)=> {
             return Promise.all([tree.grow(), treePromise]);
@@ -913,7 +900,7 @@ describe("Omm both on client and server", function () {
             expect(tt.getLeaves().length + 1000).toBe(1001); //
         };
         spyOn(l, 'listener').and.callThrough();
-        omm.onUpdate(Tests.TestTree, "grow", l.listener);
+        treeCollection.onUpdate( l.listener );
 
         var treePromise = treeCollection.newTree(10);
         return treePromise.then((tree)=> {
@@ -932,7 +919,7 @@ describe("Omm both on client and server", function () {
             event.cancel("nope");
         };
         spyOn(l, 'listener').and.callThrough();
-        omm.preUpdate(Tests.TestTree, "grow", l.listener);
+        treeCollection.preUpdate( l.listener );
 
         var treeId;
         var treePromise = treeCollection.newTree(10);
@@ -996,7 +983,6 @@ describe("Omm both on client and server", function () {
         treeCollection.newTree(20)
             .then((tree:Tests.TestTree)=>{
                 console.log("Tree id", tree.treeId);
-                debugger;
                 return client.load( Tests.TestTree, tree.treeId );
             })
             .then((tree:Tests.TestTree)=>{
@@ -1029,21 +1015,18 @@ describe("Omm both on client and server", function () {
             });
     });
 
-    fit("transports user data", function (done) {
+    it("transports user data when inserting", function (done) {
         var l:any = {};
         var n:Array<string> = [];
         client.setUserData({user:"bert", foo:"bar", solution:42});
-        l.listener = function (event:omm.EventContext<Tests.TestTree>, data:any) {
-        };
-        spyOn(l, 'listener').and.callThrough();
-
-        treeCollection.onInsert((ctx:omm.EventContext<Tests.TestTree>)=>{
+        l.listener = function (ctx:omm.EventContext<Tests.TestTree>, data:any) {
             expect( ctx.userData ).toBeDefined();
             expect( ctx.userData.user ).toBe( "bert" );
             expect( ctx.userData.solution ).toBe( 42 );
-            
-        });
-        debugger;
+        };
+        spyOn(l, 'listener').and.callThrough();
+
+        treeCollection.onInsert(l.listener);
         clientTreeService.insertTree(5).then(done,(reason)=>{
             console.log("Failing because of ", reason);
             fail(reason);
@@ -1051,4 +1034,48 @@ describe("Omm both on client and server", function () {
         });
     });
 
+    it("transports user data when updating", function (done) {
+        var l:any = {};
+        var n:Array<string> = [];
+        client.setUserData({user:"bert", foo:"bar", solution:42});
+        l.listener = function (ctx:omm.EventContext<Tests.TestTree>, data:any) {
+            expect( ctx.userData ).toBeDefined();
+            expect( ctx.userData.user ).toBe( "bert" );
+            expect( ctx.userData.solution ).toBe( 42 );
+        };
+        spyOn(l, 'listener').and.callThrough();
+
+        treeCollection.preUpdate(l.listener);
+        clientTreeService.insertTree(5).then((t:Tests.TestTree)=>{
+            return t.grow();
+        }).then(()=>{
+            expect( l.listener ).toHaveBeenCalled();
+        }).then(done);
+    });
+
+    it("transports function names and objects when updating", function (done) {
+        var l:any = {};
+        var n:Array<string> = [];
+        client.setUserData({user:"bert", foo:"bar", solution:42});
+        l.listener = function (ctx:omm.EventContext<Tests.TestTree>, data:any) {
+            expect( ctx.functionName ).toBe('flutter');
+            expect( ctx.object instanceof Tests.TestLeaf ).toBeTruthy( );
+        };
+        spyOn(l, 'listener').and.callThrough();
+
+        var treeId;
+        clientTreeService.insertTree(5).then((t:Tests.TestTree)=>{
+            treeId = t.treeId;
+            return t.grow();
+        }).then(()=>{
+            return client.load(Tests.TestTree,treeId);
+        }).then((t:Tests.TestTree)=>{
+            treeCollection.preUpdate(l.listener);
+            debugger;
+            return  t.getLeaves()[0].flutter() ;
+        }).then(()=>{
+            expect( l.listener ).toHaveBeenCalled();
+        }).then(done);
+    });
+    
 });

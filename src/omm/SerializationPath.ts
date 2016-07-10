@@ -93,11 +93,12 @@ export class SerializationPath {
 
 
     static setObjectContext(object:OmmObject, sp:SerializationPath, handler:Handler ):void{
-        PersistenceAnnotation.setNonEnumerableProperty( object, "_ommObjectContext", {serializationPath:sp, handler:handler} );
+        if( object )
+            PersistenceAnnotation.setNonEnumerableProperty( object, "_ommObjectContext", {serializationPath:sp, handler:handler} );
     }
 
     static getObjectContext(object:OmmObject  ):ObjectContext{
-        return object._ommObjectContext;
+        return object? object._ommObjectContext:undefined;
     }
 
     // if I could I would make this package protected

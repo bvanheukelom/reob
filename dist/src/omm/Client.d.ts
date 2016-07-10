@@ -4,6 +4,7 @@
 import * as omm from "../omm";
 export declare class Client implements omm.Handler {
     private serializer;
+    private userData;
     private webMethods;
     private singletons;
     constructor(host: string, port: number);

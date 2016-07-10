@@ -8,6 +8,7 @@ import * as wm from "@bvanheukelom/web-methods"
 export class Client implements omm.Handler{
 
     private serializer:omm.Serializer;
+    private userData:any;
     private webMethods:wm.WebMethods;
     private singletons:{ [index:string]: any } = {};
 
@@ -53,24 +54,25 @@ export class Client implements omm.Handler{
             }
         }
         // prepend
+        args.unshift( this.userData );
         args.unshift( objectId );
         args.unshift( methodName );
-        debugger;
         var p:Promise<any> = this.webMethods.call.apply(this.webMethods, args);
         return p.then((result:any)=>{
             console.log( "web method returned "+ result );
             // convert the result from json to an object
+            var obje;
             if( result ) {
                 var serializationPath = result.serializationPath;
                 if( result.className ){
-                    result = this.serializer.toObject(result);
+                    obje = this.serializer.toObject(result.document, omm.PersistenceAnnotation.getEntityClassByName(result.className) );
                     if (serializationPath) {
-                        omm.setNonEnumerableProperty(result, "_serializationPath", new omm.SerializationPath(serializationPath));
-                        // we probably want to update the serialization paths for sub objects here
+                        debugger;
+                        omm.SerializationPath.setObjectContext(obje, serializationPath, this);
                     }
                 }
             }
-            return result;
+            return obje;
         });
     }
 
@@ -83,7 +85,6 @@ export class Client implements omm.Handler{
     }
 
     webMethod(entityClass:omm.TypeClass<any>, functionName:string, object:omm.OmmObject, originalFunction:Function, args:any[] ):any{
-        debugger;
         console.log("On the client, running webMethod:"+functionName);
 
         var sp:omm.SerializationPath = object._ommObjectContext.serializationPath ?  object._ommObjectContext.serializationPath : undefined;
@@ -96,13 +97,13 @@ export class Client implements omm.Handler{
             r = originalFunction.apply(object, args);
         }
         if( key ) {
-            r = this.call(options.name, key, args);
+            r = this.call(options.name, key,  args);
         }
         return r;
     }
 
     setUserData( ud:any ){
-
+        this.userData = ud;
     }
 }
 

@@ -29,18 +29,32 @@ class Server {
                 console.log("Web method " + options.name);
                 // the object id is the first parameter
                 var objectId = args.shift();
+                // the user Data is the second parameter
+                var userData = args.shift();
+                console.log("User data ", userData);
                 // convert parameters given to the web method from documents to objects
                 this.convertWebMethodParameters(args, options.parameterTypes);
                 // load object based on the object id. this could either be a registered object or an object form a collection
                 var p = this.retrieveObject(objectId)
                     .then((object) => {
-                    return object[options.name].originalFunction.apply(object, args);
+                    // this might be the collection update or another function that is called directly
+                    Server.userData = userData;
+                    var r = object[options.name].apply(object, args);
+                    Server.userData = undefined;
+                    return r;
                 })
                     .then((result) => {
-                    this.attachClassName(result);
-                    var r = this.serializer.toDocument(result);
-                    console.log("Result of web method " + options.name + " is ", r);
-                    return r;
+                    var res = {};
+                    var className = omm.className(result);
+                    if (className && omm.PersistenceAnnotation.getEntityClassByName(className)) {
+                        res.className = className;
+                    }
+                    var objectContext = omm.SerializationPath.getObjectContext(result);
+                    if (objectContext && objectContext.serializationPath)
+                        res.serializationPath = objectContext.serializationPath.toString();
+                    res.document = this.serializer.toDocument(result);
+                    console.log("Result of web method " + options.name + " is ", res);
+                    return res;
                 });
                 // return the promise
                 return p;
@@ -76,30 +90,6 @@ class Server {
         }
         if (o._serializationPath)
             o.serializationPath = o._serializationPath.toString();
-    }
-    createWebMethod(options) {
-        console.log("Creating web methods ", options.name);
-        this.webMethods.add(options.name, (...args) => {
-            console.log("Web method " + options.name);
-            debugger;
-            // the object id is the first parameter
-            var objectId = args.shift();
-            // convert parameters given to the web method from documents to objects
-            this.convertWebMethodParameters(args, options.parameterTypes);
-            // load object based on the object id. this could either be a registered object or an object form a collection
-            var p = this.retrieveObject(objectId)
-                .then((object) => {
-                return object[options.name].originalFunction.apply(object, args);
-            })
-                .then((result) => {
-                this.attachClassName(result);
-                var r = this.serializer.toDocument(result);
-                console.log("Result of web method " + options.name + " is ", r);
-                return r;
-            });
-            // return the promise
-            return p;
-        });
     }
     registerGetter() {
         this.webMethods.add("get", (className, objectId) => {

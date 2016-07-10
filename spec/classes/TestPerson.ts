@@ -145,7 +145,6 @@ export class TestPerson
     @omm.Wrap
     addToWood(t:Tests.TestTree, s?:string )
     {
-        debugger;
         this.trees.push( t );
         if( s )
             this.wood[s] = t;

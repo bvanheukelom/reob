@@ -117,7 +117,7 @@ export declare function propertyDictionaryType(t: TypeClass<Object>, propertyNam
  * @memberof omm
  */
 export declare function getId(o: Object): any;
-export declare function className(fun: TypeClass<Object>): string;
+export declare function className(cls: TypeClass<Object>): string;
 export declare function MeteorMethod(p1: any, p2?: any): (t: any, functionName: string, objectDescriptor: any) => void;
 export declare class PersistenceAnnotation {
     static getMethodOptions(functionName: string): IMethodOptions;

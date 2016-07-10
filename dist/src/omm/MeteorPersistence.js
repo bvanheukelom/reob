@@ -2,14 +2,6 @@
 const SerializationPath_1 = require("./SerializationPath");
 const omm_annotation = require("../annotations/PersistenceAnnotation");
 const omm = require("../omm");
-// export var methodContext:any;
-// export function registerObject<O extends Object>( key:string, o:O ){
-//     omm_annotation.registeredObjects[key] = o;
-// }
-//
-// export function getRegisteredObject( key:string ):any{
-//     return omm_annotation.registeredObjects[key];
-// }
 class MeteorPersistence {
     static init() {
         if (!MeteorPersistence.initialized) {
@@ -21,7 +13,7 @@ class MeteorPersistence {
                     MeteorPersistence.monkeyPatch(entityClass.prototype, functionName, function (originalFunction, ...args) {
                         var _ommObjectContext = this._ommObjectContext;
                         if (!_ommObjectContext || !_ommObjectContext.handler || !_ommObjectContext.handler.collectionUpdate) {
-                            console.log("collection update function " + functionName + ". Calling original function. No handler found. ", args);
+                            console.log("Collection update function " + functionName + ". Calling original function. No handler found. ", args);
                             return originalFunction.apply(this, args);
                         }
                         else {

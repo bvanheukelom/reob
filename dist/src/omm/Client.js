@@ -42,23 +42,25 @@ class Client {
             }
         }
         // prepend
+        args.unshift(this.userData);
         args.unshift(objectId);
         args.unshift(methodName);
-        debugger;
         var p = this.webMethods.call.apply(this.webMethods, args);
         return p.then((result) => {
             console.log("web method returned " + result);
             // convert the result from json to an object
+            var obje;
             if (result) {
                 var serializationPath = result.serializationPath;
                 if (result.className) {
-                    result = this.serializer.toObject(result);
+                    obje = this.serializer.toObject(result.document, omm.PersistenceAnnotation.getEntityClassByName(result.className));
                     if (serializationPath) {
-                        omm.setNonEnumerableProperty(result, "_serializationPath", new omm.SerializationPath(serializationPath));
+                        debugger;
+                        omm.SerializationPath.setObjectContext(obje, serializationPath, this);
                     }
                 }
             }
-            return result;
+            return obje;
         });
     }
     getSingletonKey(o) {
@@ -69,7 +71,6 @@ class Client {
         return undefined;
     }
     webMethod(entityClass, functionName, object, originalFunction, args) {
-        debugger;
         console.log("On the client, running webMethod:" + functionName);
         var sp = object._ommObjectContext.serializationPath ? object._ommObjectContext.serializationPath : undefined;
         var key = this.getSingletonKey(object) || (sp ? sp.toString() : undefined);
@@ -85,6 +86,7 @@ class Client {
         return r;
     }
     setUserData(ud) {
+        this.userData = ud;
     }
 }
 exports.Client = Client;

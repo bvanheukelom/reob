@@ -16,15 +16,13 @@ class TreeService {
     }
     insertTree(height) {
         var t = new Tests.TestTree(height);
-        debugger;
         return this.treeCollection.insert(t).then((id) => {
-            debugger;
             return t;
         });
     }
 }
 __decorate([
-    omm.MeteorMethod({ serverOnly: true })
+    omm.MeteorMethod({ serverOnly: true, resultType: "TestTree" })
 ], TreeService.prototype, "insertTree", null);
 exports.TreeService = TreeService;
 //# sourceMappingURL=TreeService.js.map

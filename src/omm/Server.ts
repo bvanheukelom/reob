@@ -28,6 +28,7 @@ export class Server{
         omm.SerializationPath.updateObjectContexts( singleton, this );
     }
 
+    static userData:any;
     private addAllWebMethods():void {
         console.log("adding web methods " );
         omm.PersistenceAnnotation.getAllMethodFunctionNames().forEach((functionName:string)=>{
@@ -39,6 +40,10 @@ export class Server{
                 // the object id is the first parameter
                 var objectId = args.shift();
 
+                // the user Data is the second parameter
+                var userData = args.shift();
+                console.log("User data ", userData);
+
                 // convert parameters given to the web method from documents to objects
                 this.convertWebMethodParameters(args, options.parameterTypes);
 
@@ -47,15 +52,26 @@ export class Server{
 
                     // call function
                     .then((object:any)=> {
-                        return object[options.name].originalFunction.apply(object, args);
+                        // this might be the collection update or another function that is called directly
+                        Server.userData = userData;
+                        var r =  object[options.name].apply(object, args);
+                        Server.userData = undefined;
+                        return r;
                     })
 
                     // convert the result to a document
                     .then((result)=> {
-                        this.attachClassName(result);
-                        var r = this.serializer.toDocument(result);
-                        console.log("Result of web method " + options.name + " is ", r);
-                        return r;
+                        var res:any = {};
+                        var className = omm.className(result);
+                        if( className && omm.PersistenceAnnotation.getEntityClassByName(className) ){
+                            res.className = className;
+                        }
+                        var objectContext = omm.SerializationPath.getObjectContext(result);
+                        if( objectContext && objectContext.serializationPath )
+                            res.serializationPath = objectContext.serializationPath.toString();
+                        res.document = this.serializer.toDocument(result);
+                        console.log("Result of web method " + options.name + " is ", res);
+                        return res;
                     });
 
                 // return the promise
@@ -96,41 +112,6 @@ export class Server{
         }
         if( o._serializationPath )
             o.serializationPath = o._serializationPath.toString();
-    }
-
-
-    private createWebMethod(options:omm.IMethodOptions){
-        console.log("Creating web methods ", options.name );
-
-        this.webMethods.add(options.name, (...args:any[])=> {
-            console.log("Web method " + options.name);
-            debugger;
-
-            // the object id is the first parameter
-            var objectId = args.shift();
-
-            // convert parameters given to the web method from documents to objects
-            this.convertWebMethodParameters(args, options.parameterTypes);
-
-            // load object based on the object id. this could either be a registered object or an object form a collection
-            var p = this.retrieveObject(objectId)
-
-                // call function
-                .then((object:any)=> {
-                    return object[options.name].originalFunction.apply(object, args);
-                })
-
-                // convert the result to a document
-                .then((result)=> {
-                    this.attachClassName(result);
-                    var r = this.serializer.toDocument(result);
-                    console.log("Result of web method " + options.name + " is ", r);
-                    return r;
-                });
-
-            // return the promise
-            return p;
-        });
     }
     
     registerGetter(){
