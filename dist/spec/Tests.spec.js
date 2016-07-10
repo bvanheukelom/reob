@@ -9,7 +9,7 @@ var mongodb = require("mongodb");
 var Promise = require("bluebird");
 var co = require("co");
 require("./classes/TestLeaf");
-jasmine.DEFAULT_TIMEOUT_INTERVAL = 10000000;
+// jasmine.DEFAULT_TIMEOUT_INTERVAL = 10000000;
 describe("Omm both on client and server", function () {
     var personCollection;
     var treeCollection;
@@ -480,12 +480,15 @@ describe("Omm both on client and server", function () {
             expect(t).toBeDefined();
             return treeCollection.deleteTree(treeId);
         }).then(function () {
-            return treeCollection.getByIdOrFail(treeId).then(function () {
+            return treeCollection.getByIdOrFail(treeId).then(function (t) {
                 fail("tree was still there");
                 done();
-            }).catch(function () {
+            }).catch(function (reason) {
                 done();
             });
+        }).catch(function (reason) {
+            fail(reason);
+            done();
         });
     });
     it("removes all", function () {

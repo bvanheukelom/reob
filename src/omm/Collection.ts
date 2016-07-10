@@ -9,9 +9,10 @@ import {TypeClass as TypeClass } from "../annotations/PersistenceAnnotation"
 import * as omm_event from "../event/OmmEvent"
 import * as Config from "./Config"
 import * as mongodb from "mongodb"
+import * as Promise from "bluebird"
 
 interface EventListener<T>{
-    ( evtCtx:omm.EventContext<T>, data?:any ) : void
+    ( evtCtx:omm.EventContext<T>, data?:any ) : any
 }
 export class Collection<T extends Object> implements omm.Handler
 {
@@ -62,19 +63,20 @@ export class Collection<T extends Object> implements omm.Handler
             this.queue.push({topic:topic, data:data});
     }
 
-    private emitNow( t:string, evtCtx:omm.EventContext<T>, data?:any ){
+    private emitLater( t:string, evtCtx:omm.EventContext<T>, data?:any ):Promise<void>{
+        console.log("emitting "+t);
+        var promises = [];
         if( this.eventListeners[t] ) {
             this.eventListeners[t].forEach(function (listener:Function) {
-                try {
-                    listener(evtCtx, data);
-                }catch( e ){
-                    console.log("Exception when emitting event! Topic:"+t, "Context:", evtCtx, "Data:",data);
-                    console.log(e);
-                    // if( e.stack )
-                    //     console.log(e.stack);
-                }
+                promises.push( Promise.cast( listener(evtCtx, data) ) );
             });
         }
+        return Promise.all(promises).then(()=>{
+            if( evtCtx.cancelledWithError() )
+                return Promise.reject(evtCtx.cancelledWithError());
+            else
+                return;
+        });
     }
 
     private flushQueue(){
@@ -202,21 +204,21 @@ export class Collection<T extends Object> implements omm.Handler
      */
     protected remove( id:string ):Promise<any>
     {
+        if (!id)
+            return Promise.reject("Trying to remove an object that does not have an id.");
+
         var ctx = new omm.EventContext( undefined, this );
         ctx.objectId = id;
-        this.emitNow( "willRemove", ctx );
-        if( ctx.cancelledWithError() ) {
-            return Promise.reject(ctx.cancelledWithError());
-        }else if (!id) {
-            return Promise.reject("Trying to remove an object that does not have an id.");
-        }else{
+        return this.emitLater( "willRemove", ctx ).then(()=>{
+            console.log("removing")
+            debugger;
             return this.mongoCollection.remove({_id:id }).then((result)=>{
+                console.log("removing2");
                 var c2 = new omm.EventContext(undefined, this);
                 c2.objectId = id;
-                this.emitNow("didRemove", c2 );
-                return result;
-            });
-        }
+                return this.emitLater( "didRemove", c2 ).thenReturn(result);
+            }) ;
+        });
     }
 
     protected documentToObject( doc:Document ):T
@@ -354,13 +356,7 @@ export class Collection<T extends Object> implements omm.Handler
         var ctx = new omm.EventContext(p, this);
         var ud = omm.Server.userData;
         ctx.userData = ud;
-        this.emitNow("willInsert", ctx);
-        //console.log("inserting 2n");
-        if( ctx.cancelledWithError() ){
-            return new Promise<String>((resolve,reject)=>{
-                reject(ctx.cancelledWithError())
-            });
-        } else {
+        return this.emitLater("willInsert", ctx).then(()=>{
             //console.log("insert not cancelled");
             // TODO make sure that this is unique
             var idPropertyName = omm.PersistenceAnnotation.getIdPropertyName(this.theClass);
@@ -380,10 +376,9 @@ export class Collection<T extends Object> implements omm.Handler
                 //console.log("didInsert");
                 var ctx2 =  new omm.EventContext( p, this);
                 ctx2.userData = ud;
-                this.emitNow("didInsert", ctx2);
-                return id;
+                return this.emitLater("didInsert", ctx2).thenReturn(id);
             });
-        }
+        });
     }
 
     getEntityClass():TypeClass<T>{
@@ -418,31 +413,31 @@ export class Collection<T extends Object> implements omm.Handler
             ctx.serializationPath = sp;
             ctx.rootObject = rootObject;
             ctx.userData = ud;
-            this.emitNow( "willUpdate", ctx );
+            return this.emitLater( "willUpdate", ctx ).then(()=>{
 
-            var preUpdateObject = object;
+                var preUpdateObject = object;
 
-            if( ctx.cancelledWithError() ){
-                return Promise.reject(ctx.cancelledWithError());
-            } else {
-                var resultPromise:Promise<CollectionUpdateResult> = this.update( sp, function (subObject) {
-                    var r2 = originalFunction.apply(subObject, args);
-                    return r2;
-                }).then((r:CollectionUpdateResult)=>{
-                    console.log("Events collected during updating ", r.events);
-                    this.sendEventsCollectedDuringUpdate( r.object, r.object, r.rootObject,functionName, sp, r.events, ud );
+                if( ctx.cancelledWithError() ){
+                    return Promise.reject(ctx.cancelledWithError());
+                } else {
+                    var resultPromise:Promise<CollectionUpdateResult> = this.update( sp, function (subObject) {
+                        var r2 = originalFunction.apply(subObject, args);
+                        return r2;
+                    }).then((r:CollectionUpdateResult)=>{
+                        console.log("Events collected during updating ", r.events);
+                        this.sendEventsCollectedDuringUpdate( r.object, r.object, r.rootObject,functionName, sp, r.events, ud );
 
-                    var ctx = new omm.EventContext( r.object, this );
-                    ctx.functionName = functionName;
-                    ctx.serializationPath = sp;
-                    ctx.rootObject = r.rootObject;
-                    ctx.userData = ud;
-                    this.emitNow( "didUpdate", ctx );
-                    return r.result;
-                });
+                        var ctx = new omm.EventContext( r.object, this );
+                        ctx.functionName = functionName;
+                        ctx.serializationPath = sp;
+                        ctx.rootObject = r.rootObject;
+                        ctx.userData = ud;
+                        return this.emitLater( "didUpdate", ctx ).thenReturn(r.result);
+                    });
 
-                return resultPromise;
-            }
+                    return resultPromise;
+                }
+            })
         });
     }
 

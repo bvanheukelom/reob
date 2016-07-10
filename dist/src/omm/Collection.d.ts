@@ -9,16 +9,16 @@ export declare class Collection<T extends Object> implements omm.Handler {
     private eventListeners;
     private queue;
     removeAllListeners(): void;
-    preSave(f: (evtCtx: omm.EventContext<T>, data: any) => void): void;
-    onRemove(f: (evtCtx: omm.EventContext<T>, data: any) => void): void;
-    preRemove(f: (evtCtx: omm.EventContext<T>, data: any) => void): void;
-    onInsert(f: (evtCtx: omm.EventContext<T>, data: any) => void): void;
-    preUpdate(f: (evtCtx: omm.EventContext<T>, data: any) => void): void;
-    onUpdate(f: (evtCtx: omm.EventContext<T>, data: any) => void): void;
-    preInsert(f: (evtCtx: omm.EventContext<T>, data: any) => void): void;
+    preSave(f: EventListener<T>): void;
+    onRemove(f: EventListener<T>): void;
+    preRemove(f: EventListener<T>): void;
+    onInsert(f: EventListener<T>): void;
+    preUpdate(f: EventListener<T>): void;
+    onUpdate(f: EventListener<T>): void;
+    preInsert(f: EventListener<T>): void;
     private addListener(topic, f);
     emit(topic: string, data: any): void;
-    private emitNow(t, evtCtx, data?);
+    private emitLater(t, evtCtx, data?);
     private flushQueue();
     private resetQueue();
     /**

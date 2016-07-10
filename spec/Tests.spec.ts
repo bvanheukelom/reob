@@ -10,7 +10,7 @@ var co = require("co");
 
 import "./classes/TestLeaf"
 
-jasmine.DEFAULT_TIMEOUT_INTERVAL = 10000000;
+// jasmine.DEFAULT_TIMEOUT_INTERVAL = 10000000;
 
 describe("Omm both on client and server", function () {
 
@@ -472,7 +472,6 @@ describe("Omm both on client and server", function () {
     });
 
 
-
     it("updates the collection", function (done) {
         var id;
         personCollection.newPerson('bert').then((e:Tests.TestPerson)=> {
@@ -536,13 +535,16 @@ describe("Omm both on client and server", function () {
             expect( t ).toBeDefined();
             return treeCollection.deleteTree(treeId);
         }).then(()=>{
-            return treeCollection.getByIdOrFail(treeId).then(()=>{
-                fail("tree was still there");
+            return treeCollection.getByIdOrFail(treeId).then((t)=>{
+                fail("tree was still there" );
                 done();
-            }).catch(()=>{
+            }).catch((reason)=>{
                 done();
             });
-        })
+        }).catch((reason)=>{
+            fail(reason);
+            done();
+        });
     });
 
     it("removes all", function () {
