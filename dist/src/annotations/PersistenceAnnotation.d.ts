@@ -28,8 +28,8 @@ export declare class EventContext<T> {
     cancel(err: any): void;
     cancelledWithError(): any;
 }
-export interface EventListener {
-    (i: EventContext<any>, data?: any): void;
+export interface EventListener<T> {
+    (i: EventContext<T>, data?: any): void;
 }
 export declare function isRegisteredWithKey(o: any): string;
 export declare var entityClasses: {
@@ -40,7 +40,7 @@ export declare var registeredObjects: {
 };
 export declare var eventListeners: {
     [index: string]: {
-        [index: string]: Array<EventListener>;
+        [index: string]: Array<EventListener<any>>;
     };
 };
 export declare var meteorMethodFunctions: Array<IMethodOptions>;

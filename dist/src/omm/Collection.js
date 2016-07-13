@@ -2,8 +2,8 @@
 var omm = require("../omm");
 var omm_sp = require("./SerializationPath");
 var omm_event = require("../event/OmmEvent");
-var mongodb = require("mongodb");
 var Promise = require("bluebird");
+var uuid = require("node-uuid");
 var Collection = (function () {
     /**
      * Represents a Mongo collection that contains entities.
@@ -297,13 +297,13 @@ var Collection = (function () {
             var idPropertyName = omm.PersistenceAnnotation.getIdPropertyName(_this.theClass);
             var id = p[idPropertyName];
             if (!id) {
-                p[idPropertyName] = new mongodb.ObjectID().toString();
+                p[idPropertyName] = uuid.v1(); //new mongodb.ObjectID().toString();
                 id = p[idPropertyName];
             }
             var doc = _this.serializer.toDocument(p);
             doc.serial = 0;
             //console.log( "inserting document: ", doc);
-            return _this.mongoCollection.insert(doc).then(function () {
+            return _this.mongoCollection.insertOne(doc).then(function () {
                 omm_sp.SerializationPath.updateObjectContexts(p, _this);
                 //console.log("didInsert");
                 var ctx2 = new omm.EventContext(p, _this);

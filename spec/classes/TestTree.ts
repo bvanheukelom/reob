@@ -20,16 +20,22 @@ export class TestTree {
 
     @omm.Wrap
     grow():string {
+        return this._grow();
+    }
+
+    _grow():string {
         this.height++;
         //console.log("Tree is growing to new heights: ", this.height+" on the "+(omm.getMeteor().isServer?"server":"client"));
         this.leaves.push(new Tests.TestLeaf("leaf" + this.getHeight(), this));
         this.leaves.forEach(function (l:Tests.TestLeaf) {
             l.grow();
         });
-        // if( omm.getMeteor().isClient )
-            return "grown on the client";
-        // else
-        //     return "grown on the server";
+        return "grown!";
+    }
+
+    @omm.CollectionUpdate
+    growAsOnlyACollectionUpdate():string {
+        return this._grow();
     }
 
     @omm.Wrap

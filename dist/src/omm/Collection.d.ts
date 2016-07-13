@@ -1,6 +1,7 @@
 import * as omm from "../omm";
 import Document from "../serializer/Document";
 import { TypeClass as TypeClass } from "../annotations/PersistenceAnnotation";
+import * as Promise from "bluebird";
 export declare class Collection<T extends Object> implements omm.Handler {
     private mongoCollection;
     private theClass;
@@ -9,13 +10,13 @@ export declare class Collection<T extends Object> implements omm.Handler {
     private eventListeners;
     private queue;
     removeAllListeners(): void;
-    preSave(f: EventListener<T>): void;
-    onRemove(f: EventListener<T>): void;
-    preRemove(f: EventListener<T>): void;
-    onInsert(f: EventListener<T>): void;
-    preUpdate(f: EventListener<T>): void;
-    onUpdate(f: EventListener<T>): void;
-    preInsert(f: EventListener<T>): void;
+    preSave(f: omm.EventListener<T>): void;
+    onRemove(f: omm.EventListener<T>): void;
+    preRemove(f: omm.EventListener<T>): void;
+    onInsert(f: omm.EventListener<T>): void;
+    preUpdate(f: omm.EventListener<T>): void;
+    onUpdate(f: omm.EventListener<T>): void;
+    preInsert(f: omm.EventListener<T>): void;
     private addListener(topic, f);
     emit(topic: string, data: any): void;
     private emitLater(t, evtCtx, data?);

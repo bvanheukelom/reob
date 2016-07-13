@@ -59,7 +59,7 @@ export class Client implements omm.Handler{
         args.unshift( methodName );
         var p:Promise<any> = this.webMethods.call.apply(this.webMethods, args);
         return p.then((result:any)=>{
-            console.log( "web method returned "+ result );
+            console.log( "web method returned ", result );
             // convert the result from json to an object
             var obje;
             if( result ) {
@@ -67,7 +67,6 @@ export class Client implements omm.Handler{
                 if( result.className ){
                     obje = this.serializer.toObject(result.document, omm.PersistenceAnnotation.getEntityClassByName(result.className) );
                     if (serializationPath) {
-                        debugger;
                         omm.SerializationPath.setObjectContext(obje, serializationPath, this);
                     }
                 }

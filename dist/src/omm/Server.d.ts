@@ -7,12 +7,11 @@ export declare class Server {
     private singletons;
     private webMethods;
     private serializer;
-    constructor();
+    constructor(express: any);
     addCollection(c: omm.Collection<any>): void;
     addSingleton(name: string, singleton: any): void;
     static userData: any;
     private addAllWebMethods();
-    start(expressOrPort: any): Promise<void>;
     private retrieveObject(objectId);
     private attachClassName(o);
     registerGetter(): void;

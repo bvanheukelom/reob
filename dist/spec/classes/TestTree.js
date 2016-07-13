@@ -14,16 +14,19 @@ var TestTree = (function () {
         this.height = initialHeight || 10;
     }
     TestTree.prototype.grow = function () {
+        return this._grow();
+    };
+    TestTree.prototype._grow = function () {
         this.height++;
         //console.log("Tree is growing to new heights: ", this.height+" on the "+(omm.getMeteor().isServer?"server":"client"));
         this.leaves.push(new Tests.TestLeaf("leaf" + this.getHeight(), this));
         this.leaves.forEach(function (l) {
             l.grow();
         });
-        // if( omm.getMeteor().isClient )
-        return "grown on the client";
-        // else
-        //     return "grown on the server";
+        return "grown!";
+    };
+    TestTree.prototype.growAsOnlyACollectionUpdate = function () {
+        return this._grow();
     };
     TestTree.prototype.wither = function () {
         this.leaves = [];
@@ -56,6 +59,9 @@ var TestTree = (function () {
     __decorate([
         omm.Wrap
     ], TestTree.prototype, "grow", null);
+    __decorate([
+        omm.CollectionUpdate
+    ], TestTree.prototype, "growAsOnlyACollectionUpdate", null);
     __decorate([
         omm.Wrap
     ], TestTree.prototype, "wither", null);

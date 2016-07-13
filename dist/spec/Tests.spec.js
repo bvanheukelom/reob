@@ -7,6 +7,7 @@ var omm = require("../src/omm");
 var Tests = require("./classes/Tests");
 var mongodb = require("mongodb");
 var Promise = require("bluebird");
+var express = require("express");
 var co = require("co");
 require("./classes/TestLeaf");
 // jasmine.DEFAULT_TIMEOUT_INTERVAL = 10000000;
@@ -21,20 +22,22 @@ describe("Omm both on client and server", function () {
     beforeAll(function (done) {
         omm.init();
         mongodb.MongoClient.connect("mongodb://localhost/test", { promiseLibrary: Promise }).then(function (d) {
+            var app = express();
+            console.log("all:", app['all']);
+            server = new omm.Server(app);
             db = d;
             personCollection = new Tests.TestPersonCollection(db);
             treeCollection = new Tests.TestTreeCollection(db);
-            server = new omm.Server();
             treeService = new Tests.TreeService(treeCollection);
             clientTreeService = new Tests.TreeService();
             server.addCollection(personCollection);
             server.addCollection(treeCollection);
             server.addSingleton("ts", treeService);
-            server.start(7000).then(function () {
-                done();
-            });
             client = new omm.Client('localhost', 7000);
             client.addSingleton("ts", clientTreeService);
+            app.listen(7000, function () {
+                done();
+            });
         });
         Promise.onPossiblyUnhandledRejection(function (reason) {
             console.log("possibly unhandled rejection ", reason);
@@ -80,6 +83,17 @@ describe("Omm both on client and server", function () {
         }).then(function (p) {
             expect(p).toBeDefined();
             expect(p.phoneNumber instanceof Tests.TestPhoneNumber).toBeTruthy();
+        });
+    });
+    it("can run collection updates from within another method", function (done) {
+        var t1 = new Tests.TestTree(15);
+        treeCollection.insert(t1).then(function (id) {
+            return clientTreeService.growTree(id).thenReturn(id);
+        }).then(function (id) {
+            return treeCollection.getByIdOrFail(id);
+        }).then(function (t) {
+            expect(t.getLeaves().length).toBe(1);
+            done();
         });
     });
     it("can load objects that have sub objects (in an array) which have a parent reference ", function () {

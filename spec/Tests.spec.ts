@@ -6,6 +6,8 @@ import * as omm from "../src/omm"
 import * as Tests from "./classes/Tests"
 import * as mongodb from "mongodb"
 import * as Promise from "bluebird"
+import * as express from "express"
+import * as http from "http"
 var co = require("co");
 
 import "./classes/TestLeaf"
@@ -25,10 +27,12 @@ describe("Omm both on client and server", function () {
     beforeAll((done)=>{
         omm.init();
         mongodb.MongoClient.connect( "mongodb://localhost/test", {promiseLibrary:Promise}).then((d:mongodb.Db)=>{
+            var app = express();
+            console.log("all:", app['all']);
+            server = new omm.Server(app);
             db = d;
             personCollection = new Tests.TestPersonCollection(db);
             treeCollection = new Tests.TestTreeCollection(db);
-            server = new omm.Server();
 
             treeService = new Tests.TreeService( treeCollection );
             clientTreeService = new Tests.TreeService();
@@ -37,13 +41,13 @@ describe("Omm both on client and server", function () {
             server.addCollection(treeCollection);
 
             server.addSingleton("ts", treeService);
-
-            server.start(7000).then(()=>{
-                done();
-            });
-
             client = new omm.Client('localhost', 7000);
             client.addSingleton("ts", clientTreeService);
+
+            app.listen( 7000, ()=>{
+
+                done();
+            });
         });
         Promise.onPossiblyUnhandledRejection((reason: any) => {
             console.log("possibly unhandled rejection ", reason);
@@ -98,6 +102,18 @@ describe("Omm both on client and server", function () {
         }).then((p:Tests.TestPerson)=>{
             expect(p).toBeDefined();
             expect(p.phoneNumber instanceof Tests.TestPhoneNumber).toBeTruthy();
+        });
+    });
+
+    it("can run collection updates from within another method", function (done) {
+        var t1:Tests.TestTree = new Tests.TestTree(15);
+        treeCollection.insert(t1).then( (id:string)=> {
+            return clientTreeService.growTree( id ).thenReturn( id );
+        }).then((id)=>{
+            return treeCollection.getByIdOrFail(id);
+        }).then((t)=>{
+            expect( t.getLeaves().length ).toBe(1);
+            done();
         });
     });
 

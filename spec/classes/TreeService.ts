@@ -19,4 +19,12 @@ export class TreeService{
         });
     }
 
+    @omm.MeteorMethod({ serverOnly:true })
+    growTree(treeId:string):Promise<string> {
+        return this.treeCollection.getById(treeId).then((t:Tests.TestTree)=>{
+            return t.growAsOnlyACollectionUpdate();
+        });
+    }
+
+
 }

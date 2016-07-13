@@ -20,9 +20,17 @@ var TreeService = (function () {
             return t;
         });
     };
+    TreeService.prototype.growTree = function (treeId) {
+        return this.treeCollection.getById(treeId).then(function (t) {
+            return t.growAsOnlyACollectionUpdate();
+        });
+    };
     __decorate([
         omm.MeteorMethod({ serverOnly: true, resultType: "TestTree" })
     ], TreeService.prototype, "insertTree", null);
+    __decorate([
+        omm.MeteorMethod({ serverOnly: true })
+    ], TreeService.prototype, "growTree", null);
     return TreeService;
 }());
 exports.TreeService = TreeService;

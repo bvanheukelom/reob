@@ -29,6 +29,8 @@ export class TestTreeCollection extends omm.Collection<Tests.TestTree> {
         return this.remove(treeId);
     }
 
+
+
     @omm.MeteorMethod({ parameterTypes:[ "string", "TestTree", "number" ] } )
     serverFunction( treeId:string, t:Tests.TestTree, n:number ) {
         return "Hello " + treeId+"!";

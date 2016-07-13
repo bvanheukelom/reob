@@ -49,7 +49,7 @@ var Client = (function () {
         args.unshift(methodName);
         var p = this.webMethods.call.apply(this.webMethods, args);
         return p.then(function (result) {
-            console.log("web method returned " + result);
+            console.log("web method returned ", result);
             // convert the result from json to an object
             var obje;
             if (result) {
@@ -57,7 +57,6 @@ var Client = (function () {
                 if (result.className) {
                     obje = _this.serializer.toObject(result.document, omm.PersistenceAnnotation.getEntityClassByName(result.className));
                     if (serializationPath) {
-                        debugger;
                         omm.SerializationPath.setObjectContext(obje, serializationPath, _this);
                     }
                 }

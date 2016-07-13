@@ -6,4 +6,5 @@ export declare class TreeService {
     treeCollection: Tests.TestTreeCollection;
     constructor(ttc?: Tests.TestTreeCollection);
     insertTree(height: number): Promise<Tests.TestTree>;
+    growTree(treeId: string): Promise<string>;
 }

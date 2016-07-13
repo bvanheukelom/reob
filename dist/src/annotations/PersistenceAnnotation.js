@@ -116,7 +116,7 @@ function wrap(t, functionName) {
 exports.wrap = wrap;
 function CollectionUpdate(p1, fName) {
     var options = {};
-    console.log("registering a collection update on property", fName, p1);
+    console.log("registering a collection update on property", fName, className(p1));
     if (fName) {
         PersistenceAnnotation.setPropertyProperty(p1, fName, "collectionUpdate", options);
     }
@@ -241,7 +241,7 @@ exports.DocumentName = DocumentName;
 // }
 function Type(typeClassName) {
     return function (targetPrototypeObject, propertyName) {
-        console.log("Registering a type  " + propertyName + " as " + typeClassName, " on ", targetPrototypeObject);
+        console.log("Registering a type  " + propertyName + " as " + typeClassName, " on ", className(targetPrototypeObject));
         PersistenceAnnotation.setPropertyProperty(targetPrototypeObject, propertyName, "type", typeClassName);
     };
 }

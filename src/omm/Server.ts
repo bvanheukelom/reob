@@ -12,11 +12,13 @@ export class Server{
     private webMethods:wm.WebMethods;
     private serializer:omm.Serializer;
 
-    constructor() {
+    constructor(express:any) {
         this.webMethods = new wm.WebMethods();
         this.serializer = new omm.Serializer();
         this.addAllWebMethods();
         this.registerGetter();
+
+        this.webMethods.registerEndpoint(express);
     }
 
     addCollection( c: omm.Collection<any> ):void{
@@ -62,7 +64,8 @@ export class Server{
                     // convert the result to a document
                     .then((result)=> {
                         var res:any = {};
-                        var className = omm.className(result);
+                        var cls = omm.PersistenceAnnotation.getClass(result)
+                        var className = cls ? omm.className(cls) : undefined;
                         if( className && omm.PersistenceAnnotation.getEntityClassByName(className) ){
                             res.className = className;
                         }
@@ -78,11 +81,6 @@ export class Server{
                 return p;
             });
         });
-    }
-
-    start(expressOrPort:any):Promise<void>{
-
-        return this.webMethods.start(expressOrPort);
     }
 
     private retrieveObject( objectId:string ):Promise<any>{
@@ -101,7 +99,7 @@ export class Server{
                 });
             }
             else
-                Promise.reject( "No collection found to retrieve object. Key:" + objectId );
+                return Promise.reject( "No collection found to retrieve object. Key:" + objectId );
         }
     }
 

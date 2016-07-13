@@ -11,16 +11,16 @@ import * as Config from "./Config"
 import * as mongodb from "mongodb"
 import * as Promise from "bluebird"
 
-interface EventListener<T>{
-    ( evtCtx:omm.EventContext<T>, data?:any ) : any
-}
+import * as uuid from "node-uuid"
+
+
 export class Collection<T extends Object> implements omm.Handler
 {
     private mongoCollection:mongodb.Collection;
     private theClass:omm.TypeClass<T>;
     private name:string;
     private serializer:omm.Serializer;
-    private eventListeners:{ [index:string]:Array<EventListener<T>> } = {};
+    private eventListeners:{ [index:string]:Array<omm.EventListener<T>> } = {};
 
 
     private queue:Array<any>;
@@ -29,30 +29,30 @@ export class Collection<T extends Object> implements omm.Handler
         this.eventListeners = {};
     }
 
-    preSave( f:EventListener<T> ){
+    preSave( f:omm.EventListener<T> ){
         this.addListener("preSave", f);
     }
 
-    onRemove( f:EventListener<T> ){
+    onRemove( f:omm.EventListener<T> ){
         this.addListener("didRemove", f);
     }
-    preRemove( f:EventListener<T> ){
+    preRemove( f:omm.EventListener<T> ){
         this.addListener("willRemove", f);
     }
-    onInsert( f:EventListener<T> ){
+    onInsert( f:omm.EventListener<T> ){
         this.addListener("didInsert", f);
     }
-    preUpdate( f:EventListener<T> ){
+    preUpdate( f:omm.EventListener<T> ){
         this.addListener("willUpdate", f);
     }
-    onUpdate( f:EventListener<T> ){
+    onUpdate( f:omm.EventListener<T> ){
         this.addListener("didUpdate", f);
     }
-    preInsert( f:EventListener<T> ){
+    preInsert( f:omm.EventListener<T> ){
         this.addListener("willInsert", f);
     }
 
-    private addListener( topic:string, f:EventListener<T> ){
+    private addListener( topic:string, f:omm.EventListener<T> ){
         if( !this.eventListeners[topic] )
             this.eventListeners[topic] = [];
         this.eventListeners[topic].push(f);
@@ -362,7 +362,7 @@ export class Collection<T extends Object> implements omm.Handler
             var idPropertyName = omm.PersistenceAnnotation.getIdPropertyName(this.theClass);
             var id = p[idPropertyName];
             if (!id){
-                p[idPropertyName] = new mongodb.ObjectID().toString();
+                p[idPropertyName] = uuid.v1();//new mongodb.ObjectID().toString();
                 id = p[idPropertyName];
             }
             var doc:Document = this.serializer.toDocument(p);
@@ -370,7 +370,7 @@ export class Collection<T extends Object> implements omm.Handler
             doc.serial = 0;
             //console.log( "inserting document: ", doc);
 
-            return this.mongoCollection.insert(doc).then(()=>{
+            return this.mongoCollection.insertOne(doc).then(()=>{
                 omm_sp.SerializationPath.updateObjectContexts(p, this);
 
                 //console.log("didInsert");

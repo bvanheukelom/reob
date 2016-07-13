@@ -48,8 +48,8 @@ export interface IMethodOptions{
         }
     }
 
-    export interface EventListener {
-        (i:EventContext<any>, data?:any) : void
+    export interface EventListener<T> {
+        (i:EventContext<T>, data?:any) : void
     }
 
 
@@ -64,7 +64,7 @@ export interface IMethodOptions{
 
     export var entityClasses:{[index:string]:TypeClass<Object>};
     export var registeredObjects:{[index:string]:any};
-    export var eventListeners:{ [index:string] : { [index:string] : Array<EventListener>} };
+    export var eventListeners:{ [index:string] : { [index:string] : Array<EventListener<any>>} };
     export var meteorMethodFunctions:Array<IMethodOptions>;
 
     export function setNonEnumerableProperty(obj:Object, propertyName:string, value:any):void {
@@ -156,7 +156,7 @@ export interface IMethodOptions{
 
     export function CollectionUpdate(p1:any, fName?:string) {
         var options = {};
-        console.log("registering a collection update on property", fName, p1 );
+        console.log("registering a collection update on property", fName, className( p1 ) );
         if (fName) {
             PersistenceAnnotation.setPropertyProperty(p1, fName, "collectionUpdate", options);
         }
@@ -286,7 +286,7 @@ export interface IMethodOptions{
 
     export function Type(typeClassName:string) {
         return function (targetPrototypeObject:any, propertyName:string) {
-            console.log("Registering a type  "+propertyName+" as "+typeClassName, " on ",targetPrototypeObject);
+            console.log("Registering a type  "+propertyName+" as "+typeClassName, " on ",className(targetPrototypeObject));
             PersistenceAnnotation.setPropertyProperty(targetPrototypeObject, propertyName, "type", typeClassName);
         };
     }

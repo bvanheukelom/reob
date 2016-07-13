@@ -4,10 +4,10 @@
 
 import * as omm from "../annotations/PersistenceAnnotation"
 
-export function on<O extends Object>( t:omm.TypeClass<O>, topic:string|omm.EventListener,  f?:omm.EventListener ):void {
+export function on<O extends Object>( t:omm.TypeClass<O>, topic:string|omm.EventListener<any>,  f?:omm.EventListener<any> ):void {
     var className = omm.className(t);
     if( typeof topic == "function" ){
-        f = <omm.EventListener>topic;
+        f = <omm.EventListener<any>>topic;
         topic = null;
     }
 
@@ -79,7 +79,7 @@ export function callEventListeners<O extends Object>( t:omm.TypeClass<O>, topic:
     var className = omm.className(t);
     ctx.topic = topic;
     if( className && omm.eventListeners[className] && omm.eventListeners[className][topic] ){
-        omm.eventListeners[className][topic].forEach( function(el:omm.EventListener){
+        omm.eventListeners[className][topic].forEach( function(el:omm.EventListener<any>){
             try {
                 el(ctx, data);
             }catch( e ){
@@ -89,7 +89,7 @@ export function callEventListeners<O extends Object>( t:omm.TypeClass<O>, topic:
     }
 
     if( topic.indexOf("pre:")!=0 && topic!="pre" && topic.indexOf("post:")!=0 && topic!="post" && className && omm.eventListeners[className] && omm.eventListeners[className]["_all"] ) {
-        omm.eventListeners[className]["_all"].forEach(function (el:omm.EventListener) {
+        omm.eventListeners[className]["_all"].forEach(function (el:omm.EventListener<any>) {
             try{
                 el( ctx, data );
             }catch( e ){

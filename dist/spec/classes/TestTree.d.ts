@@ -6,6 +6,8 @@ export declare class TestTree {
     address: Tests.TestAddress;
     constructor(initialHeight?: number);
     grow(): string;
+    _grow(): string;
+    growAsOnlyACollectionUpdate(): string;
     wither(): void;
     thisThrowsAnError(): void;
     getHeight(): number;

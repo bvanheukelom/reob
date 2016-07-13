@@ -5,13 +5,14 @@
 var omm = require("../omm");
 var wm = require("@bvanheukelom/web-methods");
 var Server = (function () {
-    function Server() {
+    function Server(express) {
         this.collections = {};
         this.singletons = {};
         this.webMethods = new wm.WebMethods();
         this.serializer = new omm.Serializer();
         this.addAllWebMethods();
         this.registerGetter();
+        this.webMethods.registerEndpoint(express);
     }
     Server.prototype.addCollection = function (c) {
         this.collections[c.getName()] = c;
@@ -50,7 +51,8 @@ var Server = (function () {
                 })
                     .then(function (result) {
                     var res = {};
-                    var className = omm.className(result);
+                    var cls = omm.PersistenceAnnotation.getClass(result);
+                    var className = cls ? omm.className(cls) : undefined;
                     if (className && omm.PersistenceAnnotation.getEntityClassByName(className)) {
                         res.className = className;
                     }
@@ -65,9 +67,6 @@ var Server = (function () {
                 return p;
             });
         });
-    };
-    Server.prototype.start = function (expressOrPort) {
-        return this.webMethods.start(expressOrPort);
     };
     Server.prototype.retrieveObject = function (objectId) {
         var singleton = this.singletons[objectId];
@@ -85,7 +84,7 @@ var Server = (function () {
                 });
             }
             else
-                Promise.reject("No collection found to retrieve object. Key:" + objectId);
+                return Promise.reject("No collection found to retrieve object. Key:" + objectId);
         }
     };
     Server.prototype.attachClassName = function (o) {
