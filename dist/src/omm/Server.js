@@ -45,21 +45,14 @@ var Server = (function () {
                     .then(function (object) {
                     // this might be the collection update or another function that is called directly
                     Server.userData = userData;
-                    var r = object[options.name].apply(object, args);
+                    var r = object[options.propertyName].apply(object, args);
                     Server.userData = undefined;
                     return r;
                 })
                     .then(function (result) {
                     var res = {};
-                    var cls = omm.PersistenceAnnotation.getClass(result);
-                    var className = cls ? omm.className(cls) : undefined;
-                    if (className && omm.PersistenceAnnotation.getEntityClassByName(className)) {
-                        res.className = className;
-                    }
-                    var objectContext = omm.SerializationPath.getObjectContext(result);
-                    if (objectContext && objectContext.serializationPath)
-                        res.serializationPath = objectContext.serializationPath.toString();
-                    res.document = _this.serializer.toDocument(result);
+                    if (result)
+                        res.document = _this.serializer.toDocument(result, true);
                     console.log("Result of web method " + options.name + " is ", res);
                     return res;
                 });

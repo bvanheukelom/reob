@@ -7,8 +7,11 @@ import * as omm from "../../src/omm"
 export class TreeService{
 
     treeCollection:Tests.TestTreeCollection;
-    constructor(ttc?:Tests.TestTreeCollection){
+    personCollection:Tests.TestPersonCollection;
+
+    constructor(ttc?:Tests.TestTreeCollection, tpc?:Tests.TestPersonCollection){
         this.treeCollection = ttc;
+        this.personCollection = tpc;
     }
 
     @omm.MeteorMethod({serverOnly:true, resultType:"TestTree"})
@@ -26,5 +29,9 @@ export class TreeService{
         });
     }
 
-
+    @omm.MeteorMethod({ serverOnly:true })
+    aTreeAndAPerson(treeId:string,personId:string):Promise<any> {
+        return Promise.all([this.treeCollection.getByIdOrFail(treeId), this.personCollection.getByIdOrFail(personId)]);
+    }
+    
 }

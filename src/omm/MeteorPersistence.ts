@@ -33,8 +33,8 @@ export class MeteorPersistence {
             // web methods
             omm_annotation.PersistenceAnnotation.getAllMethodFunctionNames().forEach((functionName:string)=>{
                 var methodOptions:omm_annotation.IMethodOptions = omm_annotation.PersistenceAnnotation.getMethodOptions( functionName );
-
-                MeteorPersistence.monkeyPatch(methodOptions.parentObject, functionName, function (originalFunction, ...args:any[]) {
+                console.log("Creating monkey patch for web method "+functionName, methodOptions.propertyName);
+                MeteorPersistence.monkeyPatch(methodOptions.parentObject, methodOptions.propertyName, function (originalFunction, ...args:any[]) {
                     //console.log("updating object:",this, "original function :"+originalFunction);
                     var _ommObjectContext:omm.ObjectContext = this._ommObjectContext;
                     if( !_ommObjectContext || !_ommObjectContext.handler ||!_ommObjectContext.handler.webMethod  ){

@@ -83,7 +83,7 @@ export declare class Collection<T extends Object> implements omm.Handler {
      * @param {omm.Collection~insertCallback} callback
      * @returns {string} the id of the new object
      */
-    insert(p: T): Promise<String>;
+    insert(p: T): Promise<string>;
     getEntityClass(): TypeClass<T>;
     collectionUpdate(entityClass: omm.TypeClass<any>, functionName: string, object: omm.OmmObject, originalFunction: Function, args: any[]): any;
 }

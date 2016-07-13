@@ -223,7 +223,7 @@ export class Collection<T extends Object> implements omm.Handler
 
     protected documentToObject( doc:Document ):T
     {
-        var p:T = this.serializer.toObject<T>(doc, this.theClass, this);
+        var p:any = this.serializer.toObject(doc, this, this.theClass );
         
         return p;
     }
@@ -295,7 +295,7 @@ export class Collection<T extends Object> implements omm.Handler
             documentToSave.serial = (currentSerial || 0) + 1;
 
             // update the collection
-            //console.log("writing document ", documentToSave);
+            // console.log("writing document ", documentToSave);
 
             return this.mongoCollection.updateOne({
                 _id: omm.getId(rootObject),
@@ -318,13 +318,14 @@ export class Collection<T extends Object> implements omm.Handler
                 return cr;
             }
             else if (updateResult.modifiedCount > 1) {
-                return Promise.reject("verifiedUpdate should only update one document");
+                return Promise.reject(new Error("verifiedUpdate should only update one document"));
             } else if( attempt<10 ) {
                 return this.updateOnce(sp, updateFunction, attempt+1 );
                 //console.log("rerunning verified update ");
                 // we need to do this again
             } else {
-                return Promise.reject("tried 10 times to update the document");
+                debugger;
+                return Promise.reject( new Error("tried 10 times to update the document"));
             }
         });
     }
@@ -350,7 +351,7 @@ export class Collection<T extends Object> implements omm.Handler
      * @param {omm.Collection~insertCallback} callback
      * @returns {string} the id of the new object
      */
-    insert( p:T ):Promise<String>
+    insert( p:T ):Promise<string>
     {
 
         var ctx = new omm.EventContext(p, this);

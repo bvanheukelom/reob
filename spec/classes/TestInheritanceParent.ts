@@ -1,6 +1,7 @@
 import * as omm from "../../src/omm"
 import * as Tests from "./Tests"
 
+@omm.Entity
 export class TestInheritanceParent {
     @omm.Type("TestInheritanceOther")
     parentOther : Tests.TestInheritanceOther;

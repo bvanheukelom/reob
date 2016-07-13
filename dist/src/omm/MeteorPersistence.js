@@ -32,7 +32,8 @@ var MeteorPersistence = (function () {
             // web methods
             omm_annotation.PersistenceAnnotation.getAllMethodFunctionNames().forEach(function (functionName) {
                 var methodOptions = omm_annotation.PersistenceAnnotation.getMethodOptions(functionName);
-                MeteorPersistence.monkeyPatch(methodOptions.parentObject, functionName, function (originalFunction) {
+                console.log("Creating monkey patch for web method " + functionName, methodOptions.propertyName);
+                MeteorPersistence.monkeyPatch(methodOptions.parentObject, methodOptions.propertyName, function (originalFunction) {
                     var args = [];
                     for (var _i = 1; _i < arguments.length; _i++) {
                         args[_i - 1] = arguments[_i];

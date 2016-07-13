@@ -5,6 +5,7 @@ export interface IMethodOptions {
     resultType?: string;
     replaceWithCall?: boolean;
     serverOnly?: boolean;
+    propertyName: string;
 }
 /**
  * The omm module

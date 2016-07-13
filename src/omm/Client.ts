@@ -32,7 +32,7 @@ export class Client implements omm.Handler{
         }
         var className = omm.className(cls);
         return this.webMethods.call( "get", className, id ).then( (doc)=>{
-            var o = this.serializer.toObject( doc, cls, this );
+            var o = this.serializer.toObject( doc,  this, cls );
             // var collectionName = omm.PersistenceAnnotation.getCollectionName(cls);
             // var sp = new omm.SerializationPath( collectionName, id );
             omm.SerializationPath.updateObjectContexts( o, this );
@@ -63,13 +63,7 @@ export class Client implements omm.Handler{
             // convert the result from json to an object
             var obje;
             if( result ) {
-                var serializationPath = result.serializationPath;
-                if( result.className ){
-                    obje = this.serializer.toObject(result.document, omm.PersistenceAnnotation.getEntityClassByName(result.className) );
-                    if (serializationPath) {
-                        omm.SerializationPath.setObjectContext(obje, serializationPath, this);
-                    }
-                }
+                obje = this.serializer.toObject(result.document, this );
             }
             return obje;
         });
@@ -83,22 +77,37 @@ export class Client implements omm.Handler{
         return undefined;
     }
 
+    static webMethodRunning:boolean = false;
+
     webMethod(entityClass:omm.TypeClass<any>, functionName:string, object:omm.OmmObject, originalFunction:Function, args:any[] ):any{
-        console.log("On the client, running webMethod:"+functionName);
+        if( !Client.webMethodRunning ) {
+            Client.webMethodRunning = true;
+            try {
+                console.log("On the client, running webMethod:" + functionName);
 
-        var sp:omm.SerializationPath = object._ommObjectContext.serializationPath ?  object._ommObjectContext.serializationPath : undefined;
-        var key = this.getSingletonKey(object) || ( sp ? sp.toString() : undefined );
-        var r:any;
-        var options:omm.IMethodOptions = omm.PersistenceAnnotation.getMethodOptions(functionName);
+                var sp:omm.SerializationPath = object._ommObjectContext.serializationPath ? object._ommObjectContext.serializationPath : undefined;
+                var key = this.getSingletonKey(object) || ( sp ? sp.toString() : undefined );
+                var r:any;
+                var options:omm.IMethodOptions = omm.PersistenceAnnotation.getMethodOptions(functionName);
 
-        if( !options.serverOnly || !key ){
-            console.log( "Running original function of web method "+options.name);
-            r = originalFunction.apply(object, args);
+                if (!options.serverOnly || !key) {
+                    console.log("Running original function of web method " + options.name);
+                    r = originalFunction.apply(object, args);
+                    omm.SerializationPath.updateObjectContexts(object, this);
+                }
+                if (key) {
+                    r = this.call(options.name, key, args);
+                }
+                return r;
+            }
+            catch(e) {
+            }
+            finally {
+                Client.webMethodRunning = false;
+            }
+        }else{
+            console.log("webmethod already running");
         }
-        if( key ) {
-            r = this.call(options.name, key,  args);
-        }
-        return r;
     }
 
     setUserData( ud:any ){

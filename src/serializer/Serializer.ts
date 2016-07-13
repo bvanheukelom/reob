@@ -8,7 +8,6 @@ export class Serializer {
 
     constructor(){
     }
-    
 
     static forEachTypedObject(object:Object, cb:(path:SubObjectPath, object:Object)=>void ){
         this.forEachTypedObjectRecursive(object,object, new SubObjectPath(), [], cb);
@@ -54,52 +53,28 @@ export class Serializer {
                 }
 
             }
-            //else {
-            //    //console.log( "foreign key "+typedPropertyName );
-            //    if (!Serializer.needsLazyLoading(object, typedPropertyName)) {
-            //        var v:MeteorPersistable = object[typedPropertyName];
-            //        if (v) {
-            //            if (PersistenceAnnotation.isArrayOrMap(objectClass, typedPropertyName)) {
-            //                for (var i in v) {
-            //                    var e = v[i];
-            //                    var subObjectPath = path.clone();
-            //                    if (e.getId && e.getId()) {
-            //                        subObjectPath.appendArrayOrMapLookup(typedPropertyName, e.getId());
-            //                    } else {
-            //                        subObjectPath.appendArrayOrMapLookup(typedPropertyName, i);
-            //                    }
-            //                    cb(subObjectPath, v);
-            //                }
-            //            }
-            //            else if (!v._serializationPath)
-            //                that.updateSerializationPaths(v, visited);
-            //        }
-            //    }else{
-            //
-            //    }
-            //}
         });
     }
 
-    toObject<T extends Object>(doc:Document, f?:TypeClass<T>, handler?:any):T {
-        var o:T;
+    toObject(doc:Document, handler?:any, f?:TypeClass<any> ):any {
+        var o:any;
         if(Array.isArray(doc)){
             var r = [];
             for( var j=0; j<(<Array<any>>doc).length; j++ ){
-                r[j] = this.toObjectRecursive(doc[j], undefined, f);
+                r[j] = this.toObjectRecursive(doc[j], undefined, f, handler);
             }
             o = <any>r;
         } else if ( !doc || typeof doc == "string" || typeof doc == "number"  || typeof doc == "date" || typeof doc == "boolean")
-            o =  <T>doc;
+            o =  doc;
         else
-            o =  this.toObjectRecursive(doc,undefined, f);
+            o =  this.toObjectRecursive(doc,undefined, f, handler);
 
         omm.SerializationPath.updateObjectContexts( o, handler );
-        
+
         return o;
     }
 
-    private toObjectRecursive<T extends Object>(doc:Document, parent:Object, f?:TypeClass<T>):T {
+    private toObjectRecursive<T extends Object>(doc:Document, parent:Object, f?:TypeClass<T>, handler?:any):T {
         var o:T;
         if( !doc )
             return <T>doc;
@@ -113,13 +88,18 @@ export class Serializer {
                 o = f["toObject"](doc);
         } else {
             // if the document contains a property called "className" it defines the class that's going to be instantiated
-            if (doc.className){
-                f = PersistenceAnnotation.getEntityClassByName(doc.className);
+            if (doc._className){
+                f = PersistenceAnnotation.getEntityClassByName(doc._className);
             }
             if(!f)
-                throw new Error("Could not determine class of document. Either the document needs to have a 'className' property or a class needs to be passed to the serializer. Document: "+ JSON.stringify( doc ) );
+                throw new Error("Could not determine class of document. Either the document needs to have a '_className' property or a class needs to be passed to the serializer. Document: "+ JSON.stringify( doc ) );
             // instantiate the new object
             o = Object.create(f.prototype);
+
+            if( doc._serializationPath ){
+                var sp = new omm.SerializationPath(doc._serializationPath);
+                omm.SerializationPath.setObjectContext(o, sp, handler);
+            }
 
             PersistenceAnnotation.getParentPropertyNames(f).forEach(function (parentPropertyName:string) {
                 o[parentPropertyName] = parent;
@@ -127,7 +107,7 @@ export class Serializer {
 
             // iterate over all properties
             for (var propertyName in doc) {
-                if( propertyName=="className" )
+                if( propertyName=="_className" || propertyName=="_serializationPath" )
                     continue;
                 var value = doc[propertyName];
                 var objectNameOfTheProperty:string = PersistenceAnnotation.getObjectPropertyName(f, propertyName);
@@ -141,14 +121,14 @@ export class Serializer {
                         var result = Array.isArray(value) ? [] : {};
                         for (var i in value) {
                             var entry:Document = value[i];
-                            entry = this.toObjectRecursive(entry, o, propertyClass);
+                            entry = this.toObjectRecursive(entry, o, propertyClass, handler);
                             result[i] = entry;
                         }
                         // this can only happen once because if the property is accessed the "lazy load" already kicks in
                         o[objectNameOfTheProperty] = result;
                     }
                     else {
-                        o[objectNameOfTheProperty] = this.toObjectRecursive(value, o, propertyClass);
+                        o[objectNameOfTheProperty] = this.toObjectRecursive(value, o, propertyClass, handler );
                     }
                 }
                 else {
@@ -162,18 +142,18 @@ export class Serializer {
         return o;
     }
 
-    toDocument(object:Object ):Document {
-        return this.toDocumentRecursive(object);
+    toDocument( object:Object, includeContext?:boolean ):Document {
+        return this.toDocumentRecursive(object, includeContext);
     }
 
-    private toDocumentRecursive(object:any, rootClass?:TypeClass<Object>, parentObject?:Object, propertyNameOnParentObject?:string):Document {
+    private toDocumentRecursive(object:any, includeContext?:boolean, rootClass?:TypeClass<Object>, parentObject?:Object, propertyNameOnParentObject?:string):Document {
         var result:Document;
         if ( !object || typeof object == "string" || typeof object == "number"  || typeof object == "date" || typeof object == "boolean")
             result =  <Document>object;
         else if( Array.isArray(object) ){
             result = [];
             for( var i=0; i<object.length; i++ ){
-                result[i] = this.toDocumentRecursive(object[i]);
+                result[i] = this.toDocumentRecursive(object[i], includeContext);
             }
         } else {
             var objectClass =  PersistenceAnnotation.getClass(object);
@@ -181,16 +161,8 @@ export class Serializer {
                 result = (<any>objectClass).toDocument( object );
             } else {
                 var parentClass = PersistenceAnnotation.getClass(parentObject);
-                // if (parentObject && propertyNameOnParentObject && PersistenceAnnotation.isStoredAsForeignKeys(parentClass, propertyNameOnParentObject)) {
-                //     return <Document><any>this.objectRetriever.getId(object);
-                // }
-                // else
                 {
-                    result = this.createDocument(object, rootClass ? rootClass : PersistenceAnnotation.getClass(object), parentObject, propertyNameOnParentObject);
-
-                    // if the class of the object does not correspond to the expected type, we add it to the document
-                    if( parentClass && objectClass!=PersistenceAnnotation.getPropertyClass(parentClass, propertyNameOnParentObject))
-                        result.className = className(objectClass);
+                    result = this.createDocument(object, includeContext, rootClass ? rootClass : PersistenceAnnotation.getClass(object), parentObject, propertyNameOnParentObject);
                 }
             }
         }
@@ -198,8 +170,17 @@ export class Serializer {
         return result;
     }
 
-    private createDocument(object:any, rootClass?:TypeClass<Object>, parentObject?:Object, propertyNameOnParentObject?:string):Document {
+    private createDocument(object:any, includeContext?:boolean, rootClass?:TypeClass<Object>, parentObject?:Object, propertyNameOnParentObject?:string):Document {
         var doc:any = {};
+        var context = omm.SerializationPath.getObjectContext(object);
+        if( includeContext ) {
+            if (context && context.serializationPath)
+                doc['_serializationPath'] = context.serializationPath.toString();
+            var cls = omm.PersistenceAnnotation.getClass(object);
+            if (cls && omm.PersistenceAnnotation.isEntity(cls)) {
+                doc['_className'] = omm.className(cls);
+            }
+        }
         var objectClass = PersistenceAnnotation.getClass(object);
         for (var property in object) {
             var value = object[property];
@@ -220,13 +201,13 @@ export class Serializer {
 
                         for (var i in value) {
                             var subObject = value[i];
-                            result[i] = this.toDocumentRecursive(subObject, rootClass, object, property);
+                            result[i] = this.toDocumentRecursive(subObject, includeContext, rootClass, object, property);
                         }
                         doc[documentNameOfTheProperty] = result;
                     }
                     // object
                     else if (typeof object[property] == 'object') {
-                        doc[documentNameOfTheProperty] = this.toDocumentRecursive(value, rootClass, object, property);
+                        doc[documentNameOfTheProperty] = this.toDocumentRecursive(value, includeContext, rootClass, object, property);
                     } else {
                         throw new Error("Unsupported type : "+ typeof value);
                     }

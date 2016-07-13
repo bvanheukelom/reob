@@ -56,7 +56,7 @@ export class Server{
                     .then((object:any)=> {
                         // this might be the collection update or another function that is called directly
                         Server.userData = userData;
-                        var r =  object[options.name].apply(object, args);
+                        var r =  object[options.propertyName].apply(object, args);
                         Server.userData = undefined;
                         return r;
                     })
@@ -64,15 +64,8 @@ export class Server{
                     // convert the result to a document
                     .then((result)=> {
                         var res:any = {};
-                        var cls = omm.PersistenceAnnotation.getClass(result)
-                        var className = cls ? omm.className(cls) : undefined;
-                        if( className && omm.PersistenceAnnotation.getEntityClassByName(className) ){
-                            res.className = className;
-                        }
-                        var objectContext = omm.SerializationPath.getObjectContext(result);
-                        if( objectContext && objectContext.serializationPath )
-                            res.serializationPath = objectContext.serializationPath.toString();
-                        res.document = this.serializer.toDocument(result);
+                        if( result )
+                            res.document = this.serializer.toDocument(result, true);
                         console.log("Result of web method " + options.name + " is ", res);
                         return res;
                     });

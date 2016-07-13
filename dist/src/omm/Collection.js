@@ -176,7 +176,7 @@ var Collection = (function () {
         });
     };
     Collection.prototype.documentToObject = function (doc) {
-        var p = this.serializer.toObject(doc, this.theClass, this);
+        var p = this.serializer.toObject(doc, this, this.theClass);
         return p;
     };
     Collection.prototype.sendEventsCollectedDuringUpdate = function (preUpdateObject, postUpdateObject, rootObject, functionName, serializationPath, events, userData) {
@@ -237,7 +237,7 @@ var Collection = (function () {
             var documentToSave = _this.serializer.toDocument(rootObject);
             documentToSave.serial = (currentSerial || 0) + 1;
             // update the collection
-            //console.log("writing document ", documentToSave);
+            // console.log("writing document ", documentToSave);
             return _this.mongoCollection.updateOne({
                 _id: omm.getId(rootObject),
                 serial: currentSerial
@@ -258,13 +258,14 @@ var Collection = (function () {
                 return cr;
             }
             else if (updateResult.modifiedCount > 1) {
-                return Promise.reject("verifiedUpdate should only update one document");
+                return Promise.reject(new Error("verifiedUpdate should only update one document"));
             }
             else if (attempt < 10) {
                 return _this.updateOnce(sp, updateFunction, attempt + 1);
             }
             else {
-                return Promise.reject("tried 10 times to update the document");
+                debugger;
+                return Promise.reject(new Error("tried 10 times to update the document"));
             }
         });
     };

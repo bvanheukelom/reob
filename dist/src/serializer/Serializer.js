@@ -46,49 +46,25 @@ var Serializer = (function () {
                     }
                 }
             }
-            //else {
-            //    //console.log( "foreign key "+typedPropertyName );
-            //    if (!Serializer.needsLazyLoading(object, typedPropertyName)) {
-            //        var v:MeteorPersistable = object[typedPropertyName];
-            //        if (v) {
-            //            if (PersistenceAnnotation.isArrayOrMap(objectClass, typedPropertyName)) {
-            //                for (var i in v) {
-            //                    var e = v[i];
-            //                    var subObjectPath = path.clone();
-            //                    if (e.getId && e.getId()) {
-            //                        subObjectPath.appendArrayOrMapLookup(typedPropertyName, e.getId());
-            //                    } else {
-            //                        subObjectPath.appendArrayOrMapLookup(typedPropertyName, i);
-            //                    }
-            //                    cb(subObjectPath, v);
-            //                }
-            //            }
-            //            else if (!v._serializationPath)
-            //                that.updateSerializationPaths(v, visited);
-            //        }
-            //    }else{
-            //
-            //    }
-            //}
         });
     };
-    Serializer.prototype.toObject = function (doc, f, handler) {
+    Serializer.prototype.toObject = function (doc, handler, f) {
         var o;
         if (Array.isArray(doc)) {
             var r = [];
             for (var j = 0; j < doc.length; j++) {
-                r[j] = this.toObjectRecursive(doc[j], undefined, f);
+                r[j] = this.toObjectRecursive(doc[j], undefined, f, handler);
             }
             o = r;
         }
         else if (!doc || typeof doc == "string" || typeof doc == "number" || typeof doc == "date" || typeof doc == "boolean")
             o = doc;
         else
-            o = this.toObjectRecursive(doc, undefined, f);
+            o = this.toObjectRecursive(doc, undefined, f, handler);
         omm.SerializationPath.updateObjectContexts(o, handler);
         return o;
     };
-    Serializer.prototype.toObjectRecursive = function (doc, parent, f) {
+    Serializer.prototype.toObjectRecursive = function (doc, parent, f, handler) {
         var o;
         if (!doc)
             return doc;
@@ -100,19 +76,23 @@ var Serializer = (function () {
         }
         else {
             // if the document contains a property called "className" it defines the class that's going to be instantiated
-            if (doc.className) {
-                f = PersistenceAnnotation_1.PersistenceAnnotation.getEntityClassByName(doc.className);
+            if (doc._className) {
+                f = PersistenceAnnotation_1.PersistenceAnnotation.getEntityClassByName(doc._className);
             }
             if (!f)
-                throw new Error("Could not determine class of document. Either the document needs to have a 'className' property or a class needs to be passed to the serializer. Document: " + JSON.stringify(doc));
+                throw new Error("Could not determine class of document. Either the document needs to have a '_className' property or a class needs to be passed to the serializer. Document: " + JSON.stringify(doc));
             // instantiate the new object
             o = Object.create(f.prototype);
+            if (doc._serializationPath) {
+                var sp = new omm.SerializationPath(doc._serializationPath);
+                omm.SerializationPath.setObjectContext(o, sp, handler);
+            }
             PersistenceAnnotation_1.PersistenceAnnotation.getParentPropertyNames(f).forEach(function (parentPropertyName) {
                 o[parentPropertyName] = parent;
             });
             // iterate over all properties
             for (var propertyName in doc) {
-                if (propertyName == "className")
+                if (propertyName == "_className" || propertyName == "_serializationPath")
                     continue;
                 var value = doc[propertyName];
                 var objectNameOfTheProperty = PersistenceAnnotation_1.PersistenceAnnotation.getObjectPropertyName(f, propertyName);
@@ -125,14 +105,14 @@ var Serializer = (function () {
                         var result = Array.isArray(value) ? [] : {};
                         for (var i in value) {
                             var entry = value[i];
-                            entry = this.toObjectRecursive(entry, o, propertyClass);
+                            entry = this.toObjectRecursive(entry, o, propertyClass, handler);
                             result[i] = entry;
                         }
                         // this can only happen once because if the property is accessed the "lazy load" already kicks in
                         o[objectNameOfTheProperty] = result;
                     }
                     else {
-                        o[objectNameOfTheProperty] = this.toObjectRecursive(value, o, propertyClass);
+                        o[objectNameOfTheProperty] = this.toObjectRecursive(value, o, propertyClass, handler);
                     }
                 }
                 else {
@@ -144,17 +124,17 @@ var Serializer = (function () {
         //o._objectRetriever = this.objectRetriever;
         return o;
     };
-    Serializer.prototype.toDocument = function (object) {
-        return this.toDocumentRecursive(object);
+    Serializer.prototype.toDocument = function (object, includeContext) {
+        return this.toDocumentRecursive(object, includeContext);
     };
-    Serializer.prototype.toDocumentRecursive = function (object, rootClass, parentObject, propertyNameOnParentObject) {
+    Serializer.prototype.toDocumentRecursive = function (object, includeContext, rootClass, parentObject, propertyNameOnParentObject) {
         var result;
         if (!object || typeof object == "string" || typeof object == "number" || typeof object == "date" || typeof object == "boolean")
             result = object;
         else if (Array.isArray(object)) {
             result = [];
             for (var i = 0; i < object.length; i++) {
-                result[i] = this.toDocumentRecursive(object[i]);
+                result[i] = this.toDocumentRecursive(object[i], includeContext);
             }
         }
         else {
@@ -164,23 +144,25 @@ var Serializer = (function () {
             }
             else {
                 var parentClass = PersistenceAnnotation_1.PersistenceAnnotation.getClass(parentObject);
-                // if (parentObject && propertyNameOnParentObject && PersistenceAnnotation.isStoredAsForeignKeys(parentClass, propertyNameOnParentObject)) {
-                //     return <Document><any>this.objectRetriever.getId(object);
-                // }
-                // else
                 {
-                    result = this.createDocument(object, rootClass ? rootClass : PersistenceAnnotation_1.PersistenceAnnotation.getClass(object), parentObject, propertyNameOnParentObject);
-                    // if the class of the object does not correspond to the expected type, we add it to the document
-                    if (parentClass && objectClass != PersistenceAnnotation_1.PersistenceAnnotation.getPropertyClass(parentClass, propertyNameOnParentObject))
-                        result.className = PersistenceAnnotation_1.className(objectClass);
+                    result = this.createDocument(object, includeContext, rootClass ? rootClass : PersistenceAnnotation_1.PersistenceAnnotation.getClass(object), parentObject, propertyNameOnParentObject);
                 }
             }
         }
         //console.log("returning document:",result);
         return result;
     };
-    Serializer.prototype.createDocument = function (object, rootClass, parentObject, propertyNameOnParentObject) {
+    Serializer.prototype.createDocument = function (object, includeContext, rootClass, parentObject, propertyNameOnParentObject) {
         var doc = {};
+        var context = omm.SerializationPath.getObjectContext(object);
+        if (includeContext) {
+            if (context && context.serializationPath)
+                doc['_serializationPath'] = context.serializationPath.toString();
+            var cls = omm.PersistenceAnnotation.getClass(object);
+            if (cls && omm.PersistenceAnnotation.isEntity(cls)) {
+                doc['_className'] = omm.className(cls);
+            }
+        }
         var objectClass = PersistenceAnnotation_1.PersistenceAnnotation.getClass(object);
         for (var property in object) {
             var value = object[property];
@@ -199,12 +181,12 @@ var Serializer = (function () {
                             result = {};
                         for (var i in value) {
                             var subObject = value[i];
-                            result[i] = this.toDocumentRecursive(subObject, rootClass, object, property);
+                            result[i] = this.toDocumentRecursive(subObject, includeContext, rootClass, object, property);
                         }
                         doc[documentNameOfTheProperty] = result;
                     }
                     else if (typeof object[property] == 'object') {
-                        doc[documentNameOfTheProperty] = this.toDocumentRecursive(value, rootClass, object, property);
+                        doc[documentNameOfTheProperty] = this.toDocumentRecursive(value, includeContext, rootClass, object, property);
                     }
                     else {
                         throw new Error("Unsupported type : " + typeof value);

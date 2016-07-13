@@ -6,6 +6,7 @@ export interface IMethodOptions{
     resultType?:string;
     replaceWithCall?:boolean;
     serverOnly?:boolean;
+    propertyName:string;
 }
 /**
  * The omm module
@@ -345,7 +346,8 @@ export interface IMethodOptions{
         if (typeof p1 == "object" && typeof p2 == "string") {
             var options:IMethodOptions = { };
             options.parentObject = p1;
-            options.name = p2;
+            options.name = className(p1)+"."+p2;
+            options.propertyName = p2;
             meteorMethodFunctions.push(options);
         } else {
             return function (t:any, functionName:string, objectDescriptor:any) {
@@ -358,9 +360,10 @@ export interface IMethodOptions{
                     options.name = p1;
                 }
                 options.parentObject = t;
-                if (!options.name) {
-                    options.name = functionName;
-                }
+
+                options.propertyName = functionName;
+                options.name = className(t)+"."+functionName;
+
                 meteorMethodFunctions.push(options);
             };
         }

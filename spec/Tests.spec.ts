@@ -12,7 +12,7 @@ var co = require("co");
 
 import "./classes/TestLeaf"
 
-// jasmine.DEFAULT_TIMEOUT_INTERVAL = 10000000;
+jasmine.DEFAULT_TIMEOUT_INTERVAL = 10000000;
 
 describe("Omm both on client and server", function () {
 
@@ -28,13 +28,12 @@ describe("Omm both on client and server", function () {
         omm.init();
         mongodb.MongoClient.connect( "mongodb://localhost/test", {promiseLibrary:Promise}).then((d:mongodb.Db)=>{
             var app = express();
-            console.log("all:", app['all']);
             server = new omm.Server(app);
             db = d;
             personCollection = new Tests.TestPersonCollection(db);
             treeCollection = new Tests.TestTreeCollection(db);
 
-            treeService = new Tests.TreeService( treeCollection );
+            treeService = new Tests.TreeService( treeCollection, personCollection );
             clientTreeService = new Tests.TreeService();
 
             server.addCollection(personCollection);
@@ -71,7 +70,7 @@ describe("Omm both on client and server", function () {
 
     it("knows meteor method annotations ", function () {
         var methodNames = omm.PersistenceAnnotation.getMethodFunctionNames(Tests.TestPerson.prototype);
-        expect(methodNames).toContain("addAddress");
+        expect(methodNames).toContain("TestPerson.addAddress");
         expect(methodNames.length).toBeGreaterThan(0);
     });
 
@@ -93,7 +92,7 @@ describe("Omm both on client and server", function () {
     });
 
 
-    it("can load objects that have sub objects", function () {
+    it("can load objects that have sub objects", function (done) {
         var id = Date.now()+"t444";
         var t1:Tests.TestPerson = new Tests.TestPerson(id);
         t1.phoneNumber = new Tests.TestPhoneNumber("1212");
@@ -102,11 +101,14 @@ describe("Omm both on client and server", function () {
         }).then((p:Tests.TestPerson)=>{
             expect(p).toBeDefined();
             expect(p.phoneNumber instanceof Tests.TestPhoneNumber).toBeTruthy();
+            done();
+
         });
     });
 
     it("can run collection updates from within another method", function (done) {
         var t1:Tests.TestTree = new Tests.TestTree(15);
+        debugger;
         treeCollection.insert(t1).then( (id:string)=> {
             return clientTreeService.growTree( id ).thenReturn( id );
         }).then((id)=>{
@@ -117,7 +119,7 @@ describe("Omm both on client and server", function () {
         });
     });
 
-    it("can load objects that have sub objects (in an array) which have a parent reference ", function () {
+    it("can load objects that have sub objects (in an array) which have a parent reference ", function (done) {
         var t1:Tests.TestTree = new Tests.TestTree(10);
         var i;
         treeCollection.insert(t1).then((id:string)=>{
@@ -132,11 +134,33 @@ describe("Omm both on client and server", function () {
             expect(t).toBeDefined();
             expect(t.getLeaves()[0] instanceof Tests.TestLeaf).toBeTruthy();
             expect(t.getLeaves()[0].getTree() instanceof Tests.TestTree).toBeTruthy();
+            done();
+
         });
 
     });
 
-    it("can save objects that have sub objects (in an array) which have a parent reference", function () {
+    it("can load objects that are embedded deeper in a non entity structure", function (done) {
+        var t1:Tests.TestTree = new Tests.TestTree(10);
+        var i;
+        debugger;
+        Promise.all([treeCollection.insert(t1), personCollection.newPerson("norbert")]).then((arr)=>{
+            return clientTreeService.aTreeAndAPerson(arr[0],arr[1].getId());
+        }).then((arr)=> {
+            expect(arr).toBeDefined();
+            expect(arr.length).toBe(2);
+            var tree = arr[0];
+            var person = arr[1];
+            expect( tree instanceof Tests.TestTree ).toBeTruthy();
+            expect( person instanceof Tests.TestPerson ).toBeTruthy();
+            expect( person instanceof Tests.TestPerson ).toBeTruthy();
+            var r = tree.grow();
+            expect( r.then ).toBeDefined();
+            done();
+        });
+    });
+
+    it("can save objects that have sub objects (in an array) which have a parent reference", function (done) {
         var t1:Tests.TestTree = new Tests.TestTree(10);
         t1.grow();
         var i;
@@ -146,6 +170,7 @@ describe("Omm both on client and server", function () {
         }).then((t:Tests.TestTree)=> {
             expect(t).toBeDefined();
             expect(t.getLeaves()[0] instanceof Tests.TestLeaf).toBeTruthy();
+            done();
         });
     });
 
@@ -206,7 +231,7 @@ describe("Omm both on client and server", function () {
         expect(sp).toBeDefined();
         expect(sp.toString()).toBe("TheTreeCollection[tree1].leaves|leaf11");
     });
-    //
+
     it("serializes basic objects", function () {
         var t1:Tests.TestPerson = new Tests.TestPerson("tp1");
         t1.phoneNumber = new Tests.TestPhoneNumber("12345");
@@ -214,13 +239,13 @@ describe("Omm both on client and server", function () {
         expect(doc._id).toBe("tp1");
         expect(doc["phoneNumber"]["pn"]).toBe("12345");
     });
-    // //
+
     it("deserializes basic objects", function () {
         var serializer:omm.Serializer = new omm.Serializer();
         var t1:Tests.TestPerson = new Tests.TestPerson("tp1");
         t1.phoneNumber = new Tests.TestPhoneNumber("12345");
         var doc = serializer.toDocument(t1);
-        var t1:Tests.TestPerson = serializer.toObject(doc, Tests.TestPerson);
+        var t1:Tests.TestPerson = serializer.toObject(doc, undefined, Tests.TestPerson);
         expect(t1.getId()).toBe("tp1");
         expect(t1.phoneNumber instanceof Tests.TestPhoneNumber).toBeTruthy();
         expect(t1.phoneNumber.getNumber()).toBe("12345");
@@ -233,7 +258,7 @@ describe("Omm both on client and server", function () {
         t1.grow();
 
         var doc = serializer.toDocument(t1);
-        var t1:Tests.TestTree = serializer.toObject(doc, Tests.TestTree);
+        var t1:Tests.TestTree = serializer.toObject(doc, undefined, Tests.TestTree);
         expect(t1.treeId).toBe("t1");
         expect(t1.getLeaves()[0] instanceof Tests.TestLeaf).toBeTruthy();
     });
@@ -316,29 +341,11 @@ describe("Omm both on client and server", function () {
         tp.grow();
         var serializer = new omm.Serializer();
         var doc:any = serializer.toDocument(tp);
-        var tp2 = serializer.toObject(doc,Tests.TestTree );
+        var tp2 = serializer.toObject(doc,undefined, Tests.TestTree );
         expect( tp2.getLeaves()[0].parent ).toBeDefined();
         expect( tp2.getLeaves()[0].parent ).toBe( tp2 );
     });
 
-    it("serializes the classname of unexpected objects", function () {
-        var t:Tests.TestPerson = new Tests.TestPerson("id1", "jake");
-        t.addresses.push(<any>new Tests.TestLeaf("leafId1"));
-        var doc = new omm.Serializer().toDocument(t);
-        expect(doc["addresses"][0].className).toBe("TestLeaf");
-        expect(doc["addresses"][0]._id).toBe("leafId1");
-    });
-    //
-    it("deserializes unexpected objects", function () {
-        var t:Tests.TestPerson = new Tests.TestPerson("id1", "jake");
-        t.addresses.push(<any>new Tests.TestLeaf("leafId1"));
-        var s = new omm.Serializer();
-        var doc = s.toDocument(t);
-        var o:any = s.toObject(doc, Tests.TestPerson);
-        expect(o instanceof Tests.TestPerson).toBeTruthy();
-        expect(o.addresses[0] instanceof Tests.TestLeaf).toBeTruthy();
-    });
-    //
     it("deserializes local objects", function () {
         var car = new Tests.TestCar();
         car.brand = "VW";
@@ -347,7 +354,7 @@ describe("Omm both on client and server", function () {
         car.wheel.radius = 10;
         var s:omm.Serializer = new omm.Serializer();
         var document:any = s.toDocument(car);
-        var otherCar = s.toObject(document, Tests.TestCar);
+        var otherCar = s.toObject(document, undefined, Tests.TestCar);
         var doc:any = s.toDocument(otherCar);
 
         expect(doc).toBeDefined();
@@ -364,7 +371,7 @@ describe("Omm both on client and server", function () {
         car.wheel.radius = 10;
         var s:omm.Serializer = new omm.Serializer();
         var doc:any = s.toDocument(car);
-        var otherCar = s.toObject(doc, Tests.TestCar);
+        var otherCar = s.toObject(doc, undefined, Tests.TestCar);
         expect(otherCar).toBeDefined();
         expect(otherCar.brand).toBe("VW");
         expect(otherCar.wheel.radius).toBe(10);
@@ -404,7 +411,7 @@ describe("Omm both on client and server", function () {
         var otherCar:Tests.TestCar = s.toObject({
             brand: "Monster",
             wheels: [{}, {}, {}, {radius: 12}]
-        }, Tests.TestCar);
+        }, undefined, Tests.TestCar);
         expect(otherCar).toBeDefined();
         expect(otherCar.brand).toBe("Monster");
         expect(otherCar.wheels[3].radius).toBe(12);
@@ -435,7 +442,7 @@ describe("Omm both on client and server", function () {
         child.parentOther.name = "Groundhog";
         child.parentOther.otherness = 84;
         var doc = s.toDocument(child);
-        var child2 = s.toObject(doc, Tests.TestInheritanceChild);
+        var child2 = s.toObject(doc, undefined, Tests.TestInheritanceChild);
         expect(child2.parentOther instanceof Tests.TestInheritanceOther).toBeTruthy();
         expect(!(child2.childOther instanceof Tests.TestInheritanceOther)).toBeFalsy();
         expect(child.getChildThing()).toBe("Otter 42 Groundhog 84");
@@ -447,8 +454,10 @@ describe("Omm both on client and server", function () {
         parent.parentOther = new Tests.TestInheritanceOther();
         parent.parentOther.name = "Groundhog";
         parent.parentOther.otherness = 84;
-        var doc:any = s.toDocument(parent);
-        var parent2 = s.toObject(doc, Tests.TestInheritanceParent);
+        debugger;
+        var doc:any = s.toDocument(parent, true);
+        console.log(doc);
+        var parent2 = s.toObject(doc, undefined, Tests.TestInheritanceParent);
         expect(parent2.parentOther instanceof Tests.TestInheritanceOther).toBeTruthy();
         expect(doc.parentOther instanceof Tests.TestInheritanceOther).toBeFalsy();
     });
@@ -462,7 +471,7 @@ describe("Omm both on client and server", function () {
         child.parentOther.name = "Groundhog";
         child.parentOther.otherness = 84;
         var doc:any = s.toDocument(child);
-        var child2 = s.toObject(doc, Tests.TestInheritanceChild);
+        var child2 = s.toObject(doc, undefined, Tests.TestInheritanceChild);
         expect(doc.ignoredOther).toBeUndefined();
         expect(child2.ignoredOther).toBeUndefined();
     });
@@ -577,9 +586,9 @@ describe("Omm both on client and server", function () {
         person.addresses.push(<any>child);
         person.addresses.push(<any>wheel);
         person.addresses.push(<any>car);
-        var doc:any = s.toDocument(person);
-        var person2 = s.toObject(doc, Tests.TestPerson);
-
+        var doc:any = s.toDocument(person, true);
+        var person2 = s.toObject(doc, undefined, Tests.TestPerson);
+        console.log(doc);
         expect(person2.addresses[0] instanceof Tests.TestInheritanceChild).toBeTruthy();
         expect(person2.addresses[1] instanceof Tests.TestWheel).toBeTruthy();
         expect(person2.addresses[2] instanceof Tests.TestCar).toBeTruthy();

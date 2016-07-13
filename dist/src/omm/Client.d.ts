@@ -12,6 +12,7 @@ export declare class Client implements omm.Handler {
     load<T>(cls: omm.TypeClass<T>, id: string): Promise<T>;
     call(methodName: string, objectId: string, args: any[]): Promise<any>;
     private getSingletonKey(o);
+    static webMethodRunning: boolean;
     webMethod(entityClass: omm.TypeClass<any>, functionName: string, object: omm.OmmObject, originalFunction: Function, args: any[]): any;
     setUserData(ud: any): void;
 }

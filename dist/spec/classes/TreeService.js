@@ -11,8 +11,9 @@ var __decorate = (this && this.__decorate) || function (decorators, target, key,
 var Tests = require("./Tests");
 var omm = require("../../src/omm");
 var TreeService = (function () {
-    function TreeService(ttc) {
+    function TreeService(ttc, tpc) {
         this.treeCollection = ttc;
+        this.personCollection = tpc;
     }
     TreeService.prototype.insertTree = function (height) {
         var t = new Tests.TestTree(height);
@@ -25,12 +26,18 @@ var TreeService = (function () {
             return t.growAsOnlyACollectionUpdate();
         });
     };
+    TreeService.prototype.aTreeAndAPerson = function (treeId, personId) {
+        return Promise.all([this.treeCollection.getByIdOrFail(treeId), this.personCollection.getByIdOrFail(personId)]);
+    };
     __decorate([
         omm.MeteorMethod({ serverOnly: true, resultType: "TestTree" })
     ], TreeService.prototype, "insertTree", null);
     __decorate([
         omm.MeteorMethod({ serverOnly: true })
     ], TreeService.prototype, "growTree", null);
+    __decorate([
+        omm.MeteorMethod({ serverOnly: true })
+    ], TreeService.prototype, "aTreeAndAPerson", null);
     return TreeService;
 }());
 exports.TreeService = TreeService;

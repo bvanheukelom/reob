@@ -1,7 +1,8 @@
 export interface Document {
     _id?: string;
     serial?: number;
-    className?: string;
+    _className?: string;
+    _serializationPath?: string;
     [x: string]: any;
 }
 export default Document;

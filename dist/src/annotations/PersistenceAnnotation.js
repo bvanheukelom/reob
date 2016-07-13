@@ -304,7 +304,8 @@ function MeteorMethod(p1, p2) {
     if (typeof p1 == "object" && typeof p2 == "string") {
         var options = {};
         options.parentObject = p1;
-        options.name = p2;
+        options.name = className(p1) + "." + p2;
+        options.propertyName = p2;
         exports.meteorMethodFunctions.push(options);
     }
     else {
@@ -318,9 +319,8 @@ function MeteorMethod(p1, p2) {
                 options.name = p1;
             }
             options.parentObject = t;
-            if (!options.name) {
-                options.name = functionName;
-            }
+            options.propertyName = functionName;
+            options.name = className(t) + "." + functionName;
             exports.meteorMethodFunctions.push(options);
         };
     }

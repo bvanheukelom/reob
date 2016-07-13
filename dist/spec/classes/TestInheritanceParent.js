@@ -18,6 +18,9 @@ var TestInheritanceParent = (function () {
     __decorate([
         omm.Ignore
     ], TestInheritanceParent.prototype, "ignoredOther", void 0);
+    TestInheritanceParent = __decorate([
+        omm.Entity
+    ], TestInheritanceParent);
     return TestInheritanceParent;
 }());
 exports.TestInheritanceParent = TestInheritanceParent;
