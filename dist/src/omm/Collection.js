@@ -15,6 +15,8 @@ var Collection = (function () {
      */
     function Collection(db, entityClass, collectionName) {
         this.eventListeners = {};
+        // the handler function for the collection updates of objects loaded via this collection
+        this.updating = false;
         this.serializer = new omm.Serializer();
         if (!collectionName)
             collectionName = omm.getDefaultCollectionName(entityClass);
@@ -218,7 +220,9 @@ var Collection = (function () {
             omm_event.resetQueue();
             // call the update function
             var result = {};
+            // This is where the update function is called
             result.result = updateFunction(object);
+            // handle events sent during the update
             result.events = omm_event.getQueue();
             result.object = object;
             omm_event.resetQueue();
@@ -315,9 +319,12 @@ var Collection = (function () {
     Collection.prototype.getEntityClass = function () {
         return this.theClass;
     };
-    // the handler function for the collection updates of objects loaded via this collection
     Collection.prototype.collectionUpdate = function (entityClass, functionName, object, originalFunction, args) {
         var _this = this;
+        if (this.updating) {
+            console.log("Skipping collection update '" + omm.className(entityClass) + "." + functionName + "' . Collection update already in progress. Calling original function.");
+            return originalFunction.apply(object, args);
+        }
         console.log('doing a collection upate in the collection for ' + functionName);
         var rootObject;
         var objectPromise;
@@ -345,8 +352,14 @@ var Collection = (function () {
                 }
                 else {
                     var resultPromise = _this.update(sp, function (subObject) {
-                        var r2 = originalFunction.apply(subObject, args);
-                        return r2;
+                        _this.updating = true;
+                        try {
+                            var r2 = originalFunction.apply(subObject, args);
+                            return r2;
+                        }
+                        finally {
+                            _this.updating = false;
+                        }
                     }).then(function (r) {
                         console.log("Events collected during updating ", r.events);
                         _this.sendEventsCollectedDuringUpdate(r.object, r.object, r.rootObject, functionName, sp, r.events, ud);
@@ -355,8 +368,8 @@ var Collection = (function () {
                         ctx.serializationPath = sp;
                         ctx.rootObject = r.rootObject;
                         ctx.userData = ud;
-                        var docBefore = _this.serializer.toDocument(object);
-                        var docAfter = _this.serializer.toDocument(r.object);
+                        var docBefore = _this.serializer.toDocument(rootObject);
+                        var docAfter = _this.serializer.toDocument(r.rootObject);
                         ctx.jsonDiff = jdp.diff(docBefore, docAfter);
                         return _this.emitLater("didUpdate", ctx).thenReturn(r.result);
                     });

@@ -891,6 +891,7 @@ describe("Omm both on client and server", function () {
         })
             .then(function (tree) {
             expect(tree).toBeDefined();
+            expect(tree instanceof Tests.TestTree).toBeTruthy();
             done();
         });
     });
@@ -1000,5 +1001,6 @@ describe("Omm both on client and server", function () {
             expect(l.listener).toHaveBeenCalled();
         }).then(done);
     });
+    // test that calls a nested collection update (one in the other)
 });
 //# sourceMappingURL=Tests.spec.js.map

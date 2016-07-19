@@ -8,6 +8,7 @@ var jsd = require("jsondiffpatch");
 var Client = (function () {
     function Client(host, port, network) {
         this.singletons = {};
+        this.webMethodRunning = false;
         if (!omm.MeteorPersistence.isInitialized())
             throw new Error("omm is not initialized.");
         var endpointUrl = "http://" + host + ":" + port + "/methods";
@@ -25,10 +26,9 @@ var Client = (function () {
         if (typeof clsOrString != "string")
             collectionName = omm.className(clsOrString);
         return this.webMethods.call("get", collectionName, id).then(function (result) {
-            var document = result.document;
-            var serializationPath = new omm.SerializationPath(result.serializationPath);
-            var className = result.className;
-            var o = _this.serializer.toObject(document, _this, omm.PersistenceAnnotation.getEntityClassByName(className), serializationPath);
+            console.log("Client loaded :", result);
+            var o = _this.serializer.toObject(result, _this);
+            console.log("Client returned ", o);
             return o;
         });
     };
@@ -83,47 +83,38 @@ var Client = (function () {
         return undefined;
     };
     Client.prototype.webMethod = function (entityClass, functionName, object, originalFunction, args) {
-        if (!Client.webMethodRunning) {
-            Client.webMethodRunning = true;
+        if (this.webMethodRunning) {
+            console.log("Webmethod already running. Skipping, calling original function. Function name: " + functionName);
+            return originalFunction.apply(object, args);
+        }
+        console.log("On the client, running webMethod:" + functionName);
+        var sp = object._ommObjectContext.serializationPath ? object._ommObjectContext.serializationPath : undefined;
+        var key = this.getSingletonKey(object) || (sp ? sp.toString() : undefined);
+        var r;
+        var options = omm.PersistenceAnnotation.getMethodOptions(functionName);
+        if (key) {
+            r = this.call(options.name, key, args);
+        }
+        if (!options.serverOnly || !key) {
+            console.log("Running original function of web method " + options.name);
+            var rOriginal;
+            this.webMethodRunning = true;
             try {
-                console.log("On the client, running webMethod:" + functionName);
-                var sp = object._ommObjectContext.serializationPath ? object._ommObjectContext.serializationPath : undefined;
-                var key = this.getSingletonKey(object) || (sp ? sp.toString() : undefined);
-                var r;
-                var options = omm.PersistenceAnnotation.getMethodOptions(functionName);
-                if (key) {
-                    r = this.call(options.name, key, args);
-                }
-                if (!options.serverOnly || !key) {
-                    console.log("Running original function of web method " + options.name);
-                    var rOriginal = originalFunction.apply(object, args);
-                    if (!r)
-                        r = rOriginal;
-                    omm.SerializationPath.updateObjectContexts(object, this);
-                }
-                return r;
-            }
-            catch (e) {
-                console.log("Error running client side function for web method " + functionName + ". ", e);
+                rOriginal = originalFunction.apply(object, args);
             }
             finally {
-                Client.webMethodRunning = false;
+                this.webMethodRunning = false;
             }
+            if (!r)
+                r = rOriginal;
+            omm.SerializationPath.updateObjectContexts(object, this);
         }
-        else {
-            console.log("webmethod already running");
-        }
+        return r;
     };
     Client.prototype.setUserData = function (ud) {
         this.userData = ud;
     };
-    Client.webMethodRunning = false;
     return Client;
 }());
 exports.Client = Client;
-// web method handler on the client side?
-// patch the objects function to call the web method
-// MeteorPersistence.monkeyPatch(options.parentObject, options.name, function (originalFunction, ...a:any[]) {
-//
-// }); 
 //# sourceMappingURL=Client.js.map

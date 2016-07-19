@@ -67,7 +67,7 @@ export class Serializer {
         } else if ( !doc || typeof doc == "string" || typeof doc == "number"  || typeof doc == "date" || typeof doc == "boolean")
             o =  doc;
         else
-            o =  this.toObjectRecursive(doc,undefined, f, handler);
+            o =  this.toObjectRecursive(doc, undefined, f, handler);
 
         if( handler && serializationPath ) {
             omm.SerializationPath.setObjectContext(o, serializationPath, handler);
@@ -124,7 +124,7 @@ export class Serializer {
                         var result = Array.isArray(value) ? [] : {};
                         for (var i in value) {
                             var entry:Document = value[i];
-                            entry = this.toObjectRecursive(entry, o, propertyClass);
+                            entry = this.toObjectRecursive(entry, o, propertyClass, handler);
                             result[i] = entry;
                         }
                         // this can only happen once because if the property is accessed the "lazy load" already kicks in

@@ -52,8 +52,9 @@ var Server = (function () {
                 })
                     .then(function (result) {
                     var res = {};
-                    if (result)
+                    if (result) {
                         res.document = _this.serializer.toDocument(result, true);
+                    }
                     console.log("Result of web method " + options.name + " is ", res);
                     return res;
                 });
@@ -97,12 +98,8 @@ var Server = (function () {
             // var collectionName  = type ? omm.PersistenceAnnotation.getCollectionName( type ) : undefined;
             var objPromise = collectionName ? _this.retrieveObject(collectionName + "[" + objectId + "]") : undefined;
             return objPromise.then(function (obj) {
-                var doc = obj ? _this.serializer.toDocument(obj) : undefined;
-                return {
-                    document: doc,
-                    serializationPath: collectionName + "[" + objectId + "]",
-                    className: omm.className(obj)
-                };
+                var doc = obj ? _this.serializer.toDocument(obj, true) : undefined;
+                return doc;
             });
         });
     };

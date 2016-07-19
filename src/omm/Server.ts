@@ -65,8 +65,9 @@ export class Server{
                     // convert the result to a document
                     .then((result)=> {
                         var res:any = {};
-                        if( result )
+                        if( result ){
                             res.document = this.serializer.toDocument(result, true);
+                        }
                         console.log("Result of web method " + options.name + " is ", res);
                         return res;
                     });
@@ -113,12 +114,8 @@ export class Server{
             // var collectionName  = type ? omm.PersistenceAnnotation.getCollectionName( type ) : undefined;
             var objPromise = collectionName ? this.retrieveObject(collectionName+"["+objectId+"]") : undefined;
             return objPromise.then((obj)=>{
-                var doc = obj ? this.serializer.toDocument(obj) : undefined;
-                return {
-                    document:doc,
-                    serializationPath:collectionName+"["+objectId+"]",
-                    className:omm.className(obj)
-                };
+                var doc = obj ? this.serializer.toDocument(obj, true) : undefined;
+                return doc;
             });
         });
     }

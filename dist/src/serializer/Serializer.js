@@ -108,7 +108,7 @@ var Serializer = (function () {
                         var result = Array.isArray(value) ? [] : {};
                         for (var i in value) {
                             var entry = value[i];
-                            entry = this.toObjectRecursive(entry, o, propertyClass);
+                            entry = this.toObjectRecursive(entry, o, propertyClass, handler);
                             result[i] = entry;
                         }
                         // this can only happen once because if the property is accessed the "lazy load" already kicks in

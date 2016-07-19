@@ -283,7 +283,7 @@ describe("Omm both on client and server", function () {
         expect(omm.PersistenceAnnotation.getDocumentPropertyName(Tests.TestLeaf, "greenNess")).toBe("greenIndex");
         expect(omm.PersistenceAnnotation.getObjectPropertyName(Tests.TestLeaf, "greenIndex")).toBe("greenNess");
     });
-    
+
     it("can call functions that have are also webMethods normally", function (done) {
         Promise.cast( treeCollection.serverFunction("World", new Tests.TestTree(212), 42) ).then((r)=>{
             expect(r).toBe("Hello World!");
@@ -998,6 +998,7 @@ describe("Omm both on client and server", function () {
 
         });
     });
+    
     it("can load trees ", function (done) {
         treeCollection.newTree(20)
             .then((tree:Tests.TestTree)=>{
@@ -1006,6 +1007,7 @@ describe("Omm both on client and server", function () {
             })
             .then((tree:Tests.TestTree)=>{
                 expect( tree ).toBeDefined();
+                expect( tree instanceof Tests.TestTree ).toBeTruthy();
                 done();
             });
     });
@@ -1124,5 +1126,7 @@ describe("Omm both on client and server", function () {
             expect( l.listener ).toHaveBeenCalled();
         }).then(done);
     });
+
+    // test that calls a nested collection update (one in the other)
 
 });

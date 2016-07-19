@@ -83,6 +83,7 @@ export declare class Collection<T extends Object> implements omm.Handler {
      */
     insert(p: T): Promise<string>;
     getEntityClass(): TypeClass<T>;
+    protected updating: boolean;
     collectionUpdate(entityClass: omm.TypeClass<any>, functionName: string, object: omm.OmmObject, originalFunction: Function, args: any[]): any;
 }
 export interface CollectionUpdateResult {

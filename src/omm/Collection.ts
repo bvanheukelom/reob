@@ -270,7 +270,11 @@ export class Collection<T extends Object> implements omm.Handler
             omm_event.resetQueue();
             // call the update function
             var result:any = {};
+            
+            // This is where the update function is called
             result.result = updateFunction(object);
+            
+            // handle events sent during the update
             result.events = omm_event.getQueue();
             result.object = object;
             omm_event.resetQueue();
@@ -383,7 +387,15 @@ export class Collection<T extends Object> implements omm.Handler
     }
 
     // the handler function for the collection updates of objects loaded via this collection
+    protected updating:boolean = false;
+    
     collectionUpdate(entityClass:omm.TypeClass<any>, functionName:string, object:omm.OmmObject, originalFunction:Function, args:any[] ):any{
+        if( this.updating ){
+            console.log("Skipping collection update '"+omm.className(entityClass)+"."+functionName+"' . Collection update already in progress. Calling original function.");
+            return originalFunction.apply(object, args);
+        }
+
+
         console.log( 'doing a collection upate in the collection for '+functionName );
 
         var rootObject;
@@ -417,9 +429,14 @@ export class Collection<T extends Object> implements omm.Handler
                 if( ctx.cancelledWithError() ){
                     return Promise.reject(ctx.cancelledWithError());
                 } else {
-                    var resultPromise:Promise<CollectionUpdateResult> = this.update( sp, function (subObject) {
-                        var r2 = originalFunction.apply(subObject, args);
-                        return r2;
+                    var resultPromise:Promise<CollectionUpdateResult> = this.update( sp,  (subObject) => {
+                        this.updating = true;
+                        try{
+                            var r2 = originalFunction.apply(subObject, args);
+                            return r2;
+                        }finally{
+                            this.updating = false;
+                        }
                     }).then((r:CollectionUpdateResult)=>{
                         console.log("Events collected during updating ", r.events);
                         this.sendEventsCollectedDuringUpdate( r.object, r.object, r.rootObject,functionName, sp, r.events, ud );
@@ -429,8 +446,8 @@ export class Collection<T extends Object> implements omm.Handler
                         ctx.serializationPath = sp;
                         ctx.rootObject = r.rootObject;
                         ctx.userData = ud;
-                        var docBefore = this.serializer.toDocument(object);
-                        var docAfter = this.serializer.toDocument(r.object);
+                        var docBefore = this.serializer.toDocument(rootObject);
+                        var docAfter = this.serializer.toDocument(r.rootObject);
                         ctx.jsonDiff = jdp.diff( docBefore, docAfter );
                         return this.emitLater( "didUpdate", ctx ).thenReturn(r.result);
                     });
