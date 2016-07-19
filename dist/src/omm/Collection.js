@@ -4,6 +4,7 @@ var omm_sp = require("./SerializationPath");
 var omm_event = require("../event/OmmEvent");
 var Promise = require("bluebird");
 var uuid = require("node-uuid");
+var jdp = require("jsondiffpatch");
 var Collection = (function () {
     /**
      * Represents a Mongo collection that contains entities.
@@ -18,7 +19,7 @@ var Collection = (function () {
         if (!collectionName)
             collectionName = omm.getDefaultCollectionName(entityClass);
         // this might have to go away
-        omm.addCollectionRoot(entityClass, collectionName);
+        // omm.addCollectionRoot(entityClass, collectionName);
         this.name = collectionName;
         this.mongoCollection = db.collection(this.name);
         this.theClass = entityClass;
@@ -82,12 +83,6 @@ var Collection = (function () {
     Collection.prototype.resetQueue = function () {
         this.queue = [];
     };
-    // private static _getMeteorCollection( name?:string ) {
-    //     if( !Collection.meteorCollections[name] ) {
-    //         Collection.meteorCollections[name] = (Config.getMongo()).;
-    //     }
-    //     return Collection.meteorCollections[name];
-    // }
     /**
      * Gets the name of the collection.
      * @returns {string}
@@ -133,7 +128,7 @@ var Collection = (function () {
             var objects = [];
             for (var i = 0; i < documents.length; i++) {
                 var document = documents[i];
-                objects[i] = _this.documentToObject(document);
+                objects[i] = _this.serializer.toObject(document, _this, _this.getEntityClass(), new omm.SerializationPath(_this.getName(), document._id));
             }
             return objects;
         });
@@ -175,10 +170,12 @@ var Collection = (function () {
             });
         });
     };
-    Collection.prototype.documentToObject = function (doc) {
-        var p = this.serializer.toObject(doc, this, this.theClass);
-        return p;
-    };
+    // protected documentToObject( doc:Document ):T
+    // {
+    //     var p:any = this.serializer.toObject(doc, this, this.theClass );
+    //
+    //     return p;
+    // }
     Collection.prototype.sendEventsCollectedDuringUpdate = function (preUpdateObject, postUpdateObject, rootObject, functionName, serializationPath, events, userData) {
         var ctx = new omm.EventContext(postUpdateObject, this);
         ctx.preUpdate = preUpdateObject;
@@ -210,7 +207,9 @@ var Collection = (function () {
             return doc.serial;
         });
         var rootObjectPromise = documentPromise.then(function (doc) {
-            return _this.documentToObject(doc);
+            // do not user a handler. If the original function is called, there shouldn't be any more collection updates
+            // happening
+            return _this.serializer.toObject(doc, undefined, _this.getEntityClass());
         });
         var objectPromise = rootObjectPromise.then(function (rootObject) {
             return sp.getSubObject(rootObject);
@@ -232,7 +231,6 @@ var Collection = (function () {
             var result = values[2];
             var rootObject = values[3];
             var ctx = new omm.EventContext(rootObject, _this);
-            ctx.functionName;
             omm_event.callEventListeners(_this.getEntityClass(), "preSave", ctx);
             var documentToSave = _this.serializer.toDocument(rootObject);
             documentToSave.serial = (currentSerial || 0) + 1;
@@ -253,7 +251,7 @@ var Collection = (function () {
                     events: result.events,
                     rootObject: rootObject,
                     object: result.object,
-                    result: result.result
+                    result: result.result,
                 };
                 return cr;
             }
@@ -305,6 +303,7 @@ var Collection = (function () {
             doc.serial = 0;
             //console.log( "inserting document: ", doc);
             return _this.mongoCollection.insertOne(doc).then(function () {
+                omm_sp.SerializationPath.setObjectContext(p, new omm.SerializationPath(_this.getName(), id), _this);
                 omm_sp.SerializationPath.updateObjectContexts(p, _this);
                 //console.log("didInsert");
                 var ctx2 = new omm.EventContext(p, _this);
@@ -356,6 +355,9 @@ var Collection = (function () {
                         ctx.serializationPath = sp;
                         ctx.rootObject = r.rootObject;
                         ctx.userData = ud;
+                        var docBefore = _this.serializer.toDocument(object);
+                        var docAfter = _this.serializer.toDocument(r.object);
+                        ctx.jsonDiff = jdp.diff(docBefore, docAfter);
                         return _this.emitLater("didUpdate", ctx).thenReturn(r.result);
                     });
                     return resultPromise;

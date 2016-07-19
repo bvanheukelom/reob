@@ -27,7 +27,8 @@ export class Server{
 
     addSingleton( name:string, singleton:any ):void{
         this.singletons[name] = singleton;
-        omm.SerializationPath.updateObjectContexts( singleton, this );
+        // singletons dont need a
+        omm.SerializationPath.setObjectContext(singleton, undefined, this);
     }
 
     static userData:any;
@@ -106,13 +107,18 @@ export class Server{
     }
     
     registerGetter(){
-        this.webMethods.add("get", (className:string, objectId:string)=>{
-            console.log("Getter "+className, objectId );
-            var type = omm.entityClasses[className];
-            var collectionName  = type ? omm.PersistenceAnnotation.getCollectionName( type ) : undefined;
+        this.webMethods.add("get", (collectionName:string, objectId:string)=>{
+            console.log("Getter collectionName:"+collectionName+" Id:"+objectId );
+            // var type = omm.entityClasses[className];
+            // var collectionName  = type ? omm.PersistenceAnnotation.getCollectionName( type ) : undefined;
             var objPromise = collectionName ? this.retrieveObject(collectionName+"["+objectId+"]") : undefined;
             return objPromise.then((obj)=>{
-                return obj ? this.serializer.toDocument(obj) : undefined;
+                var doc = obj ? this.serializer.toDocument(obj) : undefined;
+                return {
+                    document:doc,
+                    serializationPath:collectionName+"["+objectId+"]",
+                    className:omm.className(obj)
+                };
             });
         });
     }

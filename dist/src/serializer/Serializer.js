@@ -48,7 +48,7 @@ var Serializer = (function () {
             }
         });
     };
-    Serializer.prototype.toObject = function (doc, handler, f) {
+    Serializer.prototype.toObject = function (doc, handler, f, serializationPath) {
         var o;
         if (Array.isArray(doc)) {
             var r = [];
@@ -61,7 +61,10 @@ var Serializer = (function () {
             o = doc;
         else
             o = this.toObjectRecursive(doc, undefined, f, handler);
-        omm.SerializationPath.updateObjectContexts(o, handler);
+        if (handler && serializationPath) {
+            omm.SerializationPath.setObjectContext(o, serializationPath, handler);
+            omm.SerializationPath.updateObjectContexts(o, handler);
+        }
         return o;
     };
     Serializer.prototype.toObjectRecursive = function (doc, parent, f, handler) {
@@ -105,7 +108,7 @@ var Serializer = (function () {
                         var result = Array.isArray(value) ? [] : {};
                         for (var i in value) {
                             var entry = value[i];
-                            entry = this.toObjectRecursive(entry, o, propertyClass, handler);
+                            entry = this.toObjectRecursive(entry, o, propertyClass);
                             result[i] = entry;
                         }
                         // this can only happen once because if the property is accessed the "lazy load" already kicks in

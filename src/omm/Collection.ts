@@ -12,7 +12,7 @@ import * as mongodb from "mongodb"
 import * as Promise from "bluebird"
 
 import * as uuid from "node-uuid"
-
+var jdp = require("jsondiffpatch");
 
 export class Collection<T extends Object> implements omm.Handler
 {
@@ -105,7 +105,7 @@ export class Collection<T extends Object> implements omm.Handler
             collectionName = omm.getDefaultCollectionName(entityClass);
 
         // this might have to go away
-        omm.addCollectionRoot(entityClass, collectionName);
+        // omm.addCollectionRoot(entityClass, collectionName);
 
         this.name = collectionName;
 
@@ -113,12 +113,6 @@ export class Collection<T extends Object> implements omm.Handler
         this.theClass = entityClass;
     }
 
-    // private static _getMeteorCollection( name?:string ) {
-    //     if( !Collection.meteorCollections[name] ) {
-    //         Collection.meteorCollections[name] = (Config.getMongo()).;
-    //     }
-    //     return Collection.meteorCollections[name];
-    // }
 
     /**
      * Gets the name of the collection.
@@ -172,7 +166,7 @@ export class Collection<T extends Object> implements omm.Handler
             var objects:Array<T> = [];
             for (var i = 0; i < documents.length; i++) {
                 var document:Document = documents[i];
-                objects[i] = this.documentToObject(document);
+                objects[i] = this.serializer.toObject(document, this, this.getEntityClass(), new omm.SerializationPath(this.getName(), document._id));
             }
             return objects;
 
@@ -221,12 +215,12 @@ export class Collection<T extends Object> implements omm.Handler
         });
     }
 
-    protected documentToObject( doc:Document ):T
-    {
-        var p:any = this.serializer.toObject(doc, this, this.theClass );
-        
-        return p;
-    }
+    // protected documentToObject( doc:Document ):T
+    // {
+    //     var p:any = this.serializer.toObject(doc, this, this.theClass );
+    //
+    //     return p;
+    // }
 
 
     sendEventsCollectedDuringUpdate( preUpdateObject, postUpdateObject, rootObject, functionName:string, serializationPath:omm.SerializationPath, events:Array<any>, userData:any ){
@@ -264,7 +258,9 @@ export class Collection<T extends Object> implements omm.Handler
         });
 
         var rootObjectPromise = documentPromise.then((doc)=>{
-            return this.documentToObject(doc);
+            // do not user a handler. If the original function is called, there shouldn't be any more collection updates
+            // happening
+            return this.serializer.toObject(doc, undefined, this.getEntityClass());
         });
         var objectPromise = rootObjectPromise.then((rootObject)=>{
             return sp.getSubObject(rootObject);
@@ -288,7 +284,6 @@ export class Collection<T extends Object> implements omm.Handler
             var result = values[2];
             var rootObject = values[3];
             var ctx = new omm.EventContext( rootObject, this);
-            ctx.functionName
             omm_event.callEventListeners(this.getEntityClass(), "preSave", ctx);
 
             var documentToSave:Document = this.serializer.toDocument(rootObject);
@@ -313,7 +308,7 @@ export class Collection<T extends Object> implements omm.Handler
                     events : result.events,
                     rootObject: rootObject,
                     object : result.object,
-                    result : result.result
+                    result : result.result,
                 };
                 return cr;
             }
@@ -372,6 +367,7 @@ export class Collection<T extends Object> implements omm.Handler
             //console.log( "inserting document: ", doc);
 
             return this.mongoCollection.insertOne(doc).then(()=>{
+                omm_sp.SerializationPath.setObjectContext(p, new omm.SerializationPath(this.getName(), id), this);
                 omm_sp.SerializationPath.updateObjectContexts(p, this);
 
                 //console.log("didInsert");
@@ -433,6 +429,9 @@ export class Collection<T extends Object> implements omm.Handler
                         ctx.serializationPath = sp;
                         ctx.rootObject = r.rootObject;
                         ctx.userData = ud;
+                        var docBefore = this.serializer.toDocument(object);
+                        var docAfter = this.serializer.toDocument(r.object);
+                        ctx.jsonDiff = jdp.diff( docBefore, docAfter );
                         return this.emitLater( "didUpdate", ctx ).thenReturn(r.result);
                     });
 
@@ -448,6 +447,5 @@ export interface CollectionUpdateResult{
     events:Array<any>; // the events emitted with omm.emit during the update that went through
     object:any; // the updated object
     rootObject:any; // the root object
-
 }
 

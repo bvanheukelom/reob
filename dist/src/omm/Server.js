@@ -19,7 +19,8 @@ var Server = (function () {
     };
     Server.prototype.addSingleton = function (name, singleton) {
         this.singletons[name] = singleton;
-        omm.SerializationPath.updateObjectContexts(singleton, this);
+        // singletons dont need a
+        omm.SerializationPath.setObjectContext(singleton, undefined, this);
     };
     Server.prototype.addAllWebMethods = function () {
         var _this = this;
@@ -90,13 +91,18 @@ var Server = (function () {
     };
     Server.prototype.registerGetter = function () {
         var _this = this;
-        this.webMethods.add("get", function (className, objectId) {
-            console.log("Getter " + className, objectId);
-            var type = omm.entityClasses[className];
-            var collectionName = type ? omm.PersistenceAnnotation.getCollectionName(type) : undefined;
+        this.webMethods.add("get", function (collectionName, objectId) {
+            console.log("Getter collectionName:" + collectionName + " Id:" + objectId);
+            // var type = omm.entityClasses[className];
+            // var collectionName  = type ? omm.PersistenceAnnotation.getCollectionName( type ) : undefined;
             var objPromise = collectionName ? _this.retrieveObject(collectionName + "[" + objectId + "]") : undefined;
             return objPromise.then(function (obj) {
-                return obj ? _this.serializer.toDocument(obj) : undefined;
+                var doc = obj ? _this.serializer.toDocument(obj) : undefined;
+                return {
+                    document: doc,
+                    serializationPath: collectionName + "[" + objectId + "]",
+                    className: omm.className(obj)
+                };
             });
         });
     };

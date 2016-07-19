@@ -92,18 +92,19 @@ var SerializationPath = (function () {
             return;
         visited.push(object);
         var objectClass = PersistenceAnnotation.PersistenceAnnotation.getClass(object);
-        if (PersistenceAnnotation.PersistenceAnnotation.isRootEntity(objectClass)) {
-            if (!object._ommObjectContext || !object._ommObjectContext.serializationPath) {
-                var idPropertyName = PersistenceAnnotation.PersistenceAnnotation.getIdPropertyName(objectClass);
-                var id = object[idPropertyName];
-                if (id) {
-                    var sp = new SerializationPath(PersistenceAnnotation.PersistenceAnnotation.getCollectionName(objectClass), id);
-                    SerializationPath.setObjectContext(object, sp, handler);
-                }
-            }
-        }
-        if (!object._ommObjectContext)
+        // // if (PersistenceAnnotation.PersistenceAnnotation.isRootEntity(objectClass)) {
+        //     if (!object._ommObjectContext || !object._ommObjectContext.serializationPath) {
+        //         var id = PersistenceAnnotation.getId(object);
+        //         if ( id ){
+        //             var sp = new SerializationPath( PersistenceAnnotation.PersistenceAnnotation.getCollectionName(objectClass), id);
+        //             SerializationPath.setObjectContext( object, sp, handler );
+        //         }
+        //     }
+        // // }
+        if (!object._ommObjectContext) {
+            // throw new Error("Cant update object context, as there is no object context. Class:"+PersistenceAnnotation.className(objectClass)+" Id:"+PersistenceAnnotation.getId(object));
             return; // we're done here
+        }
         PersistenceAnnotation.PersistenceAnnotation.getTypedPropertyNames(objectClass).forEach(function (typedPropertyName) {
             // if (!PersistenceAnnotation.isStoredAsForeignKeys(objectClass, typedPropertyName)) {
             //     //console.log("updating foreignkey property " + typedPropertyName);

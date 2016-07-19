@@ -6,7 +6,7 @@ export interface IMethodOptions{
     resultType?:string;
     replaceWithCall?:boolean;
     serverOnly?:boolean;
-    propertyName:string;
+    propertyName?:string;
 }
 /**
  * The omm module
@@ -15,7 +15,7 @@ export interface IMethodOptions{
 
     // TODO rename to something that contains the word "Entity"
     export interface TypeClass<T> {
-        new(): T ;
+        new(...numbers: any[]): T ;
         //toDocument?( o:T ):Document;
         //toObject?( doc:Document ):T;
     }
@@ -32,6 +32,7 @@ export interface IMethodOptions{
         functionName:string;
         serializationPath:any; //omm.SerializationPath;
         topic:string;
+        jsonDiff:any;
 
         constructor(o:T, coll:any /*omm.Collection<T>*/) {
             this.object = o;
@@ -137,9 +138,9 @@ export interface IMethodOptions{
         return className(t);
     }
 
-    export function addCollectionRoot(t:TypeClass<any>, collectionName:string) {
-        defineMetadata("persistence:collectionName", collectionName, t);
-    }
+    // export function addCollectionRoot(t:TypeClass<any>, collectionName:string) {
+    //     defineMetadata("persistence:collectionName", collectionName, t);
+    // }
 
     export function Wrap(t:any, functionName:string, objectDescriptor:any) {
         //CollectionUpdate(t,functionName,objectDescriptor);
@@ -415,19 +416,20 @@ export interface IMethodOptions{
 
         // ---- Entity ----
 
-        static getEntityClassByName(className:string):TypeClass<any> {
+        public static getEntityClassByName(className:string):TypeClass<any> {
             return entityClasses[className];
         }
 
-        public static getCollectionClasses():Array<TypeClass<Object>> {
-            var result:Array<TypeClass<Object>> = [];
-            for (var i in entityClasses) {
-                var entityClass = entityClasses[i];
-                if (PersistenceAnnotation.getCollectionName(entityClass))
-                    result.push(entityClass);
-            }
-            return result;
-        }
+        // public static getCollectionClasses():Array<TypeClass<Object>> {
+        //     var result:Array<TypeClass<Object>> = [];
+        //     for (var i in entityClasses) {
+        //         var entityClass = entityClasses[i];
+        //         if (PersistenceAnnotation.getCollectionName(entityClass))
+        //             result.push(entityClass);
+        //     }
+        //     return result;
+        // }
+
 
         public static getEntityClasses():Array<TypeClass<Object>> {
             var result:Array<TypeClass<Object>> = [];
@@ -438,13 +440,13 @@ export interface IMethodOptions{
             return result;
         }
 
-        static getCollectionName(f:TypeClass<any>):string {
-            return getMetadata("persistence:collectionName", f);
-        }
+        // static getCollectionName(f:TypeClass<any>):string {
+        //     return getMetadata("persistence:collectionName", f);
+        // }
 
-        static isRootEntity(f:TypeClass<any>):boolean {
-            return !!PersistenceAnnotation.getCollectionName(f);
-        }
+        // static isRootEntity(f:TypeClass<any>):boolean {
+        //     return !!PersistenceAnnotation.getCollectionName(f);
+        // }
 
         static isEntity(f:TypeClass<any>):boolean {
             return !!entityClasses[className(f)];

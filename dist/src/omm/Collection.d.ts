@@ -1,5 +1,4 @@
 import * as omm from "../omm";
-import Document from "../serializer/Document";
 import { TypeClass as TypeClass } from "../annotations/PersistenceAnnotation";
 import * as Promise from "bluebird";
 export declare class Collection<T extends Object> implements omm.Handler {
@@ -66,7 +65,6 @@ export declare class Collection<T extends Object> implements omm.Handler {
      * @callback cb the callback that's called once the object is removed or an error happend
      */
     protected remove(id: string): Promise<any>;
-    protected documentToObject(doc: Document): T;
     sendEventsCollectedDuringUpdate(preUpdateObject: any, postUpdateObject: any, rootObject: any, functionName: string, serializationPath: omm.SerializationPath, events: Array<any>, userData: any): void;
     private updateOnce(sp, updateFunction, attempt);
     /**

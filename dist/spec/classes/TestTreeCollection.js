@@ -39,7 +39,7 @@ var TestTreeCollection = (function (_super) {
         return this.getMongoCollection().remove({});
     };
     __decorate([
-        omm.MeteorMethod({ replaceWithCall: true, serverOnly: true, parameterTypes: ["number", "callback"] })
+        omm.MeteorMethod({ serverOnly: true })
     ], TestTreeCollection.prototype, "newTree", null);
     __decorate([
         omm.MeteorMethod({ replaceWithCall: true, serverOnly: true, parameterTypes: ["number", "callback"] })

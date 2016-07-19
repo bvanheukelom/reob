@@ -11,7 +11,7 @@ export class TestTreeCollection extends omm.Collection<Tests.TestTree> {
         super( db, Tests.TestTree,"TheTreeCollection");
     }
 
-    @omm.MeteorMethod({  replaceWithCall:true, serverOnly:true, parameterTypes:["number","callback"]})
+    @omm.MeteorMethod({ serverOnly:true })
     newTree(initialHeight:number):Promise<Tests.TestTree> {
         var t:Tests.TestTree = new Tests.TestTree(initialHeight);
         return this.insert(t).then((id:string)=>{

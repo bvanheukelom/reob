@@ -96,10 +96,9 @@ function getDefaultCollectionName(t) {
     return className(t);
 }
 exports.getDefaultCollectionName = getDefaultCollectionName;
-function addCollectionRoot(t, collectionName) {
-    defineMetadata("persistence:collectionName", collectionName, t);
-}
-exports.addCollectionRoot = addCollectionRoot;
+// export function addCollectionRoot(t:TypeClass<any>, collectionName:string) {
+//     defineMetadata("persistence:collectionName", collectionName, t);
+// }
 function Wrap(t, functionName, objectDescriptor) {
     //CollectionUpdate(t,functionName,objectDescriptor);
     //MeteorMethod(t,functionName,objectDescriptor);
@@ -371,15 +370,15 @@ var PersistenceAnnotation = (function () {
     PersistenceAnnotation.getEntityClassByName = function (className) {
         return exports.entityClasses[className];
     };
-    PersistenceAnnotation.getCollectionClasses = function () {
-        var result = [];
-        for (var i in exports.entityClasses) {
-            var entityClass = exports.entityClasses[i];
-            if (PersistenceAnnotation.getCollectionName(entityClass))
-                result.push(entityClass);
-        }
-        return result;
-    };
+    // public static getCollectionClasses():Array<TypeClass<Object>> {
+    //     var result:Array<TypeClass<Object>> = [];
+    //     for (var i in entityClasses) {
+    //         var entityClass = entityClasses[i];
+    //         if (PersistenceAnnotation.getCollectionName(entityClass))
+    //             result.push(entityClass);
+    //     }
+    //     return result;
+    // }
     PersistenceAnnotation.getEntityClasses = function () {
         var result = [];
         for (var i in exports.entityClasses) {
@@ -388,12 +387,12 @@ var PersistenceAnnotation = (function () {
         }
         return result;
     };
-    PersistenceAnnotation.getCollectionName = function (f) {
-        return getMetadata("persistence:collectionName", f);
-    };
-    PersistenceAnnotation.isRootEntity = function (f) {
-        return !!PersistenceAnnotation.getCollectionName(f);
-    };
+    // static getCollectionName(f:TypeClass<any>):string {
+    //     return getMetadata("persistence:collectionName", f);
+    // }
+    // static isRootEntity(f:TypeClass<any>):boolean {
+    //     return !!PersistenceAnnotation.getCollectionName(f);
+    // }
     PersistenceAnnotation.isEntity = function (f) {
         return !!exports.entityClasses[className(f)];
     };

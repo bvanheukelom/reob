@@ -5,14 +5,14 @@ export interface IMethodOptions {
     resultType?: string;
     replaceWithCall?: boolean;
     serverOnly?: boolean;
-    propertyName: string;
+    propertyName?: string;
 }
 /**
  * The omm module
  * @namespace omm
  */
 export interface TypeClass<T> {
-    new (): T;
+    new (...numbers: any[]): T;
 }
 export declare class EventContext<T> {
     private cancelledError;
@@ -25,6 +25,7 @@ export declare class EventContext<T> {
     functionName: string;
     serializationPath: any;
     topic: string;
+    jsonDiff: any;
     constructor(o: T, coll: any);
     cancel(err: any): void;
     cancelledWithError(): any;
@@ -56,7 +57,6 @@ export declare function Entity(entityNameOrP1?: any): any;
  */
 export declare function addEntity(c: TypeClass<Object>): void;
 export declare function getDefaultCollectionName(t: TypeClass<any>): string;
-export declare function addCollectionRoot(t: TypeClass<any>, collectionName: string): void;
 export declare function Wrap(t: any, functionName: string, objectDescriptor: any): void;
 export declare function wrap(t: TypeClass<any>, functionName: string): void;
 export declare function CollectionUpdate(p1: any, fName?: string): (t: any, functionName: string, objectDescriptor: any) => void;
@@ -127,10 +127,7 @@ export declare class PersistenceAnnotation {
     static getAllMethodFunctionNames(): Array<string>;
     static getClass<T extends Object>(o: T): TypeClass<T>;
     static getEntityClassByName(className: string): TypeClass<any>;
-    static getCollectionClasses(): Array<TypeClass<Object>>;
     static getEntityClasses(): Array<TypeClass<Object>>;
-    static getCollectionName(f: TypeClass<any>): string;
-    static isRootEntity(f: TypeClass<any>): boolean;
     static isEntity(f: TypeClass<any>): boolean;
     static getDocumentPropertyName(typeClass: TypeClass<any>, objectPropertyName: string): string;
     static getObjectPropertyName(typeClass: TypeClass<any>, documentPropertyName: string): string;

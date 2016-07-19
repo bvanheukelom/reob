@@ -24,7 +24,9 @@ export class TreeService{
 
     @omm.MeteorMethod({ serverOnly:true })
     growTree(treeId:string):Promise<string> {
+        debugger;
         return this.treeCollection.getById(treeId).then((t:Tests.TestTree)=>{
+            debugger;
             return t.growAsOnlyACollectionUpdate();
         });
     }

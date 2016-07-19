@@ -62,21 +62,21 @@ export class MeteorPersistence {
     //     return omm_annotation.className(o.constructor);
     // }
 
-    getKey(object:OmmObject):string {
-        if (object._ommObjectContext.serializationPath)
-            return object._ommObjectContext.serializationPath.toString();
-        else {
-            var objectClass = omm_annotation.PersistenceAnnotation.getClass(object);
-            var idPropertyName = omm_annotation.PersistenceAnnotation.getIdPropertyName(objectClass);
-            var id = object[idPropertyName];
-            if (omm_annotation.PersistenceAnnotation.isRootEntity(objectClass) && id) {
-                return new SerializationPath( omm_annotation.PersistenceAnnotation.getCollectionName(objectClass), id).toString();
-            }
-            else {
-                throw new Error("Error while 'toString'. Objects that should be stored as foreign keys need to be persisted beforehand or be the root entity of a collection and have an id.");
-            }
-        }
-    }
+    // getKey(object:OmmObject):string {
+    //     if (object._ommObjectContext.serializationPath)
+    //         return object._ommObjectContext.serializationPath.toString();
+    //     else {
+    //         var objectClass = omm_annotation.PersistenceAnnotation.getClass(object);
+    //         var idPropertyName = omm_annotation.PersistenceAnnotation.getIdPropertyName(objectClass);
+    //         var id = object[idPropertyName];
+    //         if (omm_annotation.PersistenceAnnotation.isRootEntity(objectClass) && id) {
+    //             return new SerializationPath( omm_annotation.PersistenceAnnotation.getCollectionName(objectClass), id).toString();
+    //         }
+    //         else {
+    //             throw new Error("Error while 'toString'. Objects that should be stored as foreign keys need to be persisted beforehand or be the root entity of a collection and have an id.");
+    //         }
+    //     }
+    // }
 
 
     // // todo  make the persistencePath enumerable:false everywhere it is set

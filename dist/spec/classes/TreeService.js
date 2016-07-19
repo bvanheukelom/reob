@@ -22,7 +22,9 @@ var TreeService = (function () {
         });
     };
     TreeService.prototype.growTree = function (treeId) {
+        debugger;
         return this.treeCollection.getById(treeId).then(function (t) {
+            debugger;
             return t.growAsOnlyACollectionUpdate();
         });
     };
