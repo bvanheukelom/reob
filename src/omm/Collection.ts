@@ -185,7 +185,7 @@ export class Collection<T extends Object> implements omm.Handler
     getByIdOrFail(id:string):Promise<T>{
         return this.getById(id).then((t:T)=>{
             if( !t )
-                return Promise.reject("Not found");
+                return Promise.reject(new Error("Not found"));
             else
                 return t;
         });
@@ -199,7 +199,7 @@ export class Collection<T extends Object> implements omm.Handler
     protected remove( id:string ):Promise<any>
     {
         if (!id)
-            return Promise.reject("Trying to remove an object that does not have an id.");
+            return Promise.reject(new Error("Trying to remove an object that does not have an id."));
 
         var ctx = new omm.EventContext( undefined, this );
         ctx.objectId = id;
@@ -249,7 +249,7 @@ export class Collection<T extends Object> implements omm.Handler
         }).toArray().then((documents:Document[])=> {
             var document = documents[0];
             if (!document) {
-                return Promise.reject("No document found for id: " + sp.getId());
+                return Promise.reject(new Error("No document found for id: " + sp.getId()));
             }
             return document;
         });
@@ -338,7 +338,7 @@ export class Collection<T extends Object> implements omm.Handler
     update(sp:omm.SerializationPath, updateFunction:(o:T)=>void):Promise<CollectionUpdateResult>
     {
         if (!sp || !updateFunction)
-            return Promise.reject("parameter missing");
+            return Promise.reject(new Error( "update function or serialiationPath parameter missing" ));
 
         return this.updateOnce(sp, updateFunction,0);
     }

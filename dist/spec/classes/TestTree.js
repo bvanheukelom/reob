@@ -10,8 +10,10 @@ var Tests = require("./Tests");
 var TestTree = (function () {
     function TestTree(initialHeight) {
         this.height = 10;
+        this.someArray = [];
         this.leaves = [];
         this.height = initialHeight || 10;
+        this.creationDate = new Date();
     }
     TestTree.prototype.grow = function () {
         return this._grow();

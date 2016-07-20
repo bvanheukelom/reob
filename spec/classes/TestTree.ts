@@ -5,6 +5,8 @@ export class TestTree {
     @omm.Id
     treeId:string;
     private height:number = 10;
+    someArray:Array<any> = [];
+    creationDate:Date;
 
     @omm.ArrayType("TestLeaf")
     @omm.DocumentName('thoseGreenThings')
@@ -16,6 +18,7 @@ export class TestTree {
 
     constructor( initialHeight?:number) {
         this.height = initialHeight || 10;
+        this.creationDate = new Date();
     }
 
     @omm.Wrap

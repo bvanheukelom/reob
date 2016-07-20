@@ -1,4 +1,5 @@
 "use strict";
+var Cloner = require("./Cloner");
 var omm = require("../omm");
 var SubObjectPath_1 = require("./SubObjectPath");
 var PersistenceAnnotation_1 = require("../annotations/PersistenceAnnotation");
@@ -53,7 +54,7 @@ var Serializer = (function () {
         if (Array.isArray(doc)) {
             var r = [];
             for (var j = 0; j < doc.length; j++) {
-                r[j] = this.toObjectRecursive(doc[j], undefined, f, handler);
+                r[j] = this.toObject(doc[j], handler, f);
             }
             o = r;
         }
@@ -83,9 +84,13 @@ var Serializer = (function () {
                 f = PersistenceAnnotation_1.PersistenceAnnotation.getEntityClassByName(doc._className);
             }
             if (!f)
-                throw new Error("Could not determine class of document. Either the document needs to have a '_className' property or a class needs to be passed to the serializer. Document: " + JSON.stringify(doc));
+                f = Object.getPrototypeOf(doc);
+            //     throw new Error("Could not determine class of document. Either the document needs to have a '_className' property or a class needs to be passed to the serializer. Document: "+ JSON.stringify( doc ) );
             // instantiate the new object
-            o = Object.create(f.prototype);
+            if (f && f.prototype)
+                o = Object.create(f.prototype);
+            else
+                o = {};
             if (doc._serializationPath) {
                 var sp = new omm.SerializationPath(doc._serializationPath);
                 omm.SerializationPath.setObjectContext(o, sp, handler);
@@ -98,7 +103,7 @@ var Serializer = (function () {
                 if (propertyName == "_className" || propertyName == "_serializationPath")
                     continue;
                 var value = doc[propertyName];
-                var objectNameOfTheProperty = PersistenceAnnotation_1.PersistenceAnnotation.getObjectPropertyName(f, propertyName);
+                var objectNameOfTheProperty = f ? PersistenceAnnotation_1.PersistenceAnnotation.getObjectPropertyName(f, propertyName) : undefined;
                 if (!objectNameOfTheProperty)
                     objectNameOfTheProperty = propertyName;
                 var propertyClass = PersistenceAnnotation_1.PersistenceAnnotation.getPropertyClass(f, objectNameOfTheProperty);
@@ -119,7 +124,7 @@ var Serializer = (function () {
                     }
                 }
                 else {
-                    o[objectNameOfTheProperty] = value;
+                    o[objectNameOfTheProperty] = Cloner.clone(value);
                 }
             }
         }
@@ -198,7 +203,7 @@ var Serializer = (function () {
                 else if (typeof value == 'function') {
                 }
                 else {
-                    doc[documentNameOfTheProperty] = value;
+                    doc[documentNameOfTheProperty] = Cloner.clone(value);
                 }
             }
         }

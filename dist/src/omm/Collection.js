@@ -145,7 +145,7 @@ var Collection = (function () {
     Collection.prototype.getByIdOrFail = function (id) {
         return this.getById(id).then(function (t) {
             if (!t)
-                return Promise.reject("Not found");
+                return Promise.reject(new Error("Not found"));
             else
                 return t;
         });
@@ -158,7 +158,7 @@ var Collection = (function () {
     Collection.prototype.remove = function (id) {
         var _this = this;
         if (!id)
-            return Promise.reject("Trying to remove an object that does not have an id.");
+            return Promise.reject(new Error("Trying to remove an object that does not have an id."));
         var ctx = new omm.EventContext(undefined, this);
         ctx.objectId = id;
         return this.emitLater("willRemove", ctx).then(function () {
@@ -201,7 +201,7 @@ var Collection = (function () {
         }).toArray().then(function (documents) {
             var document = documents[0];
             if (!document) {
-                return Promise.reject("No document found for id: " + sp.getId());
+                return Promise.reject(new Error("No document found for id: " + sp.getId()));
             }
             return document;
         });
@@ -280,7 +280,7 @@ var Collection = (function () {
      */
     Collection.prototype.update = function (sp, updateFunction) {
         if (!sp || !updateFunction)
-            return Promise.reject("parameter missing");
+            return Promise.reject(new Error("update function or serialiationPath parameter missing"));
         return this.updateOnce(sp, updateFunction, 0);
     };
     /**

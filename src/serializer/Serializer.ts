@@ -1,4 +1,5 @@
 
+import * as Cloner from "./Cloner"
 import Document from "./Document"
 import * as omm from "../omm"
 import SubObjectPath from "./SubObjectPath"
@@ -61,7 +62,7 @@ export class Serializer {
         if(Array.isArray(doc)){
             var r = [];
             for( var j=0; j<(<Array<any>>doc).length; j++ ){
-                r[j] = this.toObjectRecursive(doc[j], undefined, f, handler);
+                r[j] = this.toObject(doc[j], handler, f );
             }
             o = <any>r;
         } else if ( !doc || typeof doc == "string" || typeof doc == "number"  || typeof doc == "date" || typeof doc == "boolean")
@@ -95,9 +96,14 @@ export class Serializer {
                 f = PersistenceAnnotation.getEntityClassByName(doc._className);
             }
             if(!f)
-                throw new Error("Could not determine class of document. Either the document needs to have a '_className' property or a class needs to be passed to the serializer. Document: "+ JSON.stringify( doc ) );
+                f = Object.getPrototypeOf( doc );
+            //     throw new Error("Could not determine class of document. Either the document needs to have a '_className' property or a class needs to be passed to the serializer. Document: "+ JSON.stringify( doc ) );
+
             // instantiate the new object
-            o = Object.create(f.prototype);
+            if( f && f.prototype )
+                o = Object.create(f.prototype);
+            else
+                o = <any>{};
 
             if( doc._serializationPath ){
                 var sp = new omm.SerializationPath(doc._serializationPath);
@@ -113,7 +119,7 @@ export class Serializer {
                 if( propertyName=="_className" || propertyName=="_serializationPath" )
                     continue;
                 var value = doc[propertyName];
-                var objectNameOfTheProperty:string = PersistenceAnnotation.getObjectPropertyName(f, propertyName);
+                var objectNameOfTheProperty:string = f ? PersistenceAnnotation.getObjectPropertyName(f, propertyName) : undefined;
                 if(!objectNameOfTheProperty)
                     objectNameOfTheProperty = propertyName;
                 var propertyClass = PersistenceAnnotation.getPropertyClass(f, objectNameOfTheProperty);
@@ -135,7 +141,8 @@ export class Serializer {
                     }
                 }
                 else {
-                    o[objectNameOfTheProperty] = value;
+                    o[objectNameOfTheProperty] = Cloner.clone(value);
+                    // o[objectNameOfTheProperty] = value;
                 }
             }
 
@@ -219,7 +226,7 @@ export class Serializer {
                     // not doing eeeeenithing with functions
                 }
                 else {
-                    doc[documentNameOfTheProperty] = value;
+                    doc[documentNameOfTheProperty] = Cloner.clone(value);
                 }
 
             }

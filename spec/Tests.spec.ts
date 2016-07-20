@@ -1127,6 +1127,45 @@ describe("Omm both on client and server", function () {
         }).then(done);
     });
 
+    it("doesnt reuse arrays in documents", function () {
+        var tree = new Tests.TestTree(12);
+        var serializer = new omm.Serializer();
+        debugger;
+        var doc:any = serializer.toDocument(tree);
+        expect(  tree.someArray.length ).toBe(0);
+        expect(  doc.someArray ).toBeDefined();
+        expect( tree.someArray ).not.toBe(doc.someArray );
+        tree.someArray.push(42);
+        expect( doc.someArray.length ).toBe(0);
+        var t2 = serializer.toObject(doc, undefined, Tests.TestTree);
+        expect( t2.someArray ).not.toBe(doc.someArray );
+        doc.someArray.push(1200);
+        expect( t2.someArray.length ).toBe(0);
+    });
+
+    it("can serialize primitive data types", function () {
+        var serializer = new omm.Serializer();
+        var obj = serializer.toObject([42]);
+        expect( Array.isArray(obj) ).toBeTruthy();
+        expect( obj.length ).toBe(1);
+        expect( obj[0] ).toBe(42);
+        var doc:any = serializer.toDocument([42]);
+        expect( Array.isArray(doc) ).toBeTruthy();
+        expect( doc.length ).toBe(1);
+        expect( doc[0] ).toBe(42);
+    });
+
+    it("returns the proper error", function (done) {
+        treeCollection.getByIdOrFail('humbug').catch((reason)=>{
+            expect( reason ).toBeDefined();
+            expect( reason.message ).toBe("Not found");
+            expect( reason instanceof Error ).toBeTruthy();
+            done();
+        })
+    });
+
     // test that calls a nested collection update (one in the other)
+
+    // test that verifies that when en event cancells an operation with ctx.cancell(asdfasdf) its an instanceof Error that rejects the promise.
 
 });

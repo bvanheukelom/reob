@@ -18,7 +18,7 @@ function cloneInternally( o:any, seenObjects?:{ objects:Array<any>, clones:Array
             rArray[j] = cloneInternally(o[j], seenObjects);
         }
         return rArray;
-    } else if ( !o || typeof o == "string" || typeof o == "number"  || typeof o == "date" || typeof o == "boolean" || typeof o == "function" )
+    } else if ( !o || typeof o == "string" || typeof o == "number"  ||  o instanceof Date || typeof o == "boolean" || typeof o == "function" )
         return o;
     else{
         var seenIndex = seenObjects.objects.indexOf(o);
