@@ -60,13 +60,15 @@ export class Client implements omm.Handler{
         var webArgs = [];
         // convert the arguments to their origin
         for (var i in args) {
-            if (args[i]._serializationPath) {
-                webArgs[i] = args[i]._serializationPath.toString();
-            }
-            else if(typeof args[i]!="function") {
-                webArgs[i] = this.serializer.toDocument(args[i]);
-            }else{
-                throw new Error( "There can not be parameters of type 'function' in the arguments when calling a web method with name "+methodName );
+            if( args[i] ) {
+                if (args[i]._serializationPath) {
+                    webArgs[i] = args[i]._serializationPath.toString();
+                }
+                else if (typeof args[i] != "function") {
+                    webArgs[i] = this.serializer.toDocument(args[i]);
+                } else {
+                    throw new Error("There can not be parameters of type 'function' in the arguments when calling a web method with name " + methodName);
+                }
             }
         }
         // prepend

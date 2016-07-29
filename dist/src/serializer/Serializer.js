@@ -84,7 +84,7 @@ var Serializer = (function () {
                 f = PersistenceAnnotation_1.PersistenceAnnotation.getEntityClassByName(doc._className);
             }
             if (!f)
-                f = Object.getPrototypeOf(doc);
+                return Cloner.clone(doc);
             //     throw new Error("Could not determine class of document. Either the document needs to have a '_className' property or a class needs to be passed to the serializer. Document: "+ JSON.stringify( doc ) );
             // instantiate the new object
             if (f && f.prototype)

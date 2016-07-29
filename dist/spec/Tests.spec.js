@@ -50,6 +50,7 @@ describe("Omm both on client and server", function () {
         // console.log(jasmine.getEnv().currentSpec.getFullName());
         personCollection.removeAllListeners();
         treeCollection.removeAllListeners();
+        server.removeAllMethodListeners();
         omm.removeAllUpdateEventListeners();
     });
     // it("knows the difference between root entities and subdocument entities ", function () {
@@ -92,11 +93,57 @@ describe("Omm both on client and server", function () {
     it("can run collection updates from within another method", function (done) {
         var t1 = new Tests.TestTree(15);
         treeCollection.insert(t1).then(function (id) {
+            debugger;
             return clientTreeService.growTree(id).thenReturn(id);
         }).then(function (id) {
             return treeCollection.getByIdOrFail(id);
         }).then(function (t) {
             expect(t.getLeaves().length).toBe(1);
+            done();
+        });
+    });
+    it("notifies method listener", function (done) {
+        var c = 0;
+        var listener = function (i, data) {
+            c = 1;
+            expect(i.object).toBe(treeService);
+            expect(i.userData.foo).toBe("barbar");
+        };
+        var l = { listener: listener };
+        spyOn(l, "listener").and.callThrough();
+        var t1 = new Tests.TestTree(15);
+        server.onMethod(l.listener);
+        client.setUserData({ foo: "barbar" });
+        treeCollection.insert(t1).then(function (id) {
+            return clientTreeService.growTree(id).thenReturn(id);
+        }).then(function (id) {
+            return treeCollection.getByIdOrFail(id);
+        }).then(function (t) {
+            expect(l.listener).toHaveBeenCalled();
+            expect(c).toBe(1);
+            done();
+        });
+    });
+    it("notifies method listener and listeners can cancel the method", function (done) {
+        var c = 0;
+        var listener = function (i, data) {
+            c = 1;
+            return Promise.reject(new Error("No"));
+        };
+        var l = { listener: listener };
+        spyOn(l, "listener").and.callThrough();
+        var t1 = new Tests.TestTree(15);
+        server.onMethod(l.listener);
+        client.setUserData({ foo: "barbar" });
+        treeCollection.insert(t1).then(function (id) {
+            return clientTreeService.growTree(id).thenReturn(id);
+        }).then(function (id) {
+            return treeCollection.getByIdOrFail(id);
+        }).then(function (t) {
+            fail("Did succeed desipte being cancelled");
+            done();
+        }).catch(function (reason) {
+            expect(reason.message).toBe("No");
             done();
         });
     });
@@ -245,6 +292,11 @@ describe("Omm both on client and server", function () {
     it("can call functions that have are also webMethods normally", function (done) {
         Promise.cast(treeCollection.serverFunction("World", new Tests.TestTree(212), 42)).then(function (r) {
             expect(r).toBe("Hello World!");
+            done();
+        });
+    });
+    it("can call functions with undefined parameters", function (done) {
+        Promise.cast(clientTreeService.insertTree(undefined)).then(function (r) {
             done();
         });
     });
@@ -560,7 +612,7 @@ describe("Omm both on client and server", function () {
     it("can cancel inserts", function (done) {
         var l = {};
         l.listener = function (event) {
-            event.cancel("Not allowed");
+            event.cancel(new Error("Not allowed"));
         };
         spyOn(l, 'listener').and.callThrough();
         treeCollection.preInsert(l.listener);
@@ -724,7 +776,7 @@ describe("Omm both on client and server", function () {
     it("can cancel deletes ", function (done) {
         var l = {};
         l.listener = function (event) {
-            event.cancel("nope");
+            event.cancel(new Error("nope"));
         };
         spyOn(l, 'listener').and.callThrough();
         treeCollection.preRemove(l.listener);
@@ -733,7 +785,7 @@ describe("Omm both on client and server", function () {
             treeId = tree.treeId;
             return treeCollection.deleteTree(tree.treeId);
         }).catch(function (error) {
-            expect(error).toBe("nope");
+            expect(error.message).toBe("nope");
             expect(l.listener).toHaveBeenCalled();
             treeCollection.getById(treeId).then(function (tree) {
                 expect(tree).toBeDefined();
@@ -764,14 +816,14 @@ describe("Omm both on client and server", function () {
     it("can cancel updates on a subobject in a generic listener", function (done) {
         var l = {};
         l.listener = function (event) {
-            event.cancel("not happening");
+            event.cancel(new Error("not happening"));
         };
         spyOn(l, 'listener').and.callThrough();
         treeCollection.preUpdate(l.listener);
         treeCollection.newTree(10).then(function (tree) {
             return tree.grow();
         }).catch(function (reason) {
-            expect(reason).toBe("not happening");
+            expect(reason.message).toBe("not happening");
             expect(l.listener).toHaveBeenCalled();
             done();
         });
@@ -779,7 +831,7 @@ describe("Omm both on client and server", function () {
     it("can cancel updates on a subobject in a generic listener on a subobject", function (done) {
         var l = {};
         l.listener = function (event) {
-            event.cancel("not happening either");
+            event.cancel(new Error("not happening either"));
         };
         spyOn(l, 'listener').and.callThrough();
         treeCollection.preUpdate(l.listener);
@@ -791,7 +843,7 @@ describe("Omm both on client and server", function () {
         }).then(function (tree) {
             return tree.getLeaves()[0].flutter();
         }).catch(function (err) {
-            expect(err).toBe("not happening either");
+            expect(err.message).toBe("not happening either");
             expect(l.listener).toHaveBeenCalled();
             done();
         });
@@ -830,7 +882,7 @@ describe("Omm both on client and server", function () {
     it("can cancel updates", function (done) {
         var l = {};
         l.listener = function (event) {
-            event.cancel("nope");
+            event.cancel(new Error("nope"));
         };
         spyOn(l, 'listener').and.callThrough();
         treeCollection.preUpdate(l.listener);
@@ -840,14 +892,13 @@ describe("Omm both on client and server", function () {
             treeId = tree.treeId;
             return Promise.all([tree.grow(), treePromise]);
         }).catch(function (err) {
-            expect(err).toBe("nope");
+            expect(err.message).toBe("nope");
             treeCollection.getById(treeId).then(function (nt) {
                 expect(nt.getLeaves().length).toBe(0);
                 done();
             });
         });
     });
-    //
     it("can register to update events", function (done) {
         var l = {};
         var n = [];
@@ -1027,6 +1078,20 @@ describe("Omm both on client and server", function () {
         expect(doc.length).toBe(1);
         expect(doc[0]).toBe(42);
     });
+    it("did insert is called only once", function (done) {
+        var c = 0;
+        var listener = function (i, data) {
+            c++;
+        };
+        var l = { listener: listener };
+        spyOn(l, "listener").and.callThrough();
+        treeCollection.onInsert(l.listener);
+        treeCollection.newTree(12).then(function (r) {
+            expect(l.listener).toHaveBeenCalled();
+            expect(c).toBe(1);
+            done();
+        });
+    });
     it("returns the proper error", function (done) {
         treeCollection.getByIdOrFail('humbug').catch(function (reason) {
             expect(reason).toBeDefined();
@@ -1037,5 +1102,6 @@ describe("Omm both on client and server", function () {
     });
     // test that calls a nested collection update (one in the other)
     // test that verifies that when en event cancells an operation with ctx.cancell(asdfasdf) its an instanceof Error that rejects the promise.
+    // test that verifies that an onMEthod listener receives the arguments of the method
 });
 //# sourceMappingURL=Tests.spec.js.map

@@ -26,8 +26,9 @@ export declare class EventContext<T> {
     serializationPath: any;
     topic: string;
     jsonDiff: any;
+    arguments: any[];
     constructor(o: T, coll: any);
-    cancel(err: any): void;
+    cancel(err: Error): void;
     cancelledWithError(): any;
 }
 export interface EventListener<T> {

@@ -4,10 +4,12 @@
 "use strict";
 var omm = require("../omm");
 var wm = require("@bvanheukelom/web-methods");
+var Promise = require("bluebird");
 var Server = (function () {
     function Server(express) {
         this.collections = {};
         this.singletons = {};
+        this.methodListener = [];
         this.webMethods = new wm.WebMethods();
         this.serializer = new omm.Serializer();
         this.addAllWebMethods();
@@ -21,6 +23,35 @@ var Server = (function () {
         this.singletons[name] = singleton;
         // singletons dont need a
         omm.SerializationPath.setObjectContext(singleton, undefined, this);
+    };
+    Server.prototype.notifyMethodListeners = function (object, objectId, functionName, args, userData) {
+        var collection;
+        var i1 = objectId.indexOf("[");
+        var i2 = objectId.indexOf("]");
+        if (i1 != -1 && i2 != -1 && i1 < i2)
+            collection = this.getCollection(objectId);
+        var context = new omm.EventContext(object, collection);
+        context.functionName = functionName;
+        context.objectId = objectId;
+        context.userData = userData;
+        context.arguments = args;
+        var promises = [];
+        this.methodListener.forEach(function (ml) {
+            if (!context.cancelledWithError()) {
+                promises.push(Promise.cast(ml(context, undefined)));
+            }
+            else {
+                promises.push(Promise.reject(context.cancelledWithError()));
+            }
+        });
+        return Promise.all(promises).then(function () {
+        });
+    };
+    Server.prototype.onMethod = function (eventHandler) {
+        this.methodListener.push(eventHandler);
+    };
+    Server.prototype.removeAllMethodListeners = function () {
+        this.methodListener = [];
     };
     Server.prototype.addAllWebMethods = function () {
         var _this = this;
@@ -45,6 +76,12 @@ var Server = (function () {
                 var p = _this.retrieveObject(objectId)
                     .then(function (object) {
                     // this might be the collection update or another function that is called directly
+                    console.log("Notifying method event listensers.");
+                    return _this.notifyMethodListeners(object, objectId, functionName, args, userData).then(function () {
+                        return object;
+                    });
+                })
+                    .then(function (object) {
                     Server.userData = userData;
                     var r = object[options.propertyName].apply(object, args);
                     Server.userData = undefined;
@@ -63,6 +100,12 @@ var Server = (function () {
             });
         });
     };
+    Server.prototype.getCollection = function (objectId) {
+        var sPath = new omm.SerializationPath(objectId);
+        var collectionName = sPath.getCollectionName();
+        var collection = collectionName ? this.collections[collectionName] : undefined;
+        return collection;
+    };
     Server.prototype.retrieveObject = function (objectId) {
         var singleton = this.singletons[objectId];
         if (singleton)
@@ -71,8 +114,7 @@ var Server = (function () {
             if (typeof objectId != "string")
                 throw new Error("Path needs to be a string");
             var sPath = new omm.SerializationPath(objectId);
-            var collectionName = sPath.getCollectionName();
-            var collection = collectionName ? this.collections[collectionName] : undefined;
+            var collection = this.getCollection(objectId);
             if (collection) {
                 return collection.getById(sPath.getId()).then(function (o) {
                     return sPath.getSubObject(o);

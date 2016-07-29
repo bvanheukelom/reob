@@ -8,8 +8,10 @@ var SerializationPath = (function () {
         // this.objectRetriever = objectRetriever;
         if (id)
             this.path += "[" + id + "]";
-        if (!this.getId())
-            throw new Error("id is undefined");
+        if (!this.getId()) {
+            debugger;
+            throw new Error("the id parameter is missing");
+        }
     }
     SerializationPath.prototype.clone = function () {
         var sp = new SerializationPath(this.path);
@@ -19,7 +21,12 @@ var SerializationPath = (function () {
         return this.path.split("[")[0];
     };
     SerializationPath.prototype.getId = function () {
-        return this.path.split("[")[1].split("]")[0];
+        var i1 = this.path.indexOf("[");
+        var i2 = this.path.indexOf("]");
+        if (i1 != -1 && i2 != -1 && i1 < i2)
+            return this.path.split("[")[1].split("]")[0];
+        else
+            return undefined;
     };
     SerializationPath.prototype.forEachPathEntry = function (iterator) {
         if (this.path.indexOf(".") != -1)

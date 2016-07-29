@@ -350,13 +350,12 @@ export class Collection<T extends Object> implements omm.Handler
      * @param {omm.Collection~insertCallback} callback
      * @returns {string} the id of the new object
      */
-    insert( p:T ):Promise<string>
-    {
+    insert( p:T ):Promise<string> {
 
         var ctx = new omm.EventContext(p, this);
         var ud = omm.Server.userData;
         ctx.userData = ud;
-        return this.emitLater("willInsert", ctx).then(()=>{
+        return this.emitLater( "willInsert", ctx ).then(()=>{
             //console.log("insert not cancelled");
             // TODO make sure that this is unique
             var idPropertyName = omm.PersistenceAnnotation.getIdPropertyName(this.theClass);

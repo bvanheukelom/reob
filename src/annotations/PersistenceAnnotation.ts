@@ -33,6 +33,7 @@ export interface IMethodOptions{
         serializationPath:any; //omm.SerializationPath;
         topic:string;
         jsonDiff:any;
+        arguments:any[];
 
         constructor(o:T, coll:any /*omm.Collection<T>*/) {
             this.object = o;
@@ -41,7 +42,7 @@ export interface IMethodOptions{
             this.collection = coll;
         }
 
-        cancel(err:any):void {
+        cancel(err:Error):void {
             this.cancelledError = err;
         }
 
@@ -92,7 +93,7 @@ export interface IMethodOptions{
 
     export function getMetadata(propertyName, cls) {
         if (cls.hasOwnProperty("_ommAnnotations"))
-            return cls["_ommAnnotations"][propertyName];
+            return cls["_ommAnnotations"]?cls["_ommAnnotations"][propertyName]:undefined;
         else {
             return undefined;
         }
@@ -518,7 +519,7 @@ export interface IMethodOptions{
         }
 
         private static getPropertyNamesOfPropertiesThatHaveProperties(cls:TypeClass<any>):Array<string>{
-            return Object.keys( getMetadata("property_properties", cls) );
+            return Object.keys( getMetadata("property_properties", cls)  );
         }
 
         // this is i.e. good to find all properties on a class that have a "type" property

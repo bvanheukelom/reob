@@ -7,13 +7,18 @@ export declare class Server {
     private singletons;
     private webMethods;
     private serializer;
+    private methodListener;
     constructor(express: any);
     addCollection(c: omm.Collection<any>): void;
     addSingleton(name: string, singleton: any): void;
+    private notifyMethodListeners(object, objectId, functionName, args, userData);
+    onMethod(eventHandler: omm.EventListener<any>): void;
+    removeAllMethodListeners(): void;
     static userData: any;
     private addAllWebMethods();
+    private getCollection(objectId);
     private retrieveObject(objectId);
     private attachClassName(o);
-    registerGetter(): void;
+    private registerGetter();
     private convertWebMethodParameters(args, classNames);
 }

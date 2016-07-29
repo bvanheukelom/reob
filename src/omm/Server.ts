@@ -4,6 +4,7 @@
 
 import * as omm from "../omm"
 import * as wm from "@bvanheukelom/web-methods"
+import * as Promise from "bluebird"
 
 export class Server{
 
@@ -11,6 +12,7 @@ export class Server{
     private singletons:{ [index:string]: any } = {};
     private webMethods:wm.WebMethods;
     private serializer:omm.Serializer;
+    private methodListener:Array<omm.EventListener<any>> = [];
 
     constructor(express:any) {
         this.webMethods = new wm.WebMethods();
@@ -31,6 +33,39 @@ export class Server{
         omm.SerializationPath.setObjectContext(singleton, undefined, this);
     }
 
+    private notifyMethodListeners( object:any, objectId:string, functionName:string, args:any[], userData:any ):Promise<void>{
+        var collection;
+        var i1 = objectId.indexOf("[");
+        var i2 = objectId.indexOf("]");
+        if(i1!=-1 && i2!=-1 && i1<i2)
+            collection = this.getCollection(objectId);
+
+        var context = new omm.EventContext(object, collection);
+        context.functionName = functionName;
+        context.objectId = objectId;
+        context.userData = userData;
+        context.arguments = args;
+        var promises = [];
+        this.methodListener.forEach((ml:omm.EventListener<any>)=>{
+            if( !context.cancelledWithError() ) {
+                promises.push( Promise.cast( ml(context, undefined) ) );
+            } else {
+                promises.push( Promise.reject( context.cancelledWithError() ) );
+            }
+        });
+        return Promise.all( promises ).then(()=>{
+
+        });
+    }
+
+    onMethod( eventHandler:omm.EventListener<any> ){
+        this.methodListener.push(eventHandler);
+    }
+
+    removeAllMethodListeners(){
+        this.methodListener = [];
+    }
+
     static userData:any;
     private addAllWebMethods():void {
         console.log("adding web methods " );
@@ -39,6 +74,7 @@ export class Server{
             console.log("Adding Web method " + options.name);
             this.webMethods.add(options.name, (...args:any[])=> {
                 console.log("Web method " + options.name);
+
 
                 // the object id is the first parameter
                 var objectId = args.shift();
@@ -56,12 +92,19 @@ export class Server{
                     // call function
                     .then((object:any)=> {
                         // this might be the collection update or another function that is called directly
+
+                        console.log("Notifying method event listensers.");
+                        return this.notifyMethodListeners( object, objectId, functionName, args, userData ).then(()=>{
+                            return object;
+                        });
+
+                    })
+                    .then((object:any)=> {
                         Server.userData = userData;
                         var r =  object[options.propertyName].apply(object, args);
                         Server.userData = undefined;
                         return r;
                     })
-
                     // convert the result to a document
                     .then((result)=> {
                         var res:any = {};
@@ -78,6 +121,13 @@ export class Server{
         });
     }
 
+    private getCollection(objectId:string):omm.Collection<any>{
+        var sPath = new omm.SerializationPath( objectId );
+        var collectionName = sPath.getCollectionName();
+        var collection:omm.Collection<Object> = collectionName ? this.collections[collectionName] : undefined;
+        return collection;
+    }
+
     private retrieveObject( objectId:string ):Promise<any>{
         var singleton = this.singletons[objectId];
         if( singleton )
@@ -86,8 +136,7 @@ export class Server{
             if (typeof objectId != "string")
                 throw new Error("Path needs to be a string");
             var sPath = new omm.SerializationPath( objectId );
-            var collectionName = sPath.getCollectionName();
-            var collection:omm.Collection<Object> = collectionName ? this.collections[collectionName] : undefined;
+            var collection = this.getCollection(objectId);
             if (collection) {
                 return collection.getById(sPath.getId()).then((o)=>{
                     return sPath.getSubObject(o);
@@ -107,7 +156,7 @@ export class Server{
             o.serializationPath = o._serializationPath.toString();
     }
     
-    registerGetter(){
+    private registerGetter(){
         this.webMethods.add("get", (collectionName:string, objectId:string)=>{
             console.log("Getter collectionName:"+collectionName+" Id:"+objectId );
             // var type = omm.entityClasses[className];

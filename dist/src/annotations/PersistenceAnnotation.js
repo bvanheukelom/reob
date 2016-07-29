@@ -48,7 +48,7 @@ function defineMetadata(propertyName, value, cls) {
 exports.defineMetadata = defineMetadata;
 function getMetadata(propertyName, cls) {
     if (cls.hasOwnProperty("_ommAnnotations"))
-        return cls["_ommAnnotations"][propertyName];
+        return cls["_ommAnnotations"] ? cls["_ommAnnotations"][propertyName] : undefined;
     else {
         return undefined;
     }
