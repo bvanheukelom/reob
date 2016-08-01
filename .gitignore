@@ -9,3 +9,4 @@ test_meteor_web/tests/**/*.js
 *.js.map
 node_modules
 !/node_modules/omm
+npm-debug.log

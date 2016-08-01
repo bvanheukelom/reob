@@ -26,7 +26,7 @@ function cloneInternally(o, seenObjects) {
             return seenObjects.clones[seenIndex];
         }
         else {
-            var rObj = Object.create(o.constructor.prototype);
+            var rObj = o.constructor ? Object.create(o.constructor.prototype) : {};
             seenObjects.objects.push(o);
             seenObjects.clones.push(rObj);
             for (var property in o) {

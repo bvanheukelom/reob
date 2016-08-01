@@ -168,7 +168,7 @@ var Collection = (function () {
                 console.log("removing2");
                 var c2 = new omm.EventContext(undefined, _this);
                 c2.objectId = id;
-                return _this.emitLater("didRemove", c2).thenReturn(result);
+                return _this.emitLater("didRemove", c2).thenReturn(true);
             });
         });
     };

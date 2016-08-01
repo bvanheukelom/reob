@@ -209,6 +209,9 @@ export interface IMethodOptions{
      * @memberof omm
      */
     export function arrayType(c:TypeClass<Object>, propertyName:string, typeClassName:string) {
+        if( !c )
+            return;
+
         ArrayOrMap(typeClassName)(c.prototype, propertyName);
     }
 
@@ -318,6 +321,8 @@ export interface IMethodOptions{
      * @memberof omm
      */
     export function getId(o:Object) {
+        if( typeof o=="undefined" )
+            return undefined;
         var idPropertyName = PersistenceAnnotation.getIdPropertyName(PersistenceAnnotation.getClass(o));
         if (!idPropertyName)
             throw new Error("No id property defined for object of class " + PersistenceAnnotation.getClass(o));
@@ -454,11 +459,15 @@ export interface IMethodOptions{
         }
 
         static getDocumentPropertyName(typeClass:TypeClass<any>, objectPropertyName:string):string {
+            if( !typeClass )
+                return undefined;
             var documentNames = getMetadata("documentNames", typeClass.prototype);
             return documentNames ? documentNames[objectPropertyName] : undefined;
         }
 
         static getObjectPropertyName(typeClass:TypeClass<any>, documentPropertyName:string):string {
+            if( !typeClass )
+                return undefined;
             var objectNames = getMetadata("objectNames", typeClass.prototype);
             return objectNames ? objectNames[documentPropertyName] : undefined;
         }
@@ -543,6 +552,9 @@ export interface IMethodOptions{
         }
 
         static getParentClass(t:TypeClass<any>):TypeClass<any> {
+            if( !t )
+                return undefined;
+
             return Object.getPrototypeOf(t.prototype).constructor;
         }
 
@@ -598,6 +610,8 @@ export interface IMethodOptions{
 
 
         private static getCollectionUpdateOptions(cls:TypeClass<any>, functionName:string):any {
+            if( !cls )
+                return undefined;
             return PersistenceAnnotation.getPropertyProperty(cls.prototype, functionName, "collectionUpdate");
         }
 

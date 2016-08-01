@@ -204,13 +204,13 @@ export class Collection<T extends Object> implements omm.Handler
         var ctx = new omm.EventContext( undefined, this );
         ctx.objectId = id;
         return this.emitLater( "willRemove", ctx ).then(()=>{
-            console.log("removing")
+            console.log("removing");
             debugger;
             return this.mongoCollection.remove({_id:id }).then((result)=>{
                 console.log("removing2");
                 var c2 = new omm.EventContext(undefined, this);
                 c2.objectId = id;
-                return this.emitLater( "didRemove", c2 ).thenReturn(result);
+                return this.emitLater( "didRemove", c2 ).thenReturn(true);
             }) ;
         });
     }

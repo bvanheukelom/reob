@@ -164,6 +164,8 @@ exports.ArrayType = ArrayType;
  * @memberof omm
  */
 function arrayType(c, propertyName, typeClassName) {
+    if (!c)
+        return;
     ArrayOrMap(typeClassName)(c.prototype, propertyName);
 }
 exports.arrayType = arrayType;
@@ -269,6 +271,8 @@ exports.propertyDictionaryType = propertyDictionaryType;
  * @memberof omm
  */
 function getId(o) {
+    if (typeof o == "undefined")
+        return undefined;
     var idPropertyName = PersistenceAnnotation.getIdPropertyName(PersistenceAnnotation.getClass(o));
     if (!idPropertyName)
         throw new Error("No id property defined for object of class " + PersistenceAnnotation.getClass(o));
@@ -397,10 +401,14 @@ var PersistenceAnnotation = (function () {
         return !!exports.entityClasses[className(f)];
     };
     PersistenceAnnotation.getDocumentPropertyName = function (typeClass, objectPropertyName) {
+        if (!typeClass)
+            return undefined;
         var documentNames = getMetadata("documentNames", typeClass.prototype);
         return documentNames ? documentNames[objectPropertyName] : undefined;
     };
     PersistenceAnnotation.getObjectPropertyName = function (typeClass, documentPropertyName) {
+        if (!typeClass)
+            return undefined;
         var objectNames = getMetadata("objectNames", typeClass.prototype);
         return objectNames ? objectNames[documentPropertyName] : undefined;
     };
@@ -474,6 +482,8 @@ var PersistenceAnnotation = (function () {
         return undefined;
     };
     PersistenceAnnotation.getParentClass = function (t) {
+        if (!t)
+            return undefined;
         return Object.getPrototypeOf(t.prototype).constructor;
     };
     PersistenceAnnotation.getIdPropertyName = function (t) {
@@ -515,6 +525,8 @@ var PersistenceAnnotation = (function () {
         return PersistenceAnnotation.getPropertyNamesByMetaData(f.prototype, "persistence:wrap");
     };
     PersistenceAnnotation.getCollectionUpdateOptions = function (cls, functionName) {
+        if (!cls)
+            return undefined;
         return PersistenceAnnotation.getPropertyProperty(cls.prototype, functionName, "collectionUpdate");
     };
     PersistenceAnnotation.getCollectionUpdateFunctionNames = function (f) {
