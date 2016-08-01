@@ -61,6 +61,9 @@ var Client = (function () {
                     throw new Error("There can not be parameters of type 'function' in the arguments when calling a web method with name " + methodName);
                 }
             }
+            else {
+                webArgs[i] = args[i];
+            }
         }
         // prepend
         webArgs.unshift(this.userData);
