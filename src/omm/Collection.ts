@@ -409,7 +409,7 @@ export class Collection<T extends Object> implements omm.Handler
         }
 
 
-        console.log( 'doing a collection upate in the collection for '+functionName );
+        console.log( 'Doing a collection upate in the collection for '+functionName, 'userData:', omm.Server.userData );
 
         var rootObject;
         var objectPromise:Promise<any>;
@@ -451,7 +451,7 @@ export class Collection<T extends Object> implements omm.Handler
                             this.updating = false;
                         }
                     }).then((r:CollectionUpdateResult)=>{
-                        console.log("Events collected during updating ", r.events);
+                        console.log("Events collected during updating ", r.events, "user data:",ud );
                         return this.sendEventsCollectedDuringUpdate( r.object, r.object, r.rootObject,functionName, sp, r.events, ud ).then(()=> {
                             var ctx = new omm.EventContext(r.object, this);
                             ctx.functionName = functionName;

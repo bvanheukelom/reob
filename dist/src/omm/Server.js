@@ -82,7 +82,7 @@ var Server = (function () {
                     });
                 })
                     .then(function (object) {
-                    Server.userData = userData;
+                    Server.userData = userData; // this needs to go into the thing more or less
                     var r = object[options.propertyName].apply(object, args);
                     Server.userData = undefined;
                     return r;

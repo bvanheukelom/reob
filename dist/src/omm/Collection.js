@@ -339,7 +339,7 @@ var Collection = (function () {
             console.log("Skipping collection update '" + omm.className(entityClass) + "." + functionName + "' . Collection update already in progress. Calling original function.");
             return originalFunction.apply(object, args);
         }
-        console.log('doing a collection upate in the collection for ' + functionName);
+        console.log('Doing a collection upate in the collection for ' + functionName, 'userData:', omm.Server.userData);
         var rootObject;
         var objectPromise;
         var rootObjectPromise;
@@ -375,7 +375,7 @@ var Collection = (function () {
                             _this.updating = false;
                         }
                     }).then(function (r) {
-                        console.log("Events collected during updating ", r.events);
+                        console.log("Events collected during updating ", r.events, "user data:", ud);
                         return _this.sendEventsCollectedDuringUpdate(r.object, r.object, r.rootObject, functionName, sp, r.events, ud).then(function () {
                             var ctx = new omm.EventContext(r.object, _this);
                             ctx.functionName = functionName;

@@ -81,7 +81,7 @@ export class Server{
 
                 // the user Data is the second parameter
                 var userData = args.shift();
-                console.log("User data ", userData);
+                console.log("User data ", userData);    
 
                 // convert parameters given to the web method from documents to objects
                 this.convertWebMethodParameters(args, options.parameterTypes);
@@ -100,7 +100,7 @@ export class Server{
 
                     })
                     .then((object:any)=> {
-                        Server.userData = userData;
+                        Server.userData = userData; // this needs to go into the thing more or less
                         var r =  object[options.propertyName].apply(object, args);
                         Server.userData = undefined;
                         return r;
