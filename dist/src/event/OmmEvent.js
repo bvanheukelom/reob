@@ -3,6 +3,7 @@
  */
 "use strict";
 var omm = require("../annotations/PersistenceAnnotation");
+var Promise = require("bluebird");
 function on(t, topic, f) {
     var className = omm.className(t);
     if (typeof topic == "function") {
@@ -74,26 +75,32 @@ exports.on = on;
 function callEventListeners(t, topic, ctx, data) {
     var className = omm.className(t);
     ctx.topic = topic;
+    var promises = [];
     if (className && omm.eventListeners[className] && omm.eventListeners[className][topic]) {
         omm.eventListeners[className][topic].forEach(function (el) {
             try {
-                el(ctx, data);
+                var p = Promise.cast(el(ctx, data));
+                promises.push(p);
             }
             catch (e) {
-                console.log("Exception in event listener for class '" + className + "' and topic '" + topic + "':", e);
+                console.error("Exception in event listener for class '" + className + "' and topic '" + topic + "':", e);
             }
         });
     }
     if (topic.indexOf("pre:") != 0 && topic != "pre" && topic.indexOf("post:") != 0 && topic != "post" && className && omm.eventListeners[className] && omm.eventListeners[className]["_all"]) {
         omm.eventListeners[className]["_all"].forEach(function (el) {
             try {
-                el(ctx, data);
+                var p = Promise.cast(el(ctx, data));
+                promises.push(p);
             }
             catch (e) {
-                console.log("Exception in event listener for class '" + className + "' and _all topic:", e);
+                console.error("Exception in event listener for class '" + className + "' and _all topic:", e);
             }
         });
     }
+    return Promise.all(promises).thenReturn().catch(function (reason) {
+        console.error('Error in callEventListeners', reason);
+    });
 }
 exports.callEventListeners = callEventListeners;
 function removeAllUpdateEventListeners() {

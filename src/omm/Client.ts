@@ -4,7 +4,7 @@
 
 import * as omm from "../omm"
 import * as wm from "@bvanheukelom/web-methods"
-import * as Rx from "rx"
+
 import { INetwork } from "./INetwork"
 var jsd = require("jsondiffpatch");
 
@@ -135,5 +135,7 @@ export class Client implements omm.Handler{
 
     setUserData( ud:any ){
         this.userData = ud;
+
     }
+
 }

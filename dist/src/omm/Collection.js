@@ -178,6 +178,17 @@ var Collection = (function () {
     //
     //     return p;
     // }
+    Collection.prototype.getByIds = function (ids) {
+        return this.find({
+            _id: { $in: ids }
+        }).then(function (objs) {
+            var result = {};
+            objs.forEach(function (o) {
+                result[omm.getId(o)] = o;
+            });
+            return result;
+        });
+    };
     Collection.prototype.sendEventsCollectedDuringUpdate = function (preUpdateObject, postUpdateObject, rootObject, functionName, serializationPath, events, userData) {
         var ctx = new omm.EventContext(postUpdateObject, this);
         ctx.preUpdate = preUpdateObject;
@@ -187,12 +198,15 @@ var Collection = (function () {
         ctx.rootObject = rootObject;
         //ctx.ob
         var entityClass = omm.PersistenceAnnotation.getClass(postUpdateObject);
+        var promises = [];
         events.forEach(function (t) {
-            //console.log( 'emitting event:'+t.topic );
-            omm_event.callEventListeners(entityClass, t.topic, ctx, t.data);
+            console.log('emitting event:' + t.topic, ' on class ' + omm.className(entityClass));
+            var p = omm_event.callEventListeners(entityClass, t.topic, ctx, t.data);
+            promises.push(p);
         });
-        omm_event.callEventListeners(entityClass, "post:" + functionName, ctx);
-        omm_event.callEventListeners(entityClass, "post", ctx);
+        promises.push(omm_event.callEventListeners(entityClass, "post:" + functionName, ctx));
+        promises.push(omm_event.callEventListeners(entityClass, "post", ctx));
+        return Promise.all(promises).thenReturn();
     };
     Collection.prototype.updateOnce = function (sp, updateFunction, attempt) {
         var _this = this;
@@ -362,16 +376,17 @@ var Collection = (function () {
                         }
                     }).then(function (r) {
                         console.log("Events collected during updating ", r.events);
-                        _this.sendEventsCollectedDuringUpdate(r.object, r.object, r.rootObject, functionName, sp, r.events, ud);
-                        var ctx = new omm.EventContext(r.object, _this);
-                        ctx.functionName = functionName;
-                        ctx.serializationPath = sp;
-                        ctx.rootObject = r.rootObject;
-                        ctx.userData = ud;
-                        var docBefore = _this.serializer.toDocument(rootObject);
-                        var docAfter = _this.serializer.toDocument(r.rootObject);
-                        ctx.jsonDiff = jdp.diff(docBefore, docAfter);
-                        return _this.emitLater("didUpdate", ctx).thenReturn(r.result);
+                        return _this.sendEventsCollectedDuringUpdate(r.object, r.object, r.rootObject, functionName, sp, r.events, ud).then(function () {
+                            var ctx = new omm.EventContext(r.object, _this);
+                            ctx.functionName = functionName;
+                            ctx.serializationPath = sp;
+                            ctx.rootObject = r.rootObject;
+                            ctx.userData = ud;
+                            var docBefore = _this.serializer.toDocument(rootObject);
+                            var docAfter = _this.serializer.toDocument(r.rootObject);
+                            ctx.jsonDiff = jdp.diff(docBefore, docAfter);
+                            return _this.emitLater("didUpdate", ctx).thenReturn(r.result);
+                        });
                     });
                     return resultPromise;
                 }

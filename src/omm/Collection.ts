@@ -222,8 +222,19 @@ export class Collection<T extends Object> implements omm.Handler
     //     return p;
     // }
 
+    getByIds(ids:Array<string>):Promise<{[index:string]:T}>{
+        return this.find({
+            _id: {$in: ids}
+        }).then((objs)=>{
+            var result:any = {};
+            objs.forEach((o:T)=>{
+                result[omm.getId(o)] = o;
+            });
+            return result;
+        } );
+    }
 
-    sendEventsCollectedDuringUpdate( preUpdateObject, postUpdateObject, rootObject, functionName:string, serializationPath:omm.SerializationPath, events:Array<any>, userData:any ){
+    sendEventsCollectedDuringUpdate( preUpdateObject, postUpdateObject, rootObject, functionName:string, serializationPath:omm.SerializationPath, events:Array<any>, userData:any ):Promise<void>{
         var ctx = new omm.EventContext( postUpdateObject, this );
         ctx.preUpdate = preUpdateObject;
         ctx.functionName = functionName;
@@ -234,13 +245,16 @@ export class Collection<T extends Object> implements omm.Handler
 
         var entityClass = omm.PersistenceAnnotation.getClass(postUpdateObject);
 
+        var promises = [];
         events.forEach(function(t){
-                //console.log( 'emitting event:'+t.topic );
-            omm_event.callEventListeners( entityClass, t.topic, ctx, t.data );
+            console.log( 'emitting event:'+t.topic, ' on class '+omm.className(entityClass) );
+            var p = omm_event.callEventListeners( entityClass, t.topic, ctx, t.data );
+            promises.push( p );
         });
 
-        omm_event.callEventListeners( entityClass, "post:"+functionName, ctx );
-        omm_event.callEventListeners( entityClass, "post", ctx );
+        promises.push( omm_event.callEventListeners( entityClass, "post:"+functionName, ctx ) );
+        promises.push( omm_event.callEventListeners( entityClass, "post", ctx ) );
+        return Promise.all(promises).thenReturn();
     }
 
     private updateOnce(sp:omm.SerializationPath, updateFunction:(o:T)=>void, attempt:number):Promise<CollectionUpdateResult> {
@@ -438,17 +452,17 @@ export class Collection<T extends Object> implements omm.Handler
                         }
                     }).then((r:CollectionUpdateResult)=>{
                         console.log("Events collected during updating ", r.events);
-                        this.sendEventsCollectedDuringUpdate( r.object, r.object, r.rootObject,functionName, sp, r.events, ud );
-
-                        var ctx = new omm.EventContext( r.object, this );
-                        ctx.functionName = functionName;
-                        ctx.serializationPath = sp;
-                        ctx.rootObject = r.rootObject;
-                        ctx.userData = ud;
-                        var docBefore = this.serializer.toDocument(rootObject);
-                        var docAfter = this.serializer.toDocument(r.rootObject);
-                        ctx.jsonDiff = jdp.diff( docBefore, docAfter );
-                        return this.emitLater( "didUpdate", ctx ).thenReturn(r.result);
+                        return this.sendEventsCollectedDuringUpdate( r.object, r.object, r.rootObject,functionName, sp, r.events, ud ).then(()=> {
+                            var ctx = new omm.EventContext(r.object, this);
+                            ctx.functionName = functionName;
+                            ctx.serializationPath = sp;
+                            ctx.rootObject = r.rootObject;
+                            ctx.userData = ud;
+                            var docBefore = this.serializer.toDocument(rootObject);
+                            var docAfter = this.serializer.toDocument(r.rootObject);
+                            ctx.jsonDiff = jdp.diff(docBefore, docAfter);
+                            return this.emitLater("didUpdate", ctx).thenReturn(r.result);
+                        });
                     });
 
                     return resultPromise;

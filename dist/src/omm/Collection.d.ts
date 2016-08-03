@@ -65,7 +65,10 @@ export declare class Collection<T extends Object> implements omm.Handler {
      * @callback cb the callback that's called once the object is removed or an error happend
      */
     protected remove(id: string): Promise<any>;
-    sendEventsCollectedDuringUpdate(preUpdateObject: any, postUpdateObject: any, rootObject: any, functionName: string, serializationPath: omm.SerializationPath, events: Array<any>, userData: any): void;
+    getByIds(ids: Array<string>): Promise<{
+        [index: string]: T;
+    }>;
+    sendEventsCollectedDuringUpdate(preUpdateObject: any, postUpdateObject: any, rootObject: any, functionName: string, serializationPath: omm.SerializationPath, events: Array<any>, userData: any): Promise<void>;
     private updateOnce(sp, updateFunction, attempt);
     /**
      * Performs an update on an object in the collection. After the update the object is attempted to be saved to

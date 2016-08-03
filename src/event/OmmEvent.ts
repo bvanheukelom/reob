@@ -3,6 +3,7 @@
  */
 
 import * as omm from "../annotations/PersistenceAnnotation"
+import * as Promise from "bluebird"
 
 export function on<O extends Object>( t:omm.TypeClass<O>, topic:string|omm.EventListener<any>,  f?:omm.EventListener<any> ):void {
     var className = omm.className(t);
@@ -75,15 +76,17 @@ export function on<O extends Object>( t:omm.TypeClass<O>, topic:string|omm.Event
 //     omm.eventListeners[className][topic].push(f);
 // }
 
-export function callEventListeners<O extends Object>( t:omm.TypeClass<O>, topic:string, ctx:omm.EventContext<any>, data?:any ){
+export function callEventListeners<O extends Object>( t:omm.TypeClass<O>, topic:string, ctx:omm.EventContext<any>, data?:any ):Promise<void>{
     var className = omm.className(t);
     ctx.topic = topic;
+    var promises = [];
     if( className && omm.eventListeners[className] && omm.eventListeners[className][topic] ){
         omm.eventListeners[className][topic].forEach( function(el:omm.EventListener<any>){
             try {
-                el(ctx, data);
+                var p = Promise.cast( el(ctx, data) );
+                promises.push( p );
             }catch( e ){
-                console.log("Exception in event listener for class '"+className+"' and topic '"+topic+"':", e);
+                console.error("Exception in event listener for class '"+className+"' and topic '"+topic+"':", e);
             }
         });
     }
@@ -91,12 +94,16 @@ export function callEventListeners<O extends Object>( t:omm.TypeClass<O>, topic:
     if( topic.indexOf("pre:")!=0 && topic!="pre" && topic.indexOf("post:")!=0 && topic!="post" && className && omm.eventListeners[className] && omm.eventListeners[className]["_all"] ) {
         omm.eventListeners[className]["_all"].forEach(function (el:omm.EventListener<any>) {
             try{
-                el( ctx, data );
+                var p = Promise.cast( el(ctx, data) );
+                promises.push( p );
             }catch( e ){
-                console.log("Exception in event listener for class '"+className+"' and _all topic:", e);
+                console.error("Exception in event listener for class '"+className+"' and _all topic:", e);
             }
         });
     }
+    return Promise.all(promises).thenReturn().catch((reason)=>{
+        console.error('Error in callEventListeners',reason);
+    });
 }
 
 export function removeAllUpdateEventListeners(){
