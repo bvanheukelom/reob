@@ -230,6 +230,28 @@ describe("Omm both on client and server", function () {
             done();
         });
     });
+    
+    it("has pre and post documents in the update context", function (done) {
+        var t1:Tests.TestTree = new Tests.TestTree(10);
+        t1.grow();
+        var i;
+        treeCollection.insert(t1).then((id:string)=>{
+            i = id;
+            return treeCollection.getById(id);
+        }).then((t:Tests.TestTree)=> {
+            var doc = new omm.Serializer().toDocument(t);
+            var l ={listener:(ctx:omm.EventContext<Tests.TestTree>)=>{
+                expect( ctx.preUpdateDocument  ).toBeDefined();
+                expect( ctx.postUpdateDocument ).toBeDefined();
+            }};
+            spyOn(l,"listener").and.callThrough();
+            treeCollection.onUpdate(l.listener);
+            
+            return Promise.cast( t.setSomeBooleanTo( true ) ).thenReturn(doc);
+        }).then(()=>{
+            done();
+        });
+    });
 
     it("can serialize sub objects", function () {
         var t1:Tests.TestTree = new Tests.TestTree(10);

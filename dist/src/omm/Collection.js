@@ -4,7 +4,6 @@ var omm_sp = require("./SerializationPath");
 var omm_event = require("../event/OmmEvent");
 var Promise = require("bluebird");
 var uuid = require("node-uuid");
-var jdp = require("jsondiffpatch");
 var Collection = (function () {
     /**
      * Represents a Mongo collection that contains entities.
@@ -257,12 +256,16 @@ var Collection = (function () {
             return _this.mongoCollection.updateOne({
                 _id: omm.getId(rootObject),
                 serial: currentSerial
-            }, documentToSave);
+            }, documentToSave).then(function (updateResult) {
+                updateResult['documentToSave'] = documentToSave;
+                return updateResult;
+            });
         });
-        return Promise.all([resultPromise, updatePromise, rootObjectPromise]).then(function (values) {
+        return Promise.all([resultPromise, updatePromise, rootObjectPromise, documentPromise]).then(function (values) {
             var result = values[0];
             var updateResult = values[1];
             var rootObject = values[2];
+            var documentPre = values[3];
             // verify that that went well
             if (updateResult.modifiedCount == 1) {
                 var cr = {
@@ -270,6 +273,8 @@ var Collection = (function () {
                     rootObject: rootObject,
                     object: result.object,
                     result: result.result,
+                    rootDocumentPre: documentPre,
+                    rootDocumentPost: updateResult.documentToSave
                 };
                 return cr;
             }
@@ -382,9 +387,8 @@ var Collection = (function () {
                             ctx.serializationPath = sp;
                             ctx.rootObject = r.rootObject;
                             ctx.userData = ud;
-                            var docBefore = _this.serializer.toDocument(rootObject);
-                            var docAfter = _this.serializer.toDocument(r.rootObject);
-                            ctx.jsonDiff = jdp.diff(docBefore, docAfter);
+                            ctx.preUpdateDocument = r.rootDocumentPre;
+                            ctx.postUpdateDocument = r.rootDocumentPost;
                             return _this.emitLater("didUpdate", ctx).thenReturn(r.result);
                         });
                     });

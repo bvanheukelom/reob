@@ -94,4 +94,6 @@ export interface CollectionUpdateResult {
     events: Array<any>;
     object: any;
     rootObject: any;
+    rootDocumentPre: any;
+    rootDocumentPost: any;
 }

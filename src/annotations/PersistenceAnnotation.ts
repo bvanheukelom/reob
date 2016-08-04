@@ -24,6 +24,8 @@ export interface IMethodOptions{
     export class EventContext<T> {
         private  cancelledError:any = false;
         preUpdate:T;
+        preUpdateDocument:Document;
+        postUpdateDocument:Document;
         object:T;
         userData:any;
         objectId:string;
@@ -32,7 +34,6 @@ export interface IMethodOptions{
         functionName:string;
         serializationPath:any; //omm.SerializationPath;
         topic:string;
-        jsonDiff:any;
         arguments:any[];
 
         constructor(o:T, coll:any /*omm.Collection<T>*/) {

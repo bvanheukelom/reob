@@ -12,7 +12,7 @@ import * as mongodb from "mongodb"
 import * as Promise from "bluebird"
 
 import * as uuid from "node-uuid"
-var jdp = require("jsondiffpatch");
+
 
 export class Collection<T extends Object> implements omm.Handler
 {
@@ -313,13 +313,17 @@ export class Collection<T extends Object> implements omm.Handler
             return this.mongoCollection.updateOne({
                 _id: omm.getId(rootObject),
                 serial: currentSerial
-            }, documentToSave);
+            }, documentToSave).then((updateResult)=>{
+                updateResult['documentToSave'] = documentToSave;
+                return updateResult;
+            });
         });
 
-        return Promise.all([resultPromise, updatePromise, rootObjectPromise]).then( (values:any[]) => {
+        return Promise.all([resultPromise, updatePromise, rootObjectPromise, documentPromise]).then( (values:any[]) => {
             var result= values[0];
             var updateResult:any = values[1];
             var rootObject:any = values[2];
+            var documentPre:any = values[3];
             // verify that that went well
             if (updateResult.modifiedCount == 1) {
                 var cr:CollectionUpdateResult = {
@@ -327,6 +331,8 @@ export class Collection<T extends Object> implements omm.Handler
                     rootObject: rootObject,
                     object : result.object,
                     result : result.result,
+                    rootDocumentPre: documentPre,
+                    rootDocumentPost: updateResult.documentToSave
                 };
                 return cr;
             }
@@ -458,9 +464,9 @@ export class Collection<T extends Object> implements omm.Handler
                             ctx.serializationPath = sp;
                             ctx.rootObject = r.rootObject;
                             ctx.userData = ud;
-                            var docBefore = this.serializer.toDocument(rootObject);
-                            var docAfter = this.serializer.toDocument(r.rootObject);
-                            ctx.jsonDiff = jdp.diff(docBefore, docAfter);
+                            ctx.preUpdateDocument = r.rootDocumentPre;
+                            ctx.postUpdateDocument = r.rootDocumentPost;
+
                             return this.emitLater("didUpdate", ctx).thenReturn(r.result);
                         });
                     });
@@ -477,5 +483,7 @@ export interface CollectionUpdateResult{
     events:Array<any>; // the events emitted with omm.emit during the update that went through
     object:any; // the updated object
     rootObject:any; // the root object
+    rootDocumentPre:any;
+    rootDocumentPost:any;
 }
 

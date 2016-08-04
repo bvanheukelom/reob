@@ -7,6 +7,7 @@ export class TestTree {
     private height:number = 10;
     someArray:Array<any> = [];
     creationDate:Date;
+    someBoolean:boolean = false;
 
     @omm.ArrayType("TestLeaf")
     @omm.DocumentName('thoseGreenThings')
@@ -61,6 +62,11 @@ export class TestTree {
         return this.leaves;
     }
 
+    @omm.CollectionUpdate
+    setSomeBooleanTo( f:boolean ){
+        this.someBoolean = f;
+    }
+    
     @omm.CollectionUpdate
     @omm.MeteorMethod({replaceWithCall:true, resultType:"TestLeaf"})
     growAndReturnLeaves():Array<Tests.TestLeaf>{

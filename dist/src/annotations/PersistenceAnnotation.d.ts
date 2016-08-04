@@ -17,6 +17,8 @@ export interface TypeClass<T> {
 export declare class EventContext<T> {
     private cancelledError;
     preUpdate: T;
+    preUpdateDocument: Document;
+    postUpdateDocument: Document;
     object: T;
     userData: any;
     objectId: string;
@@ -25,7 +27,6 @@ export declare class EventContext<T> {
     functionName: string;
     serializationPath: any;
     topic: string;
-    jsonDiff: any;
     arguments: any[];
     constructor(o: T, coll: any);
     cancel(err: Error): void;

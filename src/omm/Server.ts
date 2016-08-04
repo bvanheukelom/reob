@@ -74,7 +74,7 @@ export class Server{
             console.log("Adding Web method " + options.name);
             this.webMethods.add(options.name, (...args:any[])=> {
                 console.log("Web method " + options.name);
-
+                var startTime = Date.now();
 
                 // the object id is the first parameter
                 var objectId = args.shift();
@@ -111,7 +111,8 @@ export class Server{
                         if( result ){
                             res.document = this.serializer.toDocument(result, true);
                         }
-                        console.log("Result of web method " + options.name + " is ", res);
+
+                        console.log("Result of web method " + options.name + " (calculated in "+(Date.now()-startTime)+"ms) is ", res);
                         return res;
                     });
 

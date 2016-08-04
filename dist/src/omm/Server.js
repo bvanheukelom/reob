@@ -65,6 +65,7 @@ var Server = (function () {
                     args[_i - 0] = arguments[_i];
                 }
                 console.log("Web method " + options.name);
+                var startTime = Date.now();
                 // the object id is the first parameter
                 var objectId = args.shift();
                 // the user Data is the second parameter
@@ -92,7 +93,7 @@ var Server = (function () {
                     if (result) {
                         res.document = _this.serializer.toDocument(result, true);
                     }
-                    console.log("Result of web method " + options.name + " is ", res);
+                    console.log("Result of web method " + options.name + " (calculated in " + (Date.now() - startTime) + "ms) is ", res);
                     return res;
                 });
                 // return the promise

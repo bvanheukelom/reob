@@ -4,6 +4,7 @@ export declare class TestTree {
     private height;
     someArray: Array<any>;
     creationDate: Date;
+    someBoolean: boolean;
     leaves: Array<Tests.TestLeaf>;
     address: Tests.TestAddress;
     constructor(initialHeight?: number);
@@ -14,5 +15,6 @@ export declare class TestTree {
     thisThrowsAnError(): void;
     getHeight(): number;
     getLeaves(): Array<Tests.TestLeaf>;
+    setSomeBooleanTo(f: boolean): void;
     growAndReturnLeaves(): Array<Tests.TestLeaf>;
 }

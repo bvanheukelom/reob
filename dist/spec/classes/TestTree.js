@@ -11,6 +11,7 @@ var TestTree = (function () {
     function TestTree(initialHeight) {
         this.height = 10;
         this.someArray = [];
+        this.someBoolean = false;
         this.leaves = [];
         this.height = initialHeight || 10;
         this.creationDate = new Date();
@@ -44,6 +45,9 @@ var TestTree = (function () {
     TestTree.prototype.getLeaves = function () {
         return this.leaves;
     };
+    TestTree.prototype.setSomeBooleanTo = function (f) {
+        this.someBoolean = f;
+    };
     TestTree.prototype.growAndReturnLeaves = function () {
         this.grow();
         return this.leaves;
@@ -70,6 +74,9 @@ var TestTree = (function () {
     __decorate([
         omm.Wrap
     ], TestTree.prototype, "thisThrowsAnError", null);
+    __decorate([
+        omm.CollectionUpdate
+    ], TestTree.prototype, "setSomeBooleanTo", null);
     __decorate([
         omm.CollectionUpdate,
         omm.MeteorMethod({ replaceWithCall: true, resultType: "TestLeaf" })
