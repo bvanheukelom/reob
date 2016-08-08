@@ -4,6 +4,7 @@
 
 import * as omm from "../omm"
 import * as wm from "@bvanheukelom/web-methods"
+import * as eventemitter from "eventemitter2"
 
 import { INetwork } from "./INetwork"
 var jsd = require("jsondiffpatch");
@@ -15,6 +16,7 @@ export class Client implements omm.Handler{
     private webMethods:wm.WebMethods;
     private singletons:{ [index:string]: any } = {};
     private network:INetwork;
+    private eventEmitter:any;
 
     constructor(host:string, port:number, network?:INetwork){
         if( !omm.MeteorPersistence.isInitialized() )
@@ -23,6 +25,7 @@ export class Client implements omm.Handler{
         this.webMethods = new wm.WebMethods(endpointUrl);
         this.serializer = new omm.Serializer();
         this.network = network;
+        this.eventEmitter = new eventemitter.EventEmitter2();
     }
 
     addSingleton( name:string, singleton:any ):void{
@@ -88,7 +91,26 @@ export class Client implements omm.Handler{
                 obje = this.serializer.toObject(result.document, this );
             }
             return obje;
+        }).catch((reason)=>{
+            if( reason.message=="XHR error" ){
+                var e = new Error("Network error");
+                this.emitNetworkError(e);
+                throw e;
+            }else
+                throw reason;
         });
+    }
+
+    onNetworkError(f:(e)=>void){
+        this.eventEmitter.on("network-error", f);
+    }
+
+    removeNetworkErrorListener(f:(e)=>void){
+        this.eventEmitter.removeEventLister("network-error", f);
+    }
+
+    private emitNetworkError( error ){
+        this.eventEmitter.emit( "network-error", error );
     }
 
     private getSingletonKey(o:any){
@@ -121,12 +143,19 @@ export class Client implements omm.Handler{
             var rOriginal;
             this.webMethodRunning = true;
             try{
-                rOriginal = originalFunction.apply(object, args);
+                rOriginal = Promise.cast(originalFunction.apply(object, args));
+            }catch(error){
+                rOriginal = Promise.reject(error);
             } finally {
                 this.webMethodRunning= false;
             }
             if( !r )
                 r = rOriginal;
+            else{
+                rOriginal.catch(()=>{
+                    // hide exception, as the result is coming from the server
+                });
+            }
             omm.SerializationPath.updateObjectContexts(object, this);
         }
 

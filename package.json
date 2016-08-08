@@ -21,6 +21,7 @@
   "dependencies": {
     "@bvanheukelom/web-methods": "*",
     "bluebird": "^3.4.1",
+    "eventemitter2": "^2.1.0",
     "jsondiffpatch": "^0.1.43",
     "mongodb": "^2.1.18",
     "node-uuid": "^1.4.7"

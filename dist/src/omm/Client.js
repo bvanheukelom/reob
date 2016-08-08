@@ -4,6 +4,7 @@
 "use strict";
 var omm = require("../omm");
 var wm = require("@bvanheukelom/web-methods");
+var eventemitter = require("eventemitter2");
 var jsd = require("jsondiffpatch");
 var Client = (function () {
     function Client(host, port, network) {
@@ -15,6 +16,7 @@ var Client = (function () {
         this.webMethods = new wm.WebMethods(endpointUrl);
         this.serializer = new omm.Serializer();
         this.network = network;
+        this.eventEmitter = new eventemitter.EventEmitter2();
     }
     Client.prototype.addSingleton = function (name, singleton) {
         this.singletons[name] = singleton;
@@ -78,7 +80,24 @@ var Client = (function () {
                 obje = _this.serializer.toObject(result.document, _this);
             }
             return obje;
+        }).catch(function (reason) {
+            if (reason.message == "XHR error") {
+                var e = new Error("Network error");
+                _this.emitNetworkError(e);
+                throw e;
+            }
+            else
+                throw reason;
         });
+    };
+    Client.prototype.onNetworkError = function (f) {
+        this.eventEmitter.on("network-error", f);
+    };
+    Client.prototype.removeNetworkErrorListener = function (f) {
+        this.eventEmitter.removeEventLister("network-error", f);
+    };
+    Client.prototype.emitNetworkError = function (error) {
+        this.eventEmitter.emit("network-error", error);
     };
     Client.prototype.getSingletonKey = function (o) {
         for (var i in this.singletons) {
@@ -105,13 +124,21 @@ var Client = (function () {
             var rOriginal;
             this.webMethodRunning = true;
             try {
-                rOriginal = originalFunction.apply(object, args);
+                rOriginal = Promise.cast(originalFunction.apply(object, args));
+            }
+            catch (error) {
+                rOriginal = Promise.reject(error);
             }
             finally {
                 this.webMethodRunning = false;
             }
             if (!r)
                 r = rOriginal;
+            else {
+                rOriginal.catch(function () {
+                    // hide exception, as the result is coming from the server
+                });
+            }
             omm.SerializationPath.updateObjectContexts(object, this);
         }
         return r;
