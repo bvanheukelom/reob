@@ -162,7 +162,6 @@ var Collection = (function () {
         ctx.objectId = id;
         return this.emitLater("willRemove", ctx).then(function () {
             console.log("removing");
-            debugger;
             return _this.mongoCollection.remove({ _id: id }).then(function (result) {
                 console.log("removing2");
                 var c2 = new omm.EventContext(undefined, _this);
@@ -229,7 +228,9 @@ var Collection = (function () {
         var objectPromise = rootObjectPromise.then(function (rootObject) {
             return sp.getSubObject(rootObject);
         });
-        var resultPromise = objectPromise.then(function (object) {
+        var resultPromise = Promise.all([objectPromise, rootObjectPromise]).then(function (values) {
+            var object = values[0];
+            var rootObject = values[1];
             omm_event.resetQueue();
             // call the update function
             var result = {};
@@ -239,7 +240,8 @@ var Collection = (function () {
             result.events = omm_event.getQueue();
             result.object = object;
             omm_event.resetQueue();
-            omm_sp.SerializationPath.updateObjectContexts(object, _this);
+            omm_sp.SerializationPath.setObjectContext(rootObject, new omm.SerializationPath(_this.getName(), omm.getId(rootObject)), _this);
+            omm_sp.SerializationPath.updateObjectContexts(rootObject, _this);
             return result;
         });
         var updatePromise = Promise.all([objectPromise, currentSerialPromise, resultPromise, rootObjectPromise]).then(function (values) {
@@ -285,7 +287,6 @@ var Collection = (function () {
                 return _this.updateOnce(sp, updateFunction, attempt + 1);
             }
             else {
-                debugger;
                 return Promise.reject(new Error("tried 10 times to update the document"));
             }
         });

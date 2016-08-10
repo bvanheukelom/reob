@@ -73,7 +73,7 @@ export class Server{
             var options:omm.IMethodOptions = omm.PersistenceAnnotation.getMethodOptions( functionName );
             console.log("Adding Web method " + options.name);
             this.webMethods.add(options.name, (...args:any[])=> {
-                console.log("Web method " + options.name);
+                console.log(new Date()+": WebMethod invokation. Name:" + options.name);
                 var startTime = Date.now();
 
                 // the object id is the first parameter
@@ -159,7 +159,7 @@ export class Server{
     
     private registerGetter(){
         this.webMethods.add("get", (collectionName:string, objectId:string)=>{
-            console.log("Getter collectionName:"+collectionName+" Id:"+objectId );
+            console.log(new Date()+": Getter. CollectionName:"+collectionName+" Id:"+objectId );
             // var type = omm.entityClasses[className];
             // var collectionName  = type ? omm.PersistenceAnnotation.getCollectionName( type ) : undefined;
             var objPromise = collectionName ? this.retrieveObject(collectionName+"["+objectId+"]") : undefined;

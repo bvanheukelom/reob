@@ -94,7 +94,7 @@ var Client = (function () {
         this.eventEmitter.on("network-error", f);
     };
     Client.prototype.removeNetworkErrorListener = function (f) {
-        this.eventEmitter.removeEventLister("network-error", f);
+        this.eventEmitter.removeListener("network-error", f);
     };
     Client.prototype.emitNetworkError = function (error) {
         this.eventEmitter.emit("network-error", error);

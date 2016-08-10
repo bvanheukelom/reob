@@ -18,11 +18,11 @@ var MeteorPersistence = (function () {
                         }
                         var _ommObjectContext = this._ommObjectContext;
                         if (!_ommObjectContext || !_ommObjectContext.handler || !_ommObjectContext.handler.collectionUpdate) {
-                            console.log("Collection update function " + functionName + ". Calling original function. No handler found. ", args);
+                            console.log(new Date() + ": CollectionUpdate called. Function " + functionName + ". Calling original function. No handler found. ", args);
                             return originalFunction.apply(this, args);
                         }
                         else {
-                            console.log("collection update function " + functionName + ". Calling handler. ", args);
+                            console.log(new Date() + ": CollectionUpdate called. Function " + functionName + ". Calling handler. ", args);
                             return _ommObjectContext.handler.collectionUpdate(entityClass, functionName, this, originalFunction, args);
                         }
                     });
@@ -40,11 +40,11 @@ var MeteorPersistence = (function () {
                     //console.log("updating object:",this, "original function :"+originalFunction);
                     var _ommObjectContext = this._ommObjectContext;
                     if (!_ommObjectContext || !_ommObjectContext.handler || !_ommObjectContext.handler.webMethod) {
-                        console.log("web method function " + functionName + ". Calling original function. No handler found.", args);
+                        console.log(new Date() + ": WebMethod called. Function " + functionName + ". Calling original function. No handler found.", args);
                         return originalFunction.apply(this, args);
                     }
                     else {
-                        console.log("web method function " + functionName + ". Calling handler.", args);
+                        console.log(new Date() + ": WebMethod called. Function " + functionName + ". Calling handler.", args);
                         return _ommObjectContext.handler.webMethod(omm.PersistenceAnnotation.getClass(this), functionName, this, originalFunction, args);
                     }
                 });

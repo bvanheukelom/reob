@@ -106,7 +106,7 @@ export class Client implements omm.Handler{
     }
 
     removeNetworkErrorListener(f:(e)=>void){
-        this.eventEmitter.removeEventLister("network-error", f);
+        this.eventEmitter.removeListener("network-error", f);
     }
 
     private emitNetworkError( error ){

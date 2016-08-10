@@ -64,7 +64,7 @@ var Server = (function () {
                 for (var _i = 0; _i < arguments.length; _i++) {
                     args[_i - 0] = arguments[_i];
                 }
-                console.log("Web method " + options.name);
+                console.log(new Date() + ": WebMethod invokation. Name:" + options.name);
                 var startTime = Date.now();
                 // the object id is the first parameter
                 var objectId = args.shift();
@@ -136,7 +136,7 @@ var Server = (function () {
     Server.prototype.registerGetter = function () {
         var _this = this;
         this.webMethods.add("get", function (collectionName, objectId) {
-            console.log("Getter collectionName:" + collectionName + " Id:" + objectId);
+            console.log(new Date() + ": Getter. CollectionName:" + collectionName + " Id:" + objectId);
             // var type = omm.entityClasses[className];
             // var collectionName  = type ? omm.PersistenceAnnotation.getCollectionName( type ) : undefined;
             var objPromise = collectionName ? _this.retrieveObject(collectionName + "[" + objectId + "]") : undefined;

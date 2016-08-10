@@ -205,7 +205,6 @@ export class Collection<T extends Object> implements omm.Handler
         ctx.objectId = id;
         return this.emitLater( "willRemove", ctx ).then(()=>{
             console.log("removing");
-            debugger;
             return this.mongoCollection.remove({_id:id }).then((result)=>{
                 console.log("removing2");
                 var c2 = new omm.EventContext(undefined, this);
@@ -280,7 +279,9 @@ export class Collection<T extends Object> implements omm.Handler
             return sp.getSubObject(rootObject);
         });
 
-        var resultPromise = objectPromise.then( (object:any)=>{
+        var resultPromise = Promise.all([objectPromise,rootObjectPromise]).then( (values:any)=>{
+            var object  = values[0];
+            var rootObject = values[1];
             omm_event.resetQueue();
             // call the update function
             var result:any = {};
@@ -292,7 +293,8 @@ export class Collection<T extends Object> implements omm.Handler
             result.events = omm_event.getQueue();
             result.object = object;
             omm_event.resetQueue();
-            omm_sp.SerializationPath.updateObjectContexts(object, this);
+            omm_sp.SerializationPath.setObjectContext(rootObject, new omm.SerializationPath(this.getName(), omm.getId(rootObject)), this);
+            omm_sp.SerializationPath.updateObjectContexts(rootObject, this);
             return result;
         });
         
@@ -343,7 +345,6 @@ export class Collection<T extends Object> implements omm.Handler
                 //console.log("rerunning verified update ");
                 // we need to do this again
             } else {
-                debugger;
                 return Promise.reject( new Error("tried 10 times to update the document"));
             }
         });
