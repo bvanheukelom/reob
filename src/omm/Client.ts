@@ -34,9 +34,9 @@ export class Client implements omm.Handler{
     }
     
     load<T>( clsOrString:omm.TypeClass<T>|string, id:string ):Promise<T>{
-        var collectionName = clsOrString;
+        var collectionName:any = clsOrString;
         if( typeof clsOrString!="string" )
-            collectionName = omm.className(clsOrString);
+            collectionName = omm.className(<omm.TypeClass<T>>clsOrString);
         return this.webMethods.call( "get", collectionName, id ).then( (result)=>{
             console.log("Client loaded :",result);
             var o = this.serializer.toObject( result,  this );
@@ -46,9 +46,9 @@ export class Client implements omm.Handler{
     }
 
     loadDocument<T>( clsOrString:omm.TypeClass<T>|string, id:string ):Promise<T>{
-        var collectionName = clsOrString;
+        var collectionName:any = clsOrString;
         if( typeof clsOrString!="string" )
-            collectionName = omm.className(clsOrString);
+            collectionName = omm.className(<omm.TypeClass<T>>clsOrString);
         return this.webMethods.call( "get", collectionName, id ).then( (result)=>{
             var document = result.document;
             // var serializationPath = new omm.SerializationPath(result.serializationPath);

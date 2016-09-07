@@ -257,6 +257,11 @@ export interface IMethodOptions{
         PersistenceAnnotation.setPropertyProperty(targetPrototypeObject, propertyName, "ignore", true);
     }
 
+    export function PrivateToServer(targetPrototypeObject:any, propertyName:string) {
+        console.log( "Privat to server: ", propertyName );
+        PersistenceAnnotation.setPropertyProperty(targetPrototypeObject, propertyName, "privateToServer", true);
+    }
+
     /**
      * Declares that a property of an entity is not persisted.
      * @param c {function} The constructor function of the entity class.
@@ -584,6 +589,15 @@ export interface IMethodOptions{
                     return true;
                 f = PersistenceAnnotation.getParentClass(f);
 
+            }
+            return false;
+        }
+
+        static isPrivateToServer(f:TypeClass<any>, propertyName:string):boolean {
+            while (f != Object) {
+                if (PersistenceAnnotation.getPropertyProperty(f, propertyName, "privateToServer"))
+                    return true;
+                f = PersistenceAnnotation.getParentClass(f);
             }
             return false;
         }

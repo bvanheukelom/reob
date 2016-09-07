@@ -18,6 +18,7 @@
     ],
     "files": [
         "typings/bluebird/bluebird.d.ts",
+        "typings/eventemitter2/eventemitter2.d.ts",
         "typings/express-serve-static-core/express-serve-static-core.d.ts",
         "typings/express/express.d.ts",
         "typings/jasmine/jasmine.d.ts",
@@ -27,8 +28,6 @@
         "typings/node-uuid/node-uuid-cjs.d.ts",
         "typings/node-uuid/node-uuid.d.ts",
         "typings/node/node.d.ts",
-        "typings/rx/rx-lite.d.ts",
-        "typings/rx/rx.d.ts",
         "typings/serve-static/serve-static.d.ts",
         "typings/underscore/underscore.d.ts",
         "src/annotations/PersistenceAnnotation.ts",

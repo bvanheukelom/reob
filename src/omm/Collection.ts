@@ -56,6 +56,7 @@ export class Collection<T extends Object> implements omm.Handler
         if( !this.eventListeners[topic] )
             this.eventListeners[topic] = [];
         this.eventListeners[topic].push(f);
+        console.log('Added event listener '+topic+" to collection "+this.getName()+". Total event listeners:" );
     }
 
     emit( topic:string, data:any ){
@@ -245,6 +246,9 @@ export class Collection<T extends Object> implements omm.Handler
         var entityClass = omm.PersistenceAnnotation.getClass(postUpdateObject);
 
         var promises = [];
+
+        // hack?!
+        omm.Server.userData = userData;
         events.forEach(function(t){
             console.log( 'emitting event:'+t.topic, ' on class '+omm.className(entityClass) );
             var p = omm_event.callEventListeners( entityClass, t.topic, ctx, t.data );
@@ -304,20 +308,21 @@ export class Collection<T extends Object> implements omm.Handler
             var result = values[2];
             var rootObject = values[3];
             var ctx = new omm.EventContext( rootObject, this);
-            omm_event.callEventListeners(this.getEntityClass(), "preSave", ctx);
+            return omm_event.callEventListeners(this.getEntityClass(), "preSave", ctx).then(()=> {
 
-            var documentToSave:Document = this.serializer.toDocument(rootObject);
-            documentToSave.serial = (currentSerial || 0) + 1;
+                var documentToSave:Document = this.serializer.toDocument(rootObject);
+                documentToSave.serial = (currentSerial || 0) + 1;
 
-            // update the collection
-            // console.log("writing document ", documentToSave);
+                // update the collection
+                // console.log("writing document ", documentToSave);
 
-            return this.mongoCollection.updateOne({
-                _id: omm.getId(rootObject),
-                serial: currentSerial
-            }, documentToSave).then((updateResult)=>{
-                updateResult['documentToSave'] = documentToSave;
-                return updateResult;
+                return this.mongoCollection.updateOne({
+                    _id: omm.getId(rootObject),
+                    serial: currentSerial
+                }, documentToSave).then((updateResult)=> {
+                    updateResult['documentToSave'] = documentToSave;
+                    return updateResult;
+                });
             });
         });
 
@@ -452,6 +457,7 @@ export class Collection<T extends Object> implements omm.Handler
                     var resultPromise:Promise<CollectionUpdateResult> = this.update( sp,  (subObject) => {
                         this.updating = true;
                         try{
+                            omm.Server.userData = ud;
                             var r2 = originalFunction.apply(subObject, args);
                             return r2;
                         }finally{
@@ -460,7 +466,7 @@ export class Collection<T extends Object> implements omm.Handler
                     }).then((r:CollectionUpdateResult)=>{
                         console.log("Events collected during updating ", r.events, "user data:",ud );
                         return this.sendEventsCollectedDuringUpdate( r.object, r.object, r.rootObject,functionName, sp, r.events, ud ).then(()=> {
-                            var ctx = new omm.EventContext(r.object, this);
+                            var ctx = new omm.EventContext(r.rootObject, this); // this is being emitted on the collection level so it needs to look as if the object was updated is the root element
                             ctx.functionName = functionName;
                             ctx.serializationPath = sp;
                             ctx.rootObject = r.rootObject;

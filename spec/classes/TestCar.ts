@@ -15,4 +15,7 @@ export class TestCar{
     @omm.Ignore
     temperature:string;
 
+    @omm.PrivateToServer
+    privateToServer:string ='itsPrivate';
+
 }

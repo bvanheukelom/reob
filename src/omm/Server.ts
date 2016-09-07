@@ -73,7 +73,6 @@ export class Server{
             var options:omm.IMethodOptions = omm.PersistenceAnnotation.getMethodOptions( functionName );
             console.log("Adding Web method " + options.name);
             this.webMethods.add(options.name, (...args:any[])=> {
-                console.log(new Date()+": WebMethod invokation. Name:" + options.name);
                 var startTime = Date.now();
 
                 // the object id is the first parameter
@@ -81,7 +80,7 @@ export class Server{
 
                 // the user Data is the second parameter
                 var userData = args.shift();
-                console.log("User data ", userData);    
+                console.log(new Date()+": WebMethod invokation. Name:" + options.name, "User data ", userData);
 
                 // convert parameters given to the web method from documents to objects
                 this.convertWebMethodParameters(args, options.parameterTypes);
@@ -94,6 +93,7 @@ export class Server{
                         // this might be the collection update or another function that is called directly
 
                         console.log("Notifying method event listensers.");
+                        Server.userData = userData;
                         return this.notifyMethodListeners( object, objectId, functionName, args, userData ).then(()=>{
                             return object;
                         });
@@ -109,7 +109,7 @@ export class Server{
                     .then((result)=> {
                         var res:any = {};
                         if( result ){
-                            res.document = this.serializer.toDocument(result, true);
+                            res.document = this.serializer.toDocument(result, true, true);
                         }
 
                         console.log("Result of web method " + options.name + " (calculated in "+(Date.now()-startTime)+"ms) is ", res);
@@ -164,7 +164,7 @@ export class Server{
             // var collectionName  = type ? omm.PersistenceAnnotation.getCollectionName( type ) : undefined;
             var objPromise = collectionName ? this.retrieveObject(collectionName+"["+objectId+"]") : undefined;
             return objPromise.then((obj)=>{
-                var doc = obj ? this.serializer.toDocument(obj, true) : undefined;
+                var doc = obj ? this.serializer.toDocument(obj, true, true) : undefined;
                 return doc;
             });
         });

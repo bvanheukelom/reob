@@ -4,8 +4,8 @@ module.exports = function (grunt) {
 
 	grunt.initConfig({
 		watch: {
-			files: ["test_meteor_web/**/*.ts"],
-			tasks: ["default"]
+			files: ["src/**/*.ts"],
+			tasks: ["compile"]
 		},
 		clean: { files:[
 			"dist",
@@ -26,8 +26,6 @@ module.exports = function (grunt) {
 
 	// NPM TASKS
 	grunt.loadNpmTasks("grunt-ts");
-	grunt.loadNpmTasks("grunt-nodemon");
-	grunt.loadNpmTasks("grunt-concurrent");
 	grunt.loadNpmTasks('grunt-contrib-copy');
 	grunt.loadNpmTasks('grunt-contrib-clean');
 	grunt.loadNpmTasks('grunt-contrib-watch');

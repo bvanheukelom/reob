@@ -153,11 +153,11 @@ export class Serializer {
         return o;
     }
 
-    toDocument( object:Object, includeContext?:boolean ):Document {
-        return this.toDocumentRecursive(object, includeContext);
+    toDocument( object:Object, includeContext?:boolean, omitPropertiesPrivateToServer?:boolean ):Document {
+        return this.toDocumentRecursive(object, includeContext, omitPropertiesPrivateToServer);
     }
 
-    private toDocumentRecursive(object:any, includeContext?:boolean, rootClass?:TypeClass<Object>, parentObject?:Object, propertyNameOnParentObject?:string):Document {
+    private toDocumentRecursive(object:any, includeContext?:boolean, omitPropertiesPrivateToServer?:boolean, rootClass?:TypeClass<Object>, parentObject?:Object, propertyNameOnParentObject?:string):Document {
         var result:Document;
         if ( !object || typeof object == "string" || typeof object == "number"  || typeof object == "date" || typeof object == "boolean")
             result =  <Document>object;
@@ -173,7 +173,7 @@ export class Serializer {
             } else {
                 var parentClass = PersistenceAnnotation.getClass(parentObject);
                 {
-                    result = this.createDocument(object, includeContext, rootClass ? rootClass : PersistenceAnnotation.getClass(object), parentObject, propertyNameOnParentObject);
+                    result = this.createDocument(object, includeContext, omitPropertiesPrivateToServer, rootClass ? rootClass : PersistenceAnnotation.getClass(object), parentObject, propertyNameOnParentObject);
                 }
             }
         }
@@ -181,7 +181,7 @@ export class Serializer {
         return result;
     }
 
-    private createDocument(object:any, includeContext?:boolean, rootClass?:TypeClass<Object>, parentObject?:Object, propertyNameOnParentObject?:string):Document {
+    private createDocument(object:any, includeContext?:boolean, omitPropertiesPrivateToServer?:boolean, rootClass?:TypeClass<Object>, parentObject?:Object, propertyNameOnParentObject?:string):Document {
         var doc:any = {};
         var context = omm.SerializationPath.getObjectContext(object);
         if( includeContext ) {
@@ -198,7 +198,11 @@ export class Serializer {
             var documentNameOfTheProperty:string = PersistenceAnnotation.getDocumentPropertyName(objectClass,property);
             if( !documentNameOfTheProperty )
                 documentNameOfTheProperty = property;
-            if (value !== undefined && !PersistenceAnnotation.isIgnored(objectClass, property)&& !PersistenceAnnotation.isParent(objectClass, property)) {
+            var needsToBeOmittedBecauseItsPrivate = omitPropertiesPrivateToServer && PersistenceAnnotation.isPrivateToServer(objectClass, property);
+            if( needsToBeOmittedBecauseItsPrivate ){
+                console.log("Omitting ", property);
+            }
+            if (value !== undefined && !PersistenceAnnotation.isIgnored(objectClass, property) && !PersistenceAnnotation.isParent(objectClass, property) && !needsToBeOmittedBecauseItsPrivate ) {
                 // primitives
                 if( PersistenceAnnotation.getPropertyClass(objectClass,property) ) {
 
@@ -212,13 +216,13 @@ export class Serializer {
 
                         for (var i in value) {
                             var subObject = value[i];
-                            result[i] = this.toDocumentRecursive(subObject, includeContext, rootClass, object, property);
+                            result[i] = this.toDocumentRecursive(subObject, includeContext, omitPropertiesPrivateToServer, rootClass, object, property);
                         }
                         doc[documentNameOfTheProperty] = result;
                     }
                     // object
                     else if (typeof object[property] == 'object') {
-                        doc[documentNameOfTheProperty] = this.toDocumentRecursive(value, includeContext, rootClass, object, property);
+                        doc[documentNameOfTheProperty] = this.toDocumentRecursive(value, includeContext, omitPropertiesPrivateToServer, rootClass, object, property);
                     } else {
                         throw new Error("Unsupported type : "+ typeof value);
                     }

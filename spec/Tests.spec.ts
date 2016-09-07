@@ -1260,10 +1260,16 @@ describe("Omm both on client and server", function () {
         })
     });
 
+    it("does not transmit properties that are private to the server", function () {
+        expect( omm.PersistenceAnnotation.isPrivateToServer( Tests.TestCar, "privateToServer" ) ).toBeTruthy();
+    });
+
+
     // test that calls a nested collection update (one in the other)
 
     // test that verifies that when en event cancells an operation with ctx.cancell(asdfasdf) its an instanceof Error that rejects the promise.
 
+    // test that makes sure that if a collection updating function throws an exception, stuff still works and event emitters are called properly
 
     // test that verifies that an onMEthod listener receives the arguments of the method
 });
