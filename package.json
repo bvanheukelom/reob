@@ -1,6 +1,6 @@
 {
   "name": "@bvanheukelom/o-m-m",
-  "version": "0.1.8",
+  "version": "0.1.9",
   "main": "dist/src/omm.js",
   "typings": "dist/src/omm.d.ts",
   "scripts": {
