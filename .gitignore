@@ -10,4 +10,4 @@ test_meteor_web/tests/**/*.js
 node_modules
 !/node_modules/omm
 npm-debug.log
-dist
+
