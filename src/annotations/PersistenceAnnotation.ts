@@ -375,8 +375,8 @@ export interface IMethodOptions{
                 options.parentObject = t;
 
                 options.propertyName = functionName;
-                options.name = className(t)+"."+functionName;
-
+                if(!options.name)
+                    options.name = className(t)+"."+functionName;
                 meteorMethodFunctions.push(options);
             };
         }

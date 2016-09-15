@@ -328,7 +328,8 @@ function MeteorMethod(p1, p2) {
             }
             options.parentObject = t;
             options.propertyName = functionName;
-            options.name = className(t) + "." + functionName;
+            if (!options.name)
+                options.name = className(t) + "." + functionName;
             exports.meteorMethodFunctions.push(options);
         };
     }

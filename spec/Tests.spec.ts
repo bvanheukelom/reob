@@ -1272,4 +1272,6 @@ describe("Omm both on client and server", function () {
     // test that makes sure that if a collection updating function throws an exception, stuff still works and event emitters are called properly
 
     // test that verifies that an onMEthod listener receives the arguments of the method
+
+    // write test that allows for methods to have a given name
 });
