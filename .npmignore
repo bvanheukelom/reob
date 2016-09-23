@@ -1,0 +1,9 @@
+spec
+typings
+src
+node_modules
+.tscache
+gruntfile.js
+notes.txt
+tsconfig.json
+tsconfig_doc.json
