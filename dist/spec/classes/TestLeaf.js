@@ -28,19 +28,19 @@ var TestLeaf = (function () {
         this.greenNess++;
         omm.emit("fluttering");
     };
-    __decorate([
-        omm.DocumentName("greenIndex")
-    ], TestLeaf.prototype, "greenNess", void 0);
-    __decorate([
-        omm.Parent
-    ], TestLeaf.prototype, "parent", void 0);
-    __decorate([
-        omm.Wrap
-    ], TestLeaf.prototype, "flutter", null);
-    TestLeaf = __decorate([
-        omm.Entity
-    ], TestLeaf);
     return TestLeaf;
 }());
+__decorate([
+    omm.DocumentName("greenIndex")
+], TestLeaf.prototype, "greenNess", void 0);
+__decorate([
+    omm.Parent
+], TestLeaf.prototype, "parent", void 0);
+__decorate([
+    omm.Wrap
+], TestLeaf.prototype, "flutter", null);
+TestLeaf = __decorate([
+    omm.Entity
+], TestLeaf);
 exports.TestLeaf = TestLeaf;
 //# sourceMappingURL=TestLeaf.js.map

@@ -11,12 +11,10 @@ var TestPerson = (function () {
         this.addresses = [];
         this.trees = [];
         this.phoneBook = {};
-        this.
         // @omm.AsForeignKeys
-        wood = {};
-        this.
+        this.wood = {};
         // @omm.AsForeignKeys
-        family = {};
+        this.family = {};
         this.gardenState = 10;
         this._id = id;
         this.name = name;
@@ -96,71 +94,71 @@ var TestPerson = (function () {
         this.tree.grow();
         return this.tree.getHeight();
     };
-    __decorate([
-        omm.Type("TestPhoneNumber")
-    ], TestPerson.prototype, "phoneNumber", void 0);
-    __decorate([
-        omm.ArrayOrMap("TestAddress")
-    ], TestPerson.prototype, "addresses", void 0);
-    __decorate([
-        omm.Type("TestTree")
-    ], TestPerson.prototype, "tree", void 0);
-    __decorate([
-        omm.Type("TestLeaf")
-    ], TestPerson.prototype, "leaf", void 0);
-    __decorate([
-        omm.ArrayOrMap("TestLeaf")
-    ], TestPerson.prototype, "trees", void 0);
-    __decorate([
-        omm.ArrayOrMap("TestPhoneNumber")
-    ], TestPerson.prototype, "phoneBook", void 0);
-    __decorate([
-        omm.ArrayOrMap("TestTree")
-    ], TestPerson.prototype, "wood", void 0);
-    __decorate([
-        omm.ArrayOrMap("TestPerson")
-    ], TestPerson.prototype, "family", void 0);
-    __decorate([
-        omm.Wrap
-    ], TestPerson.prototype, "collectLeaf", null);
-    __decorate([
-        omm.Wrap
-    ], TestPerson.prototype, "chooseTree", null);
-    __decorate([
-        omm.Wrap
-    ], TestPerson.prototype, "chooseLeaf", null);
-    __decorate([
-        omm.CollectionUpdate,
-        omm.MeteorMethod
-    ], TestPerson.prototype, "rename", null);
-    __decorate([
-        omm.CollectionUpdate,
-        omm.MeteorMethod
-    ], TestPerson.prototype, "collectionUpdateRename", null);
-    __decorate([
-        omm.CollectionUpdate,
-        omm.MeteorMethod({ parameterTypes: ["TestAddress"], replaceWithCall: true })
-    ], TestPerson.prototype, "addAddress", null);
-    __decorate([
-        omm.CollectionUpdate,
-        omm.MeteorMethod({ parameterTypes: ["TestAddress"], replaceWithCall: true })
-    ], TestPerson.prototype, "addAddresses", null);
-    __decorate([
-        omm.Wrap
-    ], TestPerson.prototype, "addToWood", null);
-    __decorate([
-        omm.Wrap
-    ], TestPerson.prototype, "addFamilyRelation", null);
-    __decorate([
-        omm.Wrap
-    ], TestPerson.prototype, "addPhoneNumber", null);
-    __decorate([
-        omm.Wrap
-    ], TestPerson.prototype, "tendToGarden", null);
-    TestPerson = __decorate([
-        omm.Entity
-    ], TestPerson);
     return TestPerson;
 }());
+__decorate([
+    omm.Type("TestPhoneNumber")
+], TestPerson.prototype, "phoneNumber", void 0);
+__decorate([
+    omm.ArrayOrMap("TestAddress")
+], TestPerson.prototype, "addresses", void 0);
+__decorate([
+    omm.Type("TestTree")
+], TestPerson.prototype, "tree", void 0);
+__decorate([
+    omm.Type("TestLeaf")
+], TestPerson.prototype, "leaf", void 0);
+__decorate([
+    omm.ArrayOrMap("TestLeaf")
+], TestPerson.prototype, "trees", void 0);
+__decorate([
+    omm.ArrayOrMap("TestPhoneNumber")
+], TestPerson.prototype, "phoneBook", void 0);
+__decorate([
+    omm.ArrayOrMap("TestTree")
+], TestPerson.prototype, "wood", void 0);
+__decorate([
+    omm.ArrayOrMap("TestPerson")
+], TestPerson.prototype, "family", void 0);
+__decorate([
+    omm.Wrap
+], TestPerson.prototype, "collectLeaf", null);
+__decorate([
+    omm.Wrap
+], TestPerson.prototype, "chooseTree", null);
+__decorate([
+    omm.Wrap
+], TestPerson.prototype, "chooseLeaf", null);
+__decorate([
+    omm.CollectionUpdate,
+    omm.MeteorMethod
+], TestPerson.prototype, "rename", null);
+__decorate([
+    omm.CollectionUpdate,
+    omm.MeteorMethod
+], TestPerson.prototype, "collectionUpdateRename", null);
+__decorate([
+    omm.CollectionUpdate,
+    omm.MeteorMethod({ parameterTypes: ["TestAddress"], replaceWithCall: true })
+], TestPerson.prototype, "addAddress", null);
+__decorate([
+    omm.CollectionUpdate,
+    omm.MeteorMethod({ parameterTypes: ["TestAddress"], replaceWithCall: true })
+], TestPerson.prototype, "addAddresses", null);
+__decorate([
+    omm.Wrap
+], TestPerson.prototype, "addToWood", null);
+__decorate([
+    omm.Wrap
+], TestPerson.prototype, "addFamilyRelation", null);
+__decorate([
+    omm.Wrap
+], TestPerson.prototype, "addPhoneNumber", null);
+__decorate([
+    omm.Wrap
+], TestPerson.prototype, "tendToGarden", null);
+TestPerson = __decorate([
+    omm.Entity
+], TestPerson);
 exports.TestPerson = TestPerson;
 //# sourceMappingURL=TestPerson.js.map

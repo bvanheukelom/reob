@@ -12,10 +12,10 @@ var TestInheritanceOther = (function () {
     TestInheritanceOther.prototype.getSomething = function () {
         return this.name + " " + this.otherness;
     };
-    TestInheritanceOther = __decorate([
-        omm.Entity
-    ], TestInheritanceOther);
     return TestInheritanceOther;
 }());
+TestInheritanceOther = __decorate([
+    omm.Entity
+], TestInheritanceOther);
 exports.TestInheritanceOther = TestInheritanceOther;
 //# sourceMappingURL=TestInheritanceOther.js.map

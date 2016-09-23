@@ -9,13 +9,13 @@ var omm = require("../../src/omm");
 var TestWheel = (function () {
     function TestWheel() {
     }
-    __decorate([
-        omm.Parent
-    ], TestWheel.prototype, "car", void 0);
-    TestWheel = __decorate([
-        omm.Entity("TestWheelBanzai")
-    ], TestWheel);
     return TestWheel;
 }());
+__decorate([
+    omm.Parent
+], TestWheel.prototype, "car", void 0);
+TestWheel = __decorate([
+    omm.Entity("TestWheelBanzai")
+], TestWheel);
 exports.TestWheel = TestWheel;
 //# sourceMappingURL=TestWheel.js.map

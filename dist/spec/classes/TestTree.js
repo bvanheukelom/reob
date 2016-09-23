@@ -52,39 +52,39 @@ var TestTree = (function () {
         this.grow();
         return this.leaves;
     };
-    __decorate([
-        omm.Id
-    ], TestTree.prototype, "treeId", void 0);
-    __decorate([
-        omm.ArrayType("TestLeaf"),
-        omm.DocumentName('thoseGreenThings')
-    ], TestTree.prototype, "leaves", void 0);
-    __decorate([
-        omm.Type("TestAddress")
-    ], TestTree.prototype, "address", void 0);
-    __decorate([
-        omm.Wrap
-    ], TestTree.prototype, "grow", null);
-    __decorate([
-        omm.CollectionUpdate
-    ], TestTree.prototype, "growAsOnlyACollectionUpdate", null);
-    __decorate([
-        omm.Wrap
-    ], TestTree.prototype, "wither", null);
-    __decorate([
-        omm.Wrap
-    ], TestTree.prototype, "thisThrowsAnError", null);
-    __decorate([
-        omm.CollectionUpdate
-    ], TestTree.prototype, "setSomeBooleanTo", null);
-    __decorate([
-        omm.CollectionUpdate,
-        omm.MeteorMethod({ replaceWithCall: true, resultType: "TestLeaf" })
-    ], TestTree.prototype, "growAndReturnLeaves", null);
-    TestTree = __decorate([
-        omm.Entity
-    ], TestTree);
     return TestTree;
 }());
+__decorate([
+    omm.Id
+], TestTree.prototype, "treeId", void 0);
+__decorate([
+    omm.ArrayType("TestLeaf"),
+    omm.DocumentName('thoseGreenThings')
+], TestTree.prototype, "leaves", void 0);
+__decorate([
+    omm.Type("TestAddress")
+], TestTree.prototype, "address", void 0);
+__decorate([
+    omm.Wrap
+], TestTree.prototype, "grow", null);
+__decorate([
+    omm.CollectionUpdate
+], TestTree.prototype, "growAsOnlyACollectionUpdate", null);
+__decorate([
+    omm.Wrap
+], TestTree.prototype, "wither", null);
+__decorate([
+    omm.Wrap
+], TestTree.prototype, "thisThrowsAnError", null);
+__decorate([
+    omm.CollectionUpdate
+], TestTree.prototype, "setSomeBooleanTo", null);
+__decorate([
+    omm.CollectionUpdate,
+    omm.MeteorMethod({ replaceWithCall: true, resultType: "TestLeaf" })
+], TestTree.prototype, "growAndReturnLeaves", null);
+TestTree = __decorate([
+    omm.Entity //("TheTreeCollection")
+], TestTree);
 exports.TestTree = TestTree;
 //# sourceMappingURL=TestTree.js.map

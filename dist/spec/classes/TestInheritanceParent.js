@@ -9,19 +9,19 @@ var omm = require("../../src/omm");
 var TestInheritanceParent = (function () {
     function TestInheritanceParent() {
     }
-    __decorate([
-        omm.Type("TestInheritanceOther")
-    ], TestInheritanceParent.prototype, "parentOther", void 0);
-    __decorate([
-        omm.Type("TestPerson")
-    ], TestInheritanceParent.prototype, "person", void 0);
-    __decorate([
-        omm.Ignore
-    ], TestInheritanceParent.prototype, "ignoredOther", void 0);
-    TestInheritanceParent = __decorate([
-        omm.Entity
-    ], TestInheritanceParent);
     return TestInheritanceParent;
 }());
+__decorate([
+    omm.Type("TestInheritanceOther")
+], TestInheritanceParent.prototype, "parentOther", void 0);
+__decorate([
+    omm.Type("TestPerson")
+], TestInheritanceParent.prototype, "person", void 0);
+__decorate([
+    omm.Ignore
+], TestInheritanceParent.prototype, "ignoredOther", void 0);
+TestInheritanceParent = __decorate([
+    omm.Entity
+], TestInheritanceParent);
 exports.TestInheritanceParent = TestInheritanceParent;
 //# sourceMappingURL=TestInheritanceParent.js.map

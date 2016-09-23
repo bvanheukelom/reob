@@ -11,22 +11,22 @@ var TestCar = (function () {
         this.wheels = [];
         this.privateToServer = 'itsPrivate';
     }
-    __decorate([
-        omm.Type("TestWheelBanzai")
-    ], TestCar.prototype, "wheel", void 0);
-    __decorate([
-        omm.ArrayOrMap("TestWheelBanzai")
-    ], TestCar.prototype, "wheels", void 0);
-    __decorate([
-        omm.Ignore
-    ], TestCar.prototype, "temperature", void 0);
-    __decorate([
-        omm.PrivateToServer
-    ], TestCar.prototype, "privateToServer", void 0);
-    TestCar = __decorate([
-        omm.Entity
-    ], TestCar);
     return TestCar;
 }());
+__decorate([
+    omm.Type("TestWheelBanzai")
+], TestCar.prototype, "wheel", void 0);
+__decorate([
+    omm.ArrayOrMap("TestWheelBanzai")
+], TestCar.prototype, "wheels", void 0);
+__decorate([
+    omm.Ignore
+], TestCar.prototype, "temperature", void 0);
+__decorate([
+    omm.PrivateToServer
+], TestCar.prototype, "privateToServer", void 0);
+TestCar = __decorate([
+    omm.Entity
+], TestCar);
 exports.TestCar = TestCar;
 //# sourceMappingURL=TestCar.js.map

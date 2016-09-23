@@ -20,13 +20,13 @@ var TestInheritanceChild = (function (_super) {
     TestInheritanceChild.prototype.getChildThing = function () {
         return this.childOther.getSomething() + " " + this.parentOther.getSomething();
     };
-    __decorate([
-        omm.Type("TestInheritanceOther")
-    ], TestInheritanceChild.prototype, "childOther", void 0);
-    TestInheritanceChild = __decorate([
-        omm.Entity
-    ], TestInheritanceChild);
     return TestInheritanceChild;
 }(Tests.TestInheritanceParent));
+__decorate([
+    omm.Type("TestInheritanceOther")
+], TestInheritanceChild.prototype, "childOther", void 0);
+TestInheritanceChild = __decorate([
+    omm.Entity
+], TestInheritanceChild);
 exports.TestInheritanceChild = TestInheritanceChild;
 //# sourceMappingURL=TestInheritanceChild.js.map

@@ -5,6 +5,9 @@ import * as omm from "../../src/omm"
 import * as Tests from "./Tests"
 
 @omm.Entity
+/**
+ * @Internal
+ */
 export class TestAddress {
     street:string;
 

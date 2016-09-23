@@ -31,16 +31,16 @@ var TreeService = (function () {
     TreeService.prototype.aTreeAndAPerson = function (treeId, personId) {
         return Promise.all([this.treeCollection.getByIdOrFail(treeId), this.personCollection.getByIdOrFail(personId)]);
     };
-    __decorate([
-        omm.MeteorMethod({ serverOnly: true, resultType: "TestTree" })
-    ], TreeService.prototype, "insertTree", null);
-    __decorate([
-        omm.MeteorMethod({ serverOnly: true })
-    ], TreeService.prototype, "growTree", null);
-    __decorate([
-        omm.MeteorMethod({ serverOnly: true })
-    ], TreeService.prototype, "aTreeAndAPerson", null);
     return TreeService;
 }());
 exports.TreeService = TreeService;
+__decorate([
+    omm.MeteorMethod({ serverOnly: true, resultType: "TestTree" })
+], TreeService.prototype, "insertTree", null);
+__decorate([
+    omm.MeteorMethod({ serverOnly: true })
+], TreeService.prototype, "growTree", null);
+__decorate([
+    omm.MeteorMethod({ serverOnly: true })
+], TreeService.prototype, "aTreeAndAPerson", null);
 //# sourceMappingURL=TreeService.js.map

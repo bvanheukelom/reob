@@ -94,10 +94,10 @@ var MeteorPersistence = (function () {
         };
         object[functionName].originalFunction = originalFunction;
     };
-    MeteorPersistence.initialized = false;
     return MeteorPersistence;
 }());
 exports.MeteorPersistence = MeteorPersistence;
+MeteorPersistence.initialized = false;
 var endpointUrl;
 function init() {
     MeteorPersistence.init();

@@ -17,13 +17,13 @@ var TestAddress = (function () {
     TestAddress.prototype.getStreet = function () {
         return this.street;
     };
-    __decorate([
-        omm.Parent
-    ], TestAddress.prototype, "person", void 0);
-    TestAddress = __decorate([
-        omm.Entity
-    ], TestAddress);
     return TestAddress;
 }());
+__decorate([
+    omm.Parent
+], TestAddress.prototype, "person", void 0);
+TestAddress = __decorate([
+    omm.Entity
+], TestAddress);
 exports.TestAddress = TestAddress;
 //# sourceMappingURL=TestAddress.js.map

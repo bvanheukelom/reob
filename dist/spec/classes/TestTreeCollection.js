@@ -38,22 +38,22 @@ var TestTreeCollection = (function (_super) {
     TestTreeCollection.prototype.removeAllTrees = function () {
         return this.getMongoCollection().remove({});
     };
-    __decorate([
-        omm.MeteorMethod({ serverOnly: true })
-    ], TestTreeCollection.prototype, "newTree", null);
-    __decorate([
-        omm.MeteorMethod({ replaceWithCall: true, serverOnly: true, parameterTypes: ["number", "callback"] })
-    ], TestTreeCollection.prototype, "errorMethod", null);
-    __decorate([
-        omm.MeteorMethod({ replaceWithCall: true, parameterTypes: ["string", "callback"] })
-    ], TestTreeCollection.prototype, "deleteTree", null);
-    __decorate([
-        omm.MeteorMethod({ parameterTypes: ["string", "TestTree", "number"] })
-    ], TestTreeCollection.prototype, "serverFunction", null);
-    __decorate([
-        omm.MeteorMethod({ object: 'TestTreeCollection', replaceWithCall: true, parameterTypes: ["callback"] })
-    ], TestTreeCollection.prototype, "removeAllTrees", null);
     return TestTreeCollection;
 }(omm.Collection));
 exports.TestTreeCollection = TestTreeCollection;
+__decorate([
+    omm.MeteorMethod({ serverOnly: true })
+], TestTreeCollection.prototype, "newTree", null);
+__decorate([
+    omm.MeteorMethod({ replaceWithCall: true, serverOnly: true, parameterTypes: ["number", "callback"] })
+], TestTreeCollection.prototype, "errorMethod", null);
+__decorate([
+    omm.MeteorMethod({ replaceWithCall: true, parameterTypes: ["string", "callback"] })
+], TestTreeCollection.prototype, "deleteTree", null);
+__decorate([
+    omm.MeteorMethod({ parameterTypes: ["string", "TestTree", "number"] })
+], TestTreeCollection.prototype, "serverFunction", null);
+__decorate([
+    omm.MeteorMethod({ object: 'TestTreeCollection', replaceWithCall: true, parameterTypes: ["callback"] })
+], TestTreeCollection.prototype, "removeAllTrees", null);
 //# sourceMappingURL=TestTreeCollection.js.map

@@ -43,19 +43,19 @@ var TestPersonCollection = (function (_super) {
     TestPersonCollection.prototype.removeAllPersons = function () {
         return this.getMongoCollection().remove({});
     };
-    __decorate([
-        omm.MeteorMethod({ serverOnly: true, parameterTypes: ["string", "callback"] })
-    ], TestPersonCollection.prototype, "newPerson", null);
-    __decorate([
-        omm.MeteorMethod({ parameterTypes: ["TestPerson", "TestPerson", "callback"] })
-    ], TestPersonCollection.prototype, "haveBaby", null);
-    __decorate([
-        omm.MeteorMethod({ serverOnly: true, parameterTypes: ["string", "callback"] })
-    ], TestPersonCollection.prototype, "removePerson", null);
-    __decorate([
-        omm.MeteorMethod({ serverOnly: true, parameterTypes: ["callback"] })
-    ], TestPersonCollection.prototype, "removeAllPersons", null);
     return TestPersonCollection;
 }(omm.Collection));
 exports.TestPersonCollection = TestPersonCollection;
+__decorate([
+    omm.MeteorMethod({ serverOnly: true, parameterTypes: ["string", "callback"] })
+], TestPersonCollection.prototype, "newPerson", null);
+__decorate([
+    omm.MeteorMethod({ parameterTypes: ["TestPerson", "TestPerson", "callback"] })
+], TestPersonCollection.prototype, "haveBaby", null);
+__decorate([
+    omm.MeteorMethod({ serverOnly: true, parameterTypes: ["string", "callback"] })
+], TestPersonCollection.prototype, "removePerson", null);
+__decorate([
+    omm.MeteorMethod({ serverOnly: true, parameterTypes: ["callback"] })
+], TestPersonCollection.prototype, "removeAllPersons", null);
 //# sourceMappingURL=TestPersonCollection.js.map

@@ -38,13 +38,13 @@ var TestPhoneNumber = (function () {
             callback(undefined, "Called:" + that.number + " " + degreeOfUrgency + " time(s)");
         }, 300);
     };
-    __decorate([
-        omm.Wrap
-    ], TestPhoneNumber.prototype, "callNumber", null);
-    TestPhoneNumber = __decorate([
-        omm.Entity
-    ], TestPhoneNumber);
     return TestPhoneNumber;
 }());
+__decorate([
+    omm.Wrap
+], TestPhoneNumber.prototype, "callNumber", null);
+TestPhoneNumber = __decorate([
+    omm.Entity
+], TestPhoneNumber);
 exports.TestPhoneNumber = TestPhoneNumber;
 //# sourceMappingURL=TestPhoneNumber.js.map
