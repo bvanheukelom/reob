@@ -2,11 +2,10 @@
  * Created by bert on 07.07.16.
  */
 
-import * as omm from "../omm"
+import * as omm from "./omm"
 import * as wm from "@bvanheukelom/web-methods"
 import * as eventemitter from "eventemitter2"
 
-import { INetwork } from "./INetwork"
 var jsd = require("jsondiffpatch");
 
 export class Client implements omm.Handler{
@@ -15,45 +14,41 @@ export class Client implements omm.Handler{
     private userData:any;
     private webMethods:wm.WebMethods;
     private singletons:{ [index:string]: any } = {};
-    private network:INetwork;
     private eventEmitter:any;
 
-    constructor(host:string, port:number, network?:INetwork){
-        if( !omm.MeteorPersistence.isInitialized() )
-            throw new Error("omm is not initialized.");
+    constructor(host:string, port:number ){
+        // if( !omm.isInitialized() )
+        //     throw new Error("omm is not initialized.");
         var endpointUrl = "http://"+host+":"+port+"/methods";
         this.webMethods = new wm.WebMethods(endpointUrl);
         this.serializer = new omm.Serializer();
-        this.network = network;
         this.eventEmitter = new eventemitter.EventEmitter2();
     }
 
-    addSingleton( name:string, singleton:any ):void{
-        this.singletons[name] = singleton;
-        omm.SerializationPath.setObjectContext( singleton, undefined, this );
+    /**
+     * @deprecated
+     */
+    addSingleton( name:string, service:any ):void{
+        this.registerService(name, service)
     }
-    
-    load<T>( clsOrString:omm.TypeClass<T>|string, id:string ):Promise<T>{
-        var collectionName:any = clsOrString;
-        if( typeof clsOrString!="string" )
-            collectionName = omm.className(<omm.TypeClass<T>>clsOrString);
-        return this.webMethods.call( "get", collectionName, id ).then( (result)=>{
-            console.log("Client loaded :",result);
-            var o = this.serializer.toObject( result,  this );
+
+    registerService( name:string, service:any ):void{
+        this.singletons[name] = service;
+        omm.SerializationPath.setObjectContext( service, undefined, this );
+    }
+
+    load<T>( collectionName:string, id:string ):Promise<T>{
+        return this.loadDocument(collectionName, id).then((doc)=>{
+            console.log("Client loaded :",doc);
+            var o = this.serializer.toObject( doc,  this );
             console.log("Client returned ",o);
-            return o;
+            return <T>o;
         });
     }
 
-    loadDocument<T>( clsOrString:omm.TypeClass<T>|string, id:string ):Promise<T>{
-        var collectionName:any = clsOrString;
-        if( typeof clsOrString!="string" )
-            collectionName = omm.className(<omm.TypeClass<T>>clsOrString);
+    loadDocument<Document>( collectionName:string, id:string ):Promise<Document>{
         return this.webMethods.call( "get", collectionName, id ).then( (result)=>{
             var document = result.document;
-            // var serializationPath = new omm.SerializationPath(result.serializationPath);
-            // var className = result.className;
-            // var o = this.serializer.toObject( document,  this, omm.PersistenceAnnotation.getEntityClassByName(className), serializationPath );
             return document;
         });
     }
@@ -134,7 +129,7 @@ export class Client implements omm.Handler{
         var sp:omm.SerializationPath = object._ommObjectContext.serializationPath ? object._ommObjectContext.serializationPath : undefined;
         var key = this.getSingletonKey(object) || ( sp ? sp.toString() : undefined );
         var r:any;
-        var options:omm.IMethodOptions = omm.PersistenceAnnotation.getMethodOptions(functionName);
+        var options:omm.IMethodOptions = omm.Reflect.getMethodOptions(entityClass, functionName);
         if (key) {
             r = this.call(options.name, key, args);
         }

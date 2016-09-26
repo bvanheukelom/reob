@@ -1,4 +1,4 @@
-///<reference path="../typings/jasmine/jasmine.d.ts"/>
+
 
 import * as omm from "../src/omm"
 import * as Tests from "./classes/Tests"

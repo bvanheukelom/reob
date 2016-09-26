@@ -4,7 +4,7 @@ module.exports = function (grunt) {
 
 	grunt.initConfig({
 		watch: {
-			files: ["src/**/*.ts"],
+			files: ["src/**/*.ts","spec/**/*.ts"],
 			tasks: ["compile"]
 		},
 		clean: { files:[

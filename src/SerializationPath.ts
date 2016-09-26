@@ -2,8 +2,8 @@
 import { ObjectContext } from "./ObjectContext"
 import { Handler } from "./Handler"
 import { OmmObject } from "./OmmObject"
-import * as PersistenceAnnotation from "../annotations/PersistenceAnnotation"
-
+import * as Annotations from "./Annotations"
+import {setNonEnumerableProperty} from "./Internal"
 export class SerializationPath {
     private path:string;
 
@@ -101,7 +101,7 @@ export class SerializationPath {
 
     static setObjectContext(object:OmmObject, sp:SerializationPath, handler:Handler ):void{
         if( object )
-            PersistenceAnnotation.setNonEnumerableProperty( object, "_ommObjectContext", {serializationPath:sp, handler:handler} );
+            setNonEnumerableProperty( object, "_ommObjectContext", {serializationPath:sp, handler:handler} );
     }
 
     static getObjectContext(object:OmmObject  ):ObjectContext{
@@ -119,7 +119,7 @@ export class SerializationPath {
             return;
 
         visited.push(object);
-        var objectClass = PersistenceAnnotation.PersistenceAnnotation.getClass(object);
+        var objectClass = Annotations.Reflect.getClass(object);
         // // if (PersistenceAnnotation.PersistenceAnnotation.isRootEntity(objectClass)) {
         //     if (!object._ommObjectContext || !object._ommObjectContext.serializationPath) {
         //         var id = PersistenceAnnotation.getId(object);
@@ -135,19 +135,19 @@ export class SerializationPath {
         }
 
 
-        PersistenceAnnotation.PersistenceAnnotation.getTypedPropertyNames(objectClass).forEach(function (typedPropertyName:string) {
+        Annotations.Reflect.getTypedPropertyNames(objectClass).forEach(function (typedPropertyName:string) {
             // if (!PersistenceAnnotation.isStoredAsForeignKeys(objectClass, typedPropertyName)) {
             //     //console.log("updating foreignkey property " + typedPropertyName);
             var v:OmmObject = object[typedPropertyName];
             if (v) {
-                if (PersistenceAnnotation.PersistenceAnnotation.isArrayOrMap(objectClass, typedPropertyName)) {
+                if (Annotations.Reflect.isArrayOrMap(objectClass, typedPropertyName)) {
                     //console.log("updating foreignkey property " + typedPropertyName + " is array");
                     for (var i in v) {
                         var e = v[i];
                         if( e ) {
                             var index = i;
-                            if (PersistenceAnnotation.getId(e))
-                                index = PersistenceAnnotation.getId(e);
+                            if (Annotations.getId(e))
+                                index = Annotations.getId(e);
                             //console.log("updating persistnece path for isArrayOrMap " + typedPropertyName + "  key:" + i + " value:", e, "object: ", object);
                             var sp = object._ommObjectContext.serializationPath.clone();
                             sp.appendArrayOrMapLookup(typedPropertyName, index);

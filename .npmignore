@@ -7,3 +7,6 @@ gruntfile.js
 notes.txt
 tsconfig.json
 tsconfig_doc.json
+.DS_Store
+npm-debug.log
+.git

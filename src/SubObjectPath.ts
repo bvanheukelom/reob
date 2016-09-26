@@ -1,5 +1,5 @@
 
-import * as omm_annotations from "../annotations/PersistenceAnnotation"
+import * as omm_annotations from "./Annotations"
 
 export default class SubObjectPath {
     private path:string;

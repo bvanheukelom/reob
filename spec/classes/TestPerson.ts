@@ -78,41 +78,41 @@ export class TestPerson
     }
 
 
-    @omm.Wrap
+    @omm.RemoteCollectionUpdate
     collectLeaf()
     {
         //console.log("collecting leaf:",this.tree);
         this.leaf = this.tree.getLeaves()[0];
     }
 
-    @omm.Wrap
+    @omm.RemoteCollectionUpdate
     chooseTree(t:Tests.TestTree)
     {
         //console.log("choosing tree:",t);
         this.tree = t;
     }
-    @omm.Wrap
+    @omm.RemoteCollectionUpdate
     chooseLeaf(l:Tests.TestLeaf)
     {
         this.leaf = l;
     }
 
     @omm.CollectionUpdate
-    @omm.MeteorMethod
+    @omm.Remote
     rename(n:string):string {
         this.name = n;
         return this.name;
     }
 
     @omm.CollectionUpdate
-    @omm.MeteorMethod
+    @omm.Remote
     collectionUpdateRename(n:string):string {
         this.name = "Collection Update:"+n;
         return this.name;
     }
 
     @omm.CollectionUpdate
-    @omm.MeteorMethod({parameterTypes:["TestAddress"], replaceWithCall:true})
+    @omm.Remote({parameterTypes:["TestAddress"], replaceWithCall:true})
     addAddress(a:Tests.TestAddress):Tests.TestAddress
     {
         //console.log("inside add address:", (a instanceof Tests.TestAddress));
@@ -121,7 +121,7 @@ export class TestPerson
     }
 
     @omm.CollectionUpdate
-    @omm.MeteorMethod({parameterTypes:["TestAddress"], replaceWithCall:true})
+    @omm.Remote({parameterTypes:["TestAddress"], replaceWithCall:true})
     addAddresses(addresses:Array<Tests.TestAddress>):Array<Tests.TestAddress>
     {
         var that = this;
@@ -142,7 +142,7 @@ export class TestPerson
     // }
 
 
-    @omm.Wrap
+    @omm.RemoteCollectionUpdate
     addToWood(t:Tests.TestTree, s?:string )
     {
         this.trees.push( t );
@@ -150,20 +150,20 @@ export class TestPerson
             this.wood[s] = t;
     }
 
-    @omm.Wrap
+    @omm.RemoteCollectionUpdate
     addFamilyRelation(s:string, p:Tests.TestPerson )
     {
         if( s )
             this.family[s] = p;
     }
 
-    @omm.Wrap
+    @omm.RemoteCollectionUpdate
     addPhoneNumber(s:string, p:Tests.TestPhoneNumber )
     {
         this.phoneBook[s] = p;
     }
 
-    @omm.Wrap
+    @omm.RemoteCollectionUpdate
     tendToGarden(  ):number
     {
         this.gardenState++;

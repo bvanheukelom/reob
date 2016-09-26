@@ -22,7 +22,7 @@ export class TestTree {
         this.creationDate = new Date();
     }
 
-    @omm.Wrap
+    @omm.RemoteCollectionUpdate
     grow():string {
         return this._grow();
     }
@@ -42,14 +42,14 @@ export class TestTree {
         return this._grow();
     }
 
-    @omm.Wrap
+    @omm.RemoteCollectionUpdate
     wither() {
         this.leaves = [];
         omm.emit("gardenevents", "withered");
         omm.emit("gardenevents", "withered2");
     }
 
-    @omm.Wrap
+    @omm.RemoteCollectionUpdate
     thisThrowsAnError() {
         throw new Error("Hello world");
     }
@@ -68,7 +68,7 @@ export class TestTree {
     }
     
     @omm.CollectionUpdate
-    @omm.MeteorMethod({replaceWithCall:true, resultType:"TestLeaf"})
+    @omm.Remote({replaceWithCall:true, resultType:"TestLeaf"})
     growAndReturnLeaves():Array<Tests.TestLeaf>{
         this.grow();
         return this.leaves;

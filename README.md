@@ -1,14 +1,12 @@
-### Meteor object mapper
+### omm, a relaxed object mapper for mongodb
 
 Omm maps between rich objects and documents.
 
 ## Key features
 
-- Load rich objects instead of documents from a collection
+- Describe the object graph through annotations
 
-- Describe the object graph through annotation-style function calls
-
-- Declare meteor methods through annotations-style function calls
+- Declare server methods through annotations
 
 - Perform collection altering operations anywhere on the object graph
 
@@ -16,69 +14,83 @@ Omm maps between rich objects and documents.
 
 - Atomicity over complex operations within one document
 
-## Api Documentation
+- Client & Server components that bring mongo collection access to the client
 
-[JsDoc](https://bvanheukelom.github.io/omm/test_meteor_web/packages/omm/out/omm.html)
+## Annotations
+
+[@Entity](globals.html#entity)
+
+[@Type](globals.html##type)
+
+[@Parent](globals.html##parent)
+
+[@Id](globals.html##parent)
+
+[@DocumentName](globals.html##documentname)
+
+[@CollectionUpdate](globals.html##collectionupdate)
+
+[@Wrap](globals.html##wrap)
+
 
 ## Example
 
-[Garden.js](example/Garden.js)
-```js
-Garden = function Garden( name, id ){
-	this._id = id;
-	this.name = name;
-	this.plants = [];
-	this.harvested = 0;
-};
-// declares Garden as an Entity
-omm.addEntity(Garden);
-// declares that the property "plants" contains objects of the type "Plant"
-omm.arrayType(Garden, "plants", "Plant");
+[Garden.ts](example/Garden.js)
+```ts
+import {Entity, CollectionUpdate, Parent} from "@bvanheukelom/o-m-m"
+import {Plant} from "./Plant"
 
-Garden.prototype.addPlant = function( t ){
-	this.plants.push( new Plant( t, this ) );
-};
-omm.collectionUpdate( Garden, "addPlant" );
+@omm.Entity
+export class Garden{
 
-Garden.prototype.growPlants = function(){
-	this.plants.forEach( function(p){
-		p.grow();
-	});
-};
-omm.collectionUpdate( Garden, "growPlants" );
+	_id:string;
+
+	@ArrayType("Plant")
+	plants:Array<Plant> = [ new Plant( "Rose") ];
+
+	constructor( ){
+	}
+
+	@CollectionUpdate
+	growPlants(){
+	    this.plants.forEach( function(p){
+	        p.grow();
+	    });
+	}
+
+}
 ```
 
-[Plant.js](example/Plant.js)
-```js
-Plant = function Plant( type, garden ){
-	//this._id = "id"+garden.plants.length;
-	this.type = type;
+[Plant.ts](example/Plant.ts)
+```ts
+
+export class Plant{
 	this.height = 1;
-	this.garden = garden;
-};
-// declares that Plant is an Entity
-omm.addEntity(Plant);
-// declares that the property garden contains object of the class "Garden"
-omm.type(Plant, "garden", "Garden");
-// declares that the value of the property should be stored as a key (string) rather than the actual object
-omm.asForeignKey(Plant, "garden");
 
+	@Parent
+	garden:Garden;
 
-Plant.prototype.grow = function(){
-	if( this.height<20 )
-		this.height++;
-	if( this.height==10 || this.height==15 ){
-		this.garden.addPlant(this.type,this.garden);
+	constructor( public type:string ){
 	}
-};
 
-Plant.prototype.harvest = function(){
-	var i = this.garden.plants.indexOf(this);
-	this.garden.plants.splice(i,1);
-	this.garden.harvested+=this.height;
-};
-// declares that the function "harvest" should also be invoked on the object in the collection.
-omm.collectionUpdate( Plant, "harvest");
+
+	grow(){
+    	if( this.height<20 )
+    		this.height++;
+    	if( this.height==10 || this.height==15 ){
+    		this.garden.addPlant(this.type,this.garden);
+    	}
+    }
+
+    @CollectionUpdate
+    harvest(){
+    	var i = this.garden.plants.indexOf(this);
+    	this.garden.plants.splice(i,1);
+    	this.garden.harvested+=this.height;
+    }
+
+}
+
 
 ```
 

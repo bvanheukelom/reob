@@ -14,7 +14,7 @@ export class TreeService{
         this.personCollection = tpc;
     }
 
-    @omm.MeteorMethod({serverOnly:true, resultType:"TestTree"})
+    @omm.Remote({serverOnly:true, resultType:"TestTree"})
     insertTree( height:number ):Promise<Tests.TestTree>{
         var t = new Tests.TestTree(height);
         return this.treeCollection.insert(t).then((id:string)=>{
@@ -22,7 +22,7 @@ export class TreeService{
         });
     }
 
-    @omm.MeteorMethod({ serverOnly:true })
+    @omm.Remote({ serverOnly:true })
     growTree(treeId:string):Promise<string> {
         debugger;
         return this.treeCollection.getById(treeId).then((t:Tests.TestTree)=>{
@@ -31,7 +31,7 @@ export class TreeService{
         });
     }
 
-    @omm.MeteorMethod({ serverOnly:true })
+    @omm.Remote({ serverOnly:true })
     aTreeAndAPerson(treeId:string,personId:string):Promise<any> {
         return Promise.all([this.treeCollection.getByIdOrFail(treeId), this.personCollection.getByIdOrFail(personId)]);
     }

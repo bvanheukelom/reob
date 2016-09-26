@@ -1,51 +1,50 @@
 {
-    "compilerOptions": {
-        "module": "commonjs",
-        "declaration": true,
-        "target": "es5",
-        "sourceMap": true,
-        "experimentalDecorators": true,
-        "removeComments": false,
-        "outDir": "dist"
-    },
-    "filesGlob": [
-        "typings/**/*.d.ts",
-        "src/**/*.ts",
-        "spec/**/*.ts"
-    ],
-    "exclude": [
-        "node_modules"
-    ],
-    "files": [
-        "typings/bluebird/bluebird.d.ts",
-        "typings/eventemitter2/eventemitter2.d.ts",
-        "typings/express-serve-static-core/express-serve-static-core.d.ts",
-        "typings/express/express.d.ts",
-        "typings/jasmine/jasmine.d.ts",
-        "typings/mime/mime.d.ts",
-        "typings/mongodb/mongodb.d.ts",
-        "typings/node-uuid/node-uuid-base.d.ts",
-        "typings/node-uuid/node-uuid-cjs.d.ts",
-        "typings/node-uuid/node-uuid.d.ts",
-        "typings/node/node.d.ts",
-        "typings/serve-static/serve-static.d.ts",
-        "typings/underscore/underscore.d.ts",
-        "src/annotations/PersistenceAnnotation.ts",
-        "src/event/OmmEvent.ts",
-        "src/omm.ts",
-        "src/omm/Client.ts",
-        "src/omm/Collection.ts",
-        "src/omm/Config.ts",
-        "src/omm/Handler.ts",
-        "src/omm/INetwork.ts",
-        "src/omm/MeteorPersistence.ts",
-        "src/omm/ObjectContext.ts",
-        "src/omm/OmmObject.ts",
-        "src/omm/SerializationPath.ts",
-        "src/omm/Server.ts",
-        "src/serializer/Cloner.ts",
-        "src/serializer/Document.ts",
-        "src/serializer/Serializer.ts",
-        "src/serializer/SubObjectPath.ts"
-    ]
+  "compilerOptions": {
+    "module": "commonjs",
+    "declaration": true,
+    "target": "es5",
+    "sourceMap": true,
+    "experimentalDecorators": true,
+    "removeComments": false,
+    "outDir": "dist"
+  },
+  "filesGlob": [
+    "typings/**/*.d.ts",
+    "src/**/*.ts",
+    "spec/**/*.ts"
+  ],
+  "exclude": [
+    "node_modules"
+  ],
+  "files": [
+    "typings/bluebird/bluebird.d.ts",
+    "typings/eventemitter2/eventemitter2.d.ts",
+    "typings/express-serve-static-core/express-serve-static-core.d.ts",
+    "typings/express/express.d.ts",
+    "typings/globals/jasmine/index.d.ts",
+    "typings/index.d.ts",
+    "typings/mime/mime.d.ts",
+    "typings/mongodb/mongodb.d.ts",
+    "typings/node-uuid/node-uuid-base.d.ts",
+    "typings/node-uuid/node-uuid-cjs.d.ts",
+    "typings/node-uuid/node-uuid.d.ts",
+    "typings/node/node.d.ts",
+    "typings/serve-static/serve-static.d.ts",
+    "typings/underscore/underscore.d.ts",
+    "src/Annotations.ts",
+    "src/Client.ts",
+    "src/Cloner.ts",
+    "src/Collection.ts",
+    "src/Document.ts",
+    "src/EventContext.ts",
+    "src/EventListener.ts",
+    "src/Handler.ts",
+    "src/MeteorPersistence.ts",
+    "src/ObjectContext.ts",
+    "src/OmmEvent.ts",
+    "src/OmmObject.ts",
+    "src/SerializationPath.ts",
+    "src/Serializer.ts",
+    "src/Server.ts"
+  ]
 }

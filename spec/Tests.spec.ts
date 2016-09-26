@@ -3,16 +3,20 @@
  */
 import "./classes/TestLeaf"
 import * as omm from "../src/omm"
+import {Server} from "../src/Server"
 import * as Tests from "./classes/Tests"
-import * as mongodb from "mongodb"
 import * as Promise from "bluebird"
-import * as express from "express"
-import * as http from "http"
 var co = require("co");
 
 import "./classes/TestLeaf"
 
 jasmine.DEFAULT_TIMEOUT_INTERVAL = 10000000;
+
+Promise.onPossiblyUnhandledRejection((reason: any) => {
+    console.log("possibly unhandled rejection ", reason);
+    debugger;
+});
+
 
 describe("Omm both on client and server", function () {
 
@@ -20,39 +24,31 @@ describe("Omm both on client and server", function () {
     var treeCollection:Tests.TestTreeCollection;
     var treeService:Tests.TreeService;
     var clientTreeService:Tests.TreeService;
-    var server:omm.Server;
+    var server:Server;
     var client:omm.Client;
-    var db:any;
 
     beforeAll((done)=>{
-        omm.init();
-        mongodb.MongoClient.connect( "mongodb://localhost/test", {promiseLibrary:Promise}).then((d:mongodb.Db)=>{
-            var app = express();
-            server = new omm.Server(app);
-            db = d;
-            personCollection = new Tests.TestPersonCollection(db);
-            treeCollection = new Tests.TestTreeCollection(db);
 
-            treeService = new Tests.TreeService( treeCollection, personCollection );
-            clientTreeService = new Tests.TreeService();
+        server = new Server("mongodb://localhost/test");
 
-            server.addCollection(personCollection);
-            server.addCollection(treeCollection);
+        personCollection = new Tests.TestPersonCollection();
+        server.addCollection(personCollection);
 
+        treeCollection = new Tests.TestTreeCollection();
+        server.addCollection(treeCollection);
 
-            server.addSingleton("ts", treeService);
-            client = new omm.Client('localhost', 7000);
-            client.addSingleton("ts", clientTreeService);
+        treeService = new Tests.TreeService( treeCollection, personCollection );
+        server.registerService("ts", treeService);
 
-            app.listen( 7000, ()=>{
-
-                done();
-            });
+        client = new omm.Client('localhost', 8080);
+        clientTreeService = new Tests.TreeService();
+        client.registerService("ts", clientTreeService);
+        console.log("Server starting");
+        server.start(8080).then(()=>{
+            console.log("Server started");
+            done();
         });
-        Promise.onPossiblyUnhandledRejection((reason: any) => {
-            console.log("possibly unhandled rejection ", reason);
-            debugger;
-        });
+
     });
 
     var count =0;
@@ -66,17 +62,9 @@ describe("Omm both on client and server", function () {
         omm.removeAllUpdateEventListeners();
     });
 
-
-    // it("knows the difference between root entities and subdocument entities ", function () {
-    //     expect(omm.PersistenceAnnotation.getCollectionName(Tests.TestPerson)).toBe("TestPerson");
-    //     expect(omm.PersistenceAnnotation.isRootEntity(Tests.TestPerson)).toBeTruthy();
-    //     expect(omm.PersistenceAnnotation.isRootEntity(Tests.TestTree)).toBeTruthy();
-    //     expect(omm.PersistenceAnnotation.isRootEntity(Tests.TestLeaf)).toBeFalsy();
-    // });
-
-    it("knows meteor method annotations ", function () {
-        var methodNames = omm.PersistenceAnnotation.getMethodFunctionNames(Tests.TestPerson.prototype);
-        expect(methodNames).toContain("TestPerson.addAddress");
+    it("knows method annotations ", function () {
+        var methodNames = omm.Reflect.getRemoteFunctionNames(Tests.TestPerson);
+        expect(methodNames).toContain("addAddress");
         expect(methodNames.length).toBeGreaterThan(0);
     });
 
@@ -86,8 +74,8 @@ describe("Omm both on client and server", function () {
     });
 
     it("knows collection updates", function () {
-        expect(omm.PersistenceAnnotation.getCollectionUpdateFunctionNames(Tests.TestPerson)).toBeDefined();
-        expect(omm.PersistenceAnnotation.getCollectionUpdateFunctionNames(Tests.TestPerson)).toContain("collectionUpdateRename");
+        expect(omm.Reflect.getCollectionUpdateFunctionNames(Tests.TestPerson)).toBeDefined();
+        expect(omm.Reflect.getCollectionUpdateFunctionNames(Tests.TestPerson)).toContain("collectionUpdateRename");
     });
 
     it("can clone stuff", function () {
@@ -114,6 +102,7 @@ describe("Omm both on client and server", function () {
 
     it("can run collection updates from within another method", function (done) {
         var t1:Tests.TestTree = new Tests.TestTree(15);
+        debugger;
 
         treeCollection.insert(t1).then( (id:string)=> {
             debugger;
@@ -263,7 +252,7 @@ describe("Omm both on client and server", function () {
     });
 
     it("knows typed properties", function () {
-        expect(omm.PersistenceAnnotation.getTypedPropertyNames(Tests.TestTree)).toContain('leaves');
+        expect(omm.Reflect.getTypedPropertyNames(Tests.TestTree)).toContain('leaves');
     });
 
     it("uses persistence paths to return undefined for non existent subobjects ", function () {
@@ -350,13 +339,13 @@ describe("Omm both on client and server", function () {
     });
 
     it("knows types ", function () {
-        expect(omm.PersistenceAnnotation.getPropertyClass(Tests.TestPerson, "tree")).toBe(Tests.TestTree);
-        expect(omm.PersistenceAnnotation.getPropertyClass(Tests.TestPerson, "leaf")).toBe(Tests.TestLeaf);
+        expect(omm.Reflect.getPropertyClass(Tests.TestPerson, "tree")).toBe(Tests.TestTree);
+        expect(omm.Reflect.getPropertyClass(Tests.TestPerson, "leaf")).toBe(Tests.TestLeaf);
     });
 
     it("knows document names ", function () {
-        expect(omm.PersistenceAnnotation.getDocumentPropertyName(Tests.TestLeaf, "greenNess")).toBe("greenIndex");
-        expect(omm.PersistenceAnnotation.getObjectPropertyName(Tests.TestLeaf, "greenIndex")).toBe("greenNess");
+        expect(omm.Reflect.getDocumentPropertyName(Tests.TestLeaf, "greenNess")).toBe("greenIndex");
+        expect(omm.Reflect.getObjectPropertyName(Tests.TestLeaf, "greenIndex")).toBe("greenNess");
     });
 
     it("can call functions that have are also webMethods normally", function (done) {
@@ -371,24 +360,7 @@ describe("Omm both on client and server", function () {
             done();
         });
     });
-
-    it("can monkey patch functions", function () {
-        var f = function f() {
-            this.c = 0;
-        };
-        f.prototype.hello = function (p) {
-            this.c += p;
-        };
-        omm.MeteorPersistence.monkeyPatch(f.prototype, "hello", function (original, p) {
-            expect(this.c).toBe(0);
-            this.c++;
-            original.call(this, p);
-
-        });
-        var x:any = new f();
-        x.hello(20);
-        expect(x.c).toBe(21)
-    });
+    
     it("serializes objects to plain objects", function () {
         var tp = new Tests.TestPerson("tp");
         tp.tree = new Tests.TestTree(12);
@@ -465,7 +437,7 @@ describe("Omm both on client and server", function () {
     });
 
     it("marks properties as ignored", function () {
-        expect(omm.PersistenceAnnotation.isIgnored(Tests.TestCar, "temperature")).toBeTruthy();
+        expect(omm.Reflect.isIgnored(Tests.TestCar, "temperature")).toBeTruthy();
     });
     //
     it("deserializes local objects with arrays", function () {
@@ -496,15 +468,15 @@ describe("Omm both on client and server", function () {
     });
     //
     it("properties of child objects have no type on the parent object", function () {
-        expect(omm.PersistenceAnnotation.getPropertyClass(Tests.TestInheritanceParent, "childOther")).toBeUndefined();
+        expect(omm.Reflect.getPropertyClass(Tests.TestInheritanceParent, "childOther")).toBeUndefined();
     });
     //
     it("properties of child objects have a type on the child object", function () {
-        expect(omm.PersistenceAnnotation.getPropertyClass(Tests.TestInheritanceChild, "childOther")).toBe(Tests.TestInheritanceOther);
+        expect(omm.Reflect.getPropertyClass(Tests.TestInheritanceChild, "childOther")).toBe(Tests.TestInheritanceOther);
     });
     //
     it("properties of the parent class have a type on the child class", function () {
-        expect(omm.PersistenceAnnotation.getPropertyClass(Tests.TestInheritanceChild, "parentOther")).toBe(Tests.TestInheritanceOther);
+        expect(omm.Reflect.getPropertyClass(Tests.TestInheritanceChild, "parentOther")).toBe(Tests.TestInheritanceOther);
     });
     //
     it("serializes local objects with inheritance", function () {
@@ -671,13 +643,13 @@ describe("Omm both on client and server", function () {
 
 
     it("can get the testwheel class by its configured name", function () {
-        var p = omm.PersistenceAnnotation.getEntityClassByName("TestWheelBanzai")
+        var p = omm.Reflect.getEntityClassByName("TestWheelBanzai")
         expect(p).toBeDefined();
         expect(p).toBe(Tests.TestWheel);
     });
 
     it("can get the testCar class by its name", function () {
-        var p = omm.PersistenceAnnotation.getEntityClassByName("TestCar");
+        var p = omm.Reflect.getEntityClassByName("TestCar");
         expect(p).toBeDefined();
         expect(p).toBe(Tests.TestCar);
     });
@@ -1261,7 +1233,7 @@ describe("Omm both on client and server", function () {
     });
 
     it("does not transmit properties that are private to the server", function () {
-        expect( omm.PersistenceAnnotation.isPrivateToServer( Tests.TestCar, "privateToServer" ) ).toBeTruthy();
+        expect( omm.Reflect.isPrivateToServer( Tests.TestCar, "privateToServer" ) ).toBeTruthy();
     });
 
 

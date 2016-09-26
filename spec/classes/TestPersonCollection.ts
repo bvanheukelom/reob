@@ -5,11 +5,11 @@ import * as mongodb from "mongodb"
 
 export class TestPersonCollection extends omm.Collection<Tests.TestPerson> {
 
-    constructor( db?:any ) {
-        super( db, Tests.TestPerson );
+    constructor( ) {
+        super( Tests.TestPerson );
     }
 
-    @omm.MeteorMethod({ serverOnly:true, parameterTypes:["string","callback"]})
+    @omm.Remote({ serverOnly:true, parameterTypes:["string","callback"]})
     newPerson(n:string):Promise<Tests.TestPerson> {
         var p:Tests.TestPerson = new Tests.TestPerson();
         p.name = n;
@@ -18,7 +18,7 @@ export class TestPersonCollection extends omm.Collection<Tests.TestPerson> {
         });
     }
 
-    @omm.MeteorMethod({ parameterTypes:["TestPerson", "TestPerson", "callback"]})
+    @omm.Remote({ parameterTypes:["TestPerson", "TestPerson", "callback"]})
     haveBaby( mom:Tests.TestPerson, dad:Tests.TestPerson ):Promise<Tests.TestPerson> {
         //console.log("mom: ", mom);
         //console.log("dad: ", dad);
@@ -31,12 +31,12 @@ export class TestPersonCollection extends omm.Collection<Tests.TestPerson> {
         });
     }
 
-    @omm.MeteorMethod({ serverOnly:true, parameterTypes:["string", "callback"]})
+    @omm.Remote({ serverOnly:true, parameterTypes:["string", "callback"]})
     removePerson( id:string ) : Promise<void> {
         return this.remove(id);
     }
 
-    @omm.MeteorMethod({ serverOnly:true, parameterTypes:["callback"]})
+    @omm.Remote({ serverOnly:true, parameterTypes:["callback"]})
     removeAllPersons() : Promise<void> {
         return this.getMongoCollection().remove({});
     }

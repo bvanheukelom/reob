@@ -37,7 +37,7 @@ export class TestLeaf
         return this.parent;
     }
 
-    @omm.Wrap
+    @omm.RemoteCollectionUpdate
     flutter(){
         this.greenNess++;
         omm.emit("fluttering");

@@ -29,7 +29,7 @@ export class TestPhoneNumber {
         return new TestPhoneNumber(dn.pn);
     }
 
-    @omm.Wrap
+    @omm.RemoteCollectionUpdate
     callNumber( ):string
     {
         this.timesCalled++;

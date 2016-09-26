@@ -1,9 +1,9 @@
 
 import * as Cloner from "./Cloner"
 import Document from "./Document"
-import * as omm from "../omm"
+import * as omm from "./omm"
 import SubObjectPath from "./SubObjectPath"
-import {TypeClass, PersistenceAnnotation, getId, setNonEnumerableProperty, className } from "../annotations/PersistenceAnnotation"
+import { Reflect, getId } from "./Annotations"
 
 export class Serializer {
 
@@ -24,13 +24,13 @@ export class Serializer {
         visited.push(object);
 
         cb(path, object);
-        var objectClass = PersistenceAnnotation.getClass(object);
-        PersistenceAnnotation.getTypedPropertyNames(objectClass).forEach(function (typedPropertyName:string) {
-            if( !PersistenceAnnotation.isParent(objectClass, typedPropertyName) ) {
+        var objectClass = Reflect.getClass(object);
+        Reflect.getTypedPropertyNames(objectClass).forEach(function (typedPropertyName:string) {
+            if( !Reflect.isParent(objectClass, typedPropertyName) ) {
                 //console.log("updating foreignkey property " + typedPropertyName);
                 var v:Object = object[typedPropertyName];
                 if (v) {
-                    if (PersistenceAnnotation.isArrayOrMap(objectClass, typedPropertyName)) {
+                    if (Reflect.isArrayOrMap(objectClass, typedPropertyName)) {
                         //console.log("updating foreignkey property " + typedPropertyName + " is array");
                         for (var i in v) {
                             var e = v[i];
@@ -57,7 +57,7 @@ export class Serializer {
         });
     }
 
-    toObject(doc:Document, handler?:any, f?:TypeClass<any>, serializationPath?:omm.SerializationPath ):any {
+    toObject(doc:Document, handler?:any, f?:omm.TypeClass<any>, serializationPath?:omm.SerializationPath ):any {
         var o:any;
         if(Array.isArray(doc)){
             var r = [];
@@ -78,7 +78,7 @@ export class Serializer {
         return o;
     }
 
-    private toObjectRecursive<T extends Object>(doc:Document, parent:Object, f?:TypeClass<T>, handler?:any):T {
+    private toObjectRecursive<T extends Object>(doc:Document, parent:Object, f?:omm.TypeClass<T>, handler?:any):T {
         var o:T;
         if( !doc )
             return <T>doc;
@@ -93,7 +93,7 @@ export class Serializer {
         } else {
             // if the document contains a property called "className" it defines the class that's going to be instantiated
             if (doc._className){
-                f = PersistenceAnnotation.getEntityClassByName(doc._className);
+                f = Reflect.getEntityClassByName(doc._className);
             }
             if(!f)
                 return Cloner.clone(doc);
@@ -111,7 +111,7 @@ export class Serializer {
                 omm.SerializationPath.setObjectContext(o, sp, handler);
             }
 
-            PersistenceAnnotation.getParentPropertyNames(f).forEach(function (parentPropertyName:string) {
+            Reflect.getParentPropertyNames(f).forEach(function (parentPropertyName:string) {
                 o[parentPropertyName] = parent;
             });
 
@@ -120,14 +120,14 @@ export class Serializer {
                 if( propertyName=="_className" || propertyName=="_serializationPath" )
                     continue;
                 var value = doc[propertyName];
-                var objectNameOfTheProperty:string = f ? PersistenceAnnotation.getObjectPropertyName(f, propertyName) : undefined;
+                var objectNameOfTheProperty:string = f ? Reflect.getObjectPropertyName(f, propertyName) : undefined;
                 if(!objectNameOfTheProperty)
                     objectNameOfTheProperty = propertyName;
-                var propertyClass = PersistenceAnnotation.getPropertyClass(f, objectNameOfTheProperty);
+                var propertyClass = Reflect.getPropertyClass(f, objectNameOfTheProperty);
                 // var isStoredAsKeys = PersistenceAnnotation.isStoredAsForeignKeys(f, objectNameOfTheProperty);
 
                 if (propertyClass /*&& !isStoredAsKeys*/) {
-                    if (PersistenceAnnotation.isArrayOrMap(f, objectNameOfTheProperty)) {
+                    if (Reflect.isArrayOrMap(f, objectNameOfTheProperty)) {
                         var result = Array.isArray(value) ? [] : {};
                         for (var i in value) {
                             var entry:Document = value[i];
@@ -157,7 +157,7 @@ export class Serializer {
         return this.toDocumentRecursive(object, includeContext, omitPropertiesPrivateToServer);
     }
 
-    private toDocumentRecursive(object:any, includeContext?:boolean, omitPropertiesPrivateToServer?:boolean, rootClass?:TypeClass<Object>, parentObject?:Object, propertyNameOnParentObject?:string):Document {
+    private toDocumentRecursive(object:any, includeContext?:boolean, omitPropertiesPrivateToServer?:boolean, rootClass?:omm.TypeClass<Object>, parentObject?:Object, propertyNameOnParentObject?:string):Document {
         var result:Document;
         if ( !object || typeof object == "string" || typeof object == "number"  || typeof object == "date" || typeof object == "boolean")
             result =  <Document>object;
@@ -167,13 +167,13 @@ export class Serializer {
                 result[i] = this.toDocumentRecursive(object[i], includeContext);
             }
         } else {
-            var objectClass =  PersistenceAnnotation.getClass(object);
+            var objectClass =  Reflect.getClass(object);
             if( typeof (<any>objectClass).toDocument == "function" ){
                 result = (<any>objectClass).toDocument( object );
             } else {
-                var parentClass = PersistenceAnnotation.getClass(parentObject);
+                var parentClass = Reflect.getClass(parentObject);
                 {
-                    result = this.createDocument(object, includeContext, omitPropertiesPrivateToServer, rootClass ? rootClass : PersistenceAnnotation.getClass(object), parentObject, propertyNameOnParentObject);
+                    result = this.createDocument(object, includeContext, omitPropertiesPrivateToServer, rootClass ? rootClass : Reflect.getClass(object), parentObject, propertyNameOnParentObject);
                 }
             }
         }
@@ -181,33 +181,33 @@ export class Serializer {
         return result;
     }
 
-    private createDocument(object:any, includeContext?:boolean, omitPropertiesPrivateToServer?:boolean, rootClass?:TypeClass<Object>, parentObject?:Object, propertyNameOnParentObject?:string):Document {
+    private createDocument(object:any, includeContext?:boolean, omitPropertiesPrivateToServer?:boolean, rootClass?:omm.TypeClass<Object>, parentObject?:Object, propertyNameOnParentObject?:string):Document {
         var doc:any = {};
         var context = omm.SerializationPath.getObjectContext(object);
         if( includeContext ) {
             if (context && context.serializationPath)
                 doc['_serializationPath'] = context.serializationPath.toString();
-            var cls = omm.PersistenceAnnotation.getClass(object);
-            if (cls && omm.PersistenceAnnotation.isEntity(cls)) {
-                doc['_className'] = omm.className(cls);
+            var cls = omm.Reflect.getClass(object);
+            if (cls && omm.Reflect.isEntity(cls)) {
+                doc['_className'] = omm.Reflect.getClassName(cls);
             }
         }
-        var objectClass = PersistenceAnnotation.getClass(object);
+        var objectClass = Reflect.getClass(object);
         for (var property in object) {
             var value = object[property];
-            var documentNameOfTheProperty:string = PersistenceAnnotation.getDocumentPropertyName(objectClass,property);
+            var documentNameOfTheProperty:string = Reflect.getDocumentPropertyName(objectClass,property);
             if( !documentNameOfTheProperty )
                 documentNameOfTheProperty = property;
-            var needsToBeOmittedBecauseItsPrivate = omitPropertiesPrivateToServer && PersistenceAnnotation.isPrivateToServer(objectClass, property);
+            var needsToBeOmittedBecauseItsPrivate = omitPropertiesPrivateToServer && Reflect.isPrivateToServer(objectClass, property);
             if( needsToBeOmittedBecauseItsPrivate ){
                 console.log("Omitting ", property);
             }
-            if (value !== undefined && !PersistenceAnnotation.isIgnored(objectClass, property) && !PersistenceAnnotation.isParent(objectClass, property) && !needsToBeOmittedBecauseItsPrivate ) {
+            if (value !== undefined && !Reflect.isIgnored(objectClass, property) && !Reflect.isParent(objectClass, property) && !needsToBeOmittedBecauseItsPrivate ) {
                 // primitives
-                if( PersistenceAnnotation.getPropertyClass(objectClass,property) ) {
+                if( Reflect.getPropertyClass(objectClass,property) ) {
 
                     // array
-                    if (PersistenceAnnotation.isArrayOrMap(objectClass, property)) {
+                    if (Reflect.isArrayOrMap(objectClass, property)) {
                         var result;
                         if (Array.isArray(value))
                             result = [];

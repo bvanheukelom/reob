@@ -1,18 +1,19 @@
 
 
-import * as omm from "../omm"
+import * as omm from "./omm"
 
 import * as omm_sp from "./SerializationPath"
+import {Server} from "./Server"
 
-import Document from "../serializer/Document"
-import {TypeClass as TypeClass } from "../annotations/PersistenceAnnotation"
-import * as omm_event from "../event/OmmEvent"
-import * as Config from "./Config"
+import Document from "./Document"
+import * as omm_event from "./OmmEvent"
 import * as mongodb from "mongodb"
 import * as Promise from "bluebird"
-
 import * as uuid from "node-uuid"
 
+function getDefaultCollectionName(t:omm.TypeClass<any>):string {
+    return omm.Reflect.getClassName(t);
+}
 
 export class Collection<T extends Object> implements omm.Handler
 {
@@ -100,20 +101,23 @@ export class Collection<T extends Object> implements omm.Handler
      * @class
      * @memberof omm
      */
-    constructor( db:any, entityClass:omm.TypeClass<T>, collectionName?:string ) {
+    constructor( entityClass:omm.TypeClass<T>, collectionName?:string ) {
         this.serializer = new omm.Serializer();
         if( !collectionName )
-            collectionName = omm.getDefaultCollectionName(entityClass);
+            collectionName = getDefaultCollectionName(entityClass);
 
         // this might have to go away
         // omm.addCollectionRoot(entityClass, collectionName);
 
         this.name = collectionName;
 
-        this.mongoCollection = db.collection( this.name );
+
         this.theClass = entityClass;
     }
 
+    setMongoCollection( db:any ){
+        this.mongoCollection = db.collection( this.name );
+    }
 
     /**
      * Gets the name of the collection.
@@ -129,6 +133,8 @@ export class Collection<T extends Object> implements omm.Handler
      */
     getMongoCollection( ):any
     {
+        if( !this.mongoCollection )
+            throw new Error("No Mongo Collection set. Use 'setMongoCollection' first." );
         return this.mongoCollection;
     }
 
@@ -158,7 +164,7 @@ export class Collection<T extends Object> implements omm.Handler
      */
     protected find(findCriteria:any ):Promise<Array<T>>
     {
-        return this.cursorToObjects( this.mongoCollection.find(findCriteria ) );
+        return this.cursorToObjects( this.getMongoCollection().find(findCriteria ) );
     }
 
     cursorToObjects( c:any ):Promise<Array<T>>{
@@ -206,7 +212,7 @@ export class Collection<T extends Object> implements omm.Handler
         ctx.objectId = id;
         return this.emitLater( "willRemove", ctx ).then(()=>{
             console.log("removing");
-            return this.mongoCollection.remove({_id:id }).then((result)=>{
+            return this.getMongoCollection().remove({_id:id }).then((result)=>{
                 console.log("removing2");
                 var c2 = new omm.EventContext(undefined, this);
                 c2.objectId = id;
@@ -243,30 +249,30 @@ export class Collection<T extends Object> implements omm.Handler
         ctx.rootObject = rootObject;
         //ctx.ob
 
-        var entityClass = omm.PersistenceAnnotation.getClass(postUpdateObject);
+        var entityClass = omm.Reflect.getClass(postUpdateObject);
 
         var promises = [];
 
         // hack?!
-        omm.Server.userData = userData;
+        Server.userData = userData;
         events.forEach(function(t){
-            console.log( 'emitting event:'+t.topic, ' on class '+omm.className(entityClass) );
-            var p = omm_event.callEventListeners( entityClass, t.topic, ctx, t.data );
+            console.log( 'emitting event:'+t.topic, ' on class '+omm.Reflect.getClassName(entityClass) );
+            var p = callEventListeners( entityClass, t.topic, ctx, t.data );
             promises.push( p );
         });
 
-        promises.push( omm_event.callEventListeners( entityClass, "post:"+functionName, ctx ) );
-        promises.push( omm_event.callEventListeners( entityClass, "post", ctx ) );
+        promises.push( callEventListeners( entityClass, "post:"+functionName, ctx ) );
+        promises.push( callEventListeners( entityClass, "post", ctx ) );
         return Promise.all(promises).thenReturn();
     }
 
     private updateOnce(sp:omm.SerializationPath, updateFunction:(o:T)=>void, attempt:number):Promise<CollectionUpdateResult> {
-        var documentPromise = this.mongoCollection.find({
+        var documentPromise = this.getMongoCollection().find({
             _id: sp.getId()
         }).toArray().then((documents:Document[])=> {
-            var document = documents[0];
+            var document:any = documents[0];
             if (!document) {
-                return Promise.reject(new Error("No document found for id: " + sp.getId()));
+                return <any>Promise.reject(new Error("No document found for id: " + sp.getId()));
             }
             return document;
         });
@@ -286,7 +292,7 @@ export class Collection<T extends Object> implements omm.Handler
         var resultPromise = Promise.all([objectPromise,rootObjectPromise]).then( (values:any)=>{
             var object  = values[0];
             var rootObject = values[1];
-            omm_event.resetQueue();
+            resetQueue();
             // call the update function
             var result:any = {};
             
@@ -294,9 +300,9 @@ export class Collection<T extends Object> implements omm.Handler
             result.result = updateFunction(object);
             
             // handle events sent during the update
-            result.events = omm_event.getQueue();
+            result.events = getQueue();
             result.object = object;
-            omm_event.resetQueue();
+            resetQueue();
             omm_sp.SerializationPath.setObjectContext(rootObject, new omm.SerializationPath(this.getName(), omm.getId(rootObject)), this);
             omm_sp.SerializationPath.updateObjectContexts(rootObject, this);
             return result;
@@ -308,7 +314,7 @@ export class Collection<T extends Object> implements omm.Handler
             var result = values[2];
             var rootObject = values[3];
             var ctx = new omm.EventContext( rootObject, this);
-            return omm_event.callEventListeners(this.getEntityClass(), "preSave", ctx).then(()=> {
+            return callEventListeners(this.getEntityClass(), "preSave", ctx).then(()=> {
 
                 var documentToSave:Document = this.serializer.toDocument(rootObject);
                 documentToSave.serial = (currentSerial || 0) + 1;
@@ -316,7 +322,7 @@ export class Collection<T extends Object> implements omm.Handler
                 // update the collection
                 // console.log("writing document ", documentToSave);
 
-                return this.mongoCollection.updateOne({
+                return this.getMongoCollection().updateOne({
                     _id: omm.getId(rootObject),
                     serial: currentSerial
                 }, documentToSave).then((updateResult)=> {
@@ -379,12 +385,12 @@ export class Collection<T extends Object> implements omm.Handler
     insert( p:T ):Promise<string> {
 
         var ctx = new omm.EventContext(p, this);
-        var ud = omm.Server.userData;
+        var ud = Server.userData;
         ctx.userData = ud;
         return this.emitLater( "willInsert", ctx ).then(()=>{
             //console.log("insert not cancelled");
             // TODO make sure that this is unique
-            var idPropertyName = omm.PersistenceAnnotation.getIdPropertyName(this.theClass);
+            var idPropertyName = omm.Reflect.getIdPropertyName(this.theClass);
             var id = p[idPropertyName];
             if (!id){
                 p[idPropertyName] = uuid.v1();//new mongodb.ObjectID().toString();
@@ -395,7 +401,7 @@ export class Collection<T extends Object> implements omm.Handler
             doc.serial = 0;
             //console.log( "inserting document: ", doc);
 
-            return this.mongoCollection.insertOne(doc).then(()=>{
+            return this.getMongoCollection().insertOne(doc).then(()=>{
                 omm_sp.SerializationPath.setObjectContext(p, new omm.SerializationPath(this.getName(), id), this);
                 omm_sp.SerializationPath.updateObjectContexts(p, this);
 
@@ -407,7 +413,7 @@ export class Collection<T extends Object> implements omm.Handler
         });
     }
 
-    getEntityClass():TypeClass<T>{
+    getEntityClass():omm.TypeClass<T>{
         return this.theClass;
     }
 
@@ -416,12 +422,12 @@ export class Collection<T extends Object> implements omm.Handler
     
     collectionUpdate(entityClass:omm.TypeClass<any>, functionName:string, object:omm.OmmObject, originalFunction:Function, args:any[] ):any{
         if( this.updating ){
-            console.log("Skipping collection update '"+omm.className(entityClass)+"."+functionName+"' . Collection update already in progress. Calling original function.");
+            console.log("Skipping collection update '"+omm.Reflect.getClassName(entityClass)+"."+functionName+"' . Collection update already in progress. Calling original function.");
             return originalFunction.apply(object, args);
         }
 
 
-        console.log( 'Doing a collection upate in the collection for '+functionName, 'userData:', omm.Server.userData );
+        console.log( 'Doing a collection upate in the collection for '+functionName, 'userData:', Server.userData );
 
         var rootObject;
         var objectPromise:Promise<any>;
@@ -435,7 +441,7 @@ export class Collection<T extends Object> implements omm.Handler
         objectPromise = rootObjectPromise.then((rootObject:any)=>{
             return sp.getSubObject(rootObject);
         });
-        var ud = omm.Server.userData;
+        var ud = Server.userData;
 
         return Promise.all([objectPromise,rootObjectPromise]).then((values:any[])=>{
             var object:any = values[0];
@@ -457,7 +463,7 @@ export class Collection<T extends Object> implements omm.Handler
                     var resultPromise:Promise<CollectionUpdateResult> = this.update( sp,  (subObject) => {
                         this.updating = true;
                         try{
-                            omm.Server.userData = ud;
+                            Server.userData = ud;
                             var r2 = originalFunction.apply(subObject, args);
                             return r2;
                         }finally{
@@ -494,3 +500,61 @@ export interface CollectionUpdateResult{
     rootDocumentPost:any;
 }
 
+
+function getQueue():Array<any>{
+    return _queue.events;
+}
+
+var _queue:{events:Array<any>} = {events:[]};
+
+function resetQueue(){
+    _queue.events = [];
+    //console.log("reset",_queue);
+}
+
+export function emit( topic, data?:any ){
+    //console.log("Emitting",_queue.events);
+    if( _queue.events ) {
+        _queue.events.push({
+            topic: topic,
+            data: data
+        });
+    }
+    else{
+        // drop this
+    }
+}
+
+function deleteQueue(){
+    _queue =  {events:[]};
+}
+
+function callEventListeners<O extends Object>( t:omm.TypeClass<O>, topic:string, ctx:omm.EventContext<any>, data?:any ):Promise<void>{
+    var className = omm.Reflect.getClassName(t);
+    ctx.topic = topic;
+    var promises = [];
+    if( className && omm.eventListeners[className] && omm.eventListeners[className][topic] ){
+        omm.eventListeners[className][topic].forEach( function(el:omm.EventListener<any>){
+            try {
+                var p = Promise.cast( el(ctx, data) );
+                promises.push( p );
+            }catch( e ){
+                console.error("Exception in event listener for class '"+className+"' and topic '"+topic+"':", e);
+            }
+        });
+    }
+
+    if( topic.indexOf("pre:")!=0 && topic!="pre" && topic.indexOf("post:")!=0 && topic!="post" && className && omm.eventListeners[className] && omm.eventListeners[className]["_all"] ) {
+        omm.eventListeners[className]["_all"].forEach(function (el:omm.EventListener<any>) {
+            try{
+                var p = Promise.cast( el(ctx, data) );
+                promises.push( p );
+            }catch( e ){
+                console.error("Exception in event listener for class '"+className+"' and _all topic:", e);
+            }
+        });
+    }
+    return Promise.all(promises).thenReturn().catch((reason)=>{
+        console.error('Error in callEventListeners',reason);
+    });
+}
