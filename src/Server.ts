@@ -124,11 +124,12 @@ export class Server{
 
     private notifyMethodListeners( object:any, objectId:string, functionName:string, args:any[], userData:any ):Promise<void>{
         var collection;
-        var i1 = objectId.indexOf("[");
-        var i2 = objectId.indexOf("]");
-        if(i1!=-1 && i2!=-1 && i1<i2)
-            collection = this.getCollection(objectId);
-
+        if( objectId ){
+            var i1 = objectId.indexOf("[");
+            var i2 = objectId.indexOf("]");
+            if(i1!=-1 && i2!=-1 && i1<i2)
+                collection = this.getCollection(objectId);
+        }
         var context = new omm.EventContext(object, collection);
         context.functionName = functionName;
         context.objectId = objectId;
@@ -260,12 +261,15 @@ export class Server{
     }
     
     private registerGetter(){
-        this.webMethods.add("get", (collectionName:string, objectId:string)=>{
-            console.log(new Date()+": Getter. CollectionName:"+collectionName+" Id:"+objectId );
-            // var type = omm.entityClasses[className];
-            // var collectionName  = type ? omm.PersistenceAnnotation.getCollectionName( type ) : undefined;
-            var objPromise = collectionName ? this.retrieveObject(collectionName+"["+objectId+"]", undefined) : undefined;
+        this.webMethods.add("get", (collectionName:string, objectId:string, userData:string )=>{
+            console.log(new Date()+": Getter. CollectionName:"+collectionName+" Id:"+objectId, "UserData:",userData );
+            var objPromise = collectionName ? this.retrieveObject(collectionName+"["+objectId+"]", undefined) : Promise.reject(new Error("No collection name given"));
             return objPromise.then((obj)=>{
+                return this.notifyMethodListeners( this, undefined, "get", [collectionName, objectId], userData ).then(()=>{
+                    return obj;
+                });
+                // return obj;
+            }).then((obj)=>{
                 var doc = obj ? this.serializer.toDocument(obj, true, true) : undefined;
                 return doc;
             });

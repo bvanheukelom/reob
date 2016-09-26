@@ -47,8 +47,7 @@ export class Client implements omm.Handler{
     }
 
     loadDocument<Document>( collectionName:string, id:string ):Promise<Document>{
-        return this.webMethods.call( "get", collectionName, id ).then( (result)=>{
-            var document = result.document;
+        return this.webMethods.call( "get", collectionName, id ).then( (document)=>{
             return document;
         });
     }
