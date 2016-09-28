@@ -4,7 +4,9 @@
 
 import * as omm from "./omm"
 import * as Promise from "bluebird"
-
+/**
+ * @deprecated
+ */
 export function on<O extends Object>( t:omm.TypeClass<O>, topic:string|omm.EventListener<any>,  f?:omm.EventListener<any> ):void {
     var className = omm.Reflect.getClassName(t);
     if( typeof topic == "function" ){

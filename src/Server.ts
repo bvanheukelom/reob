@@ -8,10 +8,15 @@ import * as Promise from "bluebird"
 import * as expressModule from "express"
 import * as path from "path"
 import * as mongo from "mongodb"
+import * as fs from "fs"
+
+export declare type LoadingCheck = (id:string, session:omm.Session) => boolean;
+
 
 export class Server{
 
-    private collections:{ [index:string]: omm.Collection<any> } = {};
+    private collections:{ [index:string]:omm.Collection<any> } = {};
+    private collectionLoadingEnabled:{ [index:string]:boolean|LoadingCheck } = {};
     private services:{ [index:string]: any } = {};
     private webMethods:wm.WebMethods;
     private serializer:omm.Serializer;
@@ -19,20 +24,17 @@ export class Server{
     private express:expressModule.Application;
     private isOwnExpress:boolean;
     private webRootPath: string;
+    private indexFileName: string;
     private mongoDb:mongo.Db;
     private mongoUrl:string;
+    private port:number;
 
     private webMethodsAdded:Array<string> = [];
 
-    constructor( theMongo?:mongo.Db|string, theExpress?:expressModule.Application ) {
+    constructor( theMongo?:mongo.Db|string ) {
         this.webMethods = new wm.WebMethods();
         this.serializer = new omm.Serializer();
-        this.registerGetter();
-        this.express = theExpress;
-        if( !theExpress ) {
-            this.express = expressModule();
-            this.isOwnExpress = true;
-        }
+        this.express = expressModule();
         if( typeof theMongo=="string" ) {
             this.mongoUrl = <string>theMongo;
         }else{
@@ -40,9 +42,19 @@ export class Server{
         }
     }
 
+
+    getWebRootPath():string{
+        return this.webRootPath;
+    }
+
     start( port?:number ):Promise<void>{
-        this.addAllWebMethods();
         this.webMethods.registerEndpoint(this.express);
+        this.addAllEntityWebMethods();
+        this.registerGetter();
+        if( this.webRootPath ){
+            this.registerStaticGET();
+        }
+        this.port = port;
         var p = Promise.resolve();
         if( !this.mongoDb ) {
             p = p.then(()=> {
@@ -56,17 +68,15 @@ export class Server{
                 });
             });
         }
-        if( this.isOwnExpress ) {
-            p = p.then(()=> {
-                return new Promise<void>((resolve, reject)=> {
-                    var p = port ? port : 8080;
-                    this.express.listen(p, () => {
-                        console.log('Web server is listening on *:' + p + ( this.webRootPath ? (', serving ' + this.webRootPath) : ""));
-                        resolve();
-                    });
+        p = p.then(()=> {
+            return new Promise<void>((resolve, reject)=> {
+                this.port = this.port ? this.port : 8080;
+                this.express.listen(this.port, () => {
+                    if( omm.verbose )console.log('Web server is listening on *:' + this.port + ( this.webRootPath ? (', serving ' + this.webRootPath) : ""));
+                    resolve();
                 });
             });
-        }
+        });
         return p;
     }
     
@@ -74,27 +84,34 @@ export class Server{
         return this.express;
     }
 
-    serveStatic( theWebRootPath:string, indexFileName?:string ){
+    serveStatic( theWebRootPath:string, indexFileName?:string ) {
         this.webRootPath = theWebRootPath;
-        var indexFileName = indexFileName ? indexFileName : "index.html";
-        this.express.get('/*', (req:any, res:any, next:Function)  => {
+        this.indexFileName = indexFileName ? indexFileName : "index.html";
+    }
 
-            //This is the current file they have requested
-            var file = req.params[0];
-            // if( file.indexOf( "js/")!=0 && file.indexOf( "css/")!=0 && file.indexOf( "fonts/")!=0  && file.indexOf( "img/" )!=0 && file.indexOf( "src/")!=0 &&file.indexOf( "components/")!=0 &&file.indexOf( "bootstrap/")!=0 && file.indexOf( "bundle")!=0 )
-            //     file = indexFileName;
+    private registerStaticGET(){
+        if( this.webRootPath && this.indexFileName ) {
+            this.express.get('/*', (req:any, res:any, next:Function) => {
 
-            var fileName = path.resolve(this.webRootPath, file);
+                //This is the current file they have requested
+                var file = req.params[0];
+                // if( file.indexOf( "js/")!=0 && file.indexOf( "css/")!=0 && file.indexOf( "fonts/")!=0  && file.indexOf( "img/" )!=0 && file.indexOf( "src/")!=0 &&file.indexOf( "components/")!=0 &&file.indexOf( "bootstrap/")!=0 && file.indexOf( "bundle")!=0 )
+                //     file = indexFileName;
 
-            console.log("file : ", file, " path:", fileName);
-            res.sendFile(fileName);
+                var fileName = path.resolve(this.webRootPath, file);
+                fs.exists(fileName, (exists:boolean) => {
+                    if( omm.verbose )console.log("file : ", file, " path:", fileName, (!exists?"Does not exist.":"") );
+                    if (!exists)
+                        fileName = path.resolve(this.webRootPath, this.indexFileName);
+                    res.sendFile(fileName);
+                });
+            });
 
-        });
-
-        this.express.get('/', (req:any, res:any, next:Function)  => {
-            var fileName = path.resolve(this.webRootPath, indexFileName);
-            res.sendFile(fileName);
-        });
+            this.express.get('/', (req:any, res:any, next:Function) => {
+                var fileName = path.resolve(this.webRootPath, this.indexFileName);
+                res.sendFile(fileName);
+            });
+        }
     }
 
     addCollection( c: omm.Collection<any> ):void{
@@ -103,13 +120,22 @@ export class Server{
             c.setMongoCollection(this.mongoDb);
     }
 
-    registerService( name:string, service:any ):void{
+    setLoadingAllowed( c:omm.Collection<any>, i:boolean|LoadingCheck ) {
+        this.collectionLoadingEnabled[c.getName()] = i;
+    }
+
+    addService(name:string, service:Object|Function ):void{
         this.services[name] = service;
         // singletons dont need a
-        if( typeof service=="object" )
-            omm.SerializationPath.setObjectContext(service, undefined, this);
+        var o;
+        if( typeof service=="object" ) {
+            omm.SerializationPath.setObjectContext(service, undefined, this, undefined);
+            o = service;
+        }else{
+            o = (<Function>service)({});
+        }
 
-        var serviceClass = omm.Reflect.getClass(service);
+        var serviceClass = omm.Reflect.getClass(o);
         omm.Reflect.getRemoteFunctionNames(serviceClass).forEach((remoteFunctionName:string)=>{
             this.addWebMethod( omm.Reflect.getMethodOptions(serviceClass,remoteFunctionName) );
         });
@@ -119,10 +145,10 @@ export class Server{
      * @deprecated
      */
     addSingleton( name:string, service:any ):void{
-       this.registerService(name, service);
+       this.addService(name, service);
     }
 
-    private notifyMethodListeners( object:any, objectId:string, functionName:string, args:any[], userData:any ):Promise<void>{
+    private notifyMethodListeners( object:any, objectId:string, functionName:string, args:any[], session:omm.Session ):Promise<void>{
         var collection;
         if( objectId ){
             var i1 = objectId.indexOf("[");
@@ -133,7 +159,7 @@ export class Server{
         var context = new omm.EventContext(object, collection);
         context.functionName = functionName;
         context.objectId = objectId;
-        context.userData = userData;
+        context.session = session;
         context.arguments = args;
         var promises = [];
         this.methodListener.forEach((ml:omm.EventListener<any>)=>{
@@ -156,9 +182,8 @@ export class Server{
         this.methodListener = [];
     }
 
-    static userData:any;
-    private addAllWebMethods():void {
-        console.log( "adding web methods" );
+    private addAllEntityWebMethods():void {
+        if( omm.verbose )console.log( "adding web methods" );
         omm.Reflect.getEntityClasses().forEach((c:omm.TypeClass<any>)=>{
             omm.Reflect.getRemoteFunctionNames(c).forEach((remoteFunctionName:string)=>{
                 this.addWebMethod(omm.Reflect.getMethodOptions(c,remoteFunctionName));
@@ -166,57 +191,59 @@ export class Server{
         });
     }
 
+    getPort():number{
+        return this.port;
+    }
+
     private addWebMethod( options:omm.IMethodOptions ){
         if( this.webMethodsAdded.indexOf(options.name)!=-1 )
             return;
         this.webMethodsAdded.push(options.name);
-        console.log("Adding Web method " + options.name);
+        if( omm.verbose )console.log("Adding Web method " + options.name);
         this.webMethods.add(options.name, (...args:any[])=> {
-            var startTime = Date.now();
+                var startTime = Date.now();
 
-            // the object id is the first parameter
-            var objectId = args.shift();
+                // the object id is the first parameter
+                var objectId = args.shift();
 
-            // the user Data is the second parameter
-            var userData = args.shift();
-            console.log(new Date()+": WebMethod invokation. Name:" + options.name, "User data ", userData);
+                // the user Data is the second parameter
+                var userData = args.shift();
+                var session = new omm.Session( userData );
+                if( omm.verbose )console.log(new Date() + ": WebMethod invokation. Name:" + options.name, "User data ", userData);
 
-            // convert parameters given to the web method from documents to objects
-            this.convertWebMethodParameters(args, options.parameterTypes, userData);
+                // convert parameters given to the web method from documents to objects
+                this.convertWebMethodParameters(args, options.parameterTypes, userData);
 
-            // load object based on the object id. this could either be a registered object or an object form a collection
-            var p = this.retrieveObject(objectId, userData)
+                // load object based on the object id. this could either be a registered object or an object form a collection
+                var p = this.retrieveObject(objectId, session)
 
-                // call function
-                .then((object:any)=> {
-                    // this might be the collection update or another function that is called directly
+                    // call function
+                    .then((object:any)=> {
+                        // this might be the collection update or another function that is called directly
 
-                    console.log("Notifying method event listensers.");
-                    Server.userData = userData;
-                    return this.notifyMethodListeners( object, objectId, options.name, args, userData ).then(()=>{
-                        return object;
+                        if( omm.verbose )console.log("Notifying method event listensers.");
+                        return this.notifyMethodListeners(object, objectId, options.name, args, session).then(()=> {
+                            return object;
+                        });
+
+                    })
+                    .then((object:any)=> {
+                        var r = object[options.propertyName].apply(object, args);
+                        return r;
+                    })
+                    // convert the result to a document
+                    .then((result)=> {
+                        var res:any = {};
+                        if (result) {
+                            res.document = this.serializer.toDocument(result, true, true);
+                        }
+
+                        if( omm.verbose )console.log("Result of web method " + options.name + " (calculated in " + (Date.now() - startTime) + "ms) is ", res);
+                        return res;
                     });
 
-                })
-                .then((object:any)=> {
-                    Server.userData = userData; // this needs to go into the thing more or less
-                    var r =  object[options.propertyName].apply(object, args);
-                    Server.userData = undefined;
-                    return r;
-                })
-                // convert the result to a document
-                .then((result)=> {
-                    var res:any = {};
-                    if( result ){
-                        res.document = this.serializer.toDocument(result, true, true);
-                    }
-
-                    console.log("Result of web method " + options.name + " (calculated in "+(Date.now()-startTime)+"ms) is ", res);
-                    return res;
-                });
-
-            // return the promise
-            return p;
+                // return the promise
+                return p;
         });
     }
 
@@ -227,12 +254,12 @@ export class Server{
         return collection;
     }
 
-    private retrieveObject( objectId:string, userData:any ):Promise<any>{
+    private retrieveObject( objectId:string, session:omm.Session ):Promise<any>{
         var singleton = this.services[objectId];
         if( singleton ) {
             var s:any = singleton;
             if( typeof singleton == "function" ){
-                s = singleton(userData);
+                s = singleton(session);
             }
             return Promise.resolve(s);
         }
@@ -242,7 +269,7 @@ export class Server{
             var sPath = new omm.SerializationPath( objectId );
             var collection = this.getCollection(objectId);
             if (collection) {
-                return collection.getById(sPath.getId()).then((o)=>{
+                return collection.getById(sPath.getId(), session).then((o)=>{
                     return sPath.getSubObject(o);
                 });
             }
@@ -261,35 +288,46 @@ export class Server{
     }
     
     private registerGetter(){
-        this.webMethods.add("get", (collectionName:string, objectId:string, userData:string )=>{
-            console.log(new Date()+": Getter. CollectionName:"+collectionName+" Id:"+objectId, "UserData:",userData );
-            var objPromise = collectionName ? this.retrieveObject(collectionName+"["+objectId+"]", undefined) : Promise.reject(new Error("No collection name given"));
-            return objPromise.then((obj)=>{
-                return this.notifyMethodListeners( this, undefined, "get", [collectionName, objectId], userData ).then(()=>{
-                    return obj;
+        this.webMethods.add("get", (collectionName:string, objectId:string, userData:any )=>{
+            var i:any = this.collectionLoadingEnabled[collectionName];
+            var session:omm.Session = new omm.Session(userData);
+            var allowed = !!i;
+            if( allowed && typeof i == "function" ){
+                allowed = i( objectId, session );
+            }
+            if( allowed ){
+                if( omm.verbose )console.log(new Date() + ": Getter. CollectionName:" + collectionName + " Id:" + objectId, "UserData:", userData);
+                var objPromise = collectionName ? this.retrieveObject(collectionName + "[" + objectId + "]", undefined) : Promise.reject(new Error("No collection name given"));
+                return objPromise.then((obj)=> {
+                    return this.notifyMethodListeners(this, undefined, "get", [collectionName, objectId], session).then(()=> {
+                        return obj;
+                    });
+                    // return obj;
+                }).then((obj)=> {
+                    var doc = obj ? this.serializer.toDocument(obj, true, true) : undefined;
+                    return doc;
                 });
-                // return obj;
-            }).then((obj)=>{
-                var doc = obj ? this.serializer.toDocument(obj, true, true) : undefined;
-                return doc;
-            });
+            } else {
+                throw new Error( "Not allowed" );
+            }
         });
     }
     
     // converts parameters given to the web method from documents to objects
-    private convertWebMethodParameters( args:Array<any>, classNames:Array<string>, userData:any ){
+    private convertWebMethodParameters( args:Array<any>, classNames:Array<string>, session:omm.Session ){
         for (var i = 0; i < args.length; i++) {
             if (classNames && classNames.length > i) {
                 var cls = omm.Reflect.getEntityClassByName(classNames[i]);
                 if (cls) {
                     if (typeof args[i] == "string")
-                        args[i] = this.retrieveObject(args[i], userData);
+                        args[i] = this.retrieveObject(args[i], session);
                     else if (typeof args[i] == "object")
                         args[i] = this.serializer.toObject(args[i], cls);
                 }
             }
         }
     }
+
 
 }
 

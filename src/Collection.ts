@@ -37,18 +37,23 @@ export class Collection<T extends Object> implements omm.Handler
     onRemove( f:omm.EventListener<T> ){
         this.addListener("didRemove", f);
     }
+
     preRemove( f:omm.EventListener<T> ){
         this.addListener("willRemove", f);
     }
+
     onInsert( f:omm.EventListener<T> ){
         this.addListener("didInsert", f);
     }
+
     preUpdate( f:omm.EventListener<T> ){
         this.addListener("willUpdate", f);
     }
+
     onUpdate( f:omm.EventListener<T> ){
         this.addListener("didUpdate", f);
     }
+
     preInsert( f:omm.EventListener<T> ){
         this.addListener("willInsert", f);
     }
@@ -57,7 +62,7 @@ export class Collection<T extends Object> implements omm.Handler
         if( !this.eventListeners[topic] )
             this.eventListeners[topic] = [];
         this.eventListeners[topic].push(f);
-        console.log('Added event listener '+topic+" to collection "+this.getName()+". Total event listeners:" );
+        if( omm.verbose )console.log('Added event listener '+topic+" to collection "+this.getName()+". Total event listeners:" );
     }
 
     emit( topic:string, data:any ){
@@ -66,7 +71,7 @@ export class Collection<T extends Object> implements omm.Handler
     }
 
     private emitLater( t:string, evtCtx:omm.EventContext<T>, data?:any ):Promise<void>{
-        console.log("emitting "+t);
+        if( omm.verbose )console.log("emitting "+t);
         var promises = [];
         if( this.eventListeners[t] ) {
             this.eventListeners[t].forEach(function (listener:Function) {
@@ -143,11 +148,11 @@ export class Collection<T extends Object> implements omm.Handler
      * @param id {string} the id
      * @returns {T} the object or undefined if it wasn't found
      */
-    getById(id:string):Promise<T>
+    getById(id:string, session?:omm.Session):Promise<T>
     {
         return this.find({
             "_id": id
-        }).then((values:[T])=>{
+        }, session ).then((values:[T])=>{
             if( values.length )
                 return values[0];
             else
@@ -162,18 +167,18 @@ export class Collection<T extends Object> implements omm.Handler
      * @returns {Array<T>}
      * @protected
      */
-    protected find(findCriteria:any ):Promise<Array<T>>
+    protected find( findCriteria:any, session?:omm.Session ):Promise<Array<T>>
     {
-        return this.cursorToObjects( this.getMongoCollection().find(findCriteria ) );
+        return this.cursorToObjects( this.getMongoCollection().find(findCriteria ), session );
     }
 
-    cursorToObjects( c:any ):Promise<Array<T>>{
+    cursorToObjects( c:any, session:omm.Session ):Promise<Array<T>>{
         var cursor:mongodb.Cursor = c;
         return cursor.toArray().then((documents:Array<Document>)=>{
             var objects:Array<T> = [];
             for (var i = 0; i < documents.length; i++) {
                 var document:Document = documents[i];
-                objects[i] = this.serializer.toObject(document, this, this.getEntityClass(), new omm.SerializationPath(this.getName(), document._id));
+                objects[i] = this.serializer.toObject(document, this, this.getEntityClass(), new omm.SerializationPath(this.getName(), document._id), session);
             }
             return objects;
 
@@ -184,13 +189,13 @@ export class Collection<T extends Object> implements omm.Handler
      * Gets all objects in a collection.
      * @returns {Array<T>}
      */
-    getAll():Promise<Array<T>>
+    getAll( userData?:any ):Promise<Array<T>>
     {
-        return this.find({});
+        return this.find({}, userData);
     }
 
-    getByIdOrFail(id:string):Promise<T>{
-        return this.getById(id).then((t:T)=>{
+    getByIdOrFail(id:string, userData?:any):Promise<T>{
+        return this.getById( id, userData ).then((t:T)=>{
             if( !t )
                 return Promise.reject(new Error("Not found"));
             else
@@ -211,9 +216,9 @@ export class Collection<T extends Object> implements omm.Handler
         var ctx = new omm.EventContext( undefined, this );
         ctx.objectId = id;
         return this.emitLater( "willRemove", ctx ).then(()=>{
-            console.log("removing");
+            if( omm.verbose )console.log("removing");
             return this.getMongoCollection().remove({_id:id }).then((result)=>{
-                console.log("removing2");
+                if( omm.verbose )console.log("removing2");
                 var c2 = new omm.EventContext(undefined, this);
                 c2.objectId = id;
                 return this.emitLater( "didRemove", c2 ).thenReturn(true);
@@ -228,7 +233,7 @@ export class Collection<T extends Object> implements omm.Handler
     //     return p;
     // }
 
-    getByIds(ids:Array<string>):Promise<{[index:string]:T}>{
+    getByIds(ids:Array<string>, userData?:any):Promise<{[index:string]:T}>{
         return this.find({
             _id: {$in: ids}
         }).then((objs)=>{
@@ -240,12 +245,13 @@ export class Collection<T extends Object> implements omm.Handler
         } );
     }
 
-    sendEventsCollectedDuringUpdate( preUpdateObject, postUpdateObject, rootObject, functionName:string, serializationPath:omm.SerializationPath, events:Array<any>, userData:any ):Promise<void>{
+    sendEventsCollectedDuringUpdate( preUpdateObject, postUpdateObject, rootObject, functionName:string, serializationPath:omm.SerializationPath, events:Array<any> ):Promise<void>{
         var ctx = new omm.EventContext( postUpdateObject, this );
+        var objectContext = omm.SerializationPath.getObjectContext(postUpdateObject);
         ctx.preUpdate = preUpdateObject;
         ctx.functionName = functionName;
         ctx.serializationPath = serializationPath;
-        ctx.userData = userData;
+        ctx.session = objectContext.session;
         ctx.rootObject = rootObject;
         //ctx.ob
 
@@ -253,10 +259,8 @@ export class Collection<T extends Object> implements omm.Handler
 
         var promises = [];
 
-        // hack?!
-        Server.userData = userData;
         events.forEach(function(t){
-            console.log( 'emitting event:'+t.topic, ' on class '+omm.Reflect.getClassName(entityClass) );
+            if( omm.verbose )console.log( 'emitting event:'+t.topic, ' on class '+omm.Reflect.getClassName(entityClass) );
             var p = callEventListeners( entityClass, t.topic, ctx, t.data );
             promises.push( p );
         });
@@ -266,7 +270,7 @@ export class Collection<T extends Object> implements omm.Handler
         return Promise.all(promises).thenReturn();
     }
 
-    private updateOnce(sp:omm.SerializationPath, updateFunction:(o:T)=>void, attempt:number):Promise<CollectionUpdateResult> {
+    private updateOnce(sp:omm.SerializationPath, updateFunction:(o:T)=>void, attempt:number, session:omm.Session):Promise<CollectionUpdateResult> {
         var documentPromise = this.getMongoCollection().find({
             _id: sp.getId()
         }).toArray().then((documents:Document[])=> {
@@ -303,8 +307,8 @@ export class Collection<T extends Object> implements omm.Handler
             result.events = getQueue();
             result.object = object;
             resetQueue();
-            omm_sp.SerializationPath.setObjectContext(rootObject, new omm.SerializationPath(this.getName(), omm.getId(rootObject)), this);
-            omm_sp.SerializationPath.updateObjectContexts(rootObject, this);
+            omm_sp.SerializationPath.setObjectContext(rootObject, new omm.SerializationPath(this.getName(), omm.getId(rootObject)), this, session);
+            omm_sp.SerializationPath.updateObjectContexts(rootObject, this, session);
             return result;
         });
         
@@ -318,9 +322,6 @@ export class Collection<T extends Object> implements omm.Handler
 
                 var documentToSave:Document = this.serializer.toDocument(rootObject);
                 documentToSave.serial = (currentSerial || 0) + 1;
-
-                // update the collection
-                // console.log("writing document ", documentToSave);
 
                 return this.getMongoCollection().updateOne({
                     _id: omm.getId(rootObject),
@@ -352,8 +353,8 @@ export class Collection<T extends Object> implements omm.Handler
             else if (updateResult.modifiedCount > 1) {
                 return Promise.reject(new Error("verifiedUpdate should only update one document"));
             } else if( attempt<10 ) {
-                return this.updateOnce(sp, updateFunction, attempt+1 );
-                //console.log("rerunning verified update ");
+                return this.updateOnce(sp, updateFunction, attempt+1, session );
+                //if( omm.verbose )console.log("rerunning verified update ");
                 // we need to do this again
             } else {
                 return Promise.reject( new Error("tried 10 times to update the document"));
@@ -367,28 +368,26 @@ export class Collection<T extends Object> implements omm.Handler
      * @param id - the id of the object
      * @param updateFunction - the function that alters the loaded object
      */
-    update(sp:omm.SerializationPath, updateFunction:(o:T)=>void):Promise<CollectionUpdateResult>
+    update(sp:omm.SerializationPath, updateFunction:(o:T)=>void, session?:omm.Session):Promise<CollectionUpdateResult>
     {
         if (!sp || !updateFunction)
             return Promise.reject(new Error( "update function or serialiationPath parameter missing" ));
 
-        return this.updateOnce(sp, updateFunction,0);
+        return this.updateOnce(sp, updateFunction,0, session);
     }
-
-
+    
     /**
      * Inserts an object into the collection
      * @param p the object
      * @param {omm.Collection~insertCallback} callback
      * @returns {string} the id of the new object
      */
-    insert( p:T ):Promise<string> {
+    insert( p:T, session?:omm.Session ):Promise<string> {
 
         var ctx = new omm.EventContext(p, this);
-        var ud = Server.userData;
-        ctx.userData = ud;
+        ctx.session = session;
         return this.emitLater( "willInsert", ctx ).then(()=>{
-            //console.log("insert not cancelled");
+            //if( omm.verbose )console.log("insert not cancelled");
             // TODO make sure that this is unique
             var idPropertyName = omm.Reflect.getIdPropertyName(this.theClass);
             var id = p[idPropertyName];
@@ -399,15 +398,15 @@ export class Collection<T extends Object> implements omm.Handler
             var doc:Document = this.serializer.toDocument(p);
 
             doc.serial = 0;
-            //console.log( "inserting document: ", doc);
+            //if( omm.verbose )console.log( "inserting document: ", doc);
 
             return this.getMongoCollection().insertOne(doc).then(()=>{
-                omm_sp.SerializationPath.setObjectContext(p, new omm.SerializationPath(this.getName(), id), this);
-                omm_sp.SerializationPath.updateObjectContexts(p, this);
+                omm_sp.SerializationPath.setObjectContext(p, new omm.SerializationPath(this.getName(), id), this, session);
+                omm_sp.SerializationPath.updateObjectContexts(p, this, session);
 
-                //console.log("didInsert");
+                //if( omm.verbose )console.log("didInsert");
                 var ctx2 =  new omm.EventContext( p, this);
-                ctx2.userData = ud;
+                ctx2.session = session;
                 return this.emitLater("didInsert", ctx2).thenReturn(id);
             });
         });
@@ -420,14 +419,14 @@ export class Collection<T extends Object> implements omm.Handler
     // the handler function for the collection updates of objects loaded via this collection
     protected updating:boolean = false;
     
-    collectionUpdate(entityClass:omm.TypeClass<any>, functionName:string, object:omm.OmmObject, originalFunction:Function, args:any[] ):any{
+    collectionUpdate(entityClass:omm.TypeClass<any>, functionName:string, object:omm.OmmObject, originalFunction:Function, args:any[], session:omm.Session ):any{
         if( this.updating ){
-            console.log("Skipping collection update '"+omm.Reflect.getClassName(entityClass)+"."+functionName+"' . Collection update already in progress. Calling original function.");
+            if( omm.verbose )console.log("Skipping collection update '"+omm.Reflect.getClassName(entityClass)+"."+functionName+"' . Collection update already in progress. Calling original function.");
             return originalFunction.apply(object, args);
         }
 
 
-        console.log( 'Doing a collection upate in the collection for '+functionName, 'userData:', Server.userData );
+        if( omm.verbose )console.log( 'Doing a collection upate in the collection for '+functionName );
 
         var rootObject;
         var objectPromise:Promise<any>;
@@ -441,7 +440,6 @@ export class Collection<T extends Object> implements omm.Handler
         objectPromise = rootObjectPromise.then((rootObject:any)=>{
             return sp.getSubObject(rootObject);
         });
-        var ud = Server.userData;
 
         return Promise.all([objectPromise,rootObjectPromise]).then((values:any[])=>{
             var object:any = values[0];
@@ -452,7 +450,7 @@ export class Collection<T extends Object> implements omm.Handler
             ctx.functionName = functionName;
             ctx.serializationPath = sp;
             ctx.rootObject = rootObject;
-            ctx.userData = ud;
+            ctx.session = objectContext.session;
             return this.emitLater( "willUpdate", ctx ).then(()=>{
 
                 var preUpdateObject = object;
@@ -463,20 +461,19 @@ export class Collection<T extends Object> implements omm.Handler
                     var resultPromise:Promise<CollectionUpdateResult> = this.update( sp,  (subObject) => {
                         this.updating = true;
                         try{
-                            Server.userData = ud;
                             var r2 = originalFunction.apply(subObject, args);
                             return r2;
                         }finally{
                             this.updating = false;
                         }
                     }).then((r:CollectionUpdateResult)=>{
-                        console.log("Events collected during updating ", r.events, "user data:",ud );
-                        return this.sendEventsCollectedDuringUpdate( r.object, r.object, r.rootObject,functionName, sp, r.events, ud ).then(()=> {
+                        if( omm.verbose )console.log("Events collected during updating ", r.events, "session:",session );
+                        return this.sendEventsCollectedDuringUpdate( r.object, r.object, r.rootObject,functionName, sp, r.events ).then(()=> {
                             var ctx = new omm.EventContext(r.rootObject, this); // this is being emitted on the collection level so it needs to look as if the object was updated is the root element
                             ctx.functionName = functionName;
                             ctx.serializationPath = sp;
                             ctx.rootObject = r.rootObject;
-                            ctx.userData = ud;
+                            ctx.session = session;
                             ctx.preUpdateDocument = r.rootDocumentPre;
                             ctx.postUpdateDocument = r.rootDocumentPost;
 
@@ -509,11 +506,11 @@ var _queue:{events:Array<any>} = {events:[]};
 
 function resetQueue(){
     _queue.events = [];
-    //console.log("reset",_queue);
+    //if( omm.verbose )console.log("reset",_queue);
 }
 
 export function emit( topic, data?:any ){
-    //console.log("Emitting",_queue.events);
+    //if( omm.verbose )console.log("Emitting",_queue.events);
     if( _queue.events ) {
         _queue.events.push({
             topic: topic,

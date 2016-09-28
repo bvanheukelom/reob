@@ -46,6 +46,7 @@
         "src/SerializationPath.ts",
         "src/Serializer.ts",
         "src/Server.ts",
+        "src/Session.ts",
         "src/SubObjectPath.ts",
         "src/TypeClass.ts",
         "src/omm.ts",

@@ -1,8 +1,5 @@
 
-import { ObjectContext } from "./ObjectContext"
-import { Handler } from "./Handler"
-import { OmmObject } from "./OmmObject"
-import * as Annotations from "./Annotations"
+import * as omm from "./omm"
 import {setNonEnumerableProperty} from "./Internal"
 export class SerializationPath {
     private path:string;
@@ -99,17 +96,22 @@ export class SerializationPath {
     }
 
 
-    static setObjectContext(object:OmmObject, sp:SerializationPath, handler:Handler ):void{
-        if( object )
-            setNonEnumerableProperty( object, "_ommObjectContext", {serializationPath:sp, handler:handler} );
+    static setObjectContext(object:omm.OmmObject, sp:SerializationPath, handler:omm.Handler, session:omm.Session ):void{
+        if( object ){
+            setNonEnumerableProperty( object, "_ommObjectContext", {
+                serializationPath:sp,
+                handler:handler,
+                session:session
+            } );
+        }
     }
 
-    static getObjectContext(object:OmmObject  ):ObjectContext{
+    static getObjectContext(object:omm.OmmObject  ):omm.ObjectContext{
         return object? object._ommObjectContext:undefined;
     }
 
     // if I could I would make this package protected
-    static updateObjectContexts(object:OmmObject, handler?:Handler, visited?:Array<Object>):void {
+    static updateObjectContexts(object:omm.OmmObject, handler:omm.Handler, session:omm.Session, visited?:Array<Object>):void {
         var that = this;
         if (!visited)
             visited = [];
@@ -119,7 +121,7 @@ export class SerializationPath {
             return;
 
         visited.push(object);
-        var objectClass = Annotations.Reflect.getClass(object);
+        var objectClass = omm.Reflect.getClass(object);
         // // if (PersistenceAnnotation.PersistenceAnnotation.isRootEntity(objectClass)) {
         //     if (!object._ommObjectContext || !object._ommObjectContext.serializationPath) {
         //         var id = PersistenceAnnotation.getId(object);
@@ -135,24 +137,24 @@ export class SerializationPath {
         }
 
 
-        Annotations.Reflect.getTypedPropertyNames(objectClass).forEach(function (typedPropertyName:string) {
+        omm.Reflect.getTypedPropertyNames(objectClass).forEach(function (typedPropertyName:string) {
             // if (!PersistenceAnnotation.isStoredAsForeignKeys(objectClass, typedPropertyName)) {
             //     //console.log("updating foreignkey property " + typedPropertyName);
-            var v:OmmObject = object[typedPropertyName];
+            var v:omm.OmmObject = object[typedPropertyName];
             if (v) {
-                if (Annotations.Reflect.isArrayOrMap(objectClass, typedPropertyName)) {
+                if (omm.Reflect.isArrayOrMap(objectClass, typedPropertyName)) {
                     //console.log("updating foreignkey property " + typedPropertyName + " is array");
                     for (var i in v) {
                         var e = v[i];
                         if( e ) {
                             var index = i;
-                            if (Annotations.getId(e))
-                                index = Annotations.getId(e);
+                            if (omm.getId(e))
+                                index = omm.getId(e);
                             //console.log("updating persistnece path for isArrayOrMap " + typedPropertyName + "  key:" + i + " value:", e, "object: ", object);
                             var sp = object._ommObjectContext.serializationPath.clone();
                             sp.appendArrayOrMapLookup(typedPropertyName, index);
-                            SerializationPath.setObjectContext(e, sp, handler);
-                            that.updateObjectContexts(e, handler, visited);
+                            SerializationPath.setObjectContext(e, sp, handler, session);
+                            that.updateObjectContexts(e, handler, session, visited);
                         }
                     }
                 }
@@ -160,7 +162,7 @@ export class SerializationPath {
                     //console.log("updating foreignkey property direct property " + typedPropertyName);
                     var sp = object._ommObjectContext.serializationPath.clone();
                     sp.appendPropertyLookup(typedPropertyName);
-                    SerializationPath.setObjectContext(v, sp, handler);
+                    SerializationPath.setObjectContext(v, sp, handler, session);
                 }
             }
 

@@ -10,7 +10,10 @@ export class EventContext<T> {
     preUpdateDocument:Document;
     postUpdateDocument:Document;
     object:T;
-    userData:any;
+    session:{
+        userData:any,
+        [other:string]:any
+    };
     objectId:string;
     collection:any; //omm.Collection<T>;
     rootObject:any;

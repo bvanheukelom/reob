@@ -22,7 +22,6 @@ describe("Omm both on client and server", function () {
 
     var personCollection:Tests.TestPersonCollection;
     var treeCollection:Tests.TestTreeCollection;
-    var treeService:Tests.TreeService;
     var clientTreeService:Tests.TreeService;
     var server:Server;
     var client:omm.Client;
@@ -35,14 +34,17 @@ describe("Omm both on client and server", function () {
         server.addCollection(personCollection);
 
         treeCollection = new Tests.TestTreeCollection();
-        server.addCollection(treeCollection);
-
-        treeService = new Tests.TreeService( treeCollection, personCollection );
-        server.registerService("ts", treeService);
+        server.addCollection( treeCollection );
+        server.setLoadingAllowed( treeCollection, (id, session)=>{
+            return true;
+        });
+        server.addService("ts", (session:omm.Session)=>{
+            return new Tests.TreeService( treeCollection, personCollection, session );
+        });
 
         client = new omm.Client('localhost', 8080);
         clientTreeService = new Tests.TreeService();
-        client.registerService("ts", clientTreeService);
+        client.addService("ts", clientTreeService);
         console.log("Server starting");
         server.start(8080).then(()=>{
             console.log("Server started");
@@ -116,12 +118,33 @@ describe("Omm both on client and server", function () {
         });
     });
 
+    it("can run collection updates from within another method and the userdata remains", function (done) {
+        var t1:Tests.TestTree = new Tests.TestTree(15);
+        debugger;
+        var f = { handle:(evtCtx:omm.EventContext<Tests.TestTree>)=>{
+            expect( evtCtx.session.userData ).toBeDefined();
+            expect( evtCtx.session.userData.hello ).toBe("World");
+        }};
+
+        spyOn(f, "handle").and.callThrough();
+        client.setUserData({hello:"World"});
+        treeCollection.onUpdate(f.handle);
+        treeCollection.insert(t1).then( (id:string)=> {
+            debugger;
+            return clientTreeService.growTree( id ).thenReturn( id );
+        }).then((id)=>{
+            expect( f.handle ).toHaveBeenCalled();
+            done();
+        });
+    });
+
+
     it("notifies method listener", function (done) {
         var c = 0;
         var listener:omm.EventListener<any> = (i:omm.EventContext<any>, data?:any)=>{
             c = 1;
-            expect( i.object ).toBe(treeService);
-            expect( i.userData.foo ).toBe("barbar");
+            expect( i.object instanceof Tests.TreeService).toBeTruthy();
+            expect( i.session.userData.foo ).toBe("barbar");
         };
         var l = {listener:listener };
         spyOn(l, "listener").and.callThrough();
@@ -1092,9 +1115,9 @@ describe("Omm both on client and server", function () {
         var n:Array<string> = [];
         client.setUserData({user:"bert", foo:"bar", solution:42});
         l.listener = function (ctx:omm.EventContext<Tests.TestTree>, data:any) {
-            expect( ctx.userData ).toBeDefined();
-            expect( ctx.userData.user ).toBe( "bert" );
-            expect( ctx.userData.solution ).toBe( 42 );
+            expect( ctx.session.userData ).toBeDefined();
+            expect( ctx.session.userData.user ).toBe( "bert" );
+            expect( ctx.session.userData.solution ).toBe( 42 );
         };
         spyOn(l, 'listener').and.callThrough();
 
@@ -1111,9 +1134,10 @@ describe("Omm both on client and server", function () {
         var n:Array<string> = [];
         client.setUserData({user:"bert", foo:"bar", solution:42});
         l.listener = function (ctx:omm.EventContext<Tests.TestTree>, data:any) {
-            expect( ctx.userData ).toBeDefined();
-            expect( ctx.userData.user ).toBe( "bert" );
-            expect( ctx.userData.solution ).toBe( 42 );
+            expect( ctx.session ).toBeDefined();
+            expect( ctx.session.userData ).toBeDefined();
+            expect( ctx.session.userData.user ).toBe( "bert" );
+            expect( ctx.session.userData.solution ).toBe( 42 );
         };
         spyOn(l, 'listener').and.callThrough();
 

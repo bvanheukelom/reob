@@ -16,6 +16,7 @@ export  * from "./EventListener"
 export  * from "./EventContext"
 export  * from "./TypeClass"
 export  * from "./Cloner"
+export  * from "./Session"
 
 export { default as Document } from "./Document"
 export * from "./Serializer"

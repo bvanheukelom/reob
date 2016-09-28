@@ -29,12 +29,12 @@ export class Client implements omm.Handler{
      * @deprecated
      */
     addSingleton( name:string, service:any ):void{
-        this.registerService(name, service)
+        this.addService(name, service)
     }
 
-    registerService( name:string, service:any ):void{
+    addService( name:string, service:any ):void{
         this.singletons[name] = service;
-        omm.SerializationPath.setObjectContext( service, undefined, this );
+        omm.SerializationPath.setObjectContext( service, undefined, this, undefined );
     }
 
     load<T>( collectionName:string, id:string ):Promise<T>{
@@ -150,7 +150,7 @@ export class Client implements omm.Handler{
                     // hide exception, as the result is coming from the server
                 });
             }
-            omm.SerializationPath.updateObjectContexts(object, this);
+            omm.SerializationPath.updateObjectContexts(object, this, undefined);
         }
 
         return r;

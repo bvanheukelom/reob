@@ -6,4 +6,8 @@ import * as omm from "./omm"
 export interface ObjectContext{
     serializationPath:omm.SerializationPath;
     handler:omm.Handler;
+    session:{
+        userData:any;
+        [otherProperties: string]: any;
+    };
 }

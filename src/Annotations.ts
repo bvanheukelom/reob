@@ -70,11 +70,11 @@ export var eventListeners:{ [index:string] : { [index:string] : Array<omm.EventL
         } else {
             entityName = Reflect.getClassName(<omm.TypeClass<Object>>name)
         }
-        console.log("Adding entity with name ",entityName);
+        if( omm.verbose )console.log("Adding entity with name ",entityName);
         var f = function (p1:any) {
             var typeClass:omm.TypeClass<Object> = <omm.TypeClass<Object>>p1;
             defineMetadata("persistence:entity", true, typeClass);
-            console.log("Adding entity ", entityName );
+            if( omm.verbose )console.log("Adding entity ", entityName );
             entityClasses[entityName] = typeClass;
             Object.defineProperty(p1, "_ommClassName", {
                 value: entityName,
@@ -116,18 +116,18 @@ export var eventListeners:{ [index:string] : { [index:string] : Array<omm.EventL
      */
     export function CollectionUpdate(p1:any, functionName:string, desc) {
         var options = {};
-        console.log("registering a collection update on property ", functionName, Reflect.getClassName( p1 ) );
+        if( omm.verbose )console.log("registering a collection update on property ", functionName, Reflect.getClassName( p1 ) );
 
         Reflect.setPropertyProperty(p1, functionName, "collectionUpdate", options);
         var entityClass = p1.constructor;
         monkeyPatch(entityClass.prototype, functionName, function (originalFunction, ...args:any[]) {
             var _ommObjectContext:omm.ObjectContext = this._ommObjectContext;
             if( !_ommObjectContext || !_ommObjectContext.handler ||!_ommObjectContext.handler.collectionUpdate ){
-                console.log(new Date()+": CollectionUpdate called. Function "+functionName+". Calling original function. No handler found. ", args );
+                if( omm.verbose )console.log(new Date()+": CollectionUpdate called. Function "+functionName+". Calling original function. No handler found. ", args );
                 return originalFunction.apply(this, args);
             }else{
-                console.log(new Date()+": CollectionUpdate called. Function "+functionName+". Calling handler. ", args );
-                return _ommObjectContext.handler.collectionUpdate(entityClass, functionName, this, originalFunction, args);
+                if( omm.verbose )console.log(new Date()+": CollectionUpdate called. Function "+functionName+". Calling handler. ", args, _ommObjectContext.session );
+                return _ommObjectContext.handler.collectionUpdate(entityClass, functionName, this, originalFunction, args, _ommObjectContext.session);
             }
         });
         desc.value = entityClass.prototype[functionName];
@@ -136,7 +136,7 @@ export var eventListeners:{ [index:string] : { [index:string] : Array<omm.EventL
 
     export function ArrayOrMap(typeClassName:string) {
         var f =  function (targetPrototypeObject:any, propertyName: string  ):void {
-            // console.log("  "+propertyName+" as collection of "+typeClassName);
+            // if( omm.verbose )console.log("  "+propertyName+" as collection of "+typeClassName);
             Reflect.setPropertyProperty(targetPrototypeObject, <string>propertyName, "type", typeClassName);
             Reflect.setPropertyProperty(targetPrototypeObject, <string>propertyName, "arrayOrMap", true);
         };
@@ -175,7 +175,7 @@ export function Parent(targetPrototypeObject:any, propertyName:string) {
     }
 
     export function PrivateToServer(targetPrototypeObject:any, propertyName:string) {
-        console.log( "Privat to server: ", propertyName );
+        if( omm.verbose )console.log( "Privat to server: ", propertyName );
         Reflect.setPropertyProperty(targetPrototypeObject, propertyName, "privateToServer", true);
     }
 
@@ -204,7 +204,7 @@ export function Parent(targetPrototypeObject:any, propertyName:string) {
 
     export function Type(typeClassName:string) {
         return function (targetPrototypeObject:any, propertyName:string) {
-            console.log("Registering a type  "+propertyName+" as "+typeClassName, " on ",Reflect.getClassName(targetPrototypeObject));
+            if( omm.verbose )console.log("Registering a type  "+propertyName+" as "+typeClassName, " on ",Reflect.getClassName(targetPrototypeObject));
             Reflect.setPropertyProperty(targetPrototypeObject, propertyName, "type", typeClassName);
         };
     }
@@ -228,24 +228,25 @@ export function Parent(targetPrototypeObject:any, propertyName:string) {
     /**
      * @deprecated
      */
-    export function MeteorMethod(p1:any, p2?:any) {
-        Remote(p1,p2);
+    export function MeteorMethod(p1:any, p2?:any, d? ){
+        Remote(p1,p2,d);
     }
 
     export function Remote( p1:any, p2?:any, d? ) {
         var f = function (methodOptions:IMethodOptions, descriptor:any ) {
             Reflect.setPropertyProperty(methodOptions.parentObject, methodOptions.propertyName, "methodOptions", methodOptions);
-            console.log("Creating monkey patch for web method "+ methodOptions.name );
+            if( omm.verbose )console.log("Creating monkey patch for web method "+ methodOptions.name );
             monkeyPatch( methodOptions.parentObject, methodOptions.propertyName, function (originalFunction, ...args:any[]) {
-                //console.log("updating object:",this, "original function :"+originalFunction);
+                //if( omm.verbose )console.log("updating object:",this, "original function :"+originalFunction);
                 var _ommObjectContext:omm.ObjectContext = this._ommObjectContext;
+                var session = _ommObjectContext ? _ommObjectContext.session : undefined;
                 if( !_ommObjectContext || !_ommObjectContext.handler ||!_ommObjectContext.handler.webMethod  ){
                     debugger;
-                    console.log(new Date()+": WebMethod called. Function "+methodOptions.name+". Calling original function. No handler found.", args );
+                    if( omm.verbose )console.log(new Date()+": WebMethod called. Function "+methodOptions.name+". Calling original function. No handler found. Arguments:", args, "session:",  session );
                     return originalFunction.apply(this, args);
                 }else{
-                    console.log(new Date()+": WebMethod called. Function "+methodOptions.name+". Calling handler.", args );
-                    return _ommObjectContext.handler.webMethod( methodOptions.parentObject.constructor, methodOptions.propertyName, this, originalFunction, args);
+                    if( omm.verbose )console.log(new Date()+": WebMethod called. Function "+methodOptions.name+". Calling handler. Arguments:", args,  "Session:", session);
+                    return _ommObjectContext.handler.webMethod( methodOptions.parentObject.constructor, methodOptions.propertyName, this, originalFunction, args, _ommObjectContext.session );
                 }
             });
             if( descriptor ){
@@ -543,7 +544,7 @@ export function Parent(targetPrototypeObject:any, propertyName:string) {
             var result:Array<string> = [];
             for (var i in o) {
                 var value = o[i];
-                //console.log("Cave man style debugging 1",i, value,getMetadata("persistence:wrap", value) );
+                //if( omm.verbose )console.log("Cave man style debugging 1",i, value,getMetadata("persistence:wrap", value) );
                 if (typeof value == "function" && getMetadata(metaData, value))
                     result.push(i);
             }
@@ -563,6 +564,8 @@ function  monkeyPatch( object:any, functionName:string, patchFunction:(original:
     };
     object[functionName].originalFunction = originalFunction;
 }
+
+export var verbose = false;
 
 (function(){
     var data;

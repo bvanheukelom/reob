@@ -57,7 +57,7 @@ export class Serializer {
         });
     }
 
-    toObject(doc:Document, handler?:any, f?:omm.TypeClass<any>, serializationPath?:omm.SerializationPath ):any {
+    toObject(doc:Document, handler?:any, f?:omm.TypeClass<any>, serializationPath?:omm.SerializationPath, session?:omm.Session ):any {
         var o:any;
         if(Array.isArray(doc)){
             var r = [];
@@ -68,17 +68,17 @@ export class Serializer {
         } else if ( !doc || typeof doc == "string" || typeof doc == "number"  || typeof doc == "date" || typeof doc == "boolean")
             o =  doc;
         else
-            o =  this.toObjectRecursive(doc, undefined, f, handler);
+            o =  this.toObjectRecursive(doc, undefined, f, handler, session);
 
         if( handler && serializationPath ) {
-            omm.SerializationPath.setObjectContext(o, serializationPath, handler);
-            omm.SerializationPath.updateObjectContexts(o, handler);
+            omm.SerializationPath.setObjectContext(o, serializationPath, handler, session);
+            omm.SerializationPath.updateObjectContexts(o, handler, session);
         }
 
         return o;
     }
 
-    private toObjectRecursive<T extends Object>(doc:Document, parent:Object, f?:omm.TypeClass<T>, handler?:any):T {
+    private toObjectRecursive<T extends Object>(doc:Document, parent:Object, f:omm.TypeClass<T>, handler:omm.Handler, session:omm.Session):T {
         var o:T;
         if( !doc )
             return <T>doc;
@@ -108,7 +108,7 @@ export class Serializer {
 
             if( doc._serializationPath ){
                 var sp = new omm.SerializationPath(doc._serializationPath);
-                omm.SerializationPath.setObjectContext(o, sp, handler);
+                omm.SerializationPath.setObjectContext(o, sp, handler, session);
             }
 
             Reflect.getParentPropertyNames(f).forEach(function (parentPropertyName:string) {
@@ -131,14 +131,14 @@ export class Serializer {
                         var result = Array.isArray(value) ? [] : {};
                         for (var i in value) {
                             var entry:Document = value[i];
-                            entry = this.toObjectRecursive(entry, o, propertyClass, handler);
+                            entry = this.toObjectRecursive(entry, o, propertyClass, handler, session);
                             result[i] = entry;
                         }
                         // this can only happen once because if the property is accessed the "lazy load" already kicks in
                         o[objectNameOfTheProperty] = result;
                     }
                     else {
-                        o[objectNameOfTheProperty] = this.toObjectRecursive(value, o, propertyClass, handler );
+                        o[objectNameOfTheProperty] = this.toObjectRecursive(value, o, propertyClass, handler, session );
                     }
                 }
                 else {
@@ -148,8 +148,6 @@ export class Serializer {
             }
 
         }
-        // setNonEnumerableProperty(o, "_objectRetriever", this.objectRetriever);
-        //o._objectRetriever = this.objectRetriever;
         return o;
     }
 
@@ -199,9 +197,6 @@ export class Serializer {
             if( !documentNameOfTheProperty )
                 documentNameOfTheProperty = property;
             var needsToBeOmittedBecauseItsPrivate = omitPropertiesPrivateToServer && Reflect.isPrivateToServer(objectClass, property);
-            if( needsToBeOmittedBecauseItsPrivate ){
-                console.log("Omitting ", property);
-            }
             if (value !== undefined && !Reflect.isIgnored(objectClass, property) && !Reflect.isParent(objectClass, property) && !needsToBeOmittedBecauseItsPrivate ) {
                 // primitives
                 if( Reflect.getPropertyClass(objectClass,property) ) {
