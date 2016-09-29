@@ -1,6 +1,6 @@
-spec
+/spec
 typings
-src
+/src
 node_modules
 .tscache
 gruntfile.js
