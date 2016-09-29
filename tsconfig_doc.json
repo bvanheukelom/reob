@@ -19,9 +19,10 @@
   "files": [
     "typings/bluebird/bluebird.d.ts",
     "typings/eventemitter2/eventemitter2.d.ts",
-    "typings/express-serve-static-core/express-serve-static-core.d.ts",
-    "typings/express/express.d.ts",
+    "typings/globals/express-serve-static-core/index.d.ts",
+    "typings/globals/express/index.d.ts",
     "typings/globals/jasmine/index.d.ts",
+    "typings/globals/serve-static/index.d.ts",
     "typings/index.d.ts",
     "typings/mime/mime.d.ts",
     "typings/mongodb/mongodb.d.ts",
@@ -29,7 +30,6 @@
     "typings/node-uuid/node-uuid-cjs.d.ts",
     "typings/node-uuid/node-uuid.d.ts",
     "typings/node/node.d.ts",
-    "typings/serve-static/serve-static.d.ts",
     "typings/underscore/underscore.d.ts",
     "src/Annotations.ts",
     "src/Client.ts",
@@ -39,12 +39,16 @@
     "src/EventContext.ts",
     "src/EventListener.ts",
     "src/Handler.ts",
-    "src/MeteorPersistence.ts",
+    "src/Internal.ts",
     "src/ObjectContext.ts",
     "src/OmmEvent.ts",
     "src/OmmObject.ts",
     "src/SerializationPath.ts",
     "src/Serializer.ts",
-    "src/Server.ts"
+    "src/Server.ts",
+    "src/Session.ts",
+    "src/SubObjectPath.ts",
+    "src/TypeClass.ts",
+    "src/omm.ts"
   ]
 }

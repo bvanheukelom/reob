@@ -1,10 +1,12 @@
 {
   "name": "@bvanheukelom/o-m-m",
+  "description": "Create backends for one page web apps with ease. Uses mongo and express.",
   "version": "0.1.13",
   "main": "dist/src/omm.js",
   "typings": "dist/src/omm.d.ts",
   "scripts": {
-    "test": "./node_modules/jasmine/bin/jasmine.js"
+    "test": "./node_modules/jasmine/bin/jasmine.js",
+    "doc": "typedoc --exclude src/Internal.ts --mode file --out doc --excludeNotExported --tsconfig tsconfig_doc.json"
   },
   "devDependencies": {
     "co": "^4.6.0",

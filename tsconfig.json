@@ -5,6 +5,7 @@
         "target": "es5",
         "sourceMap": true,
         "experimentalDecorators": true,
+        "emitDecoratorMetadata": true,
         "removeComments": false,
         "outDir": "dist"
     },
