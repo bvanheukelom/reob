@@ -7,10 +7,8 @@ export * from "./TestCar"
 export * from "./TestPerson"
 export * from "./TestAddress"
 export * from "./TestPhoneNumber"
-import "./TestTree"
-export * from "./TestTree"
-import "./TestLeaf"
 export * from "./TestLeaf"
+export * from "./TestTree"
 
 export * from "./TestPersonCollection"
 export * from "./TestTreeCollection"
@@ -20,3 +18,4 @@ export * from "./TestInheritanceChild"
 export * from "./TestInheritanceOther"
 
 export * from "./TreeService"
+console.log( exports );

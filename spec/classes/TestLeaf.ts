@@ -3,7 +3,7 @@
  */
 
 import * as omm from "../../src/omm"
-import * as Tests from "./Tests"
+import {TestTree} from "./TestTree"
 
 @omm.Entity
 export class TestLeaf
@@ -13,9 +13,9 @@ export class TestLeaf
     greenNess:number;
 
     @omm.Parent
-    parent:Tests.TestTree;
+    parent:TestTree;
 
-    constructor(id?:string, parent?:Tests.TestTree)
+    constructor(id?:string, parent?:TestTree)
     {
         this._id = id;
         this.greenNess = 1;
@@ -32,7 +32,7 @@ export class TestLeaf
         this.greenNess++;
     }
 
-    getTree():Tests.TestTree
+    getTree():TestTree
     {
         return this.parent;
     }

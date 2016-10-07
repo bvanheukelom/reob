@@ -42,11 +42,10 @@ describe("Omm both on client and server", function () {
             return new Tests.TreeService( treeCollection, personCollection, session );
         });
 
-        client = new omm.Client('localhost', 8080);
+        client = new omm.Client('localhost', 22222);
         clientTreeService = new Tests.TreeService();
         client.addService("ts", clientTreeService);
-        console.log("Server starting");
-        server.start(8080).then(()=>{
+        server.start(22222).then(()=>{
             console.log("Server started");
             done();
         });
@@ -56,6 +55,8 @@ describe("Omm both on client and server", function () {
     var count =0;
     beforeEach(()=>{
         count++;
+        omm.verbose = true;
+
         console.log("-------"+(count));
         // console.log(jasmine.getEnv().currentSpec.getFullName());
         personCollection.removeAllListeners();

@@ -5,7 +5,6 @@
         "target": "es5",
         "sourceMap": true,
         "experimentalDecorators": true,
-        "emitDecoratorMetadata": true,
         "removeComments": false,
         "outDir": "dist"
     },
@@ -20,6 +19,7 @@
     "files": [
         "typings/bluebird/bluebird.d.ts",
         "typings/eventemitter2/eventemitter2.d.ts",
+        "typings/globals/compression/index.d.ts",
         "typings/globals/express-serve-static-core/index.d.ts",
         "typings/globals/express/index.d.ts",
         "typings/globals/jasmine/index.d.ts",

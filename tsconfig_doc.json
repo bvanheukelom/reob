@@ -6,7 +6,8 @@
     "sourceMap": true,
     "experimentalDecorators": true,
     "removeComments": false,
-    "outDir": "dist"
+    "outDir": "dist",
+    "emit":false
   },
   "filesGlob": [
     "typings/**/*.d.ts",
@@ -49,6 +50,7 @@
     "src/Session.ts",
     "src/SubObjectPath.ts",
     "src/TypeClass.ts",
-    "src/omm.ts"
+    "src/omm.ts",
+    "server.ts"
   ]
 }

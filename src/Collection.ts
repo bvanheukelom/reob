@@ -172,7 +172,7 @@ export class Collection<T extends Object> implements omm.Handler
         return this.cursorToObjects( this.getMongoCollection().find(findCriteria ), session );
     }
 
-    cursorToObjects( c:any, session:omm.Session ):Promise<Array<T>>{
+    cursorToObjects( c:any, session?:omm.Session ):Promise<Array<T>>{
         var cursor:mongodb.Cursor = c;
         return cursor.toArray().then((documents:Array<Document>)=>{
             var objects:Array<T> = [];

@@ -23,6 +23,7 @@
   "dependencies": {
     "@bvanheukelom/web-methods": "*",
     "bluebird": "^3.4.1",
+    "compression": "^1.6.2",
     "eventemitter2": "^2.1.0",
     "jsondiffpatch": "^0.1.43",
     "mongodb": "^2.1.18",

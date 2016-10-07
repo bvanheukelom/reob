@@ -9,9 +9,9 @@ import * as expressModule from "express"
 import * as path from "path"
 import * as mongo from "mongodb"
 import * as fs from "fs"
+import * as compression from "compression"
 
 export declare type LoadingCheck = (id:string, session:omm.Session) => boolean;
-
 
 export class Server{
 
@@ -35,13 +35,13 @@ export class Server{
         this.webMethods = new wm.WebMethods();
         this.serializer = new omm.Serializer();
         this.express = expressModule();
+        this.express.use(compression());
         if( typeof theMongo=="string" ) {
             this.mongoUrl = <string>theMongo;
         }else{
             this.mongoDb = <mongo.Db>theMongo;
         }
     }
-
 
     getWebRootPath():string{
         return this.webRootPath;

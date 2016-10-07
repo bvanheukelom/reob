@@ -107,7 +107,7 @@ import * as omm from "@bvanheukelom/o-m-m"
 import {GardenCollection} from "./GardenCollection"
 import {Garden} from "./Garden"
 
-export class BotanicService{
+export class GardenService{
 
 	constructor(){
 	}
@@ -119,12 +119,12 @@ export class BotanicService{
 
 	@Remote({name:"GardenService.createGarden")
 	createGarden( initialBees:number ):Promise<string>{
-		return undefined; // never called
+		return undefined; // replaced with result from the server
 	}
 
-	@Remote({name:"GardenService.createGarden")
+	@Remote({name:"GardenService.getGarden")
     getGarden(id:string):Promise<Garden>{
-        return undefined; // never called
+        return undefined; // replaced with result from the server
     }
 
 }
@@ -164,12 +164,12 @@ export class GardenServiceServer{
 		return this.gardenCollection.insert(garden);
 	}
 
-	@Remote({name:"GardenService.createGarden"})
+	@Remote({name:"GardenService.getGardens"})
 	getGardens():Promise<Array<Garden>>{
 		return this.gardenCollection.getAll(); // this should be limited in the real world
 	}
 
-	@Remote({name:"GardenService.createGarden"})
+	@Remote({name:"GardenService.getGarden"})
 	getGarden( id:string ):Promise<Garden>{
 		return this.gardenCollection.getByIdOrFail( id );
 	}
