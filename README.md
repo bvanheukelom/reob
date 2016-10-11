@@ -1,15 +1,15 @@
-## omm
+## Reob - Remote objects
 
 Create backends for one page web apps with ease. Uses mongo and express.
 
-Omm is an opinionated framework to create backends for one page web apps. It combines object mapping, networking and a
-webserver. You write domain objects and service classes and use them from the client. You can call functions on an
+Reob is an opinionated framework to create backends for one page web apps. It combines object mapping, networking and a
+webserver. You write domain object classes and service classes and use them from the client. You can call functions on an
 object that causes an http request to the server which loads the object there, invokes the function on it and transmits the
-result back to the client. Omm takes care of the database and network specifics. It is written in typescript and makes
+result back to the client. Reob takes care of the database and network specifics. It is written in typescript and makes
 heavy use of decorators.
 
-In order to get an overview of how omm works we're using an example. Imagine you want to write a management tool for
-your club of garden owners.
+In order to get an overview of how reob works let's look at an example. Imagine you want to write a tool for a club of
+garden owners.
 
 ### Step 1: Create domain objects
 
@@ -19,9 +19,9 @@ Here is the simple class `Plant` which will be used as part of a garden.
 
 [Plant.ts](example/Plant.ts)
 ```ts
-import * as omm from "@bvanheukelom/o-m-m"
+import * as reob from "reob"
 
-@omm.Entity
+@reob.Entity
 export class Plant{
 
 	height:number = 1;
@@ -32,7 +32,7 @@ export class Plant{
 		this.type = theType;
 	}
 
-	@omm.RemoteCollectionUpdate
+	@reob.RemoteCollectionUpdate
 	grow( n:number ){
 		this.height += n;
 	}
@@ -40,26 +40,28 @@ export class Plant{
 }
 ```
 
-This class contains two decorators. `@omm.Entity` let's omm know that it is an entity. An Entity is a term used in
-datamodelling that describes something that is separated from other things, has data and behaviour. It can be saved and
-loaded from the database and transmitted over the network.
+This class contains two decorators. `@reob.Entity` let's reob know that it is an entity. An Entity is a term used in
+datamodelling that describes something that is separated from other things, has data and behaviour. The term is a bit
+unwieldy. It boils down to: Entities are the data-things that matter in a project.
 
-`@omm.RemoteCollectionUpdate` combines the core features of omm and we'll get to it later. So much for now: It allows you
+Entities can be saved and loaded from the database and transmitted over the network.
+
+`@reob.RemoteCollectionUpdate` combines the core features of reob and we'll get to it later. So much for now: It allows you
  to call the function from the server through the server and the changes made on the object are persisted into the database.
 
 [Garden.ts](example/Garden.js)
 ```ts
-import * as omm from "@bvanheukelom/o-m-m"
+import * as reob from "reob"
 import {Plant} from "./Plant"
 
-@omm.Entity
+@reob.Entity
 export class Garden{
 
 	_id:string;
 
 	bees:number;
 
-	@omm.ArrayType("Plant")
+	@reob.ArrayType("Plant")
 	plants:Array<Plant> = [ new Plant( "Rose") ];
 
 	constructor( initialBeeCount:number ){
@@ -68,7 +70,7 @@ export class Garden{
 
 ```
 
-The decorator `@omm.ArrayType` tells omm what type of objects the array contains. Omm can now save and load Gardens from the mongo
+The decorator `@reob.ArrayType` tells reob what type of objects the array contains. Omm can now save and load Gardens from the mongo
 database and transmit them over the network and the objects inside the `plants` array will be instances of `Plant`.
 
 ### Step 2: Setup the Collection
@@ -78,7 +80,7 @@ collection.
 
 [GardenCollection.ts](example/GardenCollection.ts)
 ```ts
-import * as omm from "@bvanheukelom/o-m-m"
+import * as reob from "reob"
 import {Garden} from "./Garden"
 
 export class GardenCollection extends Collection<Garden>{
@@ -90,7 +92,7 @@ export class GardenCollection extends Collection<Garden>{
 }
 ```
 
-The class is a representation of the mongo collection that adds the omm behaviour on top of it. The original mongo collection
+The class is a representation of the mongo collection that adds the reob behaviour on top of it. The original mongo collection
 can be accessed using `getMongoCollection()`.
 
 
@@ -103,7 +105,7 @@ the bundle that is used on the client.
 
 [GardenService.ts](example/GardenService.ts)
 ```ts
-import * as omm from "@bvanheukelom/o-m-m"
+import * as reob from "reob"
 import {GardenCollection} from "./GardenCollection"
 import {Garden} from "./Garden"
 
@@ -112,17 +114,17 @@ export class GardenService{
 	constructor(){
 	}
 
-	@Remote
+	@reob.Remote
 	countPlants(bees:number):Promise<number>{
 		return undefined; // never called
 	}
 
-	@Remote({name:"GardenService.createGarden")
+	@reob.Remote
 	createGarden( initialBees:number ):Promise<string>{
 		return undefined; // replaced with result from the server
 	}
 
-	@Remote({name:"GardenService.getGarden")
+	@reob.Remote
     getGarden(id:string):Promise<Garden>{
         return undefined; // replaced with result from the server
     }
@@ -135,7 +137,7 @@ The version of the service that's used on the server. It contains the implementa
 [GardenServiceServer.ts](example/GardenServiceServer.ts)
 ```ts
 
-import * as omm from "@bvanheukelom/o-m-m"
+import * as reob from "reob"
 import {GardenCollection} from "./GardenCollection"
 import {Garden} from "./Garden"
 
@@ -144,7 +146,7 @@ export class GardenServiceServer{
 	constructor( private gardenCollection:GardenCollection){
 	}
 
-	@Remote({name:"GardenService.countPlants")
+	@reob.Remote
 	countPlants(bees:number):Promise<number>{
 
 		return this.gardenCollection.find({
@@ -158,18 +160,18 @@ export class GardenServiceServer{
         });
 	}
 
-	@Remote({name:"GardenService.createGarden"})
+	@reob.Remote
 	createGarden( initialBees:number ):Promise<string>{
 		var g:Garden = new Garden( initialBees );
 		return this.gardenCollection.insert(garden);
 	}
 
-	@Remote({name:"GardenService.getGardens"})
+	@reob.Remote
 	getGardens():Promise<Array<Garden>>{
 		return this.gardenCollection.getAll(); // this should be limited in the real world
 	}
 
-	@Remote({name:"GardenService.getGarden"})
+	@reob.Remote
 	getGarden( id:string ):Promise<Garden>{
 		return this.gardenCollection.getByIdOrFail( id );
 	}
@@ -178,7 +180,7 @@ export class GardenServiceServer{
 
 ```
 
-The `@Remote` decorator tells omm that the functions can be called from the client.
+The `@reob.Remote` decorator tells reob that the functions can be called from the client.
 
 ### The server
 
@@ -187,7 +189,7 @@ Let's keep it that way. This is the file that is run in the node server.
 
 [main_server.ts](example/main_server.ts)
 ```ts
-import {Server} from "@bvanheukelom/o-m-m/dist/src/Server"
+import {Server} from "reob/server"
 import {GardenCollection} from "./GardenCollection"
 import {GardenServiceServer} from "./GardenServiceServer"
 
@@ -209,14 +211,14 @@ server.start(8080).then(()=>{
 
 ### Client startup
 
-Use your tool of choice to convert the client commonjs module to code that runs on the client.
+Use your tool of choice to convert the client creobonjs module to code that runs on the client.
 
 [main_client.ts](example/main_client.ts)
 ```ts
-import * as omm from "@bvanheukelom/o-m-m"
+import * as reob from "reob"
 import {GardenService} from "./GardenService"
 
-var client = new omm.Client(window.location.origin, 8080);
+var client = new reob.Client(window.location.origin, 8080);
 var gardenService = new GardenService();
 client.addService( gardenServie );
 
@@ -291,5 +293,5 @@ window.gardenService = gardenService;
 
 ## License
 
-Not open source for now.
+... still need to figure out what the most fitting license is. Any suggestions? Open an issue!
 

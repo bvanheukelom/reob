@@ -1,21 +1,22 @@
 {
-  "name": "@bvanheukelom/o-m-m",
+  "name": "reob",
   "description": "Create backends for one page web apps with ease. Uses mongo and express.",
   "version": "0.1.13",
   "main": "dist/src/omm.js",
   "typings": "dist/src/omm.d.ts",
   "scripts": {
-    "test": "./node_modules/jasmine/bin/jasmine.js",
-    "doc": "typedoc --exclude src/Internal.ts --mode file --out doc --excludeNotExported --tsconfig tsconfig_doc.json"
+    "test": "jasmine",
+    "clean-m": "find s* -type f -name '*.js' -delete && find s* -type f -name '*.d.ts' -delete && find s* -type f -name '*.js.map' -delete && rm -rf dist",
+    "clean": "npm run clean-m && rm -rf node_modules && rm -rf .tscache" ,
+    "compile": "tsc -p tsconfig.json && npm run copy",
+    "copy": "rm -rf dist && mkdir dist && cp -r s*c dist && find dist -type f  -name '*.ts' ! -iname '*.d.ts' -delete",
+    "watch": "nodemon --exec 'npm run compile' --watch './src' --watch './spec' -e ts -i *.d.ts",
+    "doc": "typedoc --exclude src/Internal.ts --mode file --out doc --excludeNotExported --tsconfig tsconfig_doc.json",
+    "publish": "npm run clean && npm run install && npm run doc && npm run test && npm version patch && npm publish"
   },
   "devDependencies": {
     "co": "^4.6.0",
     "express": "^4.14.0",
-    "grunt": "^0.4.5",
-    "grunt-contrib-clean": "^0.6.0",
-    "grunt-contrib-copy": "^0.8.0",
-    "grunt-contrib-watch": "^0.6.1",
-    "grunt-ts": "^5.5.0-beta.2",
     "jasmine": "^2.4.1",
     "typescript": "^1.8.10",
     "underscore": "^1.8.3"

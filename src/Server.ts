@@ -72,7 +72,7 @@ export class Server{
             return new Promise<void>((resolve, reject)=> {
                 this.port = this.port ? this.port : 8080;
                 this.express.listen(this.port, () => {
-                    if( omm.verbose )console.log('Web server is listening on *:' + this.port + ( this.webRootPath ? (', serving ' + this.webRootPath) : ""));
+                    if( omm.isVerbose() )console.log('Web server is listening on *:' + this.port + ( this.webRootPath ? (', serving ' + this.webRootPath) : ""));
                     resolve();
                 });
             });
@@ -100,7 +100,7 @@ export class Server{
 
                 var fileName = path.resolve(this.webRootPath, file);
                 fs.exists(fileName, (exists:boolean) => {
-                    if( omm.verbose )console.log("file : ", file, " path:", fileName, (!exists?"Does not exist.":"") );
+                    if( omm.isVerbose() )console.log("file : ", file, " path:", fileName, (!exists?"Does not exist.":"") );
                     if (!exists)
                         fileName = path.resolve(this.webRootPath, this.indexFileName);
                     res.sendFile(fileName);
@@ -124,8 +124,8 @@ export class Server{
         this.collectionLoadingEnabled[c.getName()] = i;
     }
 
-    addService(name:string, service:Object|Function ):void{
-        this.services[name] = service;
+    addService( serviceName, service:Object|Function ):void{
+
         // singletons dont need a
         var o;
         if( typeof service=="object" ) {
@@ -134,18 +134,20 @@ export class Server{
         }else{
             o = (<Function>service)({});
         }
+        var serviceClass = omm.Reflect.getClass(o);
+        // var serviceName = omm.Reflect.getServiceName(serviceClass);
+        // if( !serviceName )
+        //     throw new Error("Added service has no @Service decorator. Class name:"+ omm.Reflect.getClassName(o) );
+        this.services[serviceName] = service;
 
         var serviceClass = omm.Reflect.getClass(o);
         omm.Reflect.getRemoteFunctionNames(serviceClass).forEach((remoteFunctionName:string)=>{
-            this.addWebMethod( omm.Reflect.getMethodOptions(serviceClass,remoteFunctionName) );
+            var options = omm.Reflect.getMethodOptions(serviceClass,remoteFunctionName);
+            if( !options.name ) {
+                options.name = serviceName + "." + options.propertyName;
+            }
+            this.addWebMethod( options );
         });
-    }
-
-    /**
-     * @deprecated
-     */
-    addSingleton( name:string, service:any ):void{
-       this.addService(name, service);
     }
 
     private notifyMethodListeners( object:any, objectId:string, functionName:string, args:any[], session:omm.Session ):Promise<void>{
@@ -183,10 +185,14 @@ export class Server{
     }
 
     private addAllEntityWebMethods():void {
-        if( omm.verbose )console.log( "adding web methods" );
+        if( omm.isVerbose() )console.log( "adding web methods" );
         omm.Reflect.getEntityClasses().forEach((c:omm.TypeClass<any>)=>{
             omm.Reflect.getRemoteFunctionNames(c).forEach((remoteFunctionName:string)=>{
-                this.addWebMethod(omm.Reflect.getMethodOptions(c,remoteFunctionName));
+                var options = omm.Reflect.getMethodOptions(c,remoteFunctionName);
+                if( !options.name ){
+                    options.name = omm.Reflect.getClassName(c)+"."+options.propertyName;
+                }
+                this.addWebMethod(options);
             });
         });
     }
@@ -199,7 +205,7 @@ export class Server{
         if( this.webMethodsAdded.indexOf(options.name)!=-1 )
             return;
         this.webMethodsAdded.push(options.name);
-        if( omm.verbose )console.log("Adding Web method " + options.name);
+        if( omm.isVerbose() )console.log("Adding Web method " + options.name);
         this.webMethods.add(options.name, (...args:any[])=> {
                 var startTime = Date.now();
 
@@ -209,7 +215,7 @@ export class Server{
                 // the user Data is the second parameter
                 var userData = args.shift();
                 var session = new omm.Session( userData );
-                if( omm.verbose )console.log(new Date() + ": WebMethod invokation. Name:" + options.name, "User data ", userData);
+                if( omm.isVerbose() )console.log(new Date() + ": WebMethod invokation. Name:" + options.name, "User data ", userData);
 
                 // convert parameters given to the web method from documents to objects
                 this.convertWebMethodParameters(args, options.parameterTypes, userData);
@@ -221,7 +227,7 @@ export class Server{
                     .then((object:any)=> {
                         // this might be the collection update or another function that is called directly
 
-                        if( omm.verbose )console.log("Notifying method event listensers.");
+                        if( omm.isVerbose() )console.log("Notifying method event listensers.");
                         return this.notifyMethodListeners(object, objectId, options.name, args, session).then(()=> {
                             return object;
                         });
@@ -238,7 +244,7 @@ export class Server{
                             res.document = this.serializer.toDocument(result, true, true);
                         }
 
-                        if( omm.verbose )console.log("Result of web method " + options.name + " (calculated in " + (Date.now() - startTime) + "ms) is ", res);
+                        if( omm.isVerbose() )console.log("Result of web method " + options.name + " (calculated in " + (Date.now() - startTime) + "ms) is ", res);
                         return res;
                     });
 
@@ -296,7 +302,7 @@ export class Server{
                 allowed = i( objectId, session );
             }
             if( allowed ){
-                if( omm.verbose )console.log(new Date() + ": Getter. CollectionName:" + collectionName + " Id:" + objectId, "UserData:", userData);
+                if( omm.isVerbose() )console.log(new Date() + ": Getter. CollectionName:" + collectionName + " Id:" + objectId, "UserData:", userData);
                 var objPromise = collectionName ? this.retrieveObject(collectionName + "[" + objectId + "]", undefined) : Promise.reject(new Error("No collection name given"));
                 return objPromise.then((obj)=> {
                     return this.notifyMethodListeners(this, undefined, "get", [collectionName, objectId], session).then(()=> {

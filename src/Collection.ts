@@ -62,7 +62,7 @@ export class Collection<T extends Object> implements omm.Handler
         if( !this.eventListeners[topic] )
             this.eventListeners[topic] = [];
         this.eventListeners[topic].push(f);
-        if( omm.verbose )console.log('Added event listener '+topic+" to collection "+this.getName()+". Total event listeners:" );
+        if( omm.isVerbose() )console.log('Added event listener '+topic+" to collection "+this.getName()+". Total event listeners:" );
     }
 
     emit( topic:string, data:any ){
@@ -71,7 +71,7 @@ export class Collection<T extends Object> implements omm.Handler
     }
 
     private emitLater( t:string, evtCtx:omm.EventContext<T>, data?:any ):Promise<void>{
-        if( omm.verbose )console.log("emitting "+t);
+        if( omm.isVerbose() )console.log("emitting "+t);
         var promises = [];
         if( this.eventListeners[t] ) {
             this.eventListeners[t].forEach(function (listener:Function) {
@@ -121,6 +121,7 @@ export class Collection<T extends Object> implements omm.Handler
     }
 
     setMongoCollection( db:any ){
+        // if( omm.isVerbose() )console.log("set mongo collection for collection ", this );
         this.mongoCollection = db.collection( this.name );
     }
 
@@ -138,8 +139,10 @@ export class Collection<T extends Object> implements omm.Handler
      */
     getMongoCollection( ):any
     {
-        if( !this.mongoCollection )
+        if( !this.mongoCollection ){
+            debugger;
             throw new Error("No Mongo Collection set. Use 'setMongoCollection' first." );
+        }
         return this.mongoCollection;
     }
 
@@ -216,9 +219,9 @@ export class Collection<T extends Object> implements omm.Handler
         var ctx = new omm.EventContext( undefined, this );
         ctx.objectId = id;
         return this.emitLater( "willRemove", ctx ).then(()=>{
-            if( omm.verbose )console.log("removing");
+            if( omm.isVerbose() )console.log("removing");
             return this.getMongoCollection().remove({_id:id }).then((result)=>{
-                if( omm.verbose )console.log("removing2");
+                if( omm.isVerbose() )console.log("removing2");
                 var c2 = new omm.EventContext(undefined, this);
                 c2.objectId = id;
                 return this.emitLater( "didRemove", c2 ).thenReturn(true);
@@ -260,7 +263,7 @@ export class Collection<T extends Object> implements omm.Handler
         var promises = [];
 
         events.forEach(function(t){
-            if( omm.verbose )console.log( 'emitting event:'+t.topic, ' on class '+omm.Reflect.getClassName(entityClass) );
+            if( omm.isVerbose() )console.log( 'emitting event:'+t.topic, ' on class '+omm.Reflect.getClassName(entityClass) );
             var p = callEventListeners( entityClass, t.topic, ctx, t.data );
             promises.push( p );
         });
@@ -421,12 +424,12 @@ export class Collection<T extends Object> implements omm.Handler
     
     collectionUpdate(entityClass:omm.TypeClass<any>, functionName:string, object:omm.OmmObject, originalFunction:Function, args:any[], session:omm.Session ):any{
         if( this.updating ){
-            if( omm.verbose )console.log("Skipping collection update '"+omm.Reflect.getClassName(entityClass)+"."+functionName+"' . Collection update already in progress. Calling original function.");
+            if( omm.isVerbose() )console.log("Skipping collection update '"+omm.Reflect.getClassName(entityClass)+"."+functionName+"' . Collection update already in progress. Calling original function.");
             return originalFunction.apply(object, args);
         }
 
 
-        if( omm.verbose )console.log( 'Doing a collection upate in the collection for '+functionName );
+        if( omm.isVerbose() )console.log( 'Doing a collection upate in the collection for '+functionName );
 
         var rootObject;
         var objectPromise:Promise<any>;
@@ -467,7 +470,7 @@ export class Collection<T extends Object> implements omm.Handler
                             this.updating = false;
                         }
                     }).then((r:CollectionUpdateResult)=>{
-                        if( omm.verbose )console.log("Events collected during updating ", r.events, "session:",session );
+                        if( omm.isVerbose() )console.log("Events collected during updating ", r.events, "session:",session );
                         return this.sendEventsCollectedDuringUpdate( r.object, r.object, r.rootObject,functionName, sp, r.events ).then(()=> {
                             var ctx = new omm.EventContext(r.rootObject, this); // this is being emitted on the collection level so it needs to look as if the object was updated is the root element
                             ctx.functionName = functionName;

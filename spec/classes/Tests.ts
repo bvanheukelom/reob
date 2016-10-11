@@ -18,4 +18,4 @@ export * from "./TestInheritanceChild"
 export * from "./TestInheritanceOther"
 
 export * from "./TreeService"
-console.log( exports );
+export * from "./TreeServiceServer"

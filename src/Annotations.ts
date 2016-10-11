@@ -70,11 +70,11 @@ export var eventListeners:{ [index:string] : { [index:string] : Array<omm.EventL
         } else {
             entityName = Reflect.getClassName(<omm.TypeClass<Object>>name)
         }
-        if( omm.verbose )console.log("Adding entity with name ",entityName);
+        if( omm.isVerbose() )console.log("Adding entity with name ",entityName);
         var f = function (p1:any) {
             var typeClass:omm.TypeClass<Object> = <omm.TypeClass<Object>>p1;
             defineMetadata("persistence:entity", true, typeClass);
-            if( omm.verbose )console.log("Adding entity ", entityName );
+            if( omm.isVerbose() )console.log("Adding entity ", entityName );
             entityClasses[entityName] = typeClass;
             Object.defineProperty(p1, "_ommClassName", {
                 value: entityName,
@@ -90,17 +90,22 @@ export var eventListeners:{ [index:string] : { [index:string] : Array<omm.EventL
         }
     }
 
-    // export function addCollectionRoot(t:TypeClass<any>, collectionName:string) {
-    //     defineMetadata("persistence:collectionName", collectionName, t);
+    // export function Service(name:string):any {
+    //     var f = function (p1:any) {
+    //         var typeClass:omm.TypeClass<Object> = <omm.TypeClass<Object>>p1;
+    //         defineMetadata("persistence:service", name, typeClass);
+    //         // if( omm.isVerbose() )console.log("Found service with name ",typeClass, name);
+    //         Object.defineProperty(p1, "_ommServiceName", {
+    //             value: name,
+    //             writable: false,
+    //             configurable: false,
+    //             enumerable: false
+    //         });
+    //     };
+    //     return f;
     // }
 
-    /**
-     * Old name for RemoteCollectionUpdate
-     * @deprecated
-     */
-    export function Wrap(t:any, functionName:string, objectDescriptor:any) {
 
-    }
 
     /**
      * Convenience decorator that combines @CollectionUpdate and @Remote.
@@ -116,17 +121,17 @@ export var eventListeners:{ [index:string] : { [index:string] : Array<omm.EventL
      */
     export function CollectionUpdate(p1:any, functionName:string, desc) {
         var options = {};
-        if( omm.verbose )console.log("registering a collection update on property ", functionName, Reflect.getClassName( p1 ) );
+        if( omm.isVerbose() )console.log("registering a collection update on property ", functionName, Reflect.getClassName( p1 ) );
 
         Reflect.setPropertyProperty(p1, functionName, "collectionUpdate", options);
         var entityClass = p1.constructor;
         monkeyPatch(entityClass.prototype, functionName, function (originalFunction, ...args:any[]) {
             var _ommObjectContext:omm.ObjectContext = this._ommObjectContext;
             if( !_ommObjectContext || !_ommObjectContext.handler ||!_ommObjectContext.handler.collectionUpdate ){
-                if( omm.verbose )console.log(new Date()+": CollectionUpdate called. Function "+functionName+". Calling original function. No handler found. ", args );
+                if( omm.isVerbose() )console.log(new Date()+": CollectionUpdate called. Function "+functionName+". Calling original function. No handler found. ", args );
                 return originalFunction.apply(this, args);
             }else{
-                if( omm.verbose )console.log(new Date()+": CollectionUpdate called. Function "+functionName+". Calling handler. ", args, _ommObjectContext.session );
+                if( omm.isVerbose() )console.log(new Date()+": CollectionUpdate called. Function "+functionName+". Calling handler. ", args, _ommObjectContext.session );
                 return _ommObjectContext.handler.collectionUpdate(entityClass, functionName, this, originalFunction, args, _ommObjectContext.session);
             }
         });
@@ -175,7 +180,7 @@ export function Parent(targetPrototypeObject:any, propertyName:string) {
     }
 
     export function PrivateToServer(targetPrototypeObject:any, propertyName:string) {
-        if( omm.verbose )console.log( "Privat to server: ", propertyName );
+        if( omm.isVerbose() )console.log( "Privat to server: ", propertyName );
         Reflect.setPropertyProperty(targetPrototypeObject, propertyName, "privateToServer", true);
     }
 
@@ -204,7 +209,7 @@ export function Parent(targetPrototypeObject:any, propertyName:string) {
 
     export function Type(typeClassName:string) {
         return function (targetPrototypeObject:any, propertyName:string) {
-            if( omm.verbose )console.log("Registering a type  "+propertyName+" as "+typeClassName, " on ",Reflect.getClassName(targetPrototypeObject));
+            if( omm.isVerbose() )console.log("Registering a type  "+propertyName+" as "+typeClassName, " on ",Reflect.getClassName(targetPrototypeObject));
             Reflect.setPropertyProperty(targetPrototypeObject, propertyName, "type", typeClassName);
         };
     }
@@ -235,17 +240,17 @@ export function Parent(targetPrototypeObject:any, propertyName:string) {
     export function Remote( p1:any, p2?:any, d? ) {
         var f = function (methodOptions:IMethodOptions, descriptor:any ) {
             Reflect.setPropertyProperty(methodOptions.parentObject, methodOptions.propertyName, "methodOptions", methodOptions);
-            if( omm.verbose )console.log("Creating monkey patch for web method "+ methodOptions.name );
+            if( omm.isVerbose() )console.log("Creating monkey patch for web method "+ methodOptions.propertyName );
             monkeyPatch( methodOptions.parentObject, methodOptions.propertyName, function (originalFunction, ...args:any[]) {
                 //if( omm.verbose )console.log("updating object:",this, "original function :"+originalFunction);
                 var _ommObjectContext:omm.ObjectContext = this._ommObjectContext;
                 var session = _ommObjectContext ? _ommObjectContext.session : undefined;
                 if( !_ommObjectContext || !_ommObjectContext.handler ||!_ommObjectContext.handler.webMethod  ){
                     debugger;
-                    if( omm.verbose )console.log(new Date()+": WebMethod called. Function "+methodOptions.name+". Calling original function. No handler found. Arguments:", args, "session:",  session );
+                    if( omm.isVerbose() )console.log(new Date()+": WebMethod called. Function "+methodOptions.propertyName+". Calling original function. No handler found. Arguments:", args, "session:",  session );
                     return originalFunction.apply(this, args);
                 }else{
-                    if( omm.verbose )console.log(new Date()+": WebMethod called. Function "+methodOptions.name+". Calling handler. Arguments:", args,  "Session:", session);
+                    if( omm.isVerbose() )console.log(new Date()+": WebMethod called. Function "+methodOptions.propertyName+". Calling handler. Arguments:", args,  "Session:", session);
                     return _ommObjectContext.handler.webMethod( methodOptions.parentObject.constructor, methodOptions.propertyName, this, originalFunction, args, _ommObjectContext.session );
                 }
             });
@@ -261,8 +266,7 @@ export function Parent(targetPrototypeObject:any, propertyName:string) {
                 var options:IMethodOptions = p1;
                 options.parentObject = prototype;
                 options.propertyName = functionName;
-                if( !options.name )
-                    options.name = Reflect.getClassName(options.parentObject)+"."+options.propertyName;
+
                 return f( options, d  );
             };
         } else  if (typeof p1 == "string" && typeof p2 == "undefined") { // parameter case : only name
@@ -277,7 +281,7 @@ export function Parent(targetPrototypeObject:any, propertyName:string) {
             var options:IMethodOptions = {};
             options.parentObject = p1;
             options.propertyName = p2;
-            options.name = Reflect.getClassName(options.parentObject)+"."+options.propertyName;
+
             return f( options, d  );
         }
     }
@@ -306,6 +310,10 @@ export function Parent(targetPrototypeObject:any, propertyName:string) {
                 }
             }
         }
+
+        // public static getServiceName(cls:omm.TypeClass<Object>):string {
+        //     return cls['_ommServiceName'];
+        // }
 
         public static getRemoteFunctionNames<T extends Object>(typeClass:omm.TypeClass<any>):Array<string> {
             return Reflect.getPropertyNamesOfPropertiesThatHaveAProperty(typeClass, "methodOptions");
@@ -565,7 +573,15 @@ function  monkeyPatch( object:any, functionName:string, patchFunction:(original:
     object[functionName].originalFunction = originalFunction;
 }
 
-export var verbose = false;
+var verbose = false;
+
+export function setVerbose( v:boolean ):void{
+    verbose = v;
+}
+
+export function isVerbose():boolean{
+    return verbose;
+}
 
 (function(){
     var data;

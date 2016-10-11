@@ -1,8 +1,8 @@
 /**
  * Created by bert on 23.03.16.
  */
-import "./classes/TestLeaf"
 import * as omm from "../src/omm"
+omm.setVerbose( true );
 import {Server} from "../src/Server"
 import * as Tests from "./classes/Tests"
 import * as Promise from "bluebird"
@@ -16,6 +16,7 @@ Promise.onPossiblyUnhandledRejection((reason: any) => {
     console.log("possibly unhandled rejection ", reason);
     debugger;
 });
+
 
 
 describe("Omm both on client and server", function () {
@@ -38,24 +39,23 @@ describe("Omm both on client and server", function () {
         server.setLoadingAllowed( treeCollection, (id, session)=>{
             return true;
         });
-        server.addService("ts", (session:omm.Session)=>{
-            return new Tests.TreeService( treeCollection, personCollection, session );
+        server.addService("treeService", (session:omm.Session)=>{
+            return new Tests.TreeServiceServer( treeCollection, personCollection, session );
         });
 
         client = new omm.Client('localhost', 22222);
         clientTreeService = new Tests.TreeService();
-        client.addService("ts", clientTreeService);
+        client.addService( "treeService", clientTreeService );
         server.start(22222).then(()=>{
             console.log("Server started");
             done();
         });
-
     });
 
     var count =0;
     beforeEach(()=>{
         count++;
-        omm.verbose = true;
+        omm.setVerbose( true );
 
         console.log("-------"+(count));
         // console.log(jasmine.getEnv().currentSpec.getFullName());
@@ -65,6 +65,12 @@ describe("Omm both on client and server", function () {
         omm.removeAllUpdateEventListeners();
     });
 
+    it("isVerbose", function () {
+        expect(omm.isVerbose()).toBeTruthy();
+        omm.setVerbose(false);
+        expect(omm.isVerbose()).toBeFalsy();
+    });
+    
     it("knows method annotations ", function () {
         var methodNames = omm.Reflect.getRemoteFunctionNames(Tests.TestPerson);
         expect(methodNames).toContain("addAddress");
@@ -144,7 +150,8 @@ describe("Omm both on client and server", function () {
         var c = 0;
         var listener:omm.EventListener<any> = (i:omm.EventContext<any>, data?:any)=>{
             c = 1;
-            expect( i.object instanceof Tests.TreeService).toBeTruthy();
+            console.log("!!!! ", i );
+            expect( i.object instanceof Tests.TreeServiceServer).toBeTruthy();
             expect( i.session.userData.foo ).toBe("barbar");
         };
         var l = {listener:listener };

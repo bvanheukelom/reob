@@ -25,15 +25,23 @@ export class Client implements omm.Handler{
         this.eventEmitter = new eventemitter.EventEmitter2();
     }
 
-    /**
-     * @deprecated
-     */
-    addSingleton( name:string, service:any ):void{
-        this.addService(name, service)
-    }
+    addService( serviceName:string, service:Object ):void{
+        // var serviceName = omm.Reflect.getServiceName( omm.Reflect.getClass(service) );
+        // if( !serviceName ){
+        //     console.log(service, omm.Reflect.getClass(service));
+        //     throw new Error("Registered service has no @Service(<name>) decorator." );
+        // }
+        this.singletons[serviceName] = service;
 
-    addService( name:string, service:any ):void{
-        this.singletons[name] = service;
+        var serviceClass = omm.Reflect.getClass(service);
+
+        omm.Reflect.getRemoteFunctionNames(serviceClass).forEach((remoteFunctionName:string)=>{
+            var options = omm.Reflect.getMethodOptions(serviceClass,remoteFunctionName);
+            if( !options.name ) {
+                options.name = serviceName + "." + options.propertyName;
+            }
+        });
+
         omm.SerializationPath.setObjectContext( service, undefined, this, undefined );
     }
 
@@ -123,14 +131,25 @@ export class Client implements omm.Handler{
             return originalFunction.apply(object, args);
         }
 
-        console.log("On the client, running webMethod:" + functionName);
 
         var sp:omm.SerializationPath = object._ommObjectContext.serializationPath ? object._ommObjectContext.serializationPath : undefined;
-        var key = this.getSingletonKey(object) || ( sp ? sp.toString() : undefined );
+        var serviceKey = this.getSingletonKey(object);
+        var key = serviceKey || ( sp ? sp.toString() : undefined );
         var r:any;
         var options:omm.IMethodOptions = omm.Reflect.getMethodOptions(entityClass, functionName);
+
+        console.log("On the client, running webMethod:" + functionName, "Service key:",serviceKey);
+
+
         if (key) {
-            r = this.call(options.name, key, args);
+            var name = options.name;
+            if( !name ){
+                if( serviceKey )
+                    name = serviceKey+"."+functionName;
+                else
+                    name = omm.Reflect.getClassName(entityClass)+"."+functionName;
+            }
+            r = this.call(name, key, args);
         }
         if (!options.serverOnly || !key) {
             console.log("Running original function of web method " + options.name);
