@@ -1,13 +1,13 @@
 {
   "name": "reob",
   "description": "Create backends for one page web apps with ease. Uses mongo and express.",
-  "version": "0.1.13",
+  "version": "0.1.14",
   "main": "dist/src/omm.js",
   "typings": "dist/src/omm.d.ts",
   "scripts": {
     "test": "jasmine",
     "clean-m": "find s* -type f -name '*.js' -delete && find s* -type f -name '*.d.ts' -delete && find s* -type f -name '*.js.map' -delete && rm -rf dist",
-    "clean": "npm run clean-m && rm -rf node_modules && rm -rf .tscache" ,
+    "clean": "npm run clean-m && rm -rf node_modules && rm -rf .tscache",
     "compile": "tsc -p tsconfig.json && npm run copy",
     "copy": "rm -rf dist && mkdir dist && cp -r s*c dist && find dist -type f  -name '*.ts' ! -iname '*.d.ts' -delete",
     "watch": "nodemon --exec 'npm run compile' --watch './src' --watch './spec' -e ts -i *.d.ts",
