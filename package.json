@@ -4,7 +4,7 @@
   "version": "0.1.16",
   "repository": "https://github.com/bvanheukelom/reob",
   "license": "MIT",
-  "main": "dist/src/omm.js",
+  "main": "dist/src/reob.js",
   "typings": "dist/src/reob.d.ts",
   "scripts": {
     "test": "jasmine",
