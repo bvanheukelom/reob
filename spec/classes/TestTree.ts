@@ -1,20 +1,20 @@
-import * as omm from "../../src/omm"
+import * as reob from "../../src/reob"
 import * as Tests from "./Tests"
 
-@omm.Entity 
+@reob.Entity
 export class TestTree {
-    @omm.Id
+    @reob.Id
     treeId:string;
     private height:number = 10;
     someArray:Array<any> = [];
     creationDate:Date;
     someBoolean:boolean = false;
 
-    @omm.ArrayType("TestLeaf")
-    @omm.DocumentName('thoseGreenThings')
+    @reob.ArrayType("TestLeaf")
+    @reob.DocumentName('thoseGreenThings')
     leaves:Array<Tests.TestLeaf> = [];
 
-    @omm.Type("TestAddress")
+    @reob.Type("TestAddress")
     // @omm.AsForeignKey
     address:Tests.TestAddress; // this cant be stored as the address doesnt have a foreign key
 
@@ -23,7 +23,7 @@ export class TestTree {
         this.creationDate = new Date();
     }
 
-    @omm.RemoteCollectionUpdate
+    @reob.RemoteCollectionUpdate
     grow():string {
         return this._grow();
     }
@@ -39,19 +39,19 @@ export class TestTree {
         return "grown!";
     }
 
-    @omm.CollectionUpdate
+    @reob.CollectionUpdate
     growAsOnlyACollectionUpdate():string {
         return this._grow();
     }
 
-    @omm.RemoteCollectionUpdate
+    @reob.RemoteCollectionUpdate
     wither() {
         this.leaves = [];
-        omm.emit("gardenevents", "withered");
-        omm.emit("gardenevents", "withered2");
+        reob.emit("gardenevents", "withered");
+        reob.emit("gardenevents", "withered2");
     }
 
-    @omm.RemoteCollectionUpdate
+    @reob.RemoteCollectionUpdate
     thisThrowsAnError() {
         throw new Error("Hello world");
     }
@@ -64,13 +64,13 @@ export class TestTree {
         return this.leaves;
     }
 
-    @omm.CollectionUpdate
+    @reob.CollectionUpdate
     setSomeBooleanTo( f:boolean ){
         this.someBoolean = f;
     }
     
-    @omm.CollectionUpdate
-    @omm.Remote({replaceWithCall:true, resultType:"TestLeaf"})
+    @reob.CollectionUpdate
+    @reob.Remote({replaceWithCall:true, resultType:"TestLeaf"})
     growAndReturnLeaves():Array<Tests.TestLeaf>{
         this.grow();
         return this.leaves;

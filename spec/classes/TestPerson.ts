@@ -1,39 +1,39 @@
 
-import * as omm from "../../src/omm"
+import * as reob from "../../src/reob"
 import * as Tests from "./Tests"
 
-@omm.Entity
+@reob.Entity
 export class TestPerson
 {
     name:string;
     gardenState:number;
     _id:string;
 
-    @omm.Type("TestPhoneNumber")
+    @reob.Type("TestPhoneNumber")
     phoneNumber:Tests.TestPhoneNumber;
 
-    @omm.ArrayOrMap("TestAddress")
+    @reob.ArrayOrMap("TestAddress")
     addresses:Array<Tests.TestAddress> = [];
 
-    @omm.Type("TestTree")
+    @reob.Type("TestTree")
     // @omm.AsForeignKeys
     tree:Tests.TestTree;
 
-    @omm.Type("TestLeaf")
+    @reob.Type("TestLeaf")
     // @omm.AsForeignKeys
     leaf:Tests.TestLeaf;
 
-    @omm.ArrayOrMap("TestLeaf")
+    @reob.ArrayOrMap("TestLeaf")
     trees:Array<Tests.TestTree> = [];
 
-    @omm.ArrayOrMap("TestPhoneNumber")
+    @reob.ArrayOrMap("TestPhoneNumber")
     phoneBook:{ [index:string]: Tests.TestPhoneNumber } = {};
 
-    @omm.ArrayOrMap("TestTree")
+    @reob.ArrayOrMap("TestTree")
     // @omm.AsForeignKeys
     wood:{ [index:string]: Tests.TestTree } = {};
 
-    @omm.ArrayOrMap("TestPerson")
+    @reob.ArrayOrMap("TestPerson")
     // @omm.AsForeignKeys
     family:{ [index:string]: Tests.TestPerson } = {};
 
@@ -78,41 +78,41 @@ export class TestPerson
     }
 
 
-    @omm.RemoteCollectionUpdate
+    @reob.RemoteCollectionUpdate
     collectLeaf()
     {
         //console.log("collecting leaf:",this.tree);
         this.leaf = this.tree.getLeaves()[0];
     }
 
-    @omm.RemoteCollectionUpdate
+    @reob.RemoteCollectionUpdate
     chooseTree(t:Tests.TestTree)
     {
         //console.log("choosing tree:",t);
         this.tree = t;
     }
-    @omm.RemoteCollectionUpdate
+    @reob.RemoteCollectionUpdate
     chooseLeaf(l:Tests.TestLeaf)
     {
         this.leaf = l;
     }
 
-    @omm.CollectionUpdate
-    @omm.Remote
+    @reob.CollectionUpdate
+    @reob.Remote
     rename(n:string):string {
         this.name = n;
         return this.name;
     }
 
-    @omm.CollectionUpdate
-    @omm.Remote
+    @reob.CollectionUpdate
+    @reob.Remote
     collectionUpdateRename(n:string):string {
         this.name = "Collection Update:"+n;
         return this.name;
     }
 
-    @omm.CollectionUpdate
-    @omm.Remote({parameterTypes:["TestAddress"], replaceWithCall:true})
+    @reob.CollectionUpdate
+    @reob.Remote({parameterTypes:["TestAddress"], replaceWithCall:true})
     addAddress(a:Tests.TestAddress):Tests.TestAddress
     {
         //console.log("inside add address:", (a instanceof Tests.TestAddress));
@@ -120,8 +120,8 @@ export class TestPerson
         return a;
     }
 
-    @omm.CollectionUpdate
-    @omm.Remote({parameterTypes:["TestAddress"], replaceWithCall:true})
+    @reob.CollectionUpdate
+    @reob.Remote({parameterTypes:["TestAddress"], replaceWithCall:true})
     addAddresses(addresses:Array<Tests.TestAddress>):Array<Tests.TestAddress>
     {
         var that = this;
@@ -142,7 +142,7 @@ export class TestPerson
     // }
 
 
-    @omm.RemoteCollectionUpdate
+    @reob.RemoteCollectionUpdate
     addToWood(t:Tests.TestTree, s?:string )
     {
         this.trees.push( t );
@@ -150,20 +150,20 @@ export class TestPerson
             this.wood[s] = t;
     }
 
-    @omm.RemoteCollectionUpdate
+    @reob.RemoteCollectionUpdate
     addFamilyRelation(s:string, p:Tests.TestPerson )
     {
         if( s )
             this.family[s] = p;
     }
 
-    @omm.RemoteCollectionUpdate
+    @reob.RemoteCollectionUpdate
     addPhoneNumber(s:string, p:Tests.TestPhoneNumber )
     {
         this.phoneBook[s] = p;
     }
 
-    @omm.RemoteCollectionUpdate
+    @reob.RemoteCollectionUpdate
     tendToGarden(  ):number
     {
         this.gardenState++;

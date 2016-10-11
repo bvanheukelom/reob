@@ -1,10 +1,10 @@
-import * as omm from "../../src/omm"
+import * as reob from "../../src/reob"
 import * as Tests from "./Tests"
 
-@omm.Entity("TestWheelBanzai")
+@reob.Entity("TestWheelBanzai")
 export class TestWheel{
 
-    @omm.Parent
+    @reob.Parent
     car:Tests.TestCar;
     
     radius:number;

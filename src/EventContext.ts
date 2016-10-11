@@ -2,7 +2,7 @@
  * Created by bert on 23.09.16.
  */
 
-import * as omm from "./omm"
+import * as reob from "./reob"
 
 export class EventContext<T> {
     private  cancelledError:any = false;
@@ -25,7 +25,7 @@ export class EventContext<T> {
     constructor(o:T, coll:any /*omm.Collection<T>*/) {
         this.object = o;
         if( o )
-            this.objectId = omm.getId(o);
+            this.objectId = reob.getId(o);
         this.collection = coll;
     }
 

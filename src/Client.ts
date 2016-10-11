@@ -2,15 +2,15 @@
  * Created by bert on 07.07.16.
  */
 
-import * as omm from "./omm"
-import * as wm from "@bvanheukelom/web-methods"
+import * as reob from "./reob"
+import * as wm from "web-methods"
 import * as eventemitter from "eventemitter2"
 
 var jsd = require("jsondiffpatch");
 
-export class Client implements omm.Handler{
+export class Client implements reob.Handler{
 
-    private serializer:omm.Serializer;
+    private serializer:reob.Serializer;
     private userData:any;
     private webMethods:wm.WebMethods;
     private singletons:{ [index:string]: any } = {};
@@ -21,7 +21,7 @@ export class Client implements omm.Handler{
         //     throw new Error("omm is not initialized.");
         var endpointUrl = "http://"+host+":"+port+"/methods";
         this.webMethods = new wm.WebMethods(endpointUrl);
-        this.serializer = new omm.Serializer();
+        this.serializer = new reob.Serializer();
         this.eventEmitter = new eventemitter.EventEmitter2();
     }
 
@@ -33,16 +33,16 @@ export class Client implements omm.Handler{
         // }
         this.singletons[serviceName] = service;
 
-        var serviceClass = omm.Reflect.getClass(service);
+        var serviceClass = reob.Reflect.getClass(service);
 
-        omm.Reflect.getRemoteFunctionNames(serviceClass).forEach((remoteFunctionName:string)=>{
-            var options = omm.Reflect.getMethodOptions(serviceClass,remoteFunctionName);
+        reob.Reflect.getRemoteFunctionNames(serviceClass).forEach((remoteFunctionName:string)=>{
+            var options = reob.Reflect.getMethodOptions(serviceClass,remoteFunctionName);
             if( !options.name ) {
                 options.name = serviceName + "." + options.propertyName;
             }
         });
 
-        omm.SerializationPath.setObjectContext( service, undefined, this, undefined );
+        reob.SerializationPath.setObjectContext( service, undefined, this, undefined );
     }
 
     load<T>( collectionName:string, id:string ):Promise<T>{
@@ -125,18 +125,18 @@ export class Client implements omm.Handler{
 
     webMethodRunning:boolean = false;
 
-    webMethod(entityClass:omm.TypeClass<any>, functionName:string, object:omm.OmmObject, originalFunction:Function, args:any[] ):any{
+    webMethod(entityClass:reob.TypeClass<any>, functionName:string, object:reob.OmmObject, originalFunction:Function, args:any[] ):any{
         if( this.webMethodRunning ) {
             console.log("Webmethod already running. Skipping, calling original function. Function name: "+functionName );
             return originalFunction.apply(object, args);
         }
 
 
-        var sp:omm.SerializationPath = object._ommObjectContext.serializationPath ? object._ommObjectContext.serializationPath : undefined;
+        var sp:reob.SerializationPath = object._ommObjectContext.serializationPath ? object._ommObjectContext.serializationPath : undefined;
         var serviceKey = this.getSingletonKey(object);
         var key = serviceKey || ( sp ? sp.toString() : undefined );
         var r:any;
-        var options:omm.IMethodOptions = omm.Reflect.getMethodOptions(entityClass, functionName);
+        var options:reob.IMethodOptions = reob.Reflect.getMethodOptions(entityClass, functionName);
 
         console.log("On the client, running webMethod:" + functionName, "Service key:",serviceKey);
 
@@ -147,7 +147,7 @@ export class Client implements omm.Handler{
                 if( serviceKey )
                     name = serviceKey+"."+functionName;
                 else
-                    name = omm.Reflect.getClassName(entityClass)+"."+functionName;
+                    name = reob.Reflect.getClassName(entityClass)+"."+functionName;
             }
             r = this.call(name, key, args);
         }
@@ -169,7 +169,7 @@ export class Client implements omm.Handler{
                     // hide exception, as the result is coming from the server
                 });
             }
-            omm.SerializationPath.updateObjectContexts(object, this, undefined);
+            reob.SerializationPath.updateObjectContexts(object, this, undefined);
         }
 
         return r;

@@ -1,11 +1,11 @@
 
-import * as omm from "../../src/omm"
+import * as reob from "../../src/reob"
 import * as Tests from "./Tests"
 
-@omm.Entity
+@reob.Entity
 export class TestInheritanceChild extends Tests.TestInheritanceParent {
 
-    @omm.Type("TestInheritanceOther")
+    @reob.Type("TestInheritanceOther")
         childOther:Tests.TestInheritanceOther;
 
     public getChildThing():string {

@@ -1,7 +1,7 @@
 
 import * as Cloner from "./Cloner"
 import Document from "./Document"
-import * as omm from "./omm"
+import * as reob from "./reob"
 import SubObjectPath from "./SubObjectPath"
 import { Reflect, getId } from "./Annotations"
 
@@ -57,7 +57,7 @@ export class Serializer {
         });
     }
 
-    toObject(doc:Document, handler?:any, f?:omm.TypeClass<any>, serializationPath?:omm.SerializationPath, session?:omm.Session ):any {
+    toObject(doc:Document, handler?:any, f?:reob.TypeClass<any>, serializationPath?:reob.SerializationPath, session?:reob.Session ):any {
         var o:any;
         if(Array.isArray(doc)){
             var r = [];
@@ -71,14 +71,14 @@ export class Serializer {
             o =  this.toObjectRecursive(doc, undefined, f, handler, session);
 
         if( handler && serializationPath ) {
-            omm.SerializationPath.setObjectContext(o, serializationPath, handler, session);
-            omm.SerializationPath.updateObjectContexts(o, handler, session);
+            reob.SerializationPath.setObjectContext(o, serializationPath, handler, session);
+            reob.SerializationPath.updateObjectContexts(o, handler, session);
         }
 
         return o;
     }
 
-    private toObjectRecursive<T extends Object>(doc:Document, parent:Object, f:omm.TypeClass<T>, handler:omm.Handler, session:omm.Session):T {
+    private toObjectRecursive<T extends Object>(doc:Document, parent:Object, f:reob.TypeClass<T>, handler:reob.Handler, session:reob.Session):T {
         var o:T;
         if( !doc )
             return <T>doc;
@@ -107,8 +107,8 @@ export class Serializer {
                 o = <any>{};
 
             if( doc._serializationPath ){
-                var sp = new omm.SerializationPath(doc._serializationPath);
-                omm.SerializationPath.setObjectContext(o, sp, handler, session);
+                var sp = new reob.SerializationPath(doc._serializationPath);
+                reob.SerializationPath.setObjectContext(o, sp, handler, session);
             }
 
             Reflect.getParentPropertyNames(f).forEach(function (parentPropertyName:string) {
@@ -155,7 +155,7 @@ export class Serializer {
         return this.toDocumentRecursive(object, includeContext, omitPropertiesPrivateToServer);
     }
 
-    private toDocumentRecursive(object:any, includeContext?:boolean, omitPropertiesPrivateToServer?:boolean, rootClass?:omm.TypeClass<Object>, parentObject?:Object, propertyNameOnParentObject?:string):Document {
+    private toDocumentRecursive(object:any, includeContext?:boolean, omitPropertiesPrivateToServer?:boolean, rootClass?:reob.TypeClass<Object>, parentObject?:Object, propertyNameOnParentObject?:string):Document {
         var result:Document;
         if ( !object || typeof object == "string" || typeof object == "number"  || typeof object == "date" || typeof object == "boolean")
             result =  <Document>object;
@@ -179,15 +179,15 @@ export class Serializer {
         return result;
     }
 
-    private createDocument(object:any, includeContext?:boolean, omitPropertiesPrivateToServer?:boolean, rootClass?:omm.TypeClass<Object>, parentObject?:Object, propertyNameOnParentObject?:string):Document {
+    private createDocument(object:any, includeContext?:boolean, omitPropertiesPrivateToServer?:boolean, rootClass?:reob.TypeClass<Object>, parentObject?:Object, propertyNameOnParentObject?:string):Document {
         var doc:any = {};
-        var context = omm.SerializationPath.getObjectContext(object);
+        var context = reob.SerializationPath.getObjectContext(object);
         if( includeContext ) {
             if (context && context.serializationPath)
                 doc['_serializationPath'] = context.serializationPath.toString();
-            var cls = omm.Reflect.getClass(object);
-            if (cls && omm.Reflect.isEntity(cls)) {
-                doc['_className'] = omm.Reflect.getClassName(cls);
+            var cls = reob.Reflect.getClass(object);
+            if (cls && reob.Reflect.isEntity(cls)) {
+                doc['_className'] = reob.Reflect.getClassName(cls);
             }
         }
         var objectClass = Reflect.getClass(object);

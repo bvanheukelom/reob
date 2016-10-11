@@ -1,7 +1,7 @@
-import * as omm from "../../src/omm"
+import * as reob from "../../src/reob"
 import * as Tests from "./Tests"
 
-@omm.Entity
+@reob.Entity
 export class TestInheritanceOther {
     name:string;
     otherness:number;

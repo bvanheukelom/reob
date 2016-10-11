@@ -2,17 +2,17 @@
  * Created by bert on 07.05.15.
  */
 
-import * as omm from "../../src/omm"
+import * as reob from "../../src/reob"
 import {TestTree} from "./TestTree"
 
-@omm.Entity
+@reob.Entity
 export class TestLeaf
 {
     _id:string;
-    @omm.DocumentName("greenIndex")
+    @reob.DocumentName("greenIndex")
     greenNess:number;
 
-    @omm.Parent
+    @reob.Parent
     parent:TestTree;
 
     constructor(id?:string, parent?:TestTree)
@@ -37,9 +37,9 @@ export class TestLeaf
         return this.parent;
     }
 
-    @omm.RemoteCollectionUpdate
+    @reob.RemoteCollectionUpdate
     flutter(){
         this.greenNess++;
-        omm.emit("fluttering");
+        reob.emit("fluttering");
     }
 }

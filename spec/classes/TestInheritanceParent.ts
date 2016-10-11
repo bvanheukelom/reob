@@ -1,18 +1,18 @@
-import * as omm from "../../src/omm"
+import * as reob from "../../src/reob"
 import * as Tests from "./Tests"
 
-@omm.Entity
+@reob.Entity
 export class TestInheritanceParent {
-    @omm.Type("TestInheritanceOther")
+    @reob.Type("TestInheritanceOther")
     parentOther : Tests.TestInheritanceOther;
 
-    @omm.Type("TestPerson")
+    @reob.Type("TestPerson")
     // @omm.AsForeignKey
     person : Tests.TestPerson;
 
     parentness:number;
 
-    @omm.Ignore
+    @reob.Ignore
     ignoredOther : Tests.TestInheritanceOther;
 }
 

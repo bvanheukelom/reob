@@ -1,8 +1,8 @@
 /**
  * Created by bert on 23.09.16.
  */
-import * as omm from "./omm"
+import * as reob from "./reob"
 
 export interface EventListener<T> {
-    (i:omm.EventContext<T>, data?:any) : void
+    (i:reob.EventContext<T>, data?:any) : void
 }

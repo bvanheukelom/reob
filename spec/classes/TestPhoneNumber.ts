@@ -1,7 +1,7 @@
-import * as omm from "../../src/omm"
+import * as reob from "../../src/reob"
 import * as Tests from "./Tests"
 
-@omm.Entity
+@reob.Entity
 export class TestPhoneNumber {
     number:string;
     timesCalled:number;
@@ -29,7 +29,7 @@ export class TestPhoneNumber {
         return new TestPhoneNumber(dn.pn);
     }
 
-    @omm.RemoteCollectionUpdate
+    @reob.RemoteCollectionUpdate
     callNumber( ):string
     {
         this.timesCalled++;

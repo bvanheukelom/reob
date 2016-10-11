@@ -1,8 +1,8 @@
 /**
  * Created by bert on 23.03.16.
  */
-import * as omm from "../src/omm"
-omm.setVerbose( true );
+import * as reob from "../src/reob"
+reob.setVerbose( true );
 import {Server} from "../src/Server"
 import * as Tests from "./classes/Tests"
 import * as Promise from "bluebird"
@@ -25,7 +25,7 @@ describe("Omm both on client and server", function () {
     var treeCollection:Tests.TestTreeCollection;
     var clientTreeService:Tests.TreeService;
     var server:Server;
-    var client:omm.Client;
+    var client:reob.Client;
 
     beforeAll((done)=>{
 
@@ -39,11 +39,11 @@ describe("Omm both on client and server", function () {
         server.setLoadingAllowed( treeCollection, (id, session)=>{
             return true;
         });
-        server.addService("treeService", (session:omm.Session)=>{
+        server.addService("treeService", (session:reob.Session)=>{
             return new Tests.TreeServiceServer( treeCollection, personCollection, session );
         });
 
-        client = new omm.Client('localhost', 22222);
+        client = new reob.Client('localhost', 22222);
         clientTreeService = new Tests.TreeService();
         client.addService( "treeService", clientTreeService );
         server.start(22222).then(()=>{
@@ -55,24 +55,24 @@ describe("Omm both on client and server", function () {
     var count =0;
     beforeEach(()=>{
         count++;
-        omm.setVerbose( true );
+        reob.setVerbose( true );
 
         console.log("-------"+(count));
         // console.log(jasmine.getEnv().currentSpec.getFullName());
         personCollection.removeAllListeners();
         treeCollection.removeAllListeners();
         server.removeAllMethodListeners();
-        omm.removeAllUpdateEventListeners();
+        reob.removeAllUpdateEventListeners();
     });
 
     it("isVerbose", function () {
-        expect(omm.isVerbose()).toBeTruthy();
-        omm.setVerbose(false);
-        expect(omm.isVerbose()).toBeFalsy();
+        expect(reob.isVerbose()).toBeTruthy();
+        reob.setVerbose(false);
+        expect(reob.isVerbose()).toBeFalsy();
     });
     
     it("knows method annotations ", function () {
-        var methodNames = omm.Reflect.getRemoteFunctionNames(Tests.TestPerson);
+        var methodNames = reob.Reflect.getRemoteFunctionNames(Tests.TestPerson);
         expect(methodNames).toContain("addAddress");
         expect(methodNames.length).toBeGreaterThan(0);
     });
@@ -83,14 +83,14 @@ describe("Omm both on client and server", function () {
     });
 
     it("knows collection updates", function () {
-        expect(omm.Reflect.getCollectionUpdateFunctionNames(Tests.TestPerson)).toBeDefined();
-        expect(omm.Reflect.getCollectionUpdateFunctionNames(Tests.TestPerson)).toContain("collectionUpdateRename");
+        expect(reob.Reflect.getCollectionUpdateFunctionNames(Tests.TestPerson)).toBeDefined();
+        expect(reob.Reflect.getCollectionUpdateFunctionNames(Tests.TestPerson)).toContain("collectionUpdateRename");
     });
 
     it("can clone stuff", function () {
         var t1:Tests.TestTree = new Tests.TestTree(10);
         t1.grow();
-        var clone = omm.clone(t1);
+        var clone = reob.clone(t1);
         expect( clone instanceof Tests.TestTree ).toBeTruthy();
     });
 
@@ -128,7 +128,7 @@ describe("Omm both on client and server", function () {
     it("can run collection updates from within another method and the userdata remains", function (done) {
         var t1:Tests.TestTree = new Tests.TestTree(15);
         debugger;
-        var f = { handle:(evtCtx:omm.EventContext<Tests.TestTree>)=>{
+        var f = { handle:(evtCtx:reob.EventContext<Tests.TestTree>)=>{
             expect( evtCtx.session.userData ).toBeDefined();
             expect( evtCtx.session.userData.hello ).toBe("World");
         }};
@@ -148,7 +148,7 @@ describe("Omm both on client and server", function () {
 
     it("notifies method listener", function (done) {
         var c = 0;
-        var listener:omm.EventListener<any> = (i:omm.EventContext<any>, data?:any)=>{
+        var listener:reob.EventListener<any> = (i:reob.EventContext<any>, data?:any)=>{
             c = 1;
             console.log("!!!! ", i );
             expect( i.object instanceof Tests.TreeServiceServer).toBeTruthy();
@@ -173,7 +173,7 @@ describe("Omm both on client and server", function () {
 
     it("notifies method listener and listeners can cancel the method", function (done) {
         var c = 0;
-        var listener:omm.EventListener<any> = (i:omm.EventContext<any>, data?:any)=>{
+        var listener:reob.EventListener<any> = (i:reob.EventContext<any>, data?:any)=>{
             c = 1;
             return Promise.reject( new Error("No") );
         };
@@ -259,8 +259,8 @@ describe("Omm both on client and server", function () {
             i = id;
             return treeCollection.getById(id);
         }).then((t:Tests.TestTree)=> {
-            var doc = new omm.Serializer().toDocument(t);
-            var l ={listener:(ctx:omm.EventContext<Tests.TestTree>)=>{
+            var doc = new reob.Serializer().toDocument(t);
+            var l ={listener:(ctx:reob.EventContext<Tests.TestTree>)=>{
                 expect( ctx.preUpdateDocument  ).toBeDefined();
                 expect( ctx.postUpdateDocument ).toBeDefined();
             }};
@@ -276,19 +276,19 @@ describe("Omm both on client and server", function () {
     it("can serialize sub objects", function () {
         var t1:Tests.TestTree = new Tests.TestTree(10);
         t1.grow();
-        var doc:any = new omm.Serializer().toDocument( t1 );
+        var doc:any = new reob.Serializer().toDocument( t1 );
         expect(doc.thoseGreenThings).toBeDefined();
         expect(doc.thoseGreenThings.length).toBe(1);
         expect(doc.thoseGreenThings[0] instanceof Tests.TestLeaf).toBeFalsy();
     });
 
     it("knows typed properties", function () {
-        expect(omm.Reflect.getTypedPropertyNames(Tests.TestTree)).toContain('leaves');
+        expect(reob.Reflect.getTypedPropertyNames(Tests.TestTree)).toContain('leaves');
     });
 
     it("uses persistence paths to return undefined for non existent subobjects ", function () {
         var t1:Tests.TestTree = new Tests.TestTree(10);
-        var pp:omm.SerializationPath = new omm.SerializationPath( "TestTree", "tree1");
+        var pp:reob.SerializationPath = new reob.SerializationPath( "TestTree", "tree1");
         pp.appendArrayOrMapLookup("leaves", "nonexistentLeaf");
         expect(pp.getSubObject(t1)).toBeUndefined();
     });
@@ -297,13 +297,13 @@ describe("Omm both on client and server", function () {
         var t1:Tests.TestTree = new Tests.TestTree(10);
         t1.treeId = "tree1";
         t1.grow();
-        var doc = new omm.Serializer().toDocument(t1);
+        var doc = new reob.Serializer().toDocument(t1);
         debugger;
-        var t2 = new omm.Serializer().toObject(doc, treeCollection, Tests.TestTree, new omm.SerializationPath(treeCollection.getName(), "tree1") );
-        var sp = omm.SerializationPath.getObjectContext(t2).serializationPath;
+        var t2 = new reob.Serializer().toObject(doc, treeCollection, Tests.TestTree, new reob.SerializationPath(treeCollection.getName(), "tree1") );
+        var sp = reob.SerializationPath.getObjectContext(t2).serializationPath;
         expect( sp ).toBeDefined();
         expect( sp.toString()).toBe("TheTreeCollection[tree1]");
-        expect(omm.SerializationPath.getObjectContext(t2.leaves[0]).serializationPath.toString()).toBe("TheTreeCollection[tree1].leaves|leaf11");
+        expect(reob.SerializationPath.getObjectContext(t2.leaves[0]).serializationPath.toString()).toBe("TheTreeCollection[tree1].leaves|leaf11");
     });
 
 
@@ -316,10 +316,10 @@ describe("Omm both on client and server", function () {
         }).then((t:Tests.TestTree)=> {
             return Promise.cast(t.grow()).then(()=>{return treeCollection.getById(t.treeId)});
         }).then((t:Tests.TestTree)=> {
-            var sp = omm.SerializationPath.getObjectContext(t).serializationPath;
+            var sp = reob.SerializationPath.getObjectContext(t).serializationPath;
             expect( sp ).toBeDefined();
             expect( sp.toString()).toBe("TheTreeCollection["+i+"]");
-            expect(omm.SerializationPath.getObjectContext(t1.leaves[0]).serializationPath.toString()).toBe("TheTreeCollection["+i+"].leaves|leaf11");
+            expect(reob.SerializationPath.getObjectContext(t1.leaves[0]).serializationPath.toString()).toBe("TheTreeCollection["+i+"].leaves|leaf11");
         });
     });
 
@@ -332,13 +332,13 @@ describe("Omm both on client and server", function () {
     it("serializes basic objects", function () {
         var t1:Tests.TestPerson = new Tests.TestPerson("tp1");
         t1.phoneNumber = new Tests.TestPhoneNumber("12345");
-        var doc = new omm.Serializer().toDocument(t1);
+        var doc = new reob.Serializer().toDocument(t1);
         expect(doc._id).toBe("tp1");
         expect(doc["phoneNumber"]["pn"]).toBe("12345");
     });
 
     it("deserializes basic objects", function () {
-        var serializer:omm.Serializer = new omm.Serializer();
+        var serializer:reob.Serializer = new reob.Serializer();
         var t1:Tests.TestPerson = new Tests.TestPerson("tp1");
         t1.phoneNumber = new Tests.TestPhoneNumber("12345");
         var doc = serializer.toDocument(t1);
@@ -349,7 +349,7 @@ describe("Omm both on client and server", function () {
     });
 
     it("deserializes objects that have subobjects", function () {
-        var serializer:omm.Serializer = new omm.Serializer();
+        var serializer:reob.Serializer = new reob.Serializer();
         var t1:Tests.TestTree = new Tests.TestTree(123);
         t1.treeId = "t1";
         t1.grow();
@@ -361,7 +361,7 @@ describe("Omm both on client and server", function () {
     });
 
     it("deserializes objects that have document names", function () {
-        var serializer:omm.Serializer = new omm.Serializer();
+        var serializer:reob.Serializer = new reob.Serializer();
         var t1:Tests.TestTree = new Tests.TestTree(123);
         t1.treeId = "t1";
         t1.grow();
@@ -370,13 +370,13 @@ describe("Omm both on client and server", function () {
     });
 
     it("knows types ", function () {
-        expect(omm.Reflect.getPropertyClass(Tests.TestPerson, "tree")).toBe(Tests.TestTree);
-        expect(omm.Reflect.getPropertyClass(Tests.TestPerson, "leaf")).toBe(Tests.TestLeaf);
+        expect(reob.Reflect.getPropertyClass(Tests.TestPerson, "tree")).toBe(Tests.TestTree);
+        expect(reob.Reflect.getPropertyClass(Tests.TestPerson, "leaf")).toBe(Tests.TestLeaf);
     });
 
     it("knows document names ", function () {
-        expect(omm.Reflect.getDocumentPropertyName(Tests.TestLeaf, "greenNess")).toBe("greenIndex");
-        expect(omm.Reflect.getObjectPropertyName(Tests.TestLeaf, "greenIndex")).toBe("greenNess");
+        expect(reob.Reflect.getDocumentPropertyName(Tests.TestLeaf, "greenNess")).toBe("greenIndex");
+        expect(reob.Reflect.getObjectPropertyName(Tests.TestLeaf, "greenIndex")).toBe("greenNess");
     });
 
     it("can call functions that have are also webMethods normally", function (done) {
@@ -395,7 +395,7 @@ describe("Omm both on client and server", function () {
     it("serializes objects to plain objects", function () {
         var tp = new Tests.TestPerson("tp");
         tp.tree = new Tests.TestTree(12);
-        var serializer = new omm.Serializer();
+        var serializer = new reob.Serializer();
         var doc:any = serializer.toDocument(tp);
 
         expect(doc.tree instanceof Tests.TestTree).toBeFalsy();
@@ -405,7 +405,7 @@ describe("Omm both on client and server", function () {
     it("can serialize object in a map", function () {
         var tp = new Tests.TestPerson("tp");
         tp.phoneBook["klaus"] = new Tests.TestPhoneNumber("121212");
-        var serializer = new omm.Serializer();
+        var serializer = new reob.Serializer();
         var doc:any = serializer.toDocument(tp);
 
         expect(doc).toBeDefined();
@@ -417,7 +417,7 @@ describe("Omm both on client and server", function () {
     it("can serialize object that have a parent object", function () {
         var tp = new Tests.TestTree(23);
         tp.grow();
-        var serializer = new omm.Serializer();
+        var serializer = new reob.Serializer();
         var doc:any = serializer.toDocument(tp);
         var tp2 = serializer.toObject(doc,undefined, Tests.TestTree );
         expect( tp2.getLeaves()[0].parent ).toBeDefined();
@@ -430,7 +430,7 @@ describe("Omm both on client and server", function () {
         car.wheel = new Tests.TestWheel();
         car.wheel.car = car;
         car.wheel.radius = 10;
-        var s:omm.Serializer = new omm.Serializer();
+        var s:reob.Serializer = new reob.Serializer();
         var document:any = s.toDocument(car);
         var otherCar = s.toObject(document, undefined, Tests.TestCar);
         var doc:any = s.toDocument(otherCar);
@@ -447,7 +447,7 @@ describe("Omm both on client and server", function () {
         car.wheel = new Tests.TestWheel();
         car.wheel.car = car;
         car.wheel.radius = 10;
-        var s:omm.Serializer = new omm.Serializer();
+        var s:reob.Serializer = new reob.Serializer();
         var doc:any = s.toDocument(car);
         var otherCar = s.toObject(doc, undefined, Tests.TestCar);
         expect(otherCar).toBeDefined();
@@ -461,14 +461,14 @@ describe("Omm both on client and server", function () {
         var car = new Tests.TestCar();
         car.brand = "VW";
         car.temperature = "hot";
-        var s:omm.Serializer = new omm.Serializer();
+        var s:reob.Serializer = new reob.Serializer();
         var doc:any = s.toDocument(car);
         expect(doc.brand).toBe("VW");
         expect(doc.temperature).toBeUndefined();
     });
 
     it("marks properties as ignored", function () {
-        expect(omm.Reflect.isIgnored(Tests.TestCar, "temperature")).toBeTruthy();
+        expect(reob.Reflect.isIgnored(Tests.TestCar, "temperature")).toBeTruthy();
     });
     //
     it("deserializes local objects with arrays", function () {
@@ -477,7 +477,7 @@ describe("Omm both on client and server", function () {
         car.wheels.push(new Tests.TestWheel());
         car.wheels.push(new Tests.TestWheel());
         car.wheels.push(new Tests.TestWheel());
-        var s:omm.Serializer = new omm.Serializer();
+        var s:reob.Serializer = new reob.Serializer();
         var doc:any = s.toDocument(car);
         expect(doc).toBeDefined();
         expect(doc.wheels).toBeDefined();
@@ -485,7 +485,7 @@ describe("Omm both on client and server", function () {
     });
     //
     it("serializes local objects with arrays", function () {
-        var s:omm.Serializer = new omm.Serializer();
+        var s:reob.Serializer = new reob.Serializer();
         var otherCar:Tests.TestCar = s.toObject({
             brand: "Monster",
             wheels: [{}, {}, {}, {radius: 12}]
@@ -499,19 +499,19 @@ describe("Omm both on client and server", function () {
     });
     //
     it("properties of child objects have no type on the parent object", function () {
-        expect(omm.Reflect.getPropertyClass(Tests.TestInheritanceParent, "childOther")).toBeUndefined();
+        expect(reob.Reflect.getPropertyClass(Tests.TestInheritanceParent, "childOther")).toBeUndefined();
     });
     //
     it("properties of child objects have a type on the child object", function () {
-        expect(omm.Reflect.getPropertyClass(Tests.TestInheritanceChild, "childOther")).toBe(Tests.TestInheritanceOther);
+        expect(reob.Reflect.getPropertyClass(Tests.TestInheritanceChild, "childOther")).toBe(Tests.TestInheritanceOther);
     });
     //
     it("properties of the parent class have a type on the child class", function () {
-        expect(omm.Reflect.getPropertyClass(Tests.TestInheritanceChild, "parentOther")).toBe(Tests.TestInheritanceOther);
+        expect(reob.Reflect.getPropertyClass(Tests.TestInheritanceChild, "parentOther")).toBe(Tests.TestInheritanceOther);
     });
     //
     it("serializes local objects with inheritance", function () {
-        var s:omm.Serializer = new omm.Serializer();
+        var s:reob.Serializer = new reob.Serializer();
         var child:Tests.TestInheritanceChild = new Tests.TestInheritanceChild();
         child.childOther = new Tests.TestInheritanceOther();
         child.childOther.name = "Otter";
@@ -527,7 +527,7 @@ describe("Omm both on client and server", function () {
     });
     //
     it("serializes local parent objects with inheritance", function () {
-        var s:omm.Serializer = new omm.Serializer();
+        var s:reob.Serializer = new reob.Serializer();
         var parent:Tests.TestInheritanceParent = new Tests.TestInheritanceParent();
         parent.parentOther = new Tests.TestInheritanceOther();
         parent.parentOther.name = "Groundhog";
@@ -541,7 +541,7 @@ describe("Omm both on client and server", function () {
     });
     //
     it("ignores properties that need to be ignored on parent properties", function () {
-        var s:omm.Serializer = new omm.Serializer();
+        var s:reob.Serializer = new reob.Serializer();
         var child:Tests.TestInheritanceChild = new Tests.TestInheritanceChild();
         child.ignoredOther = new Tests.TestInheritanceOther();
         child.ignoredOther.name = "I need to be ignored";
@@ -656,7 +656,7 @@ describe("Omm both on client and server", function () {
     });
 
     it("deserializes objects of different classes in an array", function () {
-        var s:omm.Serializer = new omm.Serializer();
+        var s:reob.Serializer = new reob.Serializer();
         var person:Tests.TestPerson = new Tests.TestPerson('p1', 'pete');
         var child:Tests.TestInheritanceChild = new Tests.TestInheritanceChild();
         var wheel:Tests.TestWheel = new Tests.TestWheel();
@@ -674,13 +674,13 @@ describe("Omm both on client and server", function () {
 
 
     it("can get the testwheel class by its configured name", function () {
-        var p = omm.Reflect.getEntityClassByName("TestWheelBanzai")
+        var p = reob.Reflect.getEntityClassByName("TestWheelBanzai")
         expect(p).toBeDefined();
         expect(p).toBe(Tests.TestWheel);
     });
 
     it("can get the testCar class by its name", function () {
-        var p = omm.Reflect.getEntityClassByName("TestCar");
+        var p = reob.Reflect.getEntityClassByName("TestCar");
         expect(p).toBeDefined();
         expect(p).toBe(Tests.TestCar);
     });
@@ -698,7 +698,7 @@ describe("Omm both on client and server", function () {
 
     it("invokes didInsert events", function (done) {
         var l:any = {};
-        l.listener = function (event:omm.EventContext<Tests.TestTree>) {
+        l.listener = function (event:reob.EventContext<Tests.TestTree>) {
             expect(event.object instanceof Tests.TestTree).toBeTruthy();
             expect(event.cancelledWithError()).toBeFalsy();
         };
@@ -714,7 +714,7 @@ describe("Omm both on client and server", function () {
 
     it("can cancel inserts", function (done) {
         var l:any = {};
-        l.listener = function (event:omm.EventContext<Tests.TestTree>) {
+        l.listener = function (event:reob.EventContext<Tests.TestTree>) {
             event.cancel(new Error("Not allowed"));
         };
         spyOn(l, 'listener').and.callThrough();
@@ -750,7 +750,7 @@ describe("Omm both on client and server", function () {
 
     it("invokes deletition events", function (done) {
         var l:any = {};
-        l.listener = function (event:omm.EventContext<Tests.TestTree>) {
+        l.listener = function (event:reob.EventContext<Tests.TestTree>) {
 
         };
         spyOn(l, 'listener').and.callThrough();
@@ -782,11 +782,11 @@ describe("Omm both on client and server", function () {
     //
     it("can receive emitted events from a subobject", function (done) {
         var l:any = {};
-        l.listener = function (event:omm.EventContext<Tests.TestTree>) {
+        l.listener = function (event:reob.EventContext<Tests.TestTree>) {
 
         };
         spyOn(l, 'listener').and.callThrough();
-        omm.on(Tests.TestLeaf, "fluttering", l.listener);
+        reob.on(Tests.TestLeaf, "fluttering", l.listener);
         var tId;
         treeCollection.newTree(10).then((t)=> {
             expect(t).toBeDefined();
@@ -805,16 +805,16 @@ describe("Omm both on client and server", function () {
 
     it("can receive emitted events from a subobject even if another (the first) event listener throws an exception", function (done) {
         var l:any = {};
-        l.listener1 = function (event:omm.EventContext<Tests.TestTree>) {
+        l.listener1 = function (event:reob.EventContext<Tests.TestTree>) {
             // throw "freekish error";
         };
-        l.listener2 = function (event:omm.EventContext<Tests.TestTree>) {
+        l.listener2 = function (event:reob.EventContext<Tests.TestTree>) {
 
         };
         spyOn(l, 'listener1').and.callThrough();
         spyOn(l, 'listener2').and.callThrough();
-        omm.on(Tests.TestLeaf, "fluttering", l.listener1);
-        omm.on(Tests.TestLeaf, "fluttering", l.listener2);
+        reob.on(Tests.TestLeaf, "fluttering", l.listener1);
+        reob.on(Tests.TestLeaf, "fluttering", l.listener2);
 
         var treePromise = treeCollection.newTree(10);
         var treeIdPromise = treePromise.then((t)=>{
@@ -868,11 +868,11 @@ describe("Omm both on client and server", function () {
 
     it("can receive emitted events from a subobject and get the object", function (done) {
         var l:any = {};
-        l.listener = function (event:omm.EventContext<Tests.TestTree>) {
+        l.listener = function (event:reob.EventContext<Tests.TestTree>) {
             expect(event.object instanceof Tests.TestLeaf).toBeTruthy();
         };
         spyOn(l, 'listener').and.callThrough();
-        omm.on(Tests.TestLeaf, "fluttering", l.listener);
+        reob.on(Tests.TestLeaf, "fluttering", l.listener);
         treeCollection.newTree(10).then((t)=> {
             return Promise.cast(t.grow()).thenReturn(t);
         }).then((tree)=>{
@@ -900,7 +900,7 @@ describe("Omm both on client and server", function () {
 
     it("can cancel deletes ", function (done) {
         var l:any = {};
-        l.listener = function (event:omm.EventContext<Tests.TestTree>) {
+        l.listener = function (event:reob.EventContext<Tests.TestTree>) {
             event.cancel(new Error( "nope" ));
         };
         spyOn(l, 'listener').and.callThrough();
@@ -925,7 +925,7 @@ describe("Omm both on client and server", function () {
 
     it("can register for pre update events", function (done) {
         var l:any = {};
-        l.listener = function (event:omm.EventContext<Tests.TestTree>) {
+        l.listener = function (event:reob.EventContext<Tests.TestTree>) {
             expect(event.object).toBeDefined();
             expect(event.object instanceof Tests.TestTree).toBeTruthy();
             var tt:Tests.TestTree = event.object;
@@ -946,7 +946,7 @@ describe("Omm both on client and server", function () {
     //
     it("can cancel updates on a subobject in a generic listener", function (done) {
         var l:any = {};
-        l.listener = function (event:omm.EventContext<Tests.TestTree>) {
+        l.listener = function (event:reob.EventContext<Tests.TestTree>) {
             event.cancel(new Error("not happening"));
         };
         spyOn(l, 'listener').and.callThrough();
@@ -963,7 +963,7 @@ describe("Omm both on client and server", function () {
 
     it("can cancel updates on a subobject in a generic listener on a subobject", function (done) {
         var l:any = {};
-        l.listener = function (event:omm.EventContext<Tests.TestTree>) {
+        l.listener = function (event:reob.EventContext<Tests.TestTree>) {
             event.cancel(new Error("not happening either"));
         };
         spyOn(l, 'listener').and.callThrough();
@@ -996,7 +996,7 @@ describe("Omm both on client and server", function () {
 
     pit("can register for post update events", function (done) {
         var l:any = {};
-        l.listener = function (event:omm.EventContext<Tests.TestTree>) {
+        l.listener = function (event:reob.EventContext<Tests.TestTree>) {
             expect(event.object).toBeDefined();
             expect(event.object instanceof Tests.TestTree).toBeTruthy();
             var tt:Tests.TestTree = event.object;
@@ -1018,7 +1018,7 @@ describe("Omm both on client and server", function () {
 
     it("can cancel updates", function (done) {
         var l:any = {};
-        l.listener = function (event:omm.EventContext<Tests.TestTree>) {
+        l.listener = function (event:reob.EventContext<Tests.TestTree>) {
             event.cancel(new Error( "nope" ));
         };
         spyOn(l, 'listener').and.callThrough();
@@ -1042,12 +1042,12 @@ describe("Omm both on client and server", function () {
     it("can register to update events", function (done) {
         var l:any = {};
         var n:Array<string> = [];
-        l.listener = function (event:omm.EventContext<Tests.TestTree>, data:any) {
+        l.listener = function (event:reob.EventContext<Tests.TestTree>, data:any) {
             n.push(data);
         };
         spyOn(l, 'listener').and.callThrough();
 
-        omm.on(Tests.TestTree, "gardenevents", l.listener);
+        reob.on(Tests.TestTree, "gardenevents", l.listener);
 
         var treePromise = treeCollection.newTree(10);
         return treePromise.then((tree)=> {
@@ -1065,12 +1065,12 @@ describe("Omm both on client and server", function () {
     it("can register to all update events", function (done) {
         var l:any = {};
         var n:Array<string> = [];
-        l.listener = function (event:omm.EventContext<Tests.TestTree>, data:any) {
+        l.listener = function (event:reob.EventContext<Tests.TestTree>, data:any) {
             n.push(data);
         };
         spyOn(l, 'listener').and.callThrough();
 
-        omm.on(Tests.TestTree, "preSave", l.listener);
+        reob.on(Tests.TestTree, "preSave", l.listener);
 
         treeCollection.newTree(10).then((t)=>{
             return t.wither();
@@ -1122,7 +1122,7 @@ describe("Omm both on client and server", function () {
         var l:any = {};
         var n:Array<string> = [];
         client.setUserData({user:"bert", foo:"bar", solution:42});
-        l.listener = function (ctx:omm.EventContext<Tests.TestTree>, data:any) {
+        l.listener = function (ctx:reob.EventContext<Tests.TestTree>, data:any) {
             expect( ctx.session.userData ).toBeDefined();
             expect( ctx.session.userData.user ).toBe( "bert" );
             expect( ctx.session.userData.solution ).toBe( 42 );
@@ -1141,7 +1141,7 @@ describe("Omm both on client and server", function () {
         var l:any = {};
         var n:Array<string> = [];
         client.setUserData({user:"bert", foo:"bar", solution:42});
-        l.listener = function (ctx:omm.EventContext<Tests.TestTree>, data:any) {
+        l.listener = function (ctx:reob.EventContext<Tests.TestTree>, data:any) {
             expect( ctx.session ).toBeDefined();
             expect( ctx.session.userData ).toBeDefined();
             expect( ctx.session.userData.user ).toBe( "bert" );
@@ -1161,7 +1161,7 @@ describe("Omm both on client and server", function () {
         var l:any = {};
         var n:Array<string> = [];
         client.setUserData({user:"bert", foo:"bar", solution:42});
-        l.listener = function (ctx:omm.EventContext<Tests.TestTree>, data:any) {
+        l.listener = function (ctx:reob.EventContext<Tests.TestTree>, data:any) {
             expect( ctx.functionName ).toBe('flutter');
             expect( ctx.object instanceof Tests.TestLeaf ).toBeTruthy( );
         };
@@ -1189,7 +1189,7 @@ describe("Omm both on client and server", function () {
         var l:any = {};
         var n:Array<string> = [];
         client.setUserData({user:"bert", foo:"bar", solution:42});
-        l.listener = function (ctx:omm.EventContext<Tests.TestTree>, data:any) {
+        l.listener = function (ctx:reob.EventContext<Tests.TestTree>, data:any) {
             expect( ctx.functionName ).toBe('flutter');
             expect( ctx.object instanceof Tests.TestLeaf ).toBeTruthy( );
         };
@@ -1212,7 +1212,7 @@ describe("Omm both on client and server", function () {
 
     it("doesnt reuse arrays in documents", function () {
         var tree = new Tests.TestTree(12);
-        var serializer = new omm.Serializer();
+        var serializer = new reob.Serializer();
         debugger;
         var doc:any = serializer.toDocument(tree);
         expect(  tree.someArray.length ).toBe(0);
@@ -1227,7 +1227,7 @@ describe("Omm both on client and server", function () {
     });
 
     it("can serialize primitive data types", function () {
-        var serializer = new omm.Serializer();
+        var serializer = new reob.Serializer();
         var obj = serializer.toObject([42]);
         expect( Array.isArray(obj) ).toBeTruthy();
         expect( obj.length ).toBe(1);
@@ -1265,7 +1265,7 @@ describe("Omm both on client and server", function () {
     });
 
     it("does not transmit properties that are private to the server", function () {
-        expect( omm.Reflect.isPrivateToServer( Tests.TestCar, "privateToServer" ) ).toBeTruthy();
+        expect( reob.Reflect.isPrivateToServer( Tests.TestCar, "privateToServer" ) ).toBeTruthy();
     });
 
 

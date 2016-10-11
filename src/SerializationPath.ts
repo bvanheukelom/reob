@@ -1,5 +1,5 @@
 
-import * as omm from "./omm"
+import * as reob from "./reob"
 import {setNonEnumerableProperty} from "./Internal"
 export class SerializationPath {
     private path:string;
@@ -96,7 +96,7 @@ export class SerializationPath {
     }
 
 
-    static setObjectContext(object:omm.OmmObject, sp:SerializationPath, handler:omm.Handler, session:omm.Session ):void{
+    static setObjectContext(object:reob.OmmObject, sp:SerializationPath, handler:reob.Handler, session:reob.Session ):void{
         if( object ){
             setNonEnumerableProperty( object, "_ommObjectContext", {
                 serializationPath:sp,
@@ -106,12 +106,12 @@ export class SerializationPath {
         }
     }
 
-    static getObjectContext(object:omm.OmmObject  ):omm.ObjectContext{
+    static getObjectContext(object:reob.OmmObject  ):reob.ObjectContext{
         return object? object._ommObjectContext:undefined;
     }
 
     // if I could I would make this package protected
-    static updateObjectContexts(object:omm.OmmObject, handler:omm.Handler, session:omm.Session, visited?:Array<Object>):void {
+    static updateObjectContexts(object:reob.OmmObject, handler:reob.Handler, session:reob.Session, visited?:Array<Object>):void {
         var that = this;
         if (!visited)
             visited = [];
@@ -121,7 +121,7 @@ export class SerializationPath {
             return;
 
         visited.push(object);
-        var objectClass = omm.Reflect.getClass(object);
+        var objectClass = reob.Reflect.getClass(object);
         // // if (PersistenceAnnotation.PersistenceAnnotation.isRootEntity(objectClass)) {
         //     if (!object._ommObjectContext || !object._ommObjectContext.serializationPath) {
         //         var id = PersistenceAnnotation.getId(object);
@@ -137,19 +137,19 @@ export class SerializationPath {
         }
 
 
-        omm.Reflect.getTypedPropertyNames(objectClass).forEach(function (typedPropertyName:string) {
+        reob.Reflect.getTypedPropertyNames(objectClass).forEach(function (typedPropertyName:string) {
             // if (!PersistenceAnnotation.isStoredAsForeignKeys(objectClass, typedPropertyName)) {
             //     //console.log("updating foreignkey property " + typedPropertyName);
-            var v:omm.OmmObject = object[typedPropertyName];
+            var v:reob.OmmObject = object[typedPropertyName];
             if (v) {
-                if (omm.Reflect.isArrayOrMap(objectClass, typedPropertyName)) {
+                if (reob.Reflect.isArrayOrMap(objectClass, typedPropertyName)) {
                     //console.log("updating foreignkey property " + typedPropertyName + " is array");
                     for (var i in v) {
                         var e = v[i];
                         if( e ) {
                             var index = i;
-                            if (omm.getId(e))
-                                index = omm.getId(e);
+                            if (reob.getId(e))
+                                index = reob.getId(e);
                             //console.log("updating persistnece path for isArrayOrMap " + typedPropertyName + "  key:" + i + " value:", e, "object: ", object);
                             var sp = object._ommObjectContext.serializationPath.clone();
                             sp.appendArrayOrMapLookup(typedPropertyName, index);

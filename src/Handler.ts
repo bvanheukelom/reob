@@ -2,10 +2,10 @@
  * Created by bert on 07.07.16.
  */
 
-import * as omm from "./omm"
+import * as reob from "./reob"
 
 export interface Handler{
-    collectionUpdate?( entityClass:omm.TypeClass<any>, functionName:string, object:omm.OmmObject, originalFunction:Function, args:any[], session:omm.Session ):any;
-    webMethod?( entityClass:omm.TypeClass<any>, functionName:string, object:omm.OmmObject, originalFunction:Function, args:any[], session:omm.Session ):any;
+    collectionUpdate?( entityClass:reob.TypeClass<any>, functionName:string, object:reob.OmmObject, originalFunction:Function, args:any[], session:reob.Session ):any;
+    webMethod?( entityClass:reob.TypeClass<any>, functionName:string, object:reob.OmmObject, originalFunction:Function, args:any[], session:reob.Session ):any;
     
 }

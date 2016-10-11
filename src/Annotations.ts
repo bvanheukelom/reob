@@ -1,5 +1,5 @@
 
-import * as omm from "./omm"
+import * as reob from "./reob"
 import {setNonEnumerableProperty} from "./Internal"
 
 export interface IMethodOptions{
@@ -27,7 +27,7 @@ export interface IMethodOptions{
 /**
  * @private
  */
-export var entityClasses:{[index:string]:omm.TypeClass<Object>};
+export var entityClasses:{[index:string]:reob.TypeClass<Object>};
 /**
  * @private
  */
@@ -35,7 +35,7 @@ export var registeredObjects:{[index:string]:any};
 /**
  * @private
  */
-export var eventListeners:{ [index:string] : { [index:string] : Array<omm.EventListener<any>>} };
+export var eventListeners:{ [index:string] : { [index:string] : Array<reob.EventListener<any>>} };
 /**
  * @private
  */
@@ -63,18 +63,18 @@ export var eventListeners:{ [index:string] : { [index:string] : Array<omm.EventL
     /**
      * Declares a class as an entity. Can be used either with or without given name for the entity. 
      */
-    export function Entity(name?:string | omm.TypeClass<Object>):any {
+    export function Entity(name?:string | reob.TypeClass<Object>):any {
         var entityName:string;
         if (typeof name == "string") {
             entityName = <string>name;
         } else {
-            entityName = Reflect.getClassName(<omm.TypeClass<Object>>name)
+            entityName = Reflect.getClassName(<reob.TypeClass<Object>>name)
         }
-        if( omm.isVerbose() )console.log("Adding entity with name ",entityName);
+        if( reob.isVerbose() )console.log("Adding entity with name ",entityName);
         var f = function (p1:any) {
-            var typeClass:omm.TypeClass<Object> = <omm.TypeClass<Object>>p1;
+            var typeClass:reob.TypeClass<Object> = <reob.TypeClass<Object>>p1;
             defineMetadata("persistence:entity", true, typeClass);
-            if( omm.isVerbose() )console.log("Adding entity ", entityName );
+            if( reob.isVerbose() )console.log("Adding entity ", entityName );
             entityClasses[entityName] = typeClass;
             Object.defineProperty(p1, "_ommClassName", {
                 value: entityName,
@@ -121,17 +121,17 @@ export var eventListeners:{ [index:string] : { [index:string] : Array<omm.EventL
      */
     export function CollectionUpdate(p1:any, functionName:string, desc) {
         var options = {};
-        if( omm.isVerbose() )console.log("registering a collection update on property ", functionName, Reflect.getClassName( p1 ) );
+        if( reob.isVerbose() )console.log("registering a collection update on property ", functionName, Reflect.getClassName( p1 ) );
 
         Reflect.setPropertyProperty(p1, functionName, "collectionUpdate", options);
         var entityClass = p1.constructor;
         monkeyPatch(entityClass.prototype, functionName, function (originalFunction, ...args:any[]) {
-            var _ommObjectContext:omm.ObjectContext = this._ommObjectContext;
+            var _ommObjectContext:reob.ObjectContext = this._ommObjectContext;
             if( !_ommObjectContext || !_ommObjectContext.handler ||!_ommObjectContext.handler.collectionUpdate ){
-                if( omm.isVerbose() )console.log(new Date()+": CollectionUpdate called. Function "+functionName+". Calling original function. No handler found. ", args );
+                if( reob.isVerbose() )console.log(new Date()+": CollectionUpdate called. Function "+functionName+". Calling original function. No handler found. ", args );
                 return originalFunction.apply(this, args);
             }else{
-                if( omm.isVerbose() )console.log(new Date()+": CollectionUpdate called. Function "+functionName+". Calling handler. ", args, _ommObjectContext.session );
+                if( reob.isVerbose() )console.log(new Date()+": CollectionUpdate called. Function "+functionName+". Calling handler. ", args, _ommObjectContext.session );
                 return _ommObjectContext.handler.collectionUpdate(entityClass, functionName, this, originalFunction, args, _ommObjectContext.session);
             }
         });
@@ -180,7 +180,7 @@ export function Parent(targetPrototypeObject:any, propertyName:string) {
     }
 
     export function PrivateToServer(targetPrototypeObject:any, propertyName:string) {
-        if( omm.isVerbose() )console.log( "Privat to server: ", propertyName );
+        if( reob.isVerbose() )console.log( "Privat to server: ", propertyName );
         Reflect.setPropertyProperty(targetPrototypeObject, propertyName, "privateToServer", true);
     }
 
@@ -209,7 +209,7 @@ export function Parent(targetPrototypeObject:any, propertyName:string) {
 
     export function Type(typeClassName:string) {
         return function (targetPrototypeObject:any, propertyName:string) {
-            if( omm.isVerbose() )console.log("Registering a type  "+propertyName+" as "+typeClassName, " on ",Reflect.getClassName(targetPrototypeObject));
+            if( reob.isVerbose() )console.log("Registering a type  "+propertyName+" as "+typeClassName, " on ",Reflect.getClassName(targetPrototypeObject));
             Reflect.setPropertyProperty(targetPrototypeObject, propertyName, "type", typeClassName);
         };
     }
@@ -240,17 +240,17 @@ export function Parent(targetPrototypeObject:any, propertyName:string) {
     export function Remote( p1:any, p2?:any, d? ) {
         var f = function (methodOptions:IMethodOptions, descriptor:any ) {
             Reflect.setPropertyProperty(methodOptions.parentObject, methodOptions.propertyName, "methodOptions", methodOptions);
-            if( omm.isVerbose() )console.log("Creating monkey patch for web method "+ methodOptions.propertyName );
+            if( reob.isVerbose() )console.log("Creating monkey patch for web method "+ methodOptions.propertyName );
             monkeyPatch( methodOptions.parentObject, methodOptions.propertyName, function (originalFunction, ...args:any[]) {
                 //if( omm.verbose )console.log("updating object:",this, "original function :"+originalFunction);
-                var _ommObjectContext:omm.ObjectContext = this._ommObjectContext;
+                var _ommObjectContext:reob.ObjectContext = this._ommObjectContext;
                 var session = _ommObjectContext ? _ommObjectContext.session : undefined;
                 if( !_ommObjectContext || !_ommObjectContext.handler ||!_ommObjectContext.handler.webMethod  ){
                     debugger;
-                    if( omm.isVerbose() )console.log(new Date()+": WebMethod called. Function "+methodOptions.propertyName+". Calling original function. No handler found. Arguments:", args, "session:",  session );
+                    if( reob.isVerbose() )console.log(new Date()+": WebMethod called. Function "+methodOptions.propertyName+". Calling original function. No handler found. Arguments:", args, "session:",  session );
                     return originalFunction.apply(this, args);
                 }else{
-                    if( omm.isVerbose() )console.log(new Date()+": WebMethod called. Function "+methodOptions.propertyName+". Calling handler. Arguments:", args,  "Session:", session);
+                    if( reob.isVerbose() )console.log(new Date()+": WebMethod called. Function "+methodOptions.propertyName+". Calling handler. Arguments:", args,  "Session:", session);
                     return _ommObjectContext.handler.webMethod( methodOptions.parentObject.constructor, methodOptions.propertyName, this, originalFunction, args, _ommObjectContext.session );
                 }
             });
@@ -288,11 +288,11 @@ export function Parent(targetPrototypeObject:any, propertyName:string) {
 
     export class Reflect {
 
-        public static getMethodOptions( typeClass:omm.TypeClass<any>, functionName:string):IMethodOptions {
+        public static getMethodOptions(typeClass:reob.TypeClass<any>, functionName:string):IMethodOptions {
             return Reflect.getPropertyProperty(typeClass, functionName, "methodOptions" );
         }
 
-        public static getClassName(cls:omm.TypeClass<Object>):string {
+        public static getClassName(cls:reob.TypeClass<Object>):string {
             if( !cls ){
                 return undefined;
             }else if( cls['_ommClassName'] ){
@@ -315,7 +315,7 @@ export function Parent(targetPrototypeObject:any, propertyName:string) {
         //     return cls['_ommServiceName'];
         // }
 
-        public static getRemoteFunctionNames<T extends Object>(typeClass:omm.TypeClass<any>):Array<string> {
+        public static getRemoteFunctionNames<T extends Object>(typeClass:reob.TypeClass<any>):Array<string> {
             return Reflect.getPropertyNamesOfPropertiesThatHaveAProperty(typeClass, "methodOptions");
         }
 
@@ -332,16 +332,16 @@ export function Parent(targetPrototypeObject:any, propertyName:string) {
         //     return ret;
         // }
 
-        static getClass<T extends Object>(o:T):omm.TypeClass<T> {
+        static getClass<T extends Object>(o:T):reob.TypeClass<T> {
             if (o)
-                return <omm.TypeClass<T>>o.constructor;
+                return <reob.TypeClass<T>>o.constructor;
             else
                 return undefined;
         }
 
         // ---- Entity ----
 
-        public static getEntityClassByName(className:string):omm.TypeClass<any> {
+        public static getEntityClassByName(className:string):reob.TypeClass<any> {
             return entityClasses[className];
         }
 
@@ -356,8 +356,8 @@ export function Parent(targetPrototypeObject:any, propertyName:string) {
         // }
 
 
-        public static getEntityClasses():Array<omm.TypeClass<Object>> {
-            var result:Array<omm.TypeClass<Object>> = [];
+        public static getEntityClasses():Array<reob.TypeClass<Object>> {
+            var result:Array<reob.TypeClass<Object>> = [];
             for (var i in entityClasses) {
                 var entityClass = entityClasses[i];
                 result.push(entityClass);
@@ -373,25 +373,25 @@ export function Parent(targetPrototypeObject:any, propertyName:string) {
         //     return !!PersistenceAnnotation.getCollectionName(f);
         // }
 
-        static isEntity(f:omm.TypeClass<any>):boolean {
+        static isEntity(f:reob.TypeClass<any>):boolean {
             return !!entityClasses[Reflect.getClassName(f)];
         }
 
-        static getDocumentPropertyName(typeClass:omm.TypeClass<any>, objectPropertyName:string):string {
+        static getDocumentPropertyName(typeClass:reob.TypeClass<any>, objectPropertyName:string):string {
             if( !typeClass )
                 return undefined;
             var documentNames = getMetadata("documentNames", typeClass.prototype);
             return documentNames ? documentNames[objectPropertyName] : undefined;
         }
 
-        static getObjectPropertyName(typeClass:omm.TypeClass<any>, documentPropertyName:string):string {
+        static getObjectPropertyName(typeClass:reob.TypeClass<any>, documentPropertyName:string):string {
             if( !typeClass )
                 return undefined;
             var objectNames = getMetadata("objectNames", typeClass.prototype);
             return objectNames ? objectNames[documentPropertyName] : undefined;
         }
 
-        static isArrayOrMap(f:omm.TypeClass<any>, propertyName:string):boolean {
+        static isArrayOrMap(f:reob.TypeClass<any>, propertyName:string):boolean {
             while (f != Object) {
                 if (Reflect.getPropertyProperty(f, propertyName, "arrayOrMap"))
                     return true;
@@ -403,7 +403,7 @@ export function Parent(targetPrototypeObject:any, propertyName:string) {
 
         // ---- typed properties ----
 
-        static getPropertyClass(f:omm.TypeClass<any>, propertyName:string):omm.TypeClass<any> {
+        static getPropertyClass(f:reob.TypeClass<any>, propertyName:string):reob.TypeClass<any> {
             while (f != <any>Object) {
                 var classNameOfF = Reflect.getPropertyProperty(f, propertyName, "type")
                 if (classNameOfF) {
@@ -418,7 +418,7 @@ export function Parent(targetPrototypeObject:any, propertyName:string) {
             return undefined
         }
 
-        static getTypedPropertyNames<T extends Object>(f:omm.TypeClass<T>):Array<string> {
+        static getTypedPropertyNames<T extends Object>(f:reob.TypeClass<T>):Array<string> {
             var result:Array<string> = [];
             while (f != <any>Object) {
                 var props = getMetadata( "property_properties", f);
@@ -431,7 +431,7 @@ export function Parent(targetPrototypeObject:any, propertyName:string) {
             return result;
         }
 
-        static setPropertyProperty(cls:omm.TypeClass<any>, propertyName:string, property:string, value:any):void {
+        static setPropertyProperty(cls:reob.TypeClass<any>, propertyName:string, property:string, value:any):void {
             var arr:any = getMetadata("property_properties", cls.constructor);
             if (!arr) {
                 arr = {};
@@ -446,12 +446,12 @@ export function Parent(targetPrototypeObject:any, propertyName:string) {
             propProps[property] = value;
         }
 
-        private static getPropertyNamesOfPropertiesThatHaveProperties(cls:omm.TypeClass<any>):Array<string>{
+        private static getPropertyNamesOfPropertiesThatHaveProperties(cls:reob.TypeClass<any>):Array<string>{
             return Object.keys( getMetadata("property_properties", cls)  );
         }
 
         // this is i.e. good to find all properties on a class that have a "type" property
-        private static getPropertyNamesOfPropertiesThatHaveAProperty(cls:omm.TypeClass<any>, propertyPropertyName:string ):Array<string>{
+        private static getPropertyNamesOfPropertiesThatHaveAProperty(cls:reob.TypeClass<any>, propertyPropertyName:string ):Array<string>{
             var r = [];
             var props  = getMetadata("property_properties", cls);
             for( var i in props ){
@@ -462,7 +462,7 @@ export function Parent(targetPrototypeObject:any, propertyName:string) {
             return r;
         }
 
-        private static getPropertyProperty(cls:omm.TypeClass<any>, propertyName:string, propertyProperty:string):any {
+        private static getPropertyProperty(cls:reob.TypeClass<any>, propertyName:string, propertyProperty:string):any {
             var arr:any = getMetadata("property_properties", cls);
             if (arr && arr[propertyName]) {
                 return arr[propertyName][propertyProperty];
@@ -470,7 +470,7 @@ export function Parent(targetPrototypeObject:any, propertyName:string) {
             return undefined;
         }
 
-        static getParentClass(t:omm.TypeClass<any>):omm.TypeClass<any> {
+        static getParentClass(t:reob.TypeClass<any>):reob.TypeClass<any> {
             if( !t )
                 return undefined;
 
@@ -478,7 +478,7 @@ export function Parent(targetPrototypeObject:any, propertyName:string) {
         }
 
 
-        static getIdPropertyName(t:omm.TypeClass<any>):string {
+        static getIdPropertyName(t:reob.TypeClass<any>):string {
             return Reflect.getObjectPropertyName(t, "_id") || "_id";
         }
 
@@ -495,7 +495,7 @@ export function Parent(targetPrototypeObject:any, propertyName:string) {
         //     return false;
         // }
 
-        static isIgnored(f:omm.TypeClass<any>, propertyName:string):boolean {
+        static isIgnored(f:reob.TypeClass<any>, propertyName:string):boolean {
             //return PersistenceAnnotation.getPropertyProperty(typeClass, propertyName, "ignore");
             while (f != Object) {
                 if (Reflect.getPropertyProperty(f, propertyName, "ignore"))
@@ -506,7 +506,7 @@ export function Parent(targetPrototypeObject:any, propertyName:string) {
             return false;
         }
 
-        static isPrivateToServer(f:omm.TypeClass<any>, propertyName:string):boolean {
+        static isPrivateToServer(f:reob.TypeClass<any>, propertyName:string):boolean {
             while (f != Object) {
                 if (Reflect.getPropertyProperty(f, propertyName, "privateToServer"))
                     return true;
@@ -515,7 +515,7 @@ export function Parent(targetPrototypeObject:any, propertyName:string) {
             return false;
         }
 
-        public static isParent(f:omm.TypeClass<any>, propertyName:string):boolean {
+        public static isParent(f:reob.TypeClass<any>, propertyName:string):boolean {
             //return PersistenceAnnotation.getPropertyProperty(typeClass, propertyName, "ignore");
             while (f != Object) {
                 if (Reflect.getPropertyProperty(f, propertyName, "parent"))
@@ -525,26 +525,26 @@ export function Parent(targetPrototypeObject:any, propertyName:string) {
             return false;
         }
 
-        static getParentPropertyNames<T extends Object>(f:omm.TypeClass<T>):Array<string> {
+        static getParentPropertyNames<T extends Object>(f:reob.TypeClass<T>):Array<string> {
             return Reflect.getPropertyNamesOfPropertiesThatHaveAProperty(f, 'parent' );
         }
 
 
         // ---- Wrap ----
 
-        public static getWrappedFunctionNames<T extends Object>(f:omm.TypeClass<T>):Array<string> {
+        public static getWrappedFunctionNames<T extends Object>(f:reob.TypeClass<T>):Array<string> {
             return Reflect.getPropertyNamesByMetaData(f.prototype, "persistence:wrap");
         }
 
 
-        private static getCollectionUpdateOptions(cls:omm.TypeClass<any>, functionName:string):any {
+        private static getCollectionUpdateOptions(cls:reob.TypeClass<any>, functionName:string):any {
             if( !cls )
                 return undefined;
             return Reflect.getPropertyProperty(cls.prototype, functionName, "collectionUpdate");
         }
 
 
-        public static getCollectionUpdateFunctionNames<T extends Object>(f:omm.TypeClass<T>):Array<string> {
+        public static getCollectionUpdateFunctionNames<T extends Object>(f:reob.TypeClass<T>):Array<string> {
             return Reflect.getPropertyNamesOfPropertiesThatHaveAProperty( f, 'collectionUpdate' );
         }
 

@@ -1,5 +1,5 @@
 
-import * as omm from "../../src/omm"
+import * as omm from "../../src/reob"
 import * as Tests from "./Tests"
 
 @omm.Entity

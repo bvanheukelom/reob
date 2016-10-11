@@ -4,3 +4,6 @@ node_modules
 npm-debug.log
 dist
 doc
+s*/**/*.js.map
+s*/**/*.d.ts
+s*/**/*.js

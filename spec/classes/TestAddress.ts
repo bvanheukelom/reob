@@ -1,14 +1,14 @@
 /**
  * Created by bert on 04.05.15.
  */
-import * as omm from "../../src/omm"
+import * as reob from "../../src/reob"
 import * as Tests from "./Tests"
 
-@omm.Entity
+@reob.Entity
 export class TestAddress {
     street:string;
 
-    @omm.Parent
+    @reob.Parent
     person:Tests.TestPerson;
 
     constructor(street:string, person?:Tests.TestPerson) {
