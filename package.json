@@ -1,9 +1,9 @@
 {
   "name": "reob",
   "description": "Remote objects - Create backends for one page web apps with ease. Uses mongo and express.",
-  "version": "0.1.14",
+  "version": "0.1.15",
   "repository": "https://github.com/bvanheukelom/reob",
-  "license" : "MIT",
+  "license": "MIT",
   "main": "dist/src/omm.js",
   "typings": "dist/src/omm.d.ts",
   "scripts": {
