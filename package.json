@@ -5,7 +5,7 @@
   "repository": "https://github.com/bvanheukelom/reob",
   "license": "MIT",
   "main": "dist/src/omm.js",
-  "typings": "dist/src/omm.d.ts",
+  "typings": "dist/src/reob.d.ts",
   "scripts": {
     "test": "jasmine",
     "clean-m": "find s* -type f -name '*.js' -delete && find s* -type f -name '*.d.ts' -delete && find s* -type f -name '*.js.map' -delete && rm -rf dist",

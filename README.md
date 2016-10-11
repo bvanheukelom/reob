@@ -2,7 +2,7 @@
 
 Create backends for one page web apps with ease. Uses mongo and express.
 
-Reob is an opinionated framework to create backends for one page web apps. It combines object mapping, networking and a
+Reob helps to create backends for one page web apps. It combines object mapping, networking and a
 webserver. You write domain object classes and service classes and use them from the client. You can call functions on an
 object that causes an http request to the server which loads the object there, invokes the function on it and transmits the
 result back to the client. Reob takes care of the database and network specifics. It is written in typescript and makes
@@ -67,7 +67,6 @@ export class Garden{
 	constructor( initialBeeCount:number ){
 		this.bees = initialBees;
 	}
-
 ```
 
 The decorator `@reob.ArrayType` tells reob what type of objects the array contains. Omm can now save and load Gardens from the mongo
@@ -130,13 +129,11 @@ export class GardenService{
     }
 
 }
-
 ```
 The version of the service that's used on the server. It contains the implementations of the functions.
 
 [GardenServiceServer.ts](example/GardenServiceServer.ts)
 ```ts
-
 import * as reob from "reob"
 import {GardenCollection} from "./GardenCollection"
 import {Garden} from "./Garden"
@@ -177,12 +174,11 @@ export class GardenServiceServer{
 	}
 
 }
-
 ```
 
 The `@reob.Remote` decorator tells reob that the functions can be called from the client.
 
-### The server
+### Step 4: The server
 
 This far we've not written a single line of code that concerns itself too much with network or database access.
 Let's keep it that way. This is the file that is run in the node server.
@@ -199,17 +195,16 @@ var gardenCollection = new GardenCollection();
 server.addCollection( gardenCollection );
 
 var gardenServiceServer = new GardenServiceServer( gardenCollection );
-server.addService( gardenServiceServer );
+server.addService( "gardenService", gardenServiceServer );
 
 server.serveStatic("./webroot");
 
 server.start(8080).then(()=>{
 	console.log("Server is running");
 });
-
 ```
 
-### Client startup
+### Step 5: Client startup
 
 Use your tool of choice to convert the client creobonjs module to code that runs on the client.
 
@@ -220,13 +215,14 @@ import {GardenService} from "./GardenService"
 
 var client = new reob.Client(window.location.origin, 8080);
 var gardenService = new GardenService();
-client.addService( gardenServie );
+client.addService( "gardenService", gardenServie );
 
 window.gardenService = gardenService;
-
 ```
 
 ### index html
+
+(This part of the documentation is work in progress)
 
 [webroot/index.html](example/webroot/main_client.ts)
 ```html
@@ -243,6 +239,7 @@ window.gardenService = gardenService;
 	</body>
 <html>
 ```
+
 
 ## Key features
 
