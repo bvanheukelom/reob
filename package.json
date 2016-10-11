@@ -1,7 +1,9 @@
 {
   "name": "reob",
-  "description": "Create backends for one page web apps with ease. Uses mongo and express.",
+  "description": "Remote objects - Create backends for one page web apps with ease. Uses mongo and express.",
   "version": "0.1.14",
+  "repository": "https://github.com/bvanheukelom/reob",
+  "license" : "MIT",
   "main": "dist/src/omm.js",
   "typings": "dist/src/omm.d.ts",
   "scripts": {
@@ -12,7 +14,7 @@
     "copy": "rm -rf dist && mkdir dist && cp -r s*c dist && find dist -type f  -name '*.ts' ! -iname '*.d.ts' -delete",
     "watch": "nodemon --exec 'npm run compile' --watch './src' --watch './spec' -e ts -i *.d.ts",
     "doc": "typedoc --exclude src/Internal.ts --mode file --out doc --excludeNotExported --tsconfig tsconfig_doc.json",
-    "prepublish": " npm run test && npm version patch"
+    "upload": "npm run clean && npm install && npm run compile && npm run test && npm version patch && npm publish"
   },
   "devDependencies": {
     "co": "^4.6.0",
