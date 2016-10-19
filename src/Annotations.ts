@@ -15,14 +15,14 @@ export interface IMethodOptions{
 // TODO rename to something that contains the word "Entity"
 
 
-    export function isRegisteredWithKey( o:any ):string{
-        for( var i  in registeredObjects ){
-            if( registeredObjects[i] === o ){
-                return i;
-            }
-        }
-        return undefined;
-    }
+    // export function isRegisteredWithKey( o:any ):string{
+    //     for( var i  in registeredObjects ){
+    //         if( registeredObjects[i] === o ){
+    //             return i;
+    //         }
+    //     }
+    //     return undefined;
+    // }
 
 /**
  * @private
@@ -31,11 +31,7 @@ export var entityClasses:{[index:string]:reob.TypeClass<Object>};
 /**
  * @private
  */
-export var registeredObjects:{[index:string]:any};
-/**
- * @private
- */
-export var eventListeners:{ [index:string] : { [index:string] : Array<reob.EventListener<any>>} };
+// export var registeredObjects:{[index:string]:any};
 /**
  * @private
  */
@@ -45,16 +41,16 @@ export var eventListeners:{ [index:string] : { [index:string] : Array<reob.Event
     // it seems that the local variable that "reflect" uses is prone to the same difficulties when it gets loaded
     // multiple times. This is why it's been removed until it is supported by the Runtime directly.
     function defineMetadata(propertyName, value, cls) {
-        if (!cls.hasOwnProperty("_ommAnnotations")) {
-            setNonEnumerableProperty(cls, "_ommAnnotations", {});
+        if (!cls.hasOwnProperty("_reobAnnotations")) {
+            setNonEnumerableProperty(cls, "_reobAnnotations", {});
         }
-        var _ommAnnotations = cls._ommAnnotations;
-        _ommAnnotations[propertyName] = value;
+        var _reobAnnotations = cls._reobAnnotations;
+        _reobAnnotations[propertyName] = value;
     }
 
     function getMetadata(propertyName, cls) {
-        if (cls.hasOwnProperty("_ommAnnotations"))
-            return cls["_ommAnnotations"]?cls["_ommAnnotations"][propertyName]:undefined;
+        if (cls.hasOwnProperty("_reobAnnotations"))
+            return cls["_reobAnnotations"]?cls["_reobAnnotations"][propertyName]:undefined;
         else {
             return undefined;
         }
@@ -131,8 +127,8 @@ export var eventListeners:{ [index:string] : { [index:string] : Array<reob.Event
                 if( reob.isVerbose() )console.log(new Date()+": CollectionUpdate called. Function "+functionName+". Calling original function. No handler found. ", args );
                 return originalFunction.apply(this, args);
             }else{
-                if( reob.isVerbose() )console.log(new Date()+": CollectionUpdate called. Function "+functionName+". Calling handler. ", args, _ommObjectContext.session );
-                return _ommObjectContext.handler.collectionUpdate(entityClass, functionName, this, originalFunction, args, _ommObjectContext.session);
+                if( reob.isVerbose() )console.log(new Date()+": CollectionUpdate called. Function "+functionName+". Calling handler. ", args, _ommObjectContext.request );
+                return _ommObjectContext.handler.collectionUpdate(entityClass, functionName, this, originalFunction, args, _ommObjectContext.request);
             }
         });
         desc.value = entityClass.prototype[functionName];
@@ -244,14 +240,13 @@ export function Parent(targetPrototypeObject:any, propertyName:string) {
             monkeyPatch( methodOptions.parentObject, methodOptions.propertyName, function (originalFunction, ...args:any[]) {
                 //if( omm.verbose )console.log("updating object:",this, "original function :"+originalFunction);
                 var _ommObjectContext:reob.ObjectContext = this._ommObjectContext;
-                var session = _ommObjectContext ? _ommObjectContext.session : undefined;
+                var request = _ommObjectContext ? _ommObjectContext.request : undefined;
                 if( !_ommObjectContext || !_ommObjectContext.handler ||!_ommObjectContext.handler.webMethod  ){
-                    debugger;
-                    if( reob.isVerbose() )console.log(new Date()+": WebMethod called. Function "+methodOptions.propertyName+". Calling original function. No handler found. Arguments:", args, "session:",  session );
+                    if( reob.isVerbose() )console.log(new Date()+": WebMethod called. Function "+methodOptions.propertyName+". Calling original function. No handler found. Arguments:", args, "session:",  request );
                     return originalFunction.apply(this, args);
                 }else{
-                    if( reob.isVerbose() )console.log(new Date()+": WebMethod called. Function "+methodOptions.propertyName+". Calling handler. Arguments:", args,  "Session:", session);
-                    return _ommObjectContext.handler.webMethod( methodOptions.parentObject.constructor, methodOptions.propertyName, this, originalFunction, args, _ommObjectContext.session );
+                    if( reob.isVerbose() )console.log(new Date()+": WebMethod called. Function "+methodOptions.propertyName+". Calling handler. Arguments:", args,  "Request:", request);
+                    return _ommObjectContext.handler.webMethod( methodOptions.parentObject.constructor, methodOptions.propertyName, this, originalFunction, args, request );
                 }
             });
             if( descriptor ){
@@ -292,7 +287,7 @@ export function Parent(targetPrototypeObject:any, propertyName:string) {
             return Reflect.getPropertyProperty(typeClass, functionName, "methodOptions" );
         }
 
-        public static getClassName(cls:reob.TypeClass<Object>):string {
+        public static getClassName(cls:reob.TypeClass<reob.OmmObject>):string {
             if( !cls ){
                 return undefined;
             }else if( cls['_ommClassName'] ){
@@ -586,26 +581,22 @@ export function isVerbose():boolean{
 (function(){
     var data;
     if( typeof global!="undefined" ){
-        if(!global["_omm_data"])
-            global["_omm_data"] = {};
-        data = global["_omm_data"];
+        if(!global["_reob_data"])
+            global["_reob_data"] = {};
+        data = global["_reob_data"];
     } else if( typeof window !="undefined" ){
-        if(!window["_omm_data"])
-            window["_omm_data"] = {};
-        data = window["_omm_data"];
+        if(!window["_reob_data"])
+            window["_reob_data"] = {};
+        data = window["_reob_data"];
     } else
         data = {};
     if(!data.entityClasses)
         data.entityClasses = {};
     entityClasses = data.entityClasses;
     
-    if(!data.registeredObjects)
-        data.registeredObjects = {};
-    registeredObjects = data.registeredObjects;
-
-    if(!data.eventListeners)
-        data.eventListeners = {};
-    eventListeners = data.eventListeners;
+    // if(!data.registeredObjects)
+    //     data.registeredObjects = {};
+    // registeredObjects = data.registeredObjects;
 
 })();
 

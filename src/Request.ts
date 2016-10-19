@@ -1,7 +1,7 @@
 /**
  * Created by bert on 27.09.16.
  */
-export class Session{
+export class Request{
     userData:any;
 
     constructor(ud:any){

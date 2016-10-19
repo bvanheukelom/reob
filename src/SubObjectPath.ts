@@ -1,7 +1,7 @@
 
 import * as omm_annotations from "./Annotations"
 
-export default class SubObjectPath {
+export class SubObjectPath {
     private path:string;
 
     constructor(s?:string) {

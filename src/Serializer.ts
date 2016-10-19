@@ -1,8 +1,8 @@
 
 import * as Cloner from "./Cloner"
-import Document from "./Document"
+import { Document } from "./Document"
 import * as reob from "./reob"
-import SubObjectPath from "./SubObjectPath"
+import { SubObjectPath } from "./SubObjectPath"
 import { Reflect, getId } from "./Annotations"
 
 export class Serializer {
@@ -57,7 +57,7 @@ export class Serializer {
         });
     }
 
-    toObject(doc:Document, handler?:any, f?:reob.TypeClass<any>, serializationPath?:reob.SerializationPath, session?:reob.Session ):any {
+    toObject(doc:Document, handler?:any, f?:reob.TypeClass<any>, serializationPath?:reob.SerializationPath, request?:reob.Request ):any {
         var o:any;
         if(Array.isArray(doc)){
             var r = [];
@@ -68,17 +68,17 @@ export class Serializer {
         } else if ( !doc || typeof doc == "string" || typeof doc == "number"  || typeof doc == "date" || typeof doc == "boolean")
             o =  doc;
         else
-            o =  this.toObjectRecursive(doc, undefined, f, handler, session);
+            o =  this.toObjectRecursive(doc, undefined, f, handler, request);
 
         if( handler && serializationPath ) {
-            reob.SerializationPath.setObjectContext(o, serializationPath, handler, session);
-            reob.SerializationPath.updateObjectContexts(o, handler, session);
+            reob.SerializationPath.setObjectContext(o, serializationPath, handler, request);
+            reob.SerializationPath.updateObjectContexts(o, handler, request);
         }
 
         return o;
     }
 
-    private toObjectRecursive<T extends Object>(doc:Document, parent:Object, f:reob.TypeClass<T>, handler:reob.Handler, session:reob.Session):T {
+    private toObjectRecursive<T extends Object>(doc:Document, parent:Object, f:reob.TypeClass<T>, handler:reob.Handler, request:reob.Request):T {
         var o:T;
         if( !doc )
             return <T>doc;
@@ -108,7 +108,7 @@ export class Serializer {
 
             if( doc._serializationPath ){
                 var sp = new reob.SerializationPath(doc._serializationPath);
-                reob.SerializationPath.setObjectContext(o, sp, handler, session);
+                reob.SerializationPath.setObjectContext(o, sp, handler, request);
             }
 
             Reflect.getParentPropertyNames(f).forEach(function (parentPropertyName:string) {
@@ -131,14 +131,14 @@ export class Serializer {
                         var result = Array.isArray(value) ? [] : {};
                         for (var i in value) {
                             var entry:Document = value[i];
-                            entry = this.toObjectRecursive(entry, o, propertyClass, handler, session);
+                            entry = this.toObjectRecursive(entry, o, propertyClass, handler, request);
                             result[i] = entry;
                         }
                         // this can only happen once because if the property is accessed the "lazy load" already kicks in
                         o[objectNameOfTheProperty] = result;
                     }
                     else {
-                        o[objectNameOfTheProperty] = this.toObjectRecursive(value, o, propertyClass, handler, session );
+                        o[objectNameOfTheProperty] = this.toObjectRecursive(value, o, propertyClass, handler, request );
                     }
                 }
                 else {

@@ -3,6 +3,7 @@
  */
 
 import * as reob from "./reob"
+import {Collection} from "./Collection"
 import * as wm from "web-methods"
 import * as Promise from "bluebird"
 import * as expressModule from "express"
@@ -11,23 +12,24 @@ import * as mongo from "mongodb"
 import * as fs from "fs"
 import * as compression from "compression"
 
-export declare type LoadingCheck = (id:string, session:reob.Session) => boolean;
-
+export declare type LoadingCheck = (id:string, request:reob.Request, obj:reob.OmmObject ) => boolean|Promise<void>;
+export declare type ServiceProvider = (s:reob.Request) => Object
 export class Server{
 
-    private collections:{ [index:string]:reob.Collection<any> } = {};
+    private collections:{ [index:string]:Collection<any> } = {};
     private collectionLoadingEnabled:{ [index:string]:boolean|LoadingCheck } = {};
-    private services:{ [index:string]: any } = {};
+    private services:{ [index:string]: Object|ServiceProvider } = {};
     private webMethods:wm.WebMethods;
     private serializer:reob.Serializer;
     private methodListener:Array<reob.EventListener<any>> = [];
     private express:expressModule.Application;
-    private isOwnExpress:boolean;
     private webRootPath: string;
     private indexFileName: string;
     private mongoDb:mongo.Db;
     private mongoUrl:string;
     private port:number;
+
+    private requestFactory : (ud:any)=>reob.Request;
 
     private webMethodsAdded:Array<string> = [];
 
@@ -36,6 +38,7 @@ export class Server{
         this.serializer = new reob.Serializer();
         this.express = expressModule();
         this.express.use(compression());
+        
         if( typeof theMongo=="string" ) {
             this.mongoUrl = <string>theMongo;
         }else{
@@ -61,7 +64,7 @@ export class Server{
                 return <any>mongo.MongoClient.connect(this.mongoUrl, {promiseLibrary: Promise}).then((db:mongo.Db)=> {
                     this.mongoDb = db;
                     for( var i in this.collections ){
-                        var c:reob.Collection<any> = this.collections[i];
+                        var c:Collection<any> = this.collections[i];
                         c.setMongoCollection(db);
                     }
                     return db;
@@ -114,17 +117,17 @@ export class Server{
         }
     }
 
-    addCollection( c: reob.Collection<any> ):void{
+    addCollection( c: Collection<any> ):void{
         this.collections[c.getName()] = c;
         if( this.mongoDb )
             c.setMongoCollection(this.mongoDb);
     }
 
-    setLoadingAllowed(c:reob.Collection<any>, i:boolean|LoadingCheck ) {
+    setLoadingAllowed(c:Collection<any>, i:boolean|LoadingCheck ) {
         this.collectionLoadingEnabled[c.getName()] = i;
     }
 
-    addService( serviceName, service:Object|Function ):void{
+    addService( serviceName, service:Object|ServiceProvider ):void{
 
         // singletons dont need a
         var o;
@@ -150,7 +153,7 @@ export class Server{
         });
     }
 
-    private notifyMethodListeners( object:any, objectId:string, functionName:string, args:any[], session:reob.Session ):Promise<void>{
+    private notifyMethodListeners( object:any, objectId:string, functionName:string, args:any[], request:reob.Request ):Promise<void>{
         var collection;
         if( objectId ){
             var i1 = objectId.indexOf("[");
@@ -161,7 +164,7 @@ export class Server{
         var context = new reob.EventContext(object, collection);
         context.functionName = functionName;
         context.objectId = objectId;
-        context.session = session;
+        context.request = request;
         context.arguments = args;
         var promises = [];
         this.methodListener.forEach((ml:reob.EventListener<any>)=>{
@@ -201,6 +204,18 @@ export class Server{
         return this.port;
     }
 
+    setRequestFactory( f : (userData:any)=>reob.Request ){
+        this.requestFactory = f;
+    }
+
+    protected createRequest( userData:any ):reob.Request{
+        if( this.requestFactory ){
+            return this.requestFactory( userData );
+        } else {
+            return new reob.Request(userData);
+        }
+    }
+
     private addWebMethod( options:reob.IMethodOptions ){
         if( this.webMethodsAdded.indexOf(options.name)!=-1 )
             return;
@@ -214,21 +229,21 @@ export class Server{
 
                 // the user Data is the second parameter
                 var userData = args.shift();
-                var session = new reob.Session( userData );
+                var request:reob.Request = this.createRequest( userData );
                 if( reob.isVerbose() )console.log(new Date() + ": WebMethod invokation. Name:" + options.name, "User data ", userData);
 
                 // convert parameters given to the web method from documents to objects
                 this.convertWebMethodParameters(args, options.parameterTypes, userData);
 
                 // load object based on the object id. this could either be a registered object or an object form a collection
-                var p = this.retrieveObject(objectId, session)
+                var p = this.retrieveObject(objectId, request)
 
                     // call function
                     .then((object:any)=> {
                         // this might be the collection update or another function that is called directly
 
                         if( reob.isVerbose() )console.log("Notifying method event listensers.");
-                        return this.notifyMethodListeners(object, objectId, options.name, args, session).then(()=> {
+                        return this.notifyMethodListeners(object, objectId, options.name, args, request).then(()=> {
                             return object;
                         });
 
@@ -253,19 +268,19 @@ export class Server{
         });
     }
 
-    private getCollection(objectId:string):reob.Collection<any>{
+    private getCollection(objectId:string):Collection<any>{
         var sPath = new reob.SerializationPath( objectId );
         var collectionName = sPath.getCollectionName();
-        var collection:reob.Collection<Object> = collectionName ? this.collections[collectionName] : undefined;
+        var collection:Collection<Object> = collectionName ? this.collections[collectionName] : undefined;
         return collection;
     }
 
-    private retrieveObject( objectId:string, session:reob.Session ):Promise<any>{
-        var singleton = this.services[objectId];
-        if( singleton ) {
-            var s:any = singleton;
-            if( typeof singleton == "function" ){
-                s = singleton(session);
+    private retrieveObject( objectId:string, request:reob.Request ):Promise<any>{
+        var service = this.services[objectId];
+        if( service ) {
+            var s:any = service;
+            if( typeof service == "function" ){
+                s = (<ServiceProvider>service)(request);
             }
             return Promise.resolve(s);
         }
@@ -275,7 +290,7 @@ export class Server{
             var sPath = new reob.SerializationPath( objectId );
             var collection = this.getCollection(objectId);
             if (collection) {
-                return collection.getById(sPath.getId(), session).then((o)=>{
+                return collection.getById(sPath.getId(), request).then((o)=>{
                     return sPath.getSubObject(o);
                 });
             }
@@ -284,49 +299,51 @@ export class Server{
         }
     }
 
-    private attachClassName( o:any ){
-        var className = reob.Reflect.getClassName(o);
-        if( className && reob.entityClasses[className] ){
-            o.className = className;
-        }
-        if( o._serializationPath )
-            o.serializationPath = o._serializationPath.toString();
-    }
+    // private attachClassName( o:any ){
+    //     var className = reob.Reflect.getClassName(o);
+    //     if( className && reob.entityClasses[className] ){
+    //         o.className = className;
+    //     }
+    //     if( o._serializationPath )
+    //         o.serializationPath = o._serializationPath.toString();
+    // }
     
     private registerGetter(){
         this.webMethods.add("get", (collectionName:string, objectId:string, userData:any )=>{
-            var i:any = this.collectionLoadingEnabled[collectionName];
-            var session:reob.Session = new reob.Session(userData);
-            var allowed = !!i;
-            if( allowed && typeof i == "function" ){
-                allowed = i( objectId, session );
-            }
-            if( allowed ){
-                if( reob.isVerbose() )console.log(new Date() + ": Getter. CollectionName:" + collectionName + " Id:" + objectId, "UserData:", userData);
-                var objPromise = collectionName ? this.retrieveObject(collectionName + "[" + objectId + "]", undefined) : Promise.reject(new Error("No collection name given"));
-                return objPromise.then((obj)=> {
-                    return this.notifyMethodListeners(this, undefined, "get", [collectionName, objectId], session).then(()=> {
-                        return obj;
-                    });
-                    // return obj;
-                }).then((obj)=> {
-                    var doc = obj ? this.serializer.toDocument(obj, true, true) : undefined;
-                    return doc;
-                });
-            } else {
-                throw new Error( "Not allowed" );
-            }
+            var request:reob.Request = this.createRequest( userData );
+            var allowedPromise:Promise<void>;
+
+            if( reob.isVerbose() )console.log(new Date() + ": Getter. CollectionName:" + collectionName + " Id:" + objectId, "UserData:", userData);
+
+            return new Promise<reob.OmmObject>((resolve, reject)=>{
+                if( collectionName )
+                    resolve( this.retrieveObject(collectionName + "[" + objectId + "]", request) );
+                else
+                    reject( new Error("No collection name given") );
+            }).then((object)=>{
+                var i:any = this.collectionLoadingEnabled[collectionName];
+                if( typeof i == "function" ){
+                    return Promise.cast( i( objectId, request, object ) ).then(()=>object);
+                }else{
+                    return Promise.cast( i ).then(()=>object);
+                }
+            }).then((obj)=> {
+                    return this.notifyMethodListeners(this, undefined, "get", [collectionName, objectId], request).then(()=> obj);
+            }).then((obj)=> {
+                var doc = obj ? this.serializer.toDocument(obj, true, true) : undefined;
+                return doc;
+            });
         });
     }
     
     // converts parameters given to the web method from documents to objects
-    private convertWebMethodParameters( args:Array<any>, classNames:Array<string>, session:reob.Session ){
+    private convertWebMethodParameters( args:Array<any>, classNames:Array<string>, request:reob.Request ){
         for (var i = 0; i < args.length; i++) {
             if (classNames && classNames.length > i) {
                 var cls = reob.Reflect.getEntityClassByName(classNames[i]);
                 if (cls) {
                     if (typeof args[i] == "string")
-                        args[i] = this.retrieveObject(args[i], session);
+                        args[i] = this.retrieveObject(args[i], request);
                     else if (typeof args[i] == "object")
                         args[i] = this.serializer.toObject(args[i], cls);
                 }

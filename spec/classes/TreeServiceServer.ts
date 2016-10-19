@@ -3,34 +3,35 @@
  */
 import * as Tests from "./Tests"
 import * as reob from "../../src/reob"
+import {Request} from "../../src/Request"
 
 export class TreeServiceServer{
     treeCollection:Tests.TestTreeCollection;
     personCollection:Tests.TestPersonCollection;
 
-    constructor(ttc:Tests.TestTreeCollection, tpc:Tests.TestPersonCollection, private session:reob.Session){
+    constructor(ttc:Tests.TestTreeCollection, tpc:Tests.TestPersonCollection, private request:Request){
         this.treeCollection = ttc;
         this.personCollection = tpc;
-        console.log("instantiated tree service with session", session);
+        console.log("instantiated tree service with request", request);
     }
 
     @reob.Remote({serverOnly:true})
     insertTree( height:number ):Promise<Tests.TestTree>{
         var t = new Tests.TestTree(height);
-        return this.treeCollection.insert(t,this.session).then((id:string)=>{
+        return this.treeCollection.insert(t,this.request).then((id:string)=>{
             return t;
         });
     }
 
     @reob.Remote({ serverOnly:true })
     growTree(treeId:string):Promise<string> {
-        return this.treeCollection.getById(treeId,this.session).then((t:Tests.TestTree)=>{
+        return this.treeCollection.getById(treeId,this.request).then((t:Tests.TestTree)=>{
             return t.growAsOnlyACollectionUpdate();
         });
     }
 
     @reob.Remote({ serverOnly:true })
     aTreeAndAPerson(treeId:string,personId:string):Promise<any> {
-        return Promise.all([this.treeCollection.getByIdOrFail(treeId,this.session), this.personCollection.getByIdOrFail(personId,this.session)]);
+        return Promise.all([this.treeCollection.getByIdOrFail(treeId,this.request), this.personCollection.getByIdOrFail(personId,this.request)]);
     }
 }

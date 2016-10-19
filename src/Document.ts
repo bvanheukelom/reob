@@ -7,5 +7,3 @@ export interface Document {
     [x: string]: any;
 }
 
-
-export default Document

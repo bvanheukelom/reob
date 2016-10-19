@@ -1,9 +1,11 @@
 
 import * as reob from "../../src/reob"
+import {Collection} from "../../src/Collection"
+
 import * as Tests from "./Tests"
 import * as mongodb from "mongodb"
 
-export class TestPersonCollection extends reob.Collection<Tests.TestPerson> {
+export class TestPersonCollection extends Collection<Tests.TestPerson> {
 
     constructor( ) {
         super( Tests.TestPerson );

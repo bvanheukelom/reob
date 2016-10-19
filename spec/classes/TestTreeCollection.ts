@@ -3,9 +3,10 @@
  */
 
 import * as reob from "../../src/reob"
+import {Collection} from "../../src/Collection"
 import * as Tests from "./Tests"
 
-export class TestTreeCollection extends reob.Collection<Tests.TestTree> {
+export class TestTreeCollection extends Collection<Tests.TestTree> {
 
     constructor( ) {
         super( Tests.TestTree,"TheTreeCollection");

@@ -7,13 +7,10 @@ import * as reob from "./reob"
 export class EventContext<T> {
     private  cancelledError:any = false;
     preUpdate:T;
-    preUpdateDocument:Document;
-    postUpdateDocument:Document;
+    preUpdateDocument:reob.Document;
+    postUpdateDocument:reob.Document;
     object:T;
-    session:{
-        userData:any,
-        [other:string]:any
-    };
+    request:reob.Request;
     objectId:string;
     collection:any; //omm.Collection<T>;
     rootObject:any;

@@ -4,7 +4,7 @@
 import { ObjectContext } from "./ObjectContext"
 
 export interface OmmObject {
-    _ommObjectContext?:ObjectContext;
+    _reobObjectContext?:ObjectContext;
 }
 
 

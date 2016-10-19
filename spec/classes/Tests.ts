@@ -11,6 +11,7 @@ export * from "./TestLeaf"
 export * from "./TestTree"
 
 export * from "./TestPersonCollection"
+export * from "./TestCarCollection"
 export * from "./TestTreeCollection"
 
 export * from "./TestInheritanceParent"
@@ -19,3 +20,4 @@ export * from "./TestInheritanceOther"
 
 export * from "./TreeService"
 export * from "./TreeServiceServer"
+export * from "./TestRequest"

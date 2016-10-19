@@ -55,7 +55,7 @@ export class Client implements reob.Handler{
     }
 
     loadDocument<Document>( collectionName:string, id:string ):Promise<Document>{
-        return this.webMethods.call( "get", collectionName, id ).then( (document)=>{
+        return this.webMethods.call( "get", collectionName, id, this.userData ).then( (document)=>{
             return document;
         });
     }
@@ -131,8 +131,8 @@ export class Client implements reob.Handler{
             return originalFunction.apply(object, args);
         }
 
-
-        var sp:reob.SerializationPath = object._ommObjectContext.serializationPath ? object._ommObjectContext.serializationPath : undefined;
+        var objectContext = reob.SerializationPath.getObjectContext( object );
+        var sp:reob.SerializationPath = objectContext.serializationPath ? objectContext.serializationPath : undefined;
         var serviceKey = this.getSingletonKey(object);
         var key = serviceKey || ( sp ? sp.toString() : undefined );
         var r:any;
