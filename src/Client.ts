@@ -11,6 +11,9 @@ import * as eventemitter from "eventemitter2"
  */
 var jsd = require("jsondiffpatch");
 
+/**
+ * This is class represents the startingpoint from the website. Use it to register services and load objects.
+ */
 export class Client implements reob.Handler{
 
     private serializer:reob.Serializer;
@@ -19,7 +22,7 @@ export class Client implements reob.Handler{
     private singletons:{ [index:string]: any } = {};
     private eventEmitter:any;
 
-    constructor(host:string, port:number ){
+    constructor( host:string, port:number ){
         // if( !omm.isInitialized() )
         //     throw new Error("omm is not initialized.");
         var endpointUrl = "http://"+host+":"+port+"/methods";
@@ -28,6 +31,9 @@ export class Client implements reob.Handler{
         this.eventEmitter = new eventemitter.EventEmitter2();
     }
 
+    /**
+     * Add a service to the client. After this you can call functions decorated with @remote so
+     */
     addService( serviceName:string, service:Object ):void{
         // var serviceName = omm.Reflect.getServiceName( omm.Reflect.getClass(service) );
         // if( !serviceName ){
@@ -48,21 +54,32 @@ export class Client implements reob.Handler{
         reob.SerializationPath.setObjectContext( service, undefined, this, undefined );
     }
 
+    /**
+     * Load an object with a given id from a collection.
+     */
     load<T>( collectionName:string, id:string ):Promise<T>{
         return this.loadDocument(collectionName, id).then((doc)=>{
-            console.log("Client loaded :",doc);
             var o = this.serializer.toObject( doc,  this );
-            console.log("Client returned ",o);
             return <T>o;
         });
     }
 
+    /**
+     * Load a document with a given id from a collection.
+     */
     loadDocument<Document>( collectionName:string, id:string ):Promise<Document>{
         return this.webMethods.call( "get", collectionName, id, this.userData ).then( (document)=>{
             return document;
         });
     }
 
+    /**
+     * @hidden
+     * @param methodName
+     * @param objectId
+     * @param args
+     * @returns {Promise<T>|Promise<T|U>}
+     */
     private call( methodName:string, objectId:string, args:any[]  ):Promise<any>{
         console.log( "Call web method "+methodName, objectId, args);
         var webArgs = [];
@@ -106,18 +123,30 @@ export class Client implements reob.Handler{
         });
     }
 
+    /**
+     * Register listeners that are called whenever a network error happens.
+     */
     onNetworkError(f:(e)=>void){
         this.eventEmitter.on("network-error", f);
     }
 
+    /**
+     * Remove listeners that are called whenever a network error happens.
+     */
     removeNetworkErrorListener(f:(e)=>void){
         this.eventEmitter.removeListener("network-error", f);
     }
 
+    /**
+     * @hidden
+     */
     private emitNetworkError( error ){
         this.eventEmitter.emit( "network-error", error );
     }
 
+    /**
+     * @hidden
+     */
     private getSingletonKey(o:any){
         for( var i in this.singletons ){
             if( this.singletons[i]==o )
@@ -126,8 +155,14 @@ export class Client implements reob.Handler{
         return undefined;
     }
 
-    webMethodRunning:boolean = false;
+    /**
+     * @hidden
+     */
+    private webMethodRunning:boolean = false;
 
+    /**
+     * @hidden
+     */
     webMethod(entityClass:reob.TypeClass<any>, functionName:string, object:reob.OmmObject, originalFunction:Function, args:any[] ):any{
         if( this.webMethodRunning ) {
             console.log("Webmethod already running. Skipping, calling original function. Function name: "+functionName );
@@ -178,9 +213,12 @@ export class Client implements reob.Handler{
         return r;
     }
 
+    /**
+     * Use this method to set any data that you'd like to use for authentication and authorization purposes on the server.
+     * It is transmitted with every request.
+     */
     setUserData( ud:any ){
         this.userData = ud;
-
     }
 
 }

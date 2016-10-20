@@ -13,8 +13,9 @@
     "compile": "rm -rf dist && tsc -p tsconfig.json ",
     "copy": "rm -rf dist && mkdir dist && cp -r s*c dist && find dist -type f  -name '*.ts' ! -iname '*.d.ts' -delete",
     "watch": "nodemon --exec 'npm run compile' --watch './src' --watch './spec' -e ts -i *.d.ts",
-    "doc": "typedoc --excludeExternals --excludePrivate --noEmit --exclude src/Internal.ts --exclude node_modules --mode file --out doc -p tsconfig.json src  typings",
-    "upload": "npm run clean && npm install && npm run compile && npm run test && npm version patch && npm publish"
+    "doc": "typedoc --excludeExternals --excludePrivate --noEmit --exclude src/Internal.ts --exclude node_modules --mode file --out doc -p tsconfig.json src typings",
+    "upload": "npm run clean && npm install && npm run compile && npm run test && npm version patch && npm publish && npm run upload-doc",
+    "upload-doc": "./script/uploadDoc.sh"
   },
   "devDependencies": {
     "co": "^4.6.0",

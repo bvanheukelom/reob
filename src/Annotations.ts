@@ -30,11 +30,11 @@ export interface IMethodOptions{
 export var entityClasses:{[index:string]:reob.TypeClass<Object>};
 
 
+// it seems that the local variable that "reflect" uses is prone to the same difficulties when it gets loaded
+// multiple times. This is why it's been removed until it is supported by the Runtime directly.
 /**
  * @hidden
  */
-// it seems that the local variable that "reflect" uses is prone to the same difficulties when it gets loaded
-// multiple times. This is why it's been removed until it is supported by the Runtime directly.
 function defineMetadata(propertyName, value, cls) {
     if (!cls.hasOwnProperty("_reobAnnotations")) {
         setNonEnumerableProperty(cls, "_reobAnnotations", {});
