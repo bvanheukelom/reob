@@ -10,7 +10,7 @@ var co = require("co");
 
 import "./classes/TestLeaf"
 
-//jasmine.DEFAULT_TIMEOUT_INTERVAL = 10000000;
+// jasmine.DEFAULT_TIMEOUT_INTERVAL = 10000000;
 
 Promise.onPossiblyUnhandledRejection((reason: any) => {
     console.log("possibly unhandled rejection ", reason);
@@ -46,9 +46,6 @@ describe("Omm both on client and server", function () {
             else
                 return Promise.reject(new Error("nay"));
         });
-
-
-
 
         treeCollection = new Tests.TestTreeCollection();
         server.addCollection( treeCollection );
@@ -126,7 +123,7 @@ describe("Omm both on client and server", function () {
         });
     });
 
-    fit("can run collection updates from within another method", function (done) {
+    it("can run collection updates from within another method", function (done) {
         var t1:Tests.TestTree = new Tests.TestTree(15);
         treeCollection.insert(t1).then( (id:string)=> {
             debugger;
@@ -143,8 +140,9 @@ describe("Omm both on client and server", function () {
         var t1:Tests.TestTree = new Tests.TestTree(15);
         debugger;
         var f = { handle:(evtCtx:reob.EventContext<Tests.TestTree>)=>{
-            expect( evtCtx.request.userData ).toBeDefined();
-            expect( evtCtx.request.userData.hello ).toBe("World");
+            expect( evtCtx.request ).toBeDefined();
+            // expect( evtCtx.request.userData ).toBeDefined();
+            // expect( evtCtx.request.userData.hello ).toBe("World");
         }};
 
         spyOn(f, "handle").and.callThrough();
@@ -158,7 +156,6 @@ describe("Omm both on client and server", function () {
             done();
         });
     });
-
 
     it("notifies method listener", function (done) {
         var c = 0;
@@ -778,6 +775,8 @@ describe("Omm both on client and server", function () {
         });
     });
 
+
+
     it("trees have leaves", function (done) {
         var tId;
         treeCollection.newTree(10).then((t)=> {
@@ -933,11 +932,8 @@ describe("Omm both on client and server", function () {
         });
 
     });
-
-
-
-
-    it("can register for pre update events", function (done) {
+    
+      it("can register for pre update events", function (done) {
         var l:any = {};
         l.listener = function (event:reob.EventContext<Tests.TestTree>) {
             expect(event.object).toBeDefined();
@@ -955,6 +951,31 @@ describe("Omm both on client and server", function () {
             expect(l.listener).toHaveBeenCalled();
             done();
         });
+    });
+
+    it("can register for specific update events", function (done) {
+        var l:any = {};
+        l.listener = function (event:reob.EventContext<Tests.TestTree>) {
+
+        };
+        spyOn(l, 'listener').and.callThrough();
+        treeCollection.onBeforeUpdate( Tests.TestTree, "grow", l.listener );
+        var treePromise = treeCollection.newTree(10);
+        treePromise.then((tree)=>{
+            return Promise.all( [tree.grow(), treePromise] );
+        }).then( (values)=>{
+            expect(l.listener).not.toHaveBeenCalled();
+            done();
+        });
+    });
+
+    it("can not register for update events with a function name that is not a collection update function", function (done) {
+        expect(()=>{
+            treeCollection.onBeforeUpdate( Tests.TestTree, "notAnUpdateFunction123", (i:reob.EventContext<Tests.TestTree>, data?:any)=>{
+
+            } );
+        }).toThrow();
+        done();
     });
 
     //

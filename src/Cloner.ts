@@ -1,14 +1,18 @@
 /**
  * Created by bert on 02.05.16.
  */
-
+/**
+ * @hidden
+ */
 export function clone( o:any ):any{
     return cloneInternally( o, {
         objects:[],
         clones:[]
     });
 }
-
+/**
+ * @hidden
+ */
 function cloneInternally( o:any, seenObjects?:{ objects:Array<any>, clones:Array<any> } ):any{
     if(Array.isArray(o)){
         var rArray = [];

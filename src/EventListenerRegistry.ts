@@ -2,22 +2,22 @@
  * Created by bert on 19.10.16.
  */
 import * as Promise from "bluebird"
-
+/**
+ * @hidden
+ */
 export class EventListenerRegistry<T extends Function>{
 
     private globalListeners:Array<T> = [];
     private topicListeners:{ [index:string]:Array<T> } = {};
     private subTopicListeners:{ [index:string]:{ [index:string]:Array<T>} } = {};
 
-    public on( topic:string|T, subTopic?:string|T, handler?:T ){
-        if( typeof topic == "function" && !subTopic && !handler ){
-            handler = <T>topic;
+    public on( topic:string, subTopic:string, handler:T ){
+        if( typeof topic==="undefined" && typeof subTopic==="undefined" && typeof handler==="undefined" ){
             this.addGlobalListener( handler );
-        }else if( typeof topic == "string" && typeof subTopic == "function" && !handler ){
-            handler = <T>subTopic;
-            this.addTopicListener( <string>topic, handler );
-        }else if( typeof topic == "string" && typeof subTopic == "function" &&  typeof handler == "function"){
-            this.addSubTopicListener( <string>topic, <string>subTopic, handler );
+        }else if( topic && typeof subTopic==="undefined" && handler ){
+            this.addTopicListener( topic, handler );
+        }else if(topic && subTopic && handler ){
+            this.addSubTopicListener( topic, subTopic, handler );
         }else{
             throw new Error( "Illegal combination of parameters for EventListenerRegistry.on ." );
         }
@@ -29,33 +29,31 @@ export class EventListenerRegistry<T extends Function>{
         this.subTopicListeners = {};
     }
 
-    public emit( topic:string, subTopic:string, data?:any ):Promise<void>{
+    public emit( topic:string, subTopic:string, ctx:any, data?:any ):Promise<void>{
         var promises:Array<Promise<any>> = [];
         if( typeof topic !=="undefined" && typeof subTopic !=="undefined" && this.subTopicListeners[topic] &&  this.subTopicListeners[topic][subTopic] ){
             this.subTopicListeners[topic][subTopic].forEach( (h:T)=>{
-                promises.push( Promise.cast(h(data)) );
+                promises.push( Promise.cast(h(ctx, data)) );
             });
         }
         if( typeof topic !=="undefined" && this.topicListeners[topic]  ) {
             this.topicListeners[topic].forEach( (h:T)=>{
-                promises.push( Promise.cast(h(data)) );
+                promises.push( Promise.cast(h(ctx, data)) );
             });
         }
         this.globalListeners.forEach( (h:T)=>{
-            promises.push( Promise.cast(h(data)) );
+            promises.push( Promise.cast(h(ctx, data)) );
         });
         return Promise.all(promises).then(()=>{});
     }
 
-    public removeEventListener( topic:string|T, subTopic?:string|T, handler?:T ) {
+    public removeEventListener( topic:string, subTopic:string, handler:T ) {
         if( typeof topic == "function" && !subTopic && !handler ) {
-            handler = <T>topic;
             this.removeGlobalListener( handler );
-        } else if( typeof topic == "string" && typeof subTopic == "function" && !handler ) {
-            handler = <T>subTopic;
-            this.removeTopicListener( <string>topic, handler );
-        } else if( typeof topic == "string" && typeof subTopic == "function" &&  typeof handler == "function") {
-            this.removeSubTopicListener( <string>topic, <string>subTopic, handler );
+        } else if( typeof topic === "string" && typeof subTopic === "function" && typeof handler === "undefined" ) {
+            this.removeTopicListener( topic, handler );
+        } else if( typeof topic === "string" && typeof subTopic === "function" &&  typeof handler === "function") {
+            this.removeSubTopicListener( topic, subTopic, handler );
         } else{
             throw new Error( "Illegal combination of parameters for EventListenerRegistry.removeEventListener ." );
         }

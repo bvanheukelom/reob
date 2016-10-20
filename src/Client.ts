@@ -6,6 +6,9 @@ import * as reob from "./reob"
 import * as wm from "web-methods"
 import * as eventemitter from "eventemitter2"
 
+/**
+ * @hidden
+ */
 var jsd = require("jsondiffpatch");
 
 export class Client implements reob.Handler{
