@@ -6,9 +6,10 @@ Create backends for one page web apps with ease. Uses mongo and express.
 
 Reob helps to create backends for one page web apps. It combines object mapping, networking and a
 webserver. You write domain object classes and service classes and use them from the client. You can call functions on an
-object that causes an http request to the server which loads the object there, invokes the function on it and transmits the
-result back to the client. Reob takes care of the database and network specifics. It is written in typescript and makes
-heavy use of decorators.
+object that causes an http request to the server which loads the object there, invokes the function on it, updates the
+database with the changes to the object and transmits the result of the function back to the client.
+
+It is written in typescript and makes heavy use of decorators.
 
 ## Installation
 
