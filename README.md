@@ -1,12 +1,25 @@
-## Reob - Remote objects
+# Reob - Remote objects
 
 Create backends for one page web apps with ease. Uses mongo and express.
+
+[![NPM version](https://badge.fury.io/js/reob.svg)](http://badge.fury.io/js/reob.svg)
 
 Reob helps to create backends for one page web apps. It combines object mapping, networking and a
 webserver. You write domain object classes and service classes and use them from the client. You can call functions on an
 object that causes an http request to the server which loads the object there, invokes the function on it and transmits the
 result back to the client. Reob takes care of the database and network specifics. It is written in typescript and makes
 heavy use of decorators.
+
+## Installation
+
+Reob is available as an NPM package. You can install it
+in your project's directory as usual:
+
+```bash
+$ npm install reob --save
+```
+
+## Usage
 
 In order to get an overview of how reob works let's look at an example. Imagine you want to write a tool for a club of
 garden owners.
