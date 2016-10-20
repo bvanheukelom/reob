@@ -2,7 +2,7 @@
 
 Create backends for one page web apps with ease. Uses mongo and express.
 
-[![NPM version](https://badge.fury.io/js/reob.svg)](http://badge.fury.io/js/reob.svg)
+[![NPM version](https://badge.fury.io/js/reob.svg)](http://badge.fury.io/js/reob.svg) [![GitHub version](https://badge.fury.io/gh/bvanheukelom%2Freob.svg)](https://badge.fury.io/gh/bvanheukelom%2Freob)
 
 Reob helps to create backends for one page web apps. It combines object mapping, networking and a
 webserver. You write domain object classes and service classes and use them from the client. You can call functions on an
