@@ -16,6 +16,9 @@ var jsd = require("jsondiffpatch");
  */
 export class Client implements reob.Handler{
 
+    /**
+     * @hidden
+     */
     private serializer:reob.Serializer;
     private userData:any;
     private webMethods:wm.WebMethods;
@@ -222,3 +225,4 @@ export class Client implements reob.Handler{
     }
 
 }
+

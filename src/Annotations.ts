@@ -56,6 +56,7 @@ function getMetadata(propertyName, cls) {
 
 /**
  * Declares a class as an entity. Can be used either with or without given name for the entity.
+ * @Decorator
  */
 export function Entity(name?:string | reob.TypeClass<Object>):any {
     var entityName:string;
@@ -86,6 +87,7 @@ export function Entity(name?:string | reob.TypeClass<Object>):any {
 
 /**
  * Convenience decorator that combines @CollectionUpdate and @Remote.
+ * @Decorator
  */
 export function RemoteCollectionUpdate(t:any, functionName:string, objectDescriptor:any) {
     CollectionUpdate(t, functionName, objectDescriptor);
@@ -95,6 +97,7 @@ export function RemoteCollectionUpdate(t:any, functionName:string, objectDescrip
 /**
  * Used to declare a function of a class as a "collection update". That means that whenever the function is called
  * the same operation is also invoked on the document in the collection.
+ * @Decorator
  */
 export function CollectionUpdate(p1:any, functionName:string, desc) {
     var options = {};
