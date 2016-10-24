@@ -33,6 +33,8 @@ export class TreeServiceServer{
     setSomeBooleanOnTree(treeId:string, b:boolean):Promise<string> {
         return this.treeCollection.getByIdOrFail(treeId,this.request).then((t:Tests.TestTree)=>{
             return t.setSomeBooleanTo(b);
+        }).then((s:string)=>{
+            return "added in the service:"+s;
         });
     }
 

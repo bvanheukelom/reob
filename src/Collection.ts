@@ -302,8 +302,7 @@ export class Collection<T extends reob.Object> implements reob.Handler
      * @param id - the id of the object
      * @param updateFunction - the function that alters the loaded object
      */
-    update( sp:reob.SerializationPath, updateFunction:(o:T)=>void, request?:reob.Request ):Promise<any>
-    {
+    update( sp:reob.SerializationPath, updateFunction:(o:T)=>void, request?:reob.Request ):Promise<any> {
         if (!sp || !updateFunction)
             return Promise.reject( new Error( "update function or serialiationPath parameter missing" ) );
 
@@ -417,6 +416,7 @@ export class Collection<T extends reob.Object> implements reob.Handler
         }).then((r:CollectionUpdateResult<T>)=>{
             if( reob.isVerbose() )console.log("Events collected during updating ", r.events, "request:",request );
 
+            // prepare the update event. used for 'duringUpdate' and 'afterUpdate'
             var updateEvent:UpdateEvent<T> = {
                 rootObject:r.rootObject,
                 subObject:r.object,
@@ -428,13 +428,19 @@ export class Collection<T extends reob.Object> implements reob.Handler
                 afterUpdateDocument:r.rootDocumentPost
             };
 
+            // send  'duringUpdate' events
             var promises = [];
             r.events.forEach((t:CapturedEvent)=>{
                 promises.push( Promise.cast( this.eventListenerRegistry.emit( t.topic, t.subTopic, [updateEvent]) ));
             });
-            return Promise.all(promises).then(()=>{
+            // we ignore rejected promises from during and after events, we just want them to happen before this finishes.
+            var duringSentPromise = Promise.all(promises).catch(()=>{});
+
+            // send  'afterUpdate' events
+            var afterSentPromise = duringSentPromise.then(()=>{
                 return this.emit( EventNames.onAfterUpdate , updateEvent )
-            }).thenReturn(r);
+            }).catch(()=>{});
+            return afterSentPromise.thenReturn(r);
         });
     }
 

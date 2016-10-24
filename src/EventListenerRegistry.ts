@@ -29,20 +29,37 @@ export class EventListenerRegistry{
         this.subTopicListeners = {};
     }
 
+    /**
+     * Takes a function and converts its result to a promise. If the function throws an exception a rejected Promise is
+     * returned.
+     * @param f - the function to convert
+     * @returns {Promise}
+     */
+    static castToPromise( f:Function ){
+        return new Promise((resolve, reject)=>{
+            try{
+                var r = f();
+                resolve(r);
+            }catch(e){
+                reject(e);
+            }
+        })
+    }
+
     public emit( topic:string, subTopic:string, eventArgs:any[] ):Promise<void>{
         var promises:Array<Promise<any>> = [];
         if( typeof topic !=="undefined" && typeof subTopic !=="undefined" && this.subTopicListeners[topic] &&  this.subTopicListeners[topic][subTopic] ){
             this.subTopicListeners[topic][subTopic].forEach( (h:Function)=>{
-                promises.push( Promise.cast(h.apply(undefined, eventArgs)) );
+                promises.push( EventListenerRegistry.castToPromise( ()=>{ h.apply(undefined, eventArgs) } ) );
             });
         }
         if( typeof topic !=="undefined" && this.topicListeners[topic]  ) {
             this.topicListeners[topic].forEach( (h:Function)=>{
-                promises.push( Promise.cast(h.apply(undefined, eventArgs)) );
+                promises.push( EventListenerRegistry.castToPromise( ()=>{ h.apply(undefined, eventArgs) } ) );
             });
         }
         this.globalListeners.forEach( (h:Function)=>{
-            promises.push( Promise.cast(h.apply(undefined, eventArgs)) );
+            promises.push( EventListenerRegistry.castToPromise( ()=>{ h.apply(undefined, eventArgs) } ) );
         });
         return Promise.all(promises).then(()=>{});
     }

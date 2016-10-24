@@ -112,7 +112,11 @@ export function CollectionUpdate(p1:any, functionName:string, desc) {
             return originalFunction.apply(this, args);
         }else{
             if( reob.isVerbose() )console.log(new Date()+": CollectionUpdate called. Function "+functionName+". Calling handler. ", args, "Request:",_reobObjectContext.request );
-            return _reobObjectContext.handler.collectionUpdate(entityClass, functionName, this, originalFunction, args, _reobObjectContext.request);
+            return _reobObjectContext.handler.collectionUpdate(entityClass, functionName, this, originalFunction, args, _reobObjectContext.request).then((r)=>{
+                originalFunction.apply(this, args);
+                reob.SerializationPath.updateObjectContexts(this, _reobObjectContext.handler, _reobObjectContext.request);
+                return r;
+            });
         }
     });
     desc.value = entityClass.prototype[functionName];

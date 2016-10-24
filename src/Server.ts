@@ -162,7 +162,7 @@ export class Server{
     private notifyBeforeMethodListeners( object:any, functionName:string, args:any[], request:reob.Request ):Promise<void>{
         var promises = [];
         this.beforeMethodListener.forEach((ml:MethodEventListener)=>{
-            promises.push( Promise.cast( ml(object, functionName, args, request) ) );
+            promises.push( reob.EventListenerRegistry.castToPromise( ()=>{ ml(object, functionName, args, request); } ) );
 
         });
         return Promise.all( promises ).then(()=>{ });
@@ -171,7 +171,7 @@ export class Server{
     private notifyAfterMethodListeners( object:any, functionName:string, args:any[], request:reob.Request, result:any ):Promise<void>{
         var promises = [];
         this.afterMethodListener.forEach((ml:MethodEventListener)=>{
-            promises.push( Promise.cast( ml(object, functionName, args, request, result) ) );
+            promises.push( reob.EventListenerRegistry.castToPromise( ()=>{ ml(object, functionName, args, request, result) } ) );
         });
         return Promise.all( promises ).then(()=>{ });
     }
@@ -240,7 +240,7 @@ export class Server{
             var objectPromise = this.retrieveObject(objectId, request).then((object:any)=> {
                 // this might be the collection update or another function that is called directly
                 if( reob.isVerbose() )console.log("Notifying method event listensers.");
-                return this.notifyBeforeMethodListeners( object, options.name, args, request ).then(()=> {
+                return this.notifyBeforeMethodListeners( object, options.name.split(".")[1], args, request ).then(()=> {
                     return object;
                 });
             });
@@ -255,7 +255,7 @@ export class Server{
                     res.document = this.serializer.toDocument(result, true, true);
                 }
                 if( reob.isVerbose() )console.log("Result of web method " + options.name + " (calculated in " + (Date.now() - startTime) + "ms) is ", res);
-                return this.notifyAfterMethodListeners( object, options.name, args, request, result ).then(()=> {
+                return this.notifyAfterMethodListeners( object, options.name.split(".")[1], args, request, result ).then(()=> {
                     return res;
                 });
             });
