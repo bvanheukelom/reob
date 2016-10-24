@@ -3,7 +3,7 @@
  */
 import { ObjectContext } from "./ObjectContext"
 
-export interface OmmObject {
+export interface Object {
     _reobObjectContext?:ObjectContext;
 }
 

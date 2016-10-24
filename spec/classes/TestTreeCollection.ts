@@ -26,8 +26,8 @@ export class TestTreeCollection extends Collection<Tests.TestTree> {
     }
 
     @reob.Remote({  replaceWithCall:true, parameterTypes:["string","callback"]})
-    deleteTree(treeId:string):Promise<void> {
-        return this.remove(treeId);
+    deleteTree(treeId:string, request?:reob.Request):Promise<void> {
+        return this.remove(treeId, request);
     }
 
     @reob.Remote({ parameterTypes:[ "string", "TestTree", "number" ] } )

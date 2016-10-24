@@ -1,36 +1,40 @@
 /**
  * Created by bert on 23.03.16.
  */
-import * as reob from "../src/reob"
+import * as reob from "../src/serverModule"
 reob.setVerbose( true );
-import {Server} from "../src/Server"
+
 import * as Tests from "./classes/Tests"
 import * as Promise from "bluebird"
 var co = require("co");
 
 import "./classes/TestLeaf"
 
-// jasmine.DEFAULT_TIMEOUT_INTERVAL = 10000000;
+//jasmine.DEFAULT_TIMEOUT_INTERVAL = 10000000;
 
 Promise.onPossiblyUnhandledRejection((reason: any) => {
     console.log("possibly unhandled rejection ", reason);
     debugger;
 });
 
+function spyOnAndCallThrough<FKT extends Function>( f:FKT ):FKT{
+    var l = {listener:f};
+    spyOn(l, "listener").and.callThrough();
+    return <any>l.listener;
+}
 
-
-describe("Omm both on client and server", function () {
+describe("Reob", function () {
 
     var personCollection:Tests.TestPersonCollection;
     var treeCollection:Tests.TestTreeCollection;
     var clientTreeService:Tests.TreeService;
     var carCollection:Tests.TestCarCollection;
-    var server:Server;
+    var server:reob.Server;
     var client:reob.Client;
 
     beforeAll((done)=>{
 
-        server = new Server("mongodb://localhost/test");
+        server = new reob.Server("mongodb://localhost/test");
 
         personCollection = new Tests.TestPersonCollection();
         server.addCollection(personCollection);
@@ -138,13 +142,12 @@ describe("Omm both on client and server", function () {
 
     it("can run collection updates from within another method and the userdata remains", function (done) {
         var t1:Tests.TestTree = new Tests.TestTree(15);
-        debugger;
-        var f = { handle:(evtCtx:reob.EventContext<Tests.TestTree>)=>{
-            expect( evtCtx.request ).toBeDefined();
+        var h:reob.UpdateEventListener<Tests.TestTree> = ( updateEvent:reob.UpdateEvent<Tests.TestTree> )=>{
+            expect( updateEvent.request ).toBeDefined();
             // expect( evtCtx.request.userData ).toBeDefined();
             // expect( evtCtx.request.userData.hello ).toBe("World");
-        }};
-
+        };
+        var f = { handle:h };
         spyOn(f, "handle").and.callThrough();
         client.setUserData({hello:"World"});
         treeCollection.onAfterUpdate(f.handle);
@@ -153,56 +156,6 @@ describe("Omm both on client and server", function () {
             return clientTreeService.growTree( id ).thenReturn( id );
         }).then((id)=>{
             expect( f.handle ).toHaveBeenCalled();
-            done();
-        });
-    });
-
-    it("notifies method listener", function (done) {
-        var c = 0;
-        var listener:reob.EventListener<any> = (i:reob.EventContext<any>, data?:any)=>{
-            c = 1;
-            console.log("!!!! ", i );
-            expect( i.object instanceof Tests.TreeServiceServer).toBeTruthy();
-            expect( i.request.userData.foo ).toBe("barbar");
-        };
-        var l = {listener:listener };
-        spyOn(l, "listener").and.callThrough();
-        var t1:Tests.TestTree = new Tests.TestTree(15);
-
-        server.onMethod(l.listener);
-        client.setUserData({foo:"barbar"});
-        treeCollection.insert(t1).then( (id:string)=> {
-            return clientTreeService.growTree( id ).thenReturn( id );
-        }).then((id)=>{
-            return treeCollection.getByIdOrFail(id);
-        }).then((t)=>{
-            expect( l.listener ).toHaveBeenCalled();
-            expect( c ).toBe(1);
-            done();
-        });
-    });
-
-    it("notifies method listener and listeners can cancel the method", function (done) {
-        var c = 0;
-        var listener:reob.EventListener<any> = (i:reob.EventContext<any>, data?:any)=>{
-            c = 1;
-            return Promise.reject( new Error("No") );
-        };
-        var l = {listener:listener };
-        spyOn(l, "listener").and.callThrough();
-        var t1:Tests.TestTree = new Tests.TestTree(15);
-
-        server.onMethod(l.listener);
-        client.setUserData({foo:"barbar"});
-        treeCollection.insert(t1).then( (id:string)=> {
-            return clientTreeService.growTree( id ).thenReturn( id );
-        }).then((id)=>{
-            return treeCollection.getByIdOrFail(id);
-        }).then((t)=>{
-            fail("Did succeed desipte being cancelled");
-            done();
-        }).catch((reason)=>{
-            expect(reason.message).toBe("No");
             done();
         });
     });
@@ -245,7 +198,7 @@ describe("Omm both on client and server", function () {
             var r = tree.grow();
             expect( r.then ).toBeDefined();
             done();
-        });
+        }).catch(done.fail);
     });
 
     it("can save objects that have sub objects (in an array) which have a parent reference", function (done) {
@@ -258,28 +211,6 @@ describe("Omm both on client and server", function () {
         }).then((t:Tests.TestTree)=> {
             expect(t).toBeDefined();
             expect(t.getLeaves()[0] instanceof Tests.TestLeaf).toBeTruthy();
-            done();
-        });
-    });
-    
-    it("has pre and post documents in the update context", function (done) {
-        var t1:Tests.TestTree = new Tests.TestTree(10);
-        t1.grow();
-        var i;
-        treeCollection.insert(t1).then((id:string)=>{
-            i = id;
-            return treeCollection.getById(id);
-        }).then((t:Tests.TestTree)=> {
-            var doc = new reob.Serializer().toDocument(t);
-            var l ={listener:(ctx:reob.EventContext<Tests.TestTree>)=>{
-                expect( ctx.preUpdateDocument  ).toBeDefined();
-                expect( ctx.postUpdateDocument ).toBeDefined();
-            }};
-            spyOn(l,"listener").and.callThrough();
-            treeCollection.onAfterUpdate(l.listener);
-            
-            return Promise.cast( t.setSomeBooleanTo( true ) ).thenReturn(doc);
-        }).then(()=>{
             done();
         });
     });
@@ -696,7 +627,6 @@ describe("Omm both on client and server", function () {
         expect(p).toBe(Tests.TestCar);
     });
 
-
     it("verifies that updates fail if the id is not given ", function (done) {
         personCollection.update(undefined, function () {
         }).then(()=>{
@@ -707,46 +637,6 @@ describe("Omm both on client and server", function () {
         });
     });
 
-    it("invokes didInsert events", function (done) {
-        var l:any = {};
-        l.listener = function (event:reob.EventContext<Tests.TestTree>) {
-            expect(event.object instanceof Tests.TestTree).toBeTruthy();
-            expect(event.cancelledWithError()).toBeFalsy();
-        };
-        spyOn(l, 'listener').and.callThrough();
-        treeCollection.onBeforeInsert(l.listener);
-        treeCollection.newTree(10).then(()=>{
-            expect(l.listener).toHaveBeenCalled();
-            done();
-        });
-        //fail();
-        //done();
-    });
-
-    it("can cancel inserts", function (done) {
-        var l:any = {};
-        l.listener = function (event:reob.EventContext<Tests.TestTree>) {
-            event.cancel(new Error("Not allowed"));
-        };
-        spyOn(l, 'listener').and.callThrough();
-        treeCollection.onBeforeInsert( l.listener );
-
-        var previousSize;
-        var previousSizePromise = treeCollection.getAll().then((arr:Array<any>)=>{
-            previousSize = arr.length;
-        });
-        previousSizePromise.then(()=>{
-          return treeCollection.newTree(10);
-        }).then(()=>{
-            fail('false success');
-            done();
-        }).catch((err)=>{
-            treeCollection.getAll().then((arr:Array<any>)=>{
-                expect(arr.length).toBe(previousSize);
-                done();
-            })
-        });
-    });
 
     it("can handle thrown errors", function (done) {
         treeCollection.newTree(10).then((tree:Tests.TestTree)=>{
@@ -757,25 +647,6 @@ describe("Omm both on client and server", function () {
                 done();
         });
     });
-
-
-    it("invokes deletition events", function (done) {
-        var l:any = {};
-        l.listener = function (event:reob.EventContext<Tests.TestTree>) {
-
-        };
-        spyOn(l, 'listener').and.callThrough();
-        treeCollection.onAfterRemove(l.listener);
-        treeCollection.newTree(10).then((tree)=> {
-            expect(tree).toBeDefined();
-            return treeCollection.deleteTree(tree.treeId);
-        }).then(()=>{
-            expect(l.listener).toHaveBeenCalled();
-            done();
-        });
-    });
-
-
 
     it("trees have leaves", function (done) {
         var tId;
@@ -791,329 +662,6 @@ describe("Omm both on client and server", function () {
         });
     });
 
-
-    //
-    it("can receive emitted events from a subobject", function (done) {
-        var l:any = {};
-        l.listener = function (event:reob.EventContext<Tests.TestTree>) {
-
-        };
-        spyOn(l, 'listener').and.callThrough();
-        treeCollection.onDuringUpdate( "fluttering", l.listener );
-        var tId;
-        treeCollection.newTree(10).then((t)=> {
-            expect(t).toBeDefined();
-            tId = t.treeId;
-            return t.grow();
-        }).then((values)=> {
-            return treeCollection.getById(tId);
-        }).then((t)=> {
-            expect(l.listener).not.toHaveBeenCalled();
-            return t.getLeaves()[0].flutter();
-        }).then(()=>{
-            expect(l.listener).toHaveBeenCalled();
-            done();
-        });
-    });
-
-    it("can receive emitted events from a subobject even if another (the first) event listener throws an exception", function (done) {
-        var l:any = {};
-        l.listener1 = function (event:reob.EventContext<Tests.TestTree>) {
-            // throw "freekish error";
-        };
-        l.listener2 = function (event:reob.EventContext<Tests.TestTree>) {
-
-        };
-        spyOn(l, 'listener1').and.callThrough();
-        spyOn(l, 'listener2').and.callThrough();
-
-        treeCollection.onDuringUpdate( "fluttering", l.listener1 );
-        treeCollection.onDuringUpdate( "fluttering", l.listener2 );
-
-        var treePromise = treeCollection.newTree(10);
-        var treeIdPromise = treePromise.then((t)=>{
-            return t.treeId;
-        });
-        var growPromise = treePromise.then((t)=>{
-            return t.grow();
-        });
-
-        var treePromise2 = Promise.all([growPromise, treeIdPromise]).then((values:any)=>{
-            var treeId = values[1];
-            return treeCollection.getById(treeId);
-        });
-
-        var flutterPromise = treePromise2.then((t)=>{
-            return t.getLeaves()[0].flutter();
-        }).then((t)=>{
-            expect(l.listener1).toHaveBeenCalled();
-            expect(l.listener2).toHaveBeenCalled();
-            done();
-        }).catch((e)=>{
-            fail(e);
-            done();
-        });
-
-    });
-    //
-    //
-
-    // it("can receive emitted events from a subobject and get the object", function (done) {
-    //     var l:any = {};
-    //     l.listener = function (event:omm.EventContext<Tests.TestTree>) {
-    //         expect(event.object instanceof Tests.TestLeaf).toBeTruthy();
-    //     };
-    //     spyOn(l, 'listener').and.callThrough();
-    //     omm.on(Tests.TestLeaf, "fluttering", l.listener);
-    //     co( function* (){
-    //         treeCollection.newTree(10, function (err, t:Tests.TestTree) {
-    //             expect(err).toBeUndefined();
-    //             t.grow();
-    //             t = treeCollection.getById(t.treeId);
-    //             expect(l.listener).not.toHaveBeenCalled();
-    //             t.getLeaves()[0].flutter();
-    //             expect(l.listener).toHaveBeenCalled();
-    //             done()
-    //         });
-    //
-    //     });
-    // });
-
-
-    it("can receive emitted events from a subobject and get the object", function (done) {
-        var l:any = {};
-        l.listener = function (event:reob.EventContext<Tests.TestTree>) {
-            expect(event.object instanceof Tests.TestLeaf).toBeTruthy();
-        };
-        spyOn(l, 'listener').and.callThrough();
-
-        treeCollection.onDuringUpdate( "fluttering", l.listener );
-
-        treeCollection.newTree(10).then((t)=> {
-            return Promise.cast(t.grow()).thenReturn(t);
-        }).then((tree)=>{
-            return treeCollection.getById(tree.treeId);
-        }).then((tree2)=> {
-            expect(l.listener).not.toHaveBeenCalled();
-            return tree2.getLeaves()[0].flutter();
-        }).then(()=>{
-            expect(l.listener).toHaveBeenCalled();
-            done()
-        });
-    });
-
-    it("can return errors in a promise ", function (done) {
-        treeCollection.errorMethod(10).then(()=>{
-            fail();
-        }).catch((err)=>{
-            expect(err).toBe("the error");
-            done();
-        });
-    });
-
-    it("can cancel deletes ", function (done) {
-        var l:any = {};
-        l.listener = function (event:reob.EventContext<Tests.TestTree>) {
-            event.cancel(new Error( "nope" ));
-        };
-        spyOn(l, 'listener').and.callThrough();
-        treeCollection.onBeforeRemove(l.listener);
-        var treeId;
-        treeCollection.newTree(10).then((tree)=>{
-            treeId = tree.treeId;
-            return treeCollection.deleteTree(tree.treeId);
-        }).catch((error)=>{
-            expect(error.message).toBe("nope");
-            expect(l.listener).toHaveBeenCalled();
-            treeCollection.getById(treeId).then((tree)=>{
-                expect(tree).toBeDefined();
-                done();
-            });
-        });
-
-    });
-    
-      it("can register for pre update events", function (done) {
-        var l:any = {};
-        l.listener = function (event:reob.EventContext<Tests.TestTree>) {
-            expect(event.object).toBeDefined();
-            expect(event.object instanceof Tests.TestTree).toBeTruthy();
-            var tt:Tests.TestTree = event.object;
-            expect(tt.getLeaves().length).toBe(0);
-        };
-        spyOn(l, 'listener').and.callThrough();
-        treeCollection.onBeforeUpdate( l.listener );
-
-        var treePromise = treeCollection.newTree(10);
-        treePromise.then((tree)=>{
-            return Promise.all( [tree.grow(), treePromise] );;
-        }).then( (values)=>{
-            expect(l.listener).toHaveBeenCalled();
-            done();
-        });
-    });
-
-    it("can register for specific update events", function (done) {
-        var l:any = {};
-        l.listener = function (event:reob.EventContext<Tests.TestTree>) {
-
-        };
-        spyOn(l, 'listener').and.callThrough();
-        treeCollection.onBeforeUpdate( Tests.TestTree, "grow", l.listener );
-        var treePromise = treeCollection.newTree(10);
-        treePromise.then((tree)=>{
-            return Promise.all( [tree.grow(), treePromise] );
-        }).then( (values)=>{
-            expect(l.listener).not.toHaveBeenCalled();
-            done();
-        });
-    });
-
-    it("can not register for update events with a function name that is not a collection update function", function (done) {
-        expect(()=>{
-            treeCollection.onBeforeUpdate( Tests.TestTree, "notAnUpdateFunction123", (i:reob.EventContext<Tests.TestTree>, data?:any)=>{
-
-            } );
-        }).toThrow();
-        done();
-    });
-
-    //
-    it("can cancel updates on a subobject in a generic listener", function (done) {
-        var l:any = {};
-        l.listener = function (event:reob.EventContext<Tests.TestTree>) {
-            event.cancel(new Error("not happening"));
-        };
-        spyOn(l, 'listener').and.callThrough();
-        treeCollection.onBeforeUpdate( l.listener );
-
-        treeCollection.newTree(10).then((tree)=>{
-            return tree.grow();
-        }).catch( (reason)=>{
-            expect(reason.message).toBe("not happening");
-            expect(l.listener).toHaveBeenCalled();
-            done();
-        });
-    });
-
-    it("can cancel updates on a subobject in a generic listener on a subobject", function (done) {
-        var l:any = {};
-        l.listener = function (event:reob.EventContext<Tests.TestTree>) {
-            event.cancel(new Error("not happening either"));
-        };
-        spyOn(l, 'listener').and.callThrough();
-        treeCollection.onBeforeUpdate( l.listener );
-        var treePromise = treeCollection.newTree(10);
-        treePromise.then((tree)=> {
-            return Promise.all([tree.grow(), treePromise]);
-        }).then((values:any)=>{
-            return treeCollection.getById(values[1].treeId);
-        }).then((tree)=>{
-            return tree.getLeaves()[0].flutter()
-        }).catch( (err)=>{
-            expect(err.message).toBe("not happening either");
-            expect(l.listener).toHaveBeenCalled();
-            done();
-        });
-    });
-
-    function pit(s:string, f:Function ){
-        it( s, function(done){
-            var promise = f();
-            promise.then(()=>{
-                done();
-            }).catch((err)=>{
-                fail(err);
-                done();
-            })
-        });
-    }
-
-    pit("can register for post update events", function (done) {
-        var l:any = {};
-        l.listener = function (event:reob.EventContext<Tests.TestTree>) {
-            expect(event.object).toBeDefined();
-            expect(event.object instanceof Tests.TestTree).toBeTruthy();
-            var tt:Tests.TestTree = event.object;
-            expect(tt.getLeaves().length + 1000).toBe(1001); //
-        };
-        spyOn(l, 'listener').and.callThrough();
-        treeCollection.onAfterUpdate( l.listener );
-
-        var treePromise = treeCollection.newTree(10);
-        return treePromise.then((tree)=> {
-            return Promise.all([tree.grow(), treePromise]);
-        }).then((values:any)=>{
-            return treeCollection.getById(values[1].treeId);
-        }).then((tree)=>{
-            expect(l.listener).toHaveBeenCalled();
-            expect(tree.getLeaves().length).toBe(1);
-        });
-    });
-
-    it("can cancel updates", function (done) {
-        var l:any = {};
-        l.listener = function (event:reob.EventContext<Tests.TestTree>) {
-            event.cancel(new Error( "nope" ));
-        };
-        spyOn(l, 'listener').and.callThrough();
-        treeCollection.onBeforeUpdate( l.listener );
-
-        var treeId;
-        var treePromise = treeCollection.newTree(10);
-        return treePromise.then((tree)=> {
-            treeId  = tree.treeId;
-            return Promise.all([tree.grow(), treePromise]);
-        }).catch((err)=>{
-            expect(err.message).toBe("nope");
-            treeCollection.getById(treeId).then((nt)=>{
-                expect(nt.getLeaves().length).toBe(0);
-                done();
-
-            });
-        });
-    });
-
-    it("can register to update events", function (done) {
-        var l:any = {};
-        var n:Array<string> = [];
-        l.listener = function (event:reob.EventContext<Tests.TestTree>, data:any) {
-            n.push(data);
-        };
-        spyOn(l, 'listener').and.callThrough();
-
-        treeCollection.onDuringUpdate("gardenevents", l.listener)
-        var treePromise = treeCollection.newTree(10);
-        return treePromise.then((tree)=> {
-            return Promise.all([tree.wither(), treePromise]);
-        }).then((values:any)=>{
-            return treeCollection.getById(values[1].treeId);
-        }).then((tree)=>{
-            expect(l.listener).toHaveBeenCalled();
-            expect(n).toContain("withered");
-            expect(n).toContain("withered2");
-            done();
-        });
-    });
-
-    it("can register to all update events", function (done) {
-        var l:any = {};
-        var n:Array<string> = [];
-        l.listener = function (event:reob.EventContext<Tests.TestTree>, data:any) {
-            n.push(data);
-        };
-        spyOn(l, 'listener').and.callThrough();
-
-        treeCollection.onBeforeSave(l.listener);
-        treeCollection.newTree(10).then((t)=>{
-            return t.wither();
-        }).then(()=>{
-            expect(l.listener).toHaveBeenCalled();
-            done();
-
-        });
-    });
-    
     it("can load trees ", function (done) {
         treeCollection.newTree(20)
             .then((tree:Tests.TestTree)=>{
@@ -1151,97 +699,6 @@ describe("Omm both on client and server", function () {
             });
     });
 
-    it("transports user data when inserting", function (done) {
-        var l:any = {};
-        var n:Array<string> = [];
-        client.setUserData({user:"bert", foo:"bar", solution:42});
-        l.listener = function (ctx:reob.EventContext<Tests.TestTree>, data:any) {
-            expect( ctx.request.userData ).toBeDefined();
-            expect( ctx.request.userData.user ).toBe( "bert" );
-            expect( ctx.request.userData.solution ).toBe( 42 );
-        };
-        spyOn(l, 'listener').and.callThrough();
-
-        treeCollection.onBeforeInsert(l.listener);
-        clientTreeService.insertTree(5).then(done,(reason)=>{
-            console.log("Failing because of ", reason);
-            fail(reason);
-            done();
-        });
-    });
-
-    it("transports user data when updating", function (done) {
-        var l:any = {};
-        var n:Array<string> = [];
-        client.setUserData({user:"bert", foo:"bar", solution:42});
-        l.listener = function (ctx:reob.EventContext<Tests.TestTree>, data:any) {
-            expect( ctx.request ).toBeDefined();
-            expect( ctx.request.userData ).toBeDefined();
-            expect( ctx.request.userData.user ).toBe( "bert" );
-            expect( ctx.request.userData.solution ).toBe( 42 );
-        };
-        spyOn(l, 'listener').and.callThrough();
-
-        treeCollection.onBeforeUpdate(l.listener);
-        clientTreeService.insertTree(5).then((t:Tests.TestTree)=>{
-            return t.grow();
-        }).then(()=>{
-            expect( l.listener ).toHaveBeenCalled();
-        }).then(done);
-    });
-
-    it("transports function names and objects when updating", function (done) {
-        var l:any = {};
-        var n:Array<string> = [];
-        client.setUserData({user:"bert", foo:"bar", solution:42});
-        l.listener = function (ctx:reob.EventContext<Tests.TestTree>, data:any) {
-            expect( ctx.functionName ).toBe('flutter');
-            expect( ctx.object instanceof Tests.TestLeaf ).toBeTruthy( );
-        };
-        spyOn(l, 'listener').and.callThrough();
-
-        var treeId;
-        debugger;
-        clientTreeService.insertTree(5).then((t:Tests.TestTree)=>{
-            treeId = t.treeId;
-            return t.grow();
-        }).then(()=>{
-            return client.load("TheTreeCollection",treeId);
-        }).then((t:Tests.TestTree)=>{
-            treeCollection.onBeforeUpdate(l.listener);
-            return  t.getLeaves()[0].flutter() ;
-        }).then(()=>{
-            expect( l.listener ).toHaveBeenCalled();
-        }).then(done).catch((reason)=>{
-            fail(reason);
-            done();
-        });
-    });
-    
-    it("eventlisteners return a promise", function (done) {
-        var l:any = {};
-        var n:Array<string> = [];
-        client.setUserData({user:"bert", foo:"bar", solution:42});
-        l.listener = function (ctx:reob.EventContext<Tests.TestTree>, data:any) {
-            expect( ctx.functionName ).toBe('flutter');
-            expect( ctx.object instanceof Tests.TestLeaf ).toBeTruthy( );
-        };
-        spyOn(l, 'listener').and.callThrough();
-
-        var treeId;
-        clientTreeService.insertTree(5).then((t:Tests.TestTree)=>{
-            treeId = t.treeId;
-            return t.grow();
-        }).then(()=>{
-            return client.load("TheTreeCollection",treeId);
-        }).then((t:Tests.TestTree)=>{
-            treeCollection.onBeforeUpdate(l.listener);
-            debugger;
-            return  t.getLeaves()[0].flutter() ;
-        }).then(()=>{
-            expect( l.listener ).toHaveBeenCalled();
-        }).then(done);
-    });
 
     it("doesnt reuse arrays in documents", function () {
         var tree = new Tests.TestTree(12);
@@ -1271,21 +728,7 @@ describe("Omm both on client and server", function () {
         expect( doc[0] ).toBe(42);
     });
 
-    it("did insert is called only once", function (done) {
-        var c = 0;
-        var listener = (i:any, data?: any): void=>{
-            c++;
-        };
-        var l = {listener:listener};
-        spyOn(l, "listener").and.callThrough();
-        treeCollection.onBeforeInsert(l.listener);
-        treeCollection.newTree(12).then((r)=>{
-            expect( l.listener ).toHaveBeenCalled();
-            expect( c ).toBe(1);
-            done();
-        });
 
-    });
 
 
     it("returns the proper error", function (done) {
@@ -1327,15 +770,14 @@ describe("Omm both on client and server", function () {
 
     it("the correct session factory in methods", function (done) {
         var isInstance:boolean = false;
-        var listener:reob.EventListener<any> = (i:reob.EventContext<any>, data?:any)=>{
-            isInstance = i.request instanceof  Tests.TestRequest;
+        var listener:reob.MethodEventListener = ( object:any, functionName:string, args:any[], request:reob.Request, result?:any)=>{
+            isInstance = request instanceof  Tests.TestRequest;
         };
         var l = {listener:listener };
         spyOn(l, "listener").and.callThrough();
         var t1:Tests.TestTree = new Tests.TestTree(15);
-        server.onMethod(l.listener);
+        server.onBeforeMethod(l.listener);
         treeCollection.insert(t1).then( (id:string)=> {
-            debugger;
             return clientTreeService.growTree( id ).thenReturn( id );
         }).then((id)=>{
             expect( l.listener ).toHaveBeenCalled();
@@ -1356,6 +798,665 @@ describe("Omm both on client and server", function () {
         });
     });
 
+
+
+
+    //// -------------------------------------------------------
+    //// ------------------------ events -----------------------
+    //// -------------------------------------------------------
+
+    //// ------------------------ events : insert -----------------------
+
+    it( "can register to before insert events", function (done) {
+        var l = spyOnAndCallThrough<reob.InsertEventListener<Tests.TestTree>>( (object:Tests.TestTree, request:reob.Request )=>{
+            expect( object instanceof Tests.TestTree ).toBeTruthy();
+            expect( object?object.getHeight():undefined ).toBe(5);
+            expect( object?object.treeId:undefined ).toBeDefined();
+            expect( request ).toBeDefined();
+            expect(request?request.userData:undefined).toBeDefined();
+            expect(request && request.userData ?request.userData.Hello:undefined).toBe(41);
+
+            // verify that the object was not yet inserted
+            return treeCollection.getById(object.treeId).then((t)=>{
+                expect(t).toBeUndefined();
+            });
+        });
+        treeCollection.onBeforeInsert(l);
+        client.setUserData({Hello:41});
+        clientTreeService.insertTree(5).then(()=>{
+            expect(l).toHaveBeenCalledTimes(1);
+            done();
+        }).catch(done.fail);
+    });
+
+    it("can cancel inserts", function (done) {
+        var id:string;
+        var l = spyOnAndCallThrough<reob.InsertEventListener<Tests.TestTree>>( (object:Tests.TestTree, request:reob.Request )=>{
+            id = object.treeId;
+            throw new Error("Not happening");
+        });
+        treeCollection.onBeforeInsert(l);
+        clientTreeService.insertTree(5).then(()=>{
+            done.fail("ended up in then part")
+        }).catch((reason)=>{
+            expect(reason?reason.message:undefined).toBe("Not happening");
+
+            treeCollection.getById(id).then((t)=>{
+                expect(t).toBeUndefined();
+                done();
+            })
+        });
+    });
+
+
+    it( "can register to after insert events", function (done) {
+        var l = spyOnAndCallThrough<reob.InsertEventListener<Tests.TestTree>>( (object:Tests.TestTree, request:reob.Request )=>{
+            expect( object instanceof Tests.TestTree ).toBeTruthy();
+            expect( object?object.getHeight():undefined ).toBe(5);
+            expect( object?object.treeId:undefined ).toBeDefined();
+            expect( request ).toBeDefined();
+            expect(request?request.userData:undefined).toBeDefined();
+            expect(request && request.userData ?request.userData.Hello:undefined).toBe(41);
+
+            // verify that the object was not yet inserted
+            return treeCollection.getById(object.treeId).then((t)=>{
+                expect(t).toBeDefined();
+            });
+        });
+        treeCollection.onAfterInsert(l);
+        client.setUserData({Hello:41});
+        clientTreeService.insertTree(5).then(()=>{
+            expect(l).toHaveBeenCalledTimes(1);
+            done();
+        }).catch(done.fail);
+    });
+
+    //// ------------------------ events : remove -----------------------
+
+    it("can register to before remove events", function (done) {
+        var l = spyOnAndCallThrough<reob.RemoveEventListener>( (id:string, request:reob.Request )=>{
+            expect( id ).toBeDefined();
+            expect( request ).toBeDefined();
+            expect(request?request.userData:undefined).toBeDefined();
+            expect(request && request.userData ?request.userData.Hello:undefined).toBe(41);
+
+            // verify that the object was not yet inserted
+            return treeCollection.getById(id).then((t)=>{
+                expect(t).toBeDefined();
+            });
+        });
+        treeCollection.onBeforeRemove(l);
+
+        client.setUserData({Hello:41});
+
+        treeCollection.newTree(10).then((tree)=> {
+
+            return clientTreeService.removeTree(tree.treeId);
+        }).then(()=>{
+            expect(l).toHaveBeenCalledTimes(1);
+            done();
+        });
+    });
+
+
+    it("can cancel removes", function (done) {
+        var id:string;
+        var l = spyOnAndCallThrough<reob.RemoveEventListener>( (id:string, request:reob.Request )=>{
+            throw new Error("non");
+        });
+        treeCollection.onBeforeRemove(l);
+        treeCollection.newTree(10).then((tree)=> {
+            id = tree.treeId;
+            return clientTreeService.removeTree(id);
+        }).then(()=>{
+            done.fail("then part");
+        }).catch(r =>{
+            expect(l).toHaveBeenCalledTimes(1);
+            expect( r?r.message:undefined ).toBe("non");
+            treeCollection.getByIdOrFail(id).then(done).catch(done.fail);
+        });
+    });
+
+    it("can register to after remove events", function (done) {
+        var l = spyOnAndCallThrough<reob.RemoveEventListener>( (id:string, request:reob.Request )=>{
+            expect( id ).toBeDefined();
+            expect( request ).toBeDefined();
+            expect( request?request.userData:undefined).toBeDefined();
+            expect( request && request.userData ?request.userData.Hello:undefined).toBe(41);
+
+            // verify that the object was not yet inserted
+            return treeCollection.getByIdOrFail(id).then( t => fail("not deleted") ).catch(()=>{});
+        });
+        treeCollection.onAfterRemove(l);
+
+        client.setUserData({Hello:41});
+
+        treeCollection.newTree(10).then((tree)=> {
+
+            return clientTreeService.removeTree(tree.treeId);
+        }).then(()=>{
+            expect(l).toHaveBeenCalledTimes(1);
+            done();
+        });
+    });
+
+    //// ------------------------ events : update -----------------------
+
+    fit("can register for before update events and the event listener receives all the correct data.", function (done) {
+        var l = spyOnAndCallThrough<reob.UpdateEventListener<Tests.TestTree>>( ( updateEvent:reob.UpdateEvent<Tests.TestTree> )=>{
+            expect(updateEvent).toBeDefined();
+            if( updateEvent ) {
+                expect( updateEvent.rootObject).toBeDefined();
+                expect( updateEvent.rootObject instanceof Tests.TestTree).toBeTruthy();
+                expect( updateEvent.functionName).toBe("setSomeBooleanTo");
+                expect( updateEvent.args).toEqual([true]);
+                expect( updateEvent.request).toBeDefined();
+
+                expect( updateEvent.beforeUpdateDocument ).toBeDefined();
+                if( updateEvent.beforeUpdateDocument ) expect( updateEvent.beforeUpdateDocument["someBoolean"]).toBe(false);
+
+                expect( updateEvent.afterUpdateDocument ).toBeUndefined();
+                expect( updateEvent.result ).toBeUndefined();
+                // if( updateEvent.afterUpdateDocument ) expect( updateEvent.afterUpdateDocument["someBoolean"]).toBe(true);
+
+                expect( updateEvent.request ).toBeDefined();
+                expect( updateEvent.request?updateEvent.request.userData:undefined).toBeDefined();
+                expect( updateEvent.request && updateEvent.request.userData ?updateEvent.request.userData.Hello:undefined).toBe(41);
+            }
+        });
+        treeCollection.onBeforeUpdate( l );
+        client.setUserData({Hello:41});
+        treeCollection.newTree(10).then((tree)=>{
+            return clientTreeService.setSomeBooleanOnTree(tree.treeId, true);
+        }).then( (s)=>{
+            expect(l).toHaveBeenCalled();
+            done();
+        });
+    });
+
+    fit("can register to after-update-events and the event listener receives all the correct data.", function (done) {
+        var l = spyOnAndCallThrough<reob.UpdateEventListener<Tests.TestTree>>( ( updateEvent:reob.UpdateEvent<Tests.TestTree> )=>{
+            expect(updateEvent).toBeDefined();
+            if( updateEvent ) {
+                expect( updateEvent.rootObject).toBeDefined();
+                expect( updateEvent.rootObject instanceof Tests.TestTree).toBeTruthy();
+                expect( updateEvent.functionName).toBe("setSomeBooleanTo");
+                expect( updateEvent.args).toEqual([true]);
+                expect( updateEvent.request).toBeDefined();
+
+                expect( updateEvent.beforeUpdateDocument ).toBeDefined();
+                if( updateEvent.beforeUpdateDocument ) expect( updateEvent.beforeUpdateDocument["someBoolean"]).toBe(false);
+
+                expect( updateEvent.result ).toBe("set to true");
+                expect( updateEvent.afterUpdateDocument ).toBeDefined();
+                if( updateEvent.afterUpdateDocument ) expect( updateEvent.afterUpdateDocument["someBoolean"]).toBe(true);
+
+                expect( updateEvent.request ).toBeDefined();
+                expect( updateEvent.request?updateEvent.request.userData:undefined).toBeDefined();
+                expect( updateEvent.request && updateEvent.request.userData ?updateEvent.request.userData.Hello:undefined).toBe(41);
+            }
+        });
+        treeCollection.onAfterUpdate( l );
+        client.setUserData({Hello:41});
+        treeCollection.newTree(10).then((tree)=>{
+            return clientTreeService.setSomeBooleanOnTree(tree.treeId, true);
+        }).then( (s)=>{
+            expect(l).toHaveBeenCalled();
+            done();
+        });
+    });
+
+    fit("can register to all update listeners and they are called in the correct order", function (done) {
+        var c = 0;
+        var lBefore = spyOnAndCallThrough<reob.UpdateEventListener<Tests.TestTree>>( ( updateEvent:reob.UpdateEvent<Tests.TestTree> )=>{
+            expect( c ).toBe(0);
+            c++;
+        });
+        var lSave = spyOnAndCallThrough<reob.SaveEventListener<Tests.TestTree>>( ( t:Tests.TestTree )=>{
+            expect( c ).toBe(1);
+            c++;
+
+        });
+        var lDuring = spyOnAndCallThrough<reob.UpdateEventListener<Tests.TestTree>>( ( updateEvent:reob.UpdateEvent<Tests.TestTree> )=>{
+            expect( c ).toBe(2);
+            c++;
+        });
+        var lAfter = spyOnAndCallThrough<reob.UpdateEventListener<Tests.TestTree>>( ( updateEvent:reob.UpdateEvent<Tests.TestTree> )=>{
+            expect( c ).toBe(3);
+            c++;
+        });
+        treeCollection.onBeforeUpdate( lBefore );
+        treeCollection.onBeforeSave( lSave );
+        treeCollection.onDuringUpdate( lDuring );
+        treeCollection.onAfterUpdate( lAfter );
+
+        treeCollection.newTree(10).then((tree)=>{
+            return tree.setSomeBooleanTo(false);
+        }).then( (s)=>{
+            expect(lBefore).toHaveBeenCalledTimes(1);
+            expect(lSave).toHaveBeenCalledTimes(1);
+            expect(lDuring).toHaveBeenCalledTimes(1);
+            expect(lAfter).toHaveBeenCalledTimes(1);
+            done();
+        });
+    });
+
+    it("can receive emitted events from a subobject", function (done) {
+        var l =  spyOnAndCallThrough( (event:reob.UpdateEvent<Tests.TestTree>)=>{} );
+        treeCollection.onDuringUpdate( "fluttering", l );
+        var tId;
+        treeCollection.newTree(10).then((t)=> {
+            expect(t).toBeDefined();
+            tId = t.treeId;
+            return t.grow();
+        }).then((values)=> {
+            return treeCollection.getById(tId);
+        }).then((t)=> {
+            expect(l).not.toHaveBeenCalled();
+            return t.getLeaves()[0].flutter();
+        }).then(()=>{
+            expect(l).toHaveBeenCalled();
+            done();
+        });
+    });
+
+
+
+
+
+    it("can receive emitted events from a subobject even if another (the first) event listener throws an exception", function (done) {
+        // var l:any = {};
+        // l.listener1 = function (event:reob.EventContext<Tests.TestTree>) {
+        //     // throw "freekish error";
+        // };
+        // l.listener2 = function (event:reob.EventContext<Tests.TestTree>) {
+        //
+        // };
+        // spyOn(l, 'listener1').and.callThrough();
+        // spyOn(l, 'listener2').and.callThrough();
+        //
+        // treeCollection.onDuringUpdate( "fluttering", l.listener1 );
+        // treeCollection.onDuringUpdate( "fluttering", l.listener2 );
+        //
+        // var treePromise = treeCollection.newTree(10);
+        // var treeIdPromise = treePromise.then((t)=>{
+        //     return t.treeId;
+        // });
+        // var growPromise = treePromise.then((t)=>{
+        //     return t.grow();
+        // });
+        //
+        // var treePromise2 = Promise.all([growPromise, treeIdPromise]).then((values:any)=>{
+        //     var treeId = values[1];
+        //     return treeCollection.getById(treeId);
+        // });
+        //
+        // var flutterPromise = treePromise2.then((t)=>{
+        //     return t.getLeaves()[0].flutter();
+        // }).then((t)=>{
+        //     expect(l.listener1).toHaveBeenCalled();
+        //     expect(l.listener2).toHaveBeenCalled();
+        //     done();
+        // }).catch((e)=>{
+        //     fail(e);
+        //     done();
+        // });
+        done.fail("it needs to be implemented");
+    });
+    //
+    //
+
+    // it("can receive emitted events from a subobject and get the object", function (done) {
+    //     var l:any = {};
+    //     l.listener = function (event:omm.EventContext<Tests.TestTree>) {
+    //         expect(event.object instanceof Tests.TestLeaf).toBeTruthy();
+    //     };
+    //     spyOn(l, 'listener').and.callThrough();
+    //     omm.on(Tests.TestLeaf, "fluttering", l.listener);
+    //     co( function* (){
+    //         treeCollection.newTree(10, function (err, t:Tests.TestTree) {
+    //             expect(err).toBeUndefined();
+    //             t.grow();
+    //             t = treeCollection.getById(t.treeId);
+    //             expect(l.listener).not.toHaveBeenCalled();
+    //             t.getLeaves()[0].flutter();
+    //             expect(l.listener).toHaveBeenCalled();
+    //             done()
+    //         });
+    //
+    //     });
+    // });
+
+
+    it("can receive emitted events from a subobject and get the root object", function (done) {
+        // var l:any = {};
+        // l.listener = function (event:reob.EventContext<Tests.TestTree>) {
+        //     expect(event.rootObject instanceof Tests.TestTree).toBeTruthy();
+        // };
+        // spyOn(l, 'listener').and.callThrough();
+        //
+        // treeCollection.onDuringUpdate( "fluttering", l.listener );
+        //
+        // treeCollection.newTree(10).then((t)=> {
+        //     return Promise.cast(t.grow()).thenReturn(t);
+        // }).then((tree)=>{
+        //     return treeCollection.getById(tree.treeId);
+        // }).then((tree2)=> {
+        //     expect(l.listener).not.toHaveBeenCalled();
+        //     return tree2.getLeaves()[0].flutter();
+        // }).then(()=>{
+        //     expect(l.listener).toHaveBeenCalled();
+        //     done()
+        // });
+        done.fail("it needs to be implemented");
+    });
+
+    it("can return errors in a promise ", function (done) {
+        treeCollection.errorMethod(10).then(()=>{
+            done.fail(new Error("still happened"));
+        }).catch((err)=>{
+            expect(err).toBe("the error");
+            done();
+        });
+    });
+
+    //
+    it("can cancel updates on a subobject in a generic listener", function (done) {
+        // var l:any = {};
+        // l.listener = function (event:reob.EventContext<Tests.TestTree>) {
+        //     event.cancel(new Error("not happening"));
+        // };
+        // spyOn(l, 'listener').and.callThrough();
+        // treeCollection.onBeforeUpdate( l.listener );
+        //
+        // treeCollection.newTree(10).then((tree)=>{
+        //     return tree.grow();
+        // }).catch( (reason)=>{
+        //     expect(reason.message).toBe("not happening");
+        //     expect(l.listener).toHaveBeenCalled();
+        //     done();
+        // });
+        done.fail("it needs to be implemented");
+    });
+
+    it("can cancel updates on a subobject in a generic listener on a subobject", function (done) {
+        // var l:any = {};
+        // l.listener = function (event:reob.EventContext<Tests.TestTree>) {
+        //     event.cancel(new Error("not happening either"));
+        // };
+        // spyOn(l, 'listener').and.callThrough();
+        // treeCollection.onBeforeUpdate( l.listener );
+        // var treePromise = treeCollection.newTree(10);
+        // treePromise.then((tree)=> {
+        //     return Promise.all([tree.grow(), treePromise]);
+        // }).then((values:any)=>{
+        //     return treeCollection.getById(values[1].treeId);
+        // }).then((tree)=>{
+        //     return tree.getLeaves()[0].flutter()
+        // }).catch( (err)=>{
+        //     expect(err.message).toBe("not happening either");
+        //     expect(l.listener).toHaveBeenCalled();
+        //     done();
+        // });
+        done.fail("it needs to be implemented");
+    });
+
+    function pit(s:string, f:Function ){
+        it( s, function(done){
+            var promise = f();
+            promise.then(()=>{
+                done();
+            }).catch((err)=>{
+                fail(err);
+                done();
+            })
+        });
+    }
+
+    pit("can register for post update events", function (done) {
+        var l:any = {};
+        l.listener = (id:string, rootObject:Tests.TestTree, subObject:reob.Object, functionName:string, args:any[], request?:reob.Request, result?:any) => {
+            expect( rootObject ).toBeDefined();
+            expect( subObject ).toBeDefined();
+            expect( rootObject instanceof Tests.TestTree).toBeTruthy();
+            expect(rootObject.getLeaves().length + 1000).toBe(1001); //
+        };
+        spyOn(l, 'listener').and.callThrough();
+        treeCollection.onAfterUpdate( l.listener );
+
+        var treePromise = treeCollection.newTree(10);
+        return treePromise.then((tree)=> {
+            return Promise.all([tree.grow(), treePromise]);
+        }).then((values:any)=>{
+            return treeCollection.getById(values[1].treeId);
+        }).then((tree)=>{
+            expect(l.listener).toHaveBeenCalled();
+            expect(tree.getLeaves().length).toBe(1);
+        });
+    });
+
+    it("can cancel updates", function (done) {
+        // var l:any = {};
+        // l.listener = function (event:reob.EventContext<Tests.TestTree>) {
+        //     event.cancel(new Error( "nope" ));
+        // };
+        // spyOn(l, 'listener').and.callThrough();
+        // treeCollection.onBeforeUpdate( l.listener );
+        //
+        // var treeId;
+        // var treePromise = treeCollection.newTree(10);
+        // return treePromise.then((tree)=> {
+        //     treeId  = tree.treeId;
+        //     return Promise.all([tree.grow(), treePromise]);
+        // }).catch((err)=>{
+        //     expect(err.message).toBe("nope");
+        //     treeCollection.getById(treeId).then((nt)=>{
+        //         expect(nt.getLeaves().length).toBe(0);
+        //         done();
+        //
+        //     });
+        // });
+        done.fail("it needs to be implemented");
+
+    });
+
+    it("can register to update events", function (done) {
+        // var l:any = {};
+        // var n:Array<string> = [];
+        // l.listener = function (event:reob.EventContext<Tests.TestTree>, data:any) {
+        //     n.push(data);
+        // };
+        // spyOn(l, 'listener').and.callThrough();
+        //
+        // treeCollection.onDuringUpdate("gardenevents", l.listener)
+        // var treePromise = treeCollection.newTree(10);
+        // return treePromise.then((tree)=> {
+        //     return Promise.all([tree.wither(), treePromise]);
+        // }).then((values:any)=>{
+        //     return treeCollection.getById(values[1].treeId);
+        // }).then((tree)=>{
+        //     expect(l.listener).toHaveBeenCalled();
+        //     expect(n).toContain("withered");
+        //     expect(n).toContain("withered2");
+        //     done();
+        // });
+        done.fail("it needs to be implemented");
+    });
+
+    it("can register to all update events", function (done) {
+        // var l:any = {};
+        // var n:Array<string> = [];
+        // l.listener = function (event:reob.EventContext<Tests.TestTree>, data:any) {
+        //     n.push(data);
+        // };
+        // spyOn(l, 'listener').and.callThrough();
+        //
+        // treeCollection.onBeforeSave(l.listener);
+        // treeCollection.newTree(10).then((t)=>{
+        //     return t.wither();
+        // }).then(()=>{
+        //     expect(l.listener).toHaveBeenCalled();
+        //     done();
+        //
+        // });
+        done.fail("it needs to be implemented");
+    });
+    
+
+
+
+    it("transports the request when updating", function (done) {
+        // var l:any = {};
+        // var n:Array<string> = [];
+        // client.setUserData({user:"bert", foo:"bar", solution:42});
+        // l.listener = function (ctx:reob.EventContext<Tests.TestTree>, data:any) {
+        //     expect( ctx.request ).toBeDefined();
+        //     expect( ctx.request.userData ).toBeDefined();
+        //     expect( ctx.request.userData.user ).toBe( "bert" );
+        //     expect( ctx.request.userData.solution ).toBe( 42 );
+        // };
+        // spyOn(l, 'listener').and.callThrough();
+        //
+        // treeCollection.onBeforeUpdate(l.listener);
+        // clientTreeService.insertTree(5).then((t:Tests.TestTree)=>{
+        //     return t.grow();
+        // }).then(()=>{
+        //     expect( l.listener ).toHaveBeenCalled();
+        // }).then(done);
+        done.fail("it needs to be implemented");
+    });
+
+
+    it("transports function names and objects when updating", function (done) {
+        var l:any = {};
+        var n:Array<string> = [];
+        client.setUserData({user:"bert", foo:"bar", solution:42});
+        l.listener = function ( rootObject:Tests.TestTree, subObject:reob.Object, functionName:string, args:any[], request?:reob.Request, result?:any ) {
+            expect( functionName ).toBe('flutter');
+            expect( subObject instanceof Tests.TestLeaf ).toBeTruthy( );
+        };
+        spyOn(l, 'listener').and.callThrough();
+
+        var treeId;
+        debugger;
+        clientTreeService.insertTree(5).then((t:Tests.TestTree)=>{
+            treeId = t.treeId;
+            return t.grow();
+        }).then(()=>{
+            return client.load("TheTreeCollection",treeId);
+        }).then((t:Tests.TestTree)=>{
+            treeCollection.onBeforeUpdate(l.listener);
+            return  t.getLeaves()[0].flutter() ;
+        }).then(()=>{
+            expect( l.listener ).toHaveBeenCalled();
+        }).then(done).catch((reason)=>{
+            fail(reason);
+            done();
+        });
+    });
+
+    it("can register for update events triggered by a function", function (done) {
+        var l:any = {};
+        l.listener =  (id:string, rootObject: Tests.TestTree, subObject:reob.Object, functionName:string, args:any[], request?:reob.Request, result?:any) => {
+        };
+        spyOn(l, 'listener').and.callThrough();
+        treeCollection.onBeforeUpdate( Tests.TestTree, "grow", l.listener );
+        var treePromise = treeCollection.newTree(10);
+        treePromise.then((tree)=>{
+            return Promise.all( [tree.grow(), treePromise] );
+        }).then( (values)=>{
+            expect(l.listener).not.toHaveBeenCalled();
+            done();
+        });
+    });
+
+    it("can not register for update events with a function name that is not a collection update function", function (done) {
+        expect(()=>{
+            treeCollection.onBeforeUpdate( Tests.TestTree, "notAnUpdateFunction123", ()=>{
+            } );
+        }).toThrow();
+        done();
+    });
+
+    it("notifies method listener", function (done) {
+        var c = 0;
+        var listener:reob.MethodEventListener = (object:any, functionName:string, args:any[], request:reob.Request, result?:any)=>{
+            c = 1;
+            expect( object instanceof Tests.TreeServiceServer).toBeTruthy();
+            expect( request.userData.foo ).toBe("barbar");
+        };
+        var l = {listener:listener };
+        spyOn(l, "listener").and.callThrough();
+        var t1:Tests.TestTree = new Tests.TestTree(15);
+
+        server.onBeforeMethod(l.listener);
+        client.setUserData({foo:"barbar"});
+        treeCollection.insert(t1).then( (id:string)=> {
+            return clientTreeService.growTree( id ).thenReturn( id );
+        }).then((id)=>{
+            return treeCollection.getByIdOrFail(id);
+        }).then((t)=>{
+            expect( l.listener ).toHaveBeenCalled();
+            expect( c ).toBe(1);
+            done();
+        });
+    });
+
+    it("notifies method listener and listeners can cancel the method", function (done) {
+        var c = 0;
+        var listener:reob.MethodEventListener = (object:any, functionName:string, args:any[], request:reob.Request, result?:any)=>{
+            c = 1;
+            return Promise.reject( new Error("No") );
+        };
+        var l = {listener:listener };
+        spyOn(l, "listener").and.callThrough();
+        var t1:Tests.TestTree = new Tests.TestTree(15);
+
+        server.onBeforeMethod(l.listener);
+        client.setUserData({foo:"barbar"});
+        treeCollection.insert(t1).then( (id:string)=> {
+            return clientTreeService.growTree( id ).thenReturn( id );
+        }).then((id)=>{
+            return treeCollection.getByIdOrFail(id);
+        }).then((t)=>{
+            fail("Did succeed desipte being cancelled");
+            done();
+        }).catch((reason)=>{
+            expect(reason.message).toBe("No");
+            done();
+        });
+    });
+
+
+
+    it("eventlisteners return a promise", function (done) {
+        var l:any = {};
+        var n:Array<string> = [];
+        client.setUserData({user:"bert", foo:"bar", solution:42});
+        l.listener = function ( rootObject:Tests.TestTree, subObject:reob.Object, functionName:string, args:any[], request?:reob.Request, result?:any ) {
+            expect( functionName ).toBe('flutter');
+            expect( subObject instanceof Tests.TestLeaf ).toBeTruthy( );
+        };
+        spyOn(l, 'listener').and.callThrough();
+
+        var treeId;
+        clientTreeService.insertTree(5).then((t:Tests.TestTree)=>{
+            treeId = t.treeId;
+            return t.grow();
+        }).then(()=>{
+            return client.load("TheTreeCollection",treeId);
+        }).then((t:Tests.TestTree)=>{
+            treeCollection.onBeforeUpdate(l.listener);
+            debugger;
+            return  t.getLeaves()[0].flutter() ;
+        }).then(()=>{
+            expect( l.listener ).toHaveBeenCalled();
+        }).then(done);
+    });
+
+    it("event listeners can throw an Error to abort the operation", function (done) {
+        fail("to be implemented")
+    });
 
     // test that calls a nested collection update (one in the other)
 

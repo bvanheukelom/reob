@@ -29,9 +29,21 @@ export class TreeServiceServer{
             return t.growAsOnlyACollectionUpdate();
         });
     }
+    @reob.Remote({ serverOnly:true })
+    setSomeBooleanOnTree(treeId:string, b:boolean):Promise<string> {
+        return this.treeCollection.getByIdOrFail(treeId,this.request).then((t:Tests.TestTree)=>{
+            return t.setSomeBooleanTo(b);
+        });
+    }
 
     @reob.Remote({ serverOnly:true })
     aTreeAndAPerson(treeId:string,personId:string):Promise<any> {
         return Promise.all([this.treeCollection.getByIdOrFail(treeId,this.request), this.personCollection.getByIdOrFail(personId,this.request)]);
     }
+
+    @reob.Remote({ serverOnly:true })
+    removeTree(treeId:string):Promise<any> {
+        return this.treeCollection.deleteTree(treeId, this.request);
+    }
+
 }

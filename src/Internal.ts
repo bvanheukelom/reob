@@ -2,7 +2,7 @@
  * Created by bert on 23.09.16.
  */
 /**
- * @private
+ * @hidden
  */
 export function setNonEnumerableProperty(obj:Object, propertyName:string, value:any):void {
     if (!Object.getOwnPropertyDescriptor(obj, propertyName)) {

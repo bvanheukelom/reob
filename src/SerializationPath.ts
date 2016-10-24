@@ -96,7 +96,7 @@ export class SerializationPath {
     }
 
 
-    static setObjectContext(object:reob.OmmObject, sp:SerializationPath, handler:reob.Handler, request:reob.Request ):void{
+    static setObjectContext(object:reob.Object, sp:SerializationPath, handler:reob.Handler, request:reob.Request ):void{
         if( object ){
             setNonEnumerableProperty( object, "_reobObjectContext", {
                 serializationPath:sp,
@@ -106,12 +106,12 @@ export class SerializationPath {
         }
     }
 
-    static getObjectContext(object:reob.OmmObject  ):reob.ObjectContext{
+    static getObjectContext(object:reob.Object  ):reob.ObjectContext{
         return object? object._reobObjectContext:undefined;
     }
 
     // if I could I would make this package protected
-    static updateObjectContexts(object:reob.OmmObject, handler:reob.Handler, request:reob.Request, visited?:Array<Object>):void {
+    static updateObjectContexts(object:reob.Object, handler:reob.Handler, request:reob.Request, visited?:Array<Object>):void {
         var that = this;
         if (!visited)
             visited = [];
@@ -140,7 +140,7 @@ export class SerializationPath {
         reob.Reflect.getTypedPropertyNames(objectClass).forEach(function (typedPropertyName:string) {
             // if (!PersistenceAnnotation.isStoredAsForeignKeys(objectClass, typedPropertyName)) {
             //     //console.log("updating foreignkey property " + typedPropertyName);
-            var v:reob.OmmObject = object[typedPropertyName];
+            var v:reob.Object = object[typedPropertyName];
             if (v) {
                 if (reob.Reflect.isArrayOrMap(objectClass, typedPropertyName)) {
                     //console.log("updating foreignkey property " + typedPropertyName + " is array");

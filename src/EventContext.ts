@@ -5,25 +5,25 @@
 import * as reob from "./reob"
 
 export class EventContext<T> {
-    private  cancelledError:any = false;
-    preUpdate:T;
-    preUpdateDocument:reob.Document;
-    postUpdateDocument:reob.Document;
-    object:T;
+    private cancelledError:any = false;
+
+    beforeUpdate:T;
+    beforeUpdateDocument:reob.Document;
+    afterUpdateDocument:reob.Document;
     request:reob.Request;
-    objectId:string;
-    collection:any; //omm.Collection<T>;
-    rootObject:any;
+
+    rootObject:T;
+    rootObjectId:string;
+    subObject:reob.Object;
+
     functionName:string;
-    serializationPath:any; //omm.SerializationPath;
-    topic:string;
     arguments:any[];
 
-    constructor(o:T, coll:any /*omm.Collection<T>*/) {
-        this.object = o;
-        if( o )
-            this.objectId = reob.getId(o);
-        this.collection = coll;
+    constructor(rootObject?:T, subObject?:reob.Object ) {
+        this.rootObject = rootObject;
+        this.subObject = subObject;
+        if( rootObject )
+            this.rootObjectId = reob.getId(rootObject);
     }
 
     cancel(err:Error):void {

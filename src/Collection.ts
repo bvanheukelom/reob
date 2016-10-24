@@ -1,10 +1,6 @@
 
 
-import * as reob from "./reob"
-
-import {Request} from "./Request"
-import {EventListenerRegistry} from "./EventListenerRegistry"
-
+import * as reob from "./serverModule"
 import * as mongodb from "mongodb"
 import * as Promise from "bluebird"
 import * as uuid from "node-uuid"
@@ -19,14 +15,18 @@ function getDefaultCollectionName(t:reob.TypeClass<any>):string {
  * @hidden
  */
 class EventNames{
-    static onBeforeSave:string = "onBeforeSave";
-    static onBeforeRemove:string = "onBeforeSave";
-    static onAfterRemove:string = "onAfterRemove";
+
+    static onBeforeRemove:string = "onBeforeRemove";
+    static onAfterRemove:string = "onAfterRemove"; // only id
+
     static onBeforeInsert:string = "onBeforeInsert";
     static onAfterInsert:string = "onAfterInsert";
+
     static onBeforeUpdate:string = "onBeforeUpdate";
     static onAfterUpdate:string = "onAfterUpdate";
+    static onBeforeSave:string = "onBeforeSave";
     static onDuringUpdate:string = "onDuringUpdate";
+
 }
 
 /**
@@ -39,14 +39,41 @@ interface CapturedEvent{
 }
 
 
-export class Collection<T extends reob.OmmObject> implements reob.Handler
+export interface RemoveEventListener {
+    ( id:string, request?:reob.Request ) : Promise<void>|void
+}
+
+export interface UpdateEvent<T> {
+    rootObject:T;
+    subObject:reob.Object;
+    functionName:string;
+    args:any[];
+    request:reob.Request;
+    result:any;
+    beforeUpdateDocument:reob.Document;
+    afterUpdateDocument:reob.Document;
+}
+
+export interface UpdateEventListener<T> {
+    ( updateEvent:UpdateEvent<T> ) : Promise<void>|void
+}
+
+export interface SaveEventListener<T> {
+    ( object:T, request?:reob.Request ) : Promise<void>|void
+}
+
+export interface InsertEventListener<T> {
+    ( object:T, request?:reob.Request ) : Promise<void>|void
+}
+
+export class Collection<T extends reob.Object> implements reob.Handler
 {
     private mongoCollection:mongodb.Collection;
     private theClass:reob.TypeClass<T>;
     private name:string;
     private serializer:reob.Serializer;
 
-    private eventListenerRegistry:EventListenerRegistry<reob.EventListener<T>> = new EventListenerRegistry<reob.EventListener<T>>();
+    private eventListenerRegistry:reob.EventListenerRegistry = new reob.EventListenerRegistry();
 
     constructor( entityClass:reob.TypeClass<T>, collectionName?:string ) {
         this.serializer = new reob.Serializer();
@@ -66,7 +93,7 @@ export class Collection<T extends reob.OmmObject> implements reob.Handler
      * Adds an event listener that is called before an object is removed from the collection. The listener can cancel the operation.
      * @param f the listener
      */
-    onBeforeRemove( f:reob.EventListener<T> ){
+    onBeforeRemove( f:RemoveEventListener ){
         this.eventListenerRegistry.on( EventNames.onBeforeRemove, undefined, f );
     }
 
@@ -74,7 +101,7 @@ export class Collection<T extends reob.OmmObject> implements reob.Handler
      * Adds an event listener that is called after an object is removed from the collection.
      * @param f the listener
      */
-    onAfterRemove(f:reob.EventListener<T> ){
+    onAfterRemove( f:RemoveEventListener ){
         this.eventListenerRegistry.on( EventNames.onAfterRemove, undefined, f );
     }
 
@@ -82,7 +109,7 @@ export class Collection<T extends reob.OmmObject> implements reob.Handler
      * Adds an event listener that is called after an object is inserted into the collection. The listener can cancel the operation.
      * @param f the listener
      */
-    onBeforeInsert(f:reob.EventListener<T> ){
+    onBeforeInsert( f:InsertEventListener<T> ){
         this.eventListenerRegistry.on( EventNames.onBeforeInsert, undefined, f );
     }
 
@@ -90,7 +117,7 @@ export class Collection<T extends reob.OmmObject> implements reob.Handler
      * Adds an event listener that is called after an object is inserted into the collection.
      * @param f the listener
      */
-    onAfterInsert(f:reob.EventListener<T> ){
+    onAfterInsert( f:InsertEventListener<T> ){
         this.eventListenerRegistry.on( EventNames.onAfterInsert, undefined, f );
     }
 
@@ -98,7 +125,7 @@ export class Collection<T extends reob.OmmObject> implements reob.Handler
      * Adds an event listener that is called before a collection is updated with an updated object.
      * @param f the listener
      */
-    onBeforeSave( f?:reob.EventListener<T> ){
+    onBeforeSave( f?:SaveEventListener<T> ){
         this.eventListenerRegistry.on( EventNames.onBeforeSave, undefined, f );
     }
 
@@ -106,7 +133,7 @@ export class Collection<T extends reob.OmmObject> implements reob.Handler
      * Adds an event listener that is called before a remote function updates an object. The listener can cancel the operation.
      * @param f the listener
      */
-    onBeforeUpdate( cls?:reob.TypeClass<any>|reob.EventListener<T>, functionName?:string, f?:reob.EventListener<T> ){
+    onBeforeUpdate( cls?:reob.TypeClass<any>|UpdateEventListener<T>, functionName?:string, f?:UpdateEventListener<T> ){
         this.registerUpdateEventListener( EventNames.onBeforeUpdate, cls, functionName, f );
     }
 
@@ -114,87 +141,42 @@ export class Collection<T extends reob.OmmObject> implements reob.Handler
      * Adds an event listener that is called after a remote function updates an object.
      * @param f the listener
      */
-    onAfterUpdate( cls?:reob.TypeClass<any>|reob.EventListener<T>, functionName?:string, f?:reob.EventListener<T> ){
+    onAfterUpdate( cls?:reob.TypeClass<any>|reob.UpdateEventListener<T>, functionName?:string, f?:UpdateEventListener<T> ){
         this.registerUpdateEventListener( EventNames.onAfterUpdate, cls, functionName, f );
     }
 
-    private registerUpdateEventListener( topic:string, cls:reob.TypeClass<reob.OmmObject>|reob.EventListener<T>, functionName?:string, f?:reob.EventListener<T> ){
+    private registerUpdateEventListener(topic:string, cls:reob.TypeClass<reob.Object>|UpdateEventListener<T>, functionName?:string, f?:UpdateEventListener<T> ){
         var subTopic = undefined;
 
         if( !f && typeof functionName === "undefined" && typeof cls === "function" ){
-            f = <reob.EventListener<T>>cls;
-        } else if( typeof cls !== "undefined" && typeof functionName !== "undefined" && f && reob.Reflect.getClassName(<reob.TypeClass<reob.OmmObject>>cls) ){
-            if( reob.Reflect.getCollectionUpdateFunctionNames(<reob.TypeClass<reob.OmmObject>>cls).indexOf(functionName)==-1 )
-                throw new Error("'"+functionName+"' is not a collection updating function on the class/entity "+reob.Reflect.getClassName(<reob.TypeClass<reob.OmmObject>>cls)+".");
-            subTopic = reob.Reflect.getClassName(<reob.TypeClass<reob.OmmObject>>cls)+"."+functionName;
+            f = <UpdateEventListener<T>>cls;
+        } else if( typeof cls !== "undefined" && typeof functionName !== "undefined" && f && reob.Reflect.getClassName(<reob.TypeClass<reob.Object>>cls) ){
+            if( reob.Reflect.getCollectionUpdateFunctionNames(<reob.TypeClass<reob.Object>>cls).indexOf(functionName)==-1 )
+                throw new Error("'"+functionName+"' is not a collection updating function on the class/entity "+reob.Reflect.getClassName(<reob.TypeClass<reob.Object>>cls)+".");
+            subTopic = reob.Reflect.getClassName(<reob.TypeClass<reob.Object>>cls)+"."+functionName;
         } else {
             throw new Error( "Illegal combination of parameters." );
         }
         this.eventListenerRegistry.on( topic, subTopic,  f );
     }
 
-    onDuringUpdate<O extends Object>( topic:string|reob.EventListener<T>,  f?:reob.EventListener<T> ):void {
+    /**
+     * Adds an event listener that is called after an update is completed in case events were emitted using reob.emit(topic).
+     * @param topic optional the event name that's emitted by reob.emit() in the update function
+     * @param f the listener
+     */
+    onDuringUpdate<O extends Object>( topic:string|UpdateEventListener<T>,  f?:UpdateEventListener<T> ):void {
         if( typeof topic == "function" ){
-            f = <reob.EventListener<any>>topic;
+            f = <UpdateEventListener<T>>topic;
             topic = undefined;
         }
         this.eventListenerRegistry.on( EventNames.onDuringUpdate, <string>topic, f );
     }
 
-    private sendEventsCollectedDuringUpdate( preUpdateObject, postUpdateObject, rootObject, functionName:string, serializationPath:reob.SerializationPath, events:Array<any> ):Promise<void>{
-        var ctx = new reob.EventContext( postUpdateObject, this );
-        var objectContext = reob.SerializationPath.getObjectContext(postUpdateObject);
-        ctx.preUpdate = preUpdateObject;
-        ctx.functionName = functionName;
-        ctx.serializationPath = serializationPath;
-        ctx.request = objectContext.request;
-        ctx.rootObject = rootObject;
-        var entityClass = reob.Reflect.getClass(postUpdateObject);
-
-        var promises = [];
-
-        events.forEach((t:CapturedEvent)=>{
-            if( reob.isVerbose() )console.log( 'emitting event: '+t  );
-            promises.push( Promise.cast( this.eventListenerRegistry.emit( t.topic, t.subTopic, ctx, t.data) ));
-        });
-        return Promise.all(promises).thenReturn();
-    }
-
-
-    // private emit( topic:string, data:any ){
-    //     if( this.queue )
-    //         this.queue.push({topic:topic, data:data});
-    // }
-    //
-    private emitLater( t:string, evtCtx:reob.EventContext<T>, data?:any ):Promise<void>{
+    private emit( t:string, ...eventArgs:any[] ):Promise<void>{
         if( reob.isVerbose() )console.log("Emitting "+t);
-        return this.eventListenerRegistry.emit( t, undefined, evtCtx, data ).then(()=>{
-            if( evtCtx.cancelledWithError() )
-                throw evtCtx.cancelledWithError() ;
-        });
+        return this.eventListenerRegistry.emit( t, undefined, eventArgs );
     }
-    //
-    // private flushQueue(){
-    //     if( this.queue ){
-    //         this.queue.forEach(function(evt:any){
-    //             this.emitNow(evt.topic, evt.data);
-    //         });
-    //         this.queue = undefined;
-    //     }
-    // }
-    //
-    // private resetQueue(){
-    //     this.queue = [];
-    // }
-
-    /**
-     * Represents a Mongo collection that contains entities.
-     * @param c {function} The constructor function of the entity class.
-     * @param collectionName {string=} The name of the collection
-     * @class
-     * @memberof omm
-     */
-
 
     setMongoCollection( db:any ){
         // if( omm.isVerbose() )console.log("set mongo collection for collection ", this );
@@ -216,7 +198,6 @@ export class Collection<T extends reob.OmmObject> implements reob.Handler
     getMongoCollection( ):any
     {
         if( !this.mongoCollection ){
-            debugger;
             throw new Error("No Mongo Collection set. Use 'setMongoCollection' first." );
         }
         return this.mongoCollection;
@@ -228,7 +209,7 @@ export class Collection<T extends reob.OmmObject> implements reob.Handler
      * @param id {string} the id
      * @returns {T} the object or undefined if it wasn't found
      */
-    getById(id:string, request?:Request):Promise<T>
+    getById(id:string, request?:reob.Request):Promise<T>
     {
         return this.find({
             "_id": id
@@ -247,12 +228,12 @@ export class Collection<T extends reob.OmmObject> implements reob.Handler
      * @returns {Array<T>}
      * @protected
      */
-    protected find( findCriteria:any, request?:Request ):Promise<Array<T>>
+    protected find( findCriteria:any, request?:reob.Request ):Promise<Array<T>>
     {
         return this.cursorToObjects( this.getMongoCollection().find(findCriteria ), request );
     }
 
-    cursorToObjects( c:any, request?:Request ):Promise<Array<T>>{
+    cursorToObjects( c:any, request?:reob.Request ):Promise<Array<T>>{
         var cursor:mongodb.Cursor = c;
         return cursor.toArray().then((documents:Array<reob.Document>)=>{
             var objects:Array<T> = [];
@@ -269,13 +250,13 @@ export class Collection<T extends reob.OmmObject> implements reob.Handler
      * Gets all objects in a collection.
      * @returns {Array<T>}
      */
-    getAll( userData?:any ):Promise<Array<T>>
+    getAll( request?:reob.Request ):Promise<Array<T>>
     {
-        return this.find({}, userData);
+        return this.find({}, request);
     }
 
-    getByIdOrFail(id:string, userData?:any):Promise<T>{
-        return this.getById( id, userData ).then((t:T)=>{
+    getByIdOrFail(id:string, request?:reob.Request):Promise<T>{
+        return this.getById( id, request ).then((t:T)=>{
             if( !t )
                 return Promise.reject(new Error("Not found"));
             else
@@ -289,35 +270,23 @@ export class Collection<T extends reob.OmmObject> implements reob.Handler
      * @param id {string} the id of the object to be removed from the collection
      * @callback cb the callback that's called once the object is removed or an error happend
      */
-    protected remove( id:string ):Promise<any>
-    {
+    protected remove( id:string, request?:reob.Request ):Promise<any> {
         if (!id)
-            return Promise.reject(new Error("Trying to remove an object that does not have an id."));
+            return Promise.reject(new Error("Trying to remove an object without an id."));
 
-        var ctx = new reob.EventContext( undefined, this );
-        ctx.objectId = id;
-        return this.emitLater( EventNames.onBeforeRemove, ctx ).then(()=>{
+        return this.emit( EventNames.onBeforeRemove, id, request ).then(()=>{
             if( reob.isVerbose() )console.log("removing");
             return this.getMongoCollection().remove({_id:id }).then((result)=>{
                 if( reob.isVerbose() )console.log("removing2");
-                var c2 = new reob.EventContext(undefined, this);
-                c2.objectId = id;
-                return this.emitLater( EventNames.onAfterRemove, c2 ).thenReturn(true);
+                return this.emit( EventNames.onAfterRemove, id, request ).thenReturn(true);
             }) ;
         });
     }
 
-    // protected documentToObject( doc:Document ):T
-    // {
-    //     var p:any = this.serializer.toObject(doc, this, this.theClass );
-    //
-    //     return p;
-    // }
-
-    getByIds(ids:Array<string>, userData?:any):Promise<{[index:string]:T}>{
+    getByIds(ids:Array<string>, request?:reob.Request):Promise<{[index:string]:T}>{
         return this.find({
             _id: {$in: ids}
-        }).then((objs)=>{
+        }, request).then((objs)=>{
             var result:any = {};
             objs.forEach((o:T)=>{
                 result[reob.getId(o)] = o;
@@ -326,8 +295,25 @@ export class Collection<T extends reob.OmmObject> implements reob.Handler
         } );
     }
 
+    /**
+     * Performs an update on an object in the collection. After the update the object is attempted to be saved to
+     * the collection. If the object has changed between the time it was loaded and the time it is saved, the whole
+     * process is repeated. This means that the updateFunction might be called more than once.
+     * @param id - the id of the object
+     * @param updateFunction - the function that alters the loaded object
+     */
+    update( sp:reob.SerializationPath, updateFunction:(o:T)=>void, request?:reob.Request ):Promise<any>
+    {
+        if (!sp || !updateFunction)
+            return Promise.reject( new Error( "update function or serialiationPath parameter missing" ) );
 
-    private updateOnce(sp:reob.SerializationPath, updateFunction:(o:T)=>void, attempt:number, request:Request, functionName?:string ):Promise<CollectionUpdateResult> {
+        return this.updateOnce( sp, updateFunction,0, request, undefined, false, undefined ).then((cru:CollectionUpdateResult<T>)=>{
+            return cru.result;
+        });
+    }
+
+
+    private updateOnce(sp:reob.SerializationPath, updateFunction:(o:T)=>void, attempt:number, request:reob.Request, functionName:string, didSendBeforeUpdateEvents:boolean, originalArguments:any[] ):Promise<CollectionUpdateResult<T>> {
         var documentPromise = this.getMongoCollection().find({
             _id: sp.getId()
         }).toArray().then((documents:reob.Document[])=> {
@@ -350,11 +336,25 @@ export class Collection<T extends reob.OmmObject> implements reob.Handler
             return sp.getSubObject(rootObject);
         });
 
-        var resultPromise = Promise.all([objectPromise,rootObjectPromise]).then( (values:any)=>{
+        var beforeUpdateEventSentPromise = Promise.all([rootObjectPromise, objectPromise, documentPromise]).then((values:any[])=> {
+            var updateEvent: UpdateEvent<T> = {
+                rootObject: values[0],
+                subObject: values[1],
+                functionName: functionName,
+                args: originalArguments,
+                result: undefined,
+                request: request,
+                beforeUpdateDocument: values[2],
+                afterUpdateDocument: undefined
+            };
+            return this.emit( EventNames.onBeforeUpdate, updateEvent ).thenReturn();
+        });
+
+        var resultPromise = Promise.all([objectPromise,rootObjectPromise, beforeUpdateEventSentPromise]).then( (values:any)=>{
             var object  = values[0];
             var rootObject = values[1];
             // call the update function
-            var result:CollectionUpdateResult = { };
+            var result:CollectionUpdateResult<T> = { };
 
             result.events = [];
             reob.setEmitHandler(( topic:string, data:any )=>{
@@ -370,15 +370,14 @@ export class Collection<T extends reob.OmmObject> implements reob.Handler
             return result;
         });
         
-        var updatePromise = Promise.all([objectPromise, currentSerialPromise, resultPromise, rootObjectPromise]).then((values:any)=>{
-            var object = values[0];
+        var updatePromise = Promise.all([objectPromise, currentSerialPromise, resultPromise, rootObjectPromise, documentPromise]).then((values:any)=>{
             var currentSerial:number = values[1];
-            var result:CollectionUpdateResult = values[2];
             var rootObject = values[3];
-            var ctx = new reob.EventContext( rootObject, this );
-            return this.eventListenerRegistry.emit( EventNames.onBeforeSave, undefined, ctx ).then(()=> {
 
-                var documentToSave:reob.Document = this.serializer.toDocument(rootObject);
+            var documentToSave:reob.Document = this.serializer.toDocument(rootObject);
+
+            return this.emit( EventNames.onBeforeSave, rootObject, request).then(()=> {
+
                 documentToSave.serial = (currentSerial || 0) + 1;
 
                 return this.getMongoCollection().updateOne({
@@ -398,7 +397,7 @@ export class Collection<T extends reob.OmmObject> implements reob.Handler
             var documentPre:any = values[3];
             // verify that that went well
             if (updateResult.modifiedCount == 1) {
-                var cr:CollectionUpdateResult = {
+                var cr:CollectionUpdateResult<T> = {
                     events : result.events,
                     rootObject: rootObject,
                     object : result.object,
@@ -411,65 +410,52 @@ export class Collection<T extends reob.OmmObject> implements reob.Handler
             else if (updateResult.modifiedCount > 1) {
                 return Promise.reject(new Error("Reob updated more than 1 document. This is not expected."));
             } else if( attempt<10 ) {
-                return this.updateOnce(sp, updateFunction, attempt+1, request, functionName );
-                //if( omm.verbose )console.log("rerunning verified update ");
-                // we need to do this again
+                return this.updateOnce(sp, updateFunction, attempt+1, request, functionName, true, originalArguments );
             } else {
                 return Promise.reject( new Error("Reob tried 10 times to update the document. This happens if there is a lot of concurrency.") );
             }
-        }).then((r:CollectionUpdateResult)=>{
+        }).then((r:CollectionUpdateResult<T>)=>{
             if( reob.isVerbose() )console.log("Events collected during updating ", r.events, "request:",request );
-            return this.sendEventsCollectedDuringUpdate( r.object, r.object, r.rootObject,functionName, sp, r.events ).then(()=> {
-                var ctx = new reob.EventContext<T>(<any>r.rootObject, this); // this is being emitted on the collection level so it needs to look as if the object was updated is the root element
-                ctx.functionName = functionName;
-                ctx.serializationPath = sp;
-                ctx.rootObject = r.rootObject;
-                ctx.request = request;
-                ctx.preUpdateDocument = r.rootDocumentPre;
-                ctx.postUpdateDocument = r.rootDocumentPost;
 
-                return this.emitLater( EventNames.onAfterUpdate , ctx).thenReturn(r);
+            var updateEvent:UpdateEvent<T> = {
+                rootObject:r.rootObject,
+                subObject:r.object,
+                functionName:functionName,
+                args:originalArguments,
+                result:r.result,
+                request:request,
+                beforeUpdateDocument:r.rootDocumentPre,
+                afterUpdateDocument:r.rootDocumentPost
+            };
+
+            var promises = [];
+            r.events.forEach((t:CapturedEvent)=>{
+                promises.push( Promise.cast( this.eventListenerRegistry.emit( t.topic, t.subTopic, [updateEvent]) ));
             });
+            return Promise.all(promises).then(()=>{
+                return this.emit( EventNames.onAfterUpdate , updateEvent )
+            }).thenReturn(r);
         });
     }
 
-    /**
-     * Performs an update on an object in the collection. After the update the object is attempted to be saved to
-     * the collection. If the object has changed between the time it was loaded and the time it is saved, the whole
-     * process is repeated. This means that the updateFunction might be called more than once.
-     * @param id - the id of the object
-     * @param updateFunction - the function that alters the loaded object
-     */
-    update( sp:reob.SerializationPath, updateFunction:(o:T)=>void, request?:Request, functionName?:string ):Promise<any>
-    {
-        if (!sp || !updateFunction)
-            return Promise.reject( new Error( "update function or serialiationPath parameter missing" ) );
 
-        return this.updateOnce( sp, updateFunction,0, request, functionName ).then((cru:CollectionUpdateResult)=>{
-            debugger;
-            return cru.result;
-        });
-    }
-    
     /**
      * Inserts an object into the collection
      * @param p the object
      * @param {reob.Collection~insertCallback} callback
      * @returns {string} the id of the new object
      */
-    insert( p:T, request?:Request ):Promise<string> {
-
-        var ctx = new reob.EventContext(p, this);
-        ctx.request = request;
-        return this.emitLater( EventNames.onBeforeInsert, ctx ).then(()=>{
+    insert( p:T, request?:reob.Request ):Promise<string> {
+        // TODO make sure that this is unique
+        var idPropertyName = reob.Reflect.getIdPropertyName(this.theClass);
+        var id = p[idPropertyName];
+        if (!id){
+            p[idPropertyName] = uuid.v1();//new mongodb.ObjectID().toString();
+            id = p[idPropertyName];
+        }
+        return this.emit( EventNames.onBeforeInsert, p, request ).then(()=>{
             //if( omm.verbose )console.log("insert not cancelled");
-            // TODO make sure that this is unique
-            var idPropertyName = reob.Reflect.getIdPropertyName(this.theClass);
-            var id = p[idPropertyName];
-            if (!id){
-                p[idPropertyName] = uuid.v1();//new mongodb.ObjectID().toString();
-                id = p[idPropertyName];
-            }
+
             var doc:reob.Document = this.serializer.toDocument(p);
 
             doc.serial = 0;
@@ -478,11 +464,7 @@ export class Collection<T extends reob.OmmObject> implements reob.Handler
             return this.getMongoCollection().insertOne(doc).then(()=>{
                 reob.SerializationPath.setObjectContext(p, new reob.SerializationPath(this.getName(), id), this, request);
                 reob.SerializationPath.updateObjectContexts(p, this, request);
-
-                //if( omm.verbose )console.log("didInsert");
-                var ctx2 =  new reob.EventContext( p, this);
-                ctx2.request = request;
-                return this.emitLater(EventNames.onAfterInsert, ctx2).thenReturn(id);
+                return this.emit(EventNames.onAfterInsert, p, request).thenReturn(id);
             });
         });
     }
@@ -494,7 +476,7 @@ export class Collection<T extends reob.OmmObject> implements reob.Handler
     // the handler function for the collection updates of objects loaded via this collection
     protected updating:boolean = false;
     
-    collectionUpdate(entityClass:reob.TypeClass<any>, functionName:string, object:reob.OmmObject, originalFunction:Function, args:any[], request:Request ):any{
+    collectionUpdate(entityClass:reob.TypeClass<any>, functionName:string, object:reob.Object, originalFunction:Function, args:any[], request:reob.Request ):any{
         if( this.updating ){
             if( reob.isVerbose() )console.log("Skipping collection update '"+reob.Reflect.getClassName(entityClass)+"."+functionName+"' . Collection update already in progress. Calling original function. ");
             return originalFunction.apply(object, args);
@@ -503,82 +485,46 @@ export class Collection<T extends reob.OmmObject> implements reob.Handler
 
         if( reob.isVerbose() )console.log( 'Doing a collection upate in the collection for '+functionName );
 
-        var rootObject;
-        var objectPromise:Promise<any>;
-
-        var rootObjectPromise:Promise<any>;
+        // var rootObject;
+        // var objectPromise:Promise<any>;
+        //
+        // var rootObjectPromise:Promise<any>;
+        //
+        //
+        // rootObjectPromise =  this.getById(sp.getId(), request);
+        // objectPromise = rootObjectPromise.then((rootObject:any)=>{
+        //     return sp.getSubObject(rootObject);
+        // });
 
         var objectContext = reob.SerializationPath.getObjectContext(object);
         var sp = objectContext.serializationPath;
 
-        rootObjectPromise =  this.getById(sp.getId(), request);
-        objectPromise = rootObjectPromise.then((rootObject:any)=>{
-            return sp.getSubObject(rootObject);
+        return this.updateOnce( sp, (subObject) => {
+            this.updating = true;
+            try{
+                var r2 = originalFunction.apply(subObject, args);
+                return r2;
+            }finally{
+                this.updating = false;
+            }
+        }, 0, request, functionName, false, args ).then((cru:CollectionUpdateResult<T>)=>{
+            return cru.result;
         });
 
-        return Promise.all([objectPromise,rootObjectPromise]).then((values:any[])=>{
-            var object:any = values[0];
-            var rootObject:any = values[1];
 
-            // create the event context
-            var ctx = new reob.EventContext( object, this );
-            ctx.functionName = functionName;
-            ctx.serializationPath = sp;
-            ctx.rootObject = rootObject;
-            ctx.request = request;
-            return this.emitLater( EventNames.onBeforeUpdate, ctx ).then(()=>{
-                return this.update( sp,  (subObject) => {
-                    this.updating = true;
-                    try{
-                        var r2 = originalFunction.apply(subObject, args);
-                        return r2;
-                    }finally{
-                        this.updating = false;
-                    }
-                }, request, functionName);
-            })
-        });
+        // return Promise.all([objectPromise,rootObjectPromise]).then((values:any[])=>{
+        // });
     }
 
 }
 /**
  * @hidden
  */
-interface CollectionUpdateResult{
+interface CollectionUpdateResult<T>{
     result?:any; // what the update function has returned
     events?:Array<CapturedEvent>; // the events emitted with omm.emit during the update that went through
-    object?:reob.OmmObject; // the updated object
-    rootObject?:reob.OmmObject; // the root object
+    object?:reob.Object; // the updated object
+    rootObject?:T; // the root object
     rootDocumentPre?:reob.Document;
     rootDocumentPost?:reob.Document;
 }
-//
-// function callEventListeners<O extends Object>( t:reob.TypeClass<O>, topic:string, ctx:reob.EventContext<any>, data?:any ):Promise<void>{
-//     var className = reob.Reflect.getClassName(t);
-//     ctx.topic = topic;
-//     var promises = [];
-//     if( className && reob.eventListeners[className] && reob.eventListeners[className][topic] ){
-//         reob.eventListeners[className][topic].forEach( function(el:reob.EventListener<any>){
-//             try {
-//                 var p = Promise.cast( el(ctx, data) );
-//                 promises.push( p );
-//             }catch( e ){
-//                 console.error("Exception in event listener for class '"+className+"' and topic '"+topic+"':", e);
-//             }
-//         });
-//     }
-//
-//     if( topic.indexOf("pre:")!=0 && topic!="pre" && topic.indexOf("post:")!=0 && topic!="post" && className && reob.eventListeners[className] && reob.eventListeners[className]["_all"] ) {
-//         reob.eventListeners[className]["_all"].forEach(function (el:reob.EventListener<any>) {
-//             try{
-//                 var p = Promise.cast( el(ctx, data) );
-//                 promises.push( p );
-//             }catch( e ){
-//                 console.error("Exception in event listener for class '"+className+"' and _all topic:", e);
-//             }
-//         });
-//     }
-//     return Promise.all(promises).thenReturn().catch((reason)=>{
-//         console.error('Error in callEventListeners',reason);
-//     });
-// }

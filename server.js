@@ -5,4 +5,4 @@ function __export(m) {
 /**
  * Created by bert on 06.10.16.
  */
-__export(require("./dist/src/Server"));
+__export(require("./dist/src/serverModule"));

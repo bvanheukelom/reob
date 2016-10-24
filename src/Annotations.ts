@@ -265,7 +265,7 @@ export class Reflect {
         return Reflect.getPropertyProperty(typeClass, functionName, "methodOptions" );
     }
 
-    public static getClassName(cls:reob.TypeClass<reob.OmmObject>):string {
+    public static getClassName(cls:reob.TypeClass<reob.Object>):string {
         if( !cls ){
             return undefined;
         }else if( cls['_reobClassName'] ){

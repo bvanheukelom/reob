@@ -8,6 +8,6 @@ import * as reob from "./reob"
  * @hidden
  */
 export interface Handler{
-    collectionUpdate?( entityClass:reob.TypeClass<any>, functionName:string, object:reob.OmmObject, originalFunction:Function, args:any[], request:reob.Request ):any;
-    webMethod?( entityClass:reob.TypeClass<any>, functionName:string, object:reob.OmmObject, originalFunction:Function, args:any[], request:reob.Request ):any;
+    collectionUpdate?(entityClass:reob.TypeClass<any>, functionName:string, object:reob.Object, originalFunction:Function, args:any[], request:reob.Request ):any;
+    webMethod?(entityClass:reob.TypeClass<any>, functionName:string, object:reob.Object, originalFunction:Function, args:any[], request:reob.Request ):any;
 }

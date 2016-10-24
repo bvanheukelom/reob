@@ -65,8 +65,10 @@ export class TestTree {
     }
 
     @reob.CollectionUpdate
-    setSomeBooleanTo( f:boolean ){
+    setSomeBooleanTo( f:boolean ):string{
         this.someBoolean = f;
+        reob.emit("gardenevents", "someBoolean");
+        return "set to "+f;
     }
     
     @reob.CollectionUpdate

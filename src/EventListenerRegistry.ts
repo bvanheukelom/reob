@@ -5,13 +5,13 @@ import * as Promise from "bluebird"
 /**
  * @hidden
  */
-export class EventListenerRegistry<T extends Function>{
+export class EventListenerRegistry{
 
-    private globalListeners:Array<T> = [];
-    private topicListeners:{ [index:string]:Array<T> } = {};
-    private subTopicListeners:{ [index:string]:{ [index:string]:Array<T>} } = {};
+    private globalListeners:Array<any> = [];
+    private topicListeners:{ [index:string]:Array<any> } = {};
+    private subTopicListeners:{ [index:string]:{ [index:string]:Array<any>} } = {};
 
-    public on( topic:string, subTopic:string, handler:T ){
+    public on( topic:string, subTopic:string, handler:Function ){
         if( typeof topic==="undefined" && typeof subTopic==="undefined" && typeof handler==="undefined" ){
             this.addGlobalListener( handler );
         }else if( topic && typeof subTopic==="undefined" && handler ){
@@ -29,25 +29,25 @@ export class EventListenerRegistry<T extends Function>{
         this.subTopicListeners = {};
     }
 
-    public emit( topic:string, subTopic:string, ctx:any, data?:any ):Promise<void>{
+    public emit( topic:string, subTopic:string, eventArgs:any[] ):Promise<void>{
         var promises:Array<Promise<any>> = [];
         if( typeof topic !=="undefined" && typeof subTopic !=="undefined" && this.subTopicListeners[topic] &&  this.subTopicListeners[topic][subTopic] ){
-            this.subTopicListeners[topic][subTopic].forEach( (h:T)=>{
-                promises.push( Promise.cast(h(ctx, data)) );
+            this.subTopicListeners[topic][subTopic].forEach( (h:Function)=>{
+                promises.push( Promise.cast(h.apply(undefined, eventArgs)) );
             });
         }
         if( typeof topic !=="undefined" && this.topicListeners[topic]  ) {
-            this.topicListeners[topic].forEach( (h:T)=>{
-                promises.push( Promise.cast(h(ctx, data)) );
+            this.topicListeners[topic].forEach( (h:Function)=>{
+                promises.push( Promise.cast(h.apply(undefined, eventArgs)) );
             });
         }
-        this.globalListeners.forEach( (h:T)=>{
-            promises.push( Promise.cast(h(ctx, data)) );
+        this.globalListeners.forEach( (h:Function)=>{
+            promises.push( Promise.cast(h.apply(undefined, eventArgs)) );
         });
         return Promise.all(promises).then(()=>{});
     }
 
-    public removeEventListener( topic:string, subTopic:string, handler:T ) {
+    public removeEventListener( topic:string, subTopic:string, handler:Function ) {
         if( typeof topic == "function" && !subTopic && !handler ) {
             this.removeGlobalListener( handler );
         } else if( typeof topic === "string" && typeof subTopic === "function" && typeof handler === "undefined" ) {
@@ -59,25 +59,25 @@ export class EventListenerRegistry<T extends Function>{
         }
     }
 
-    private addGlobalListener( handler:T ):void {
+    private addGlobalListener( handler:Function ):void {
         this.globalListeners.push( handler );
     }
 
-    private removeGlobalListener( handler:T ):void {
+    private removeGlobalListener( handler:Function ):void {
         var index = this.globalListeners.indexOf(handler);
         if( index!=-1 ){
             this.globalListeners.splice(index,1);
         }
     }
 
-    private addTopicListener( topic:string, handler:T ):void {
+    private addTopicListener( topic:string, handler:Function ):void {
         if( !this.topicListeners[topic] ){
             this.topicListeners[topic] = [];
         }
         this.topicListeners[topic].push(handler);
     }
 
-    private removeTopicListener( topic:string, handler:T ):void {
+    private removeTopicListener( topic:string, handler:Function ):void {
         if( this.topicListeners[topic] ) {
             var index = this.topicListeners[topic].indexOf(handler);
             if (index != -1) {
@@ -86,7 +86,7 @@ export class EventListenerRegistry<T extends Function>{
         }
     }
 
-    private addSubTopicListener( topic:string, subTopic:string, handler:T ):void {
+    private addSubTopicListener( topic:string, subTopic:string, handler:Function ):void {
         if( !this.subTopicListeners[topic] ){
             this.subTopicListeners[topic] = {};
         }
@@ -97,7 +97,7 @@ export class EventListenerRegistry<T extends Function>{
     }
 
 
-    private removeSubTopicListener( topic:string, subTopic:string, handler:T ):void {
+    private removeSubTopicListener( topic:string, subTopic:string, handler:Function ):void {
         if( this.subTopicListeners[topic] && this.subTopicListeners[topic][subTopic] ){
             var index = this.subTopicListeners[topic][subTopic].indexOf(handler);
             if (index != -1) {

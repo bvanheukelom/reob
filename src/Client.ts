@@ -5,7 +5,7 @@
 import * as reob from "./reob"
 import * as wm from "web-methods"
 import * as eventemitter from "eventemitter2"
-
+import * as Promise from "bluebird"
 /**
  * @hidden
  */
@@ -166,7 +166,7 @@ export class Client implements reob.Handler{
     /**
      * @hidden
      */
-    webMethod(entityClass:reob.TypeClass<any>, functionName:string, object:reob.OmmObject, originalFunction:Function, args:any[] ):any{
+    webMethod(entityClass:reob.TypeClass<any>, functionName:string, object:reob.Object, originalFunction:Function, args:any[] ):any{
         if( this.webMethodRunning ) {
             console.log("Webmethod already running. Skipping, calling original function. Function name: "+functionName );
             return originalFunction.apply(object, args);

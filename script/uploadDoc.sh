@@ -9,10 +9,11 @@ npm install
 npm run doc
 mv doc ..
 git checkout gh-pages
+cp CNAME ../doc
 rm -rf node_modules
 git rm -rf *
 cp -r ../doc/* .
-git add -f doc
+git add -f .
 git commit -m "Lastest typedoc auto-pushed to gh-pages"
 git push -fq origin gh-pages
 cd ../..
