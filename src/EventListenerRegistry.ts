@@ -50,16 +50,22 @@ export class EventListenerRegistry{
         var promises:Array<Promise<any>> = [];
         if( typeof topic !=="undefined" && typeof subTopic !=="undefined" && this.subTopicListeners[topic] &&  this.subTopicListeners[topic][subTopic] ){
             this.subTopicListeners[topic][subTopic].forEach( (h:Function)=>{
-                promises.push( EventListenerRegistry.castToPromise( ()=>{ h.apply(undefined, eventArgs) } ) );
+                promises.push( EventListenerRegistry.castToPromise( ()=>{
+                    return h.apply(undefined, eventArgs)
+                } ) );
             });
         }
         if( typeof topic !=="undefined" && this.topicListeners[topic]  ) {
             this.topicListeners[topic].forEach( (h:Function)=>{
-                promises.push( EventListenerRegistry.castToPromise( ()=>{ h.apply(undefined, eventArgs) } ) );
+                promises.push( EventListenerRegistry.castToPromise( ()=>{
+                    return h.apply(undefined, eventArgs)
+                } ) );
             });
         }
         this.globalListeners.forEach( (h:Function)=>{
-            promises.push( EventListenerRegistry.castToPromise( ()=>{ h.apply(undefined, eventArgs) } ) );
+            promises.push( EventListenerRegistry.castToPromise( ()=>{
+                return h.apply(undefined, eventArgs)
+            } ) );
         });
         return Promise.all(promises).then(()=>{});
     }

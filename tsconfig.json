@@ -9,8 +9,7 @@
     "experimentalDecorators": true,
     "sourceMap": true,
     "moduleResolution": "node",
-    "outDir": "dist",
-    "listFiles": true
+    "outDir": "dist"
   },
   "include": [
     "src/**/*.ts",

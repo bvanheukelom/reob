@@ -56,6 +56,13 @@ export class TestTree {
         throw new Error("Hello world");
     }
 
+    @reob.RemoteCollectionUpdate
+    collectionUpdateInAnotherCollectionUpdate():number {
+        if(  this.leaves.length==0 )
+            throw new Error("not enough leaves");
+        return this.leaves[0].doACollectionUpdate()+5;
+    }
+
     getHeight():number {
         return this.height;
     }

@@ -10,7 +10,7 @@ var co = require("co");
 
 import "./classes/TestLeaf"
 
-//jasmine.DEFAULT_TIMEOUT_INTERVAL = 10000000;
+// jasmine.DEFAULT_TIMEOUT_INTERVAL = 10000000;
 
 Promise.onPossiblyUnhandledRejection((reason: any) => {
     console.log("possibly unhandled rejection ", reason);
@@ -22,6 +22,19 @@ function spyOnAndCallThrough<FKT extends Function>( f:FKT ):FKT{
     spyOn(l, "listener").and.callThrough();
     return <any>l.listener;
 }
+
+describe("Reob", function () {
+    it("can start and stop a server", function (done) {
+        var server:reob.Server = new reob.Server("mongodb://localhost/test");
+        server.start(12345).then(()=>{
+            server.stop();
+            return server.start(12345).then(()=>{
+                server.stop();
+                done();
+            });
+        }).catch(done.fail)
+    });
+});
 
 describe("Reob", function () {
 
@@ -125,6 +138,25 @@ describe("Reob", function () {
             done();
 
         });
+    });
+
+    it("can run collection updates from within another collection update", function (done) {
+        var t1:Tests.TestTree = new Tests.TestTree(15);
+        treeCollection.insert(t1).then( (id:string)=> {
+            debugger;
+            return clientTreeService.growTree( id ).thenReturn( id );
+        }).then((id)=>{
+            return client.load("TheTreeCollection", id);
+        }).then((t:Tests.TestTree)=>{
+            return Promise.cast(t.collectionUpdateInAnotherCollectionUpdate()).then((r)=>{
+                expect(r).toBe(10);
+            }).thenReturn(t.treeId);
+        }).then((id)=>{
+            return treeCollection.getByIdOrFail(id);
+        }).then((t:Tests.TestTree)=>{
+            expect( t.getLeaves()[0].greenNess ).toBe(3);
+            done();
+        }).catch(done.fail);
     });
 
     it("can run collection updates from within another method", function (done) {
@@ -1030,6 +1062,7 @@ describe("Reob", function () {
             }
         });
         treeCollection.onDuringUpdate( l );
+        console.log(treeCollection['eventListenerRegistry']);
         client.setUserData({Hello:41});
         treeCollection.newTree(10).then((tree)=>{
             return clientTreeService.setSomeBooleanOnTree(tree.treeId, true);
@@ -1052,8 +1085,14 @@ describe("Reob", function () {
 
         });
         var lDuring = spyOnAndCallThrough<reob.UpdateEventListener<Tests.TestTree>>( ( updateEvent:reob.UpdateEvent<Tests.TestTree> )=>{
-            expect( c ).toBe(2);
-            c++;
+            return new Promise<void>((res,rej)=>{
+                setTimeout(()=>{
+                    expect( c ).toBe(2);
+                    c++;
+                    console.log("during resolves");
+                    res();
+                }, 500)
+            });
         });
         var lAfter = spyOnAndCallThrough<reob.UpdateEventListener<Tests.TestTree>>( ( updateEvent:reob.UpdateEvent<Tests.TestTree> )=>{
             expect( c ).toBe(3);
@@ -1183,6 +1222,19 @@ describe("Reob", function () {
         }).catch(done.fail);
     });
 
+    it("receives the data from emits", function (done) {
+        var l =  spyOnAndCallThrough( (event:reob.UpdateEvent<Tests.TestTree>)=>{
+            expect( event.data ).toBe("someBoolean");
+        } );
+        treeCollection.onDuringUpdate( "gardenevents", l );
+        treeCollection.newTree(10).then((t)=> {
+            return Promise.cast(t.setSomeBooleanTo(true))
+        }).then((tId)=> {
+            expect(l).toHaveBeenCalledTimes(1);
+            done();
+        }).catch(done.fail);
+    });
+
     function pit(s:string, f:Function ){
         it( s, function(done){
             var promise = f();
@@ -1269,5 +1321,5 @@ describe("Reob", function () {
     });
 
     // test that calls a nested collection update (one in the other)
-    
+
 });

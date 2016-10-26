@@ -42,4 +42,11 @@ export class TestLeaf
         this.greenNess++;
         reob.emit("fluttering");
     }
+
+
+    @reob.CollectionUpdate
+    doACollectionUpdate():number{
+        this.greenNess++;
+        return 5;
+    }
 }

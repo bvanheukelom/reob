@@ -6,6 +6,7 @@ import * as reob from "./serverModule"
 import * as wm from "web-methods"
 import * as Promise from "bluebird"
 import * as expressModule from "express"
+import * as http from "http"
 import * as path from "path"
 import * as mongo from "mongodb"
 import * as fs from "fs"
@@ -29,6 +30,7 @@ export class Server{
     private beforeMethodListener:Array<MethodEventListener> = [];
     private afterMethodListener:Array<MethodEventListener> = [];
     private express:expressModule.Application;
+    private httpServer:any;
     private webRootPath: string;
     private indexFileName: string;
     private mongoDb:mongo.Db;
@@ -44,6 +46,7 @@ export class Server{
         this.serializer = new reob.Serializer();
         this.express = expressModule();
         this.express.use(compression());
+        this.httpServer = http.createServer(this.express);
         
         if( typeof theMongoDbOrDbUrl=="string" ) {
             this.mongoUrl = <string>theMongoDbOrDbUrl;
@@ -54,6 +57,10 @@ export class Server{
 
     getWebRootPath():string{
         return this.webRootPath;
+    }
+
+    stop(){
+        this.httpServer.close();
     }
 
     start( port?:number ):Promise<void>{
@@ -80,7 +87,7 @@ export class Server{
         p = p.then(()=> {
             return new Promise<void>((resolve, reject)=> {
                 this.port = this.port ? this.port : 8080;
-                this.express.listen(this.port, () => {
+                this.httpServer.listen(this.port, () => {
                     if( reob.isVerbose() )console.log('Web server is listening on *:' + this.port + ( this.webRootPath ? (', serving ' + this.webRootPath) : ""));
                     resolve();
                 });
@@ -134,7 +141,6 @@ export class Server{
     }
 
     addService( serviceName, service:Object|ServiceProvider ):void{
-
         // singletons dont need a
         var o;
         if( typeof service=="object" ) {

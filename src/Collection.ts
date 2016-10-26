@@ -45,13 +45,14 @@ export interface RemoveEventListener {
 
 export interface UpdateEvent<T> {
     rootObject:T;
-    subObject:reob.Object;
+    subObject:any;
     functionName:string;
     args:any[];
     request:reob.Request;
     result:any;
     beforeUpdateDocument:reob.Document;
     afterUpdateDocument:reob.Document;
+    data:any;
 }
 
 export interface UpdateEventListener<T> {
@@ -173,9 +174,9 @@ export class Collection<T extends reob.Object> implements reob.Handler
         this.eventListenerRegistry.on( EventNames.onDuringUpdate, <string>topic, f );
     }
 
-    private emit( t:string, ...eventArgs:any[] ):Promise<void>{
+    private emit( t:string, subTopic:string, ...eventArgs:any[] ):Promise<void>{
         if( reob.isVerbose() )console.log("Emitting "+t);
-        return this.eventListenerRegistry.emit( t, undefined, eventArgs );
+        return this.eventListenerRegistry.emit( t, subTopic, eventArgs );
     }
 
     setMongoCollection( db:any ){
@@ -274,11 +275,11 @@ export class Collection<T extends reob.Object> implements reob.Handler
         if (!id)
             return Promise.reject(new Error("Trying to remove an object without an id."));
 
-        return this.emit( EventNames.onBeforeRemove, id, request ).then(()=>{
+        return this.emit( EventNames.onBeforeRemove, undefined, id, request ).then(()=>{
             if( reob.isVerbose() )console.log("removing");
             return this.getMongoCollection().remove({_id:id }).then((result)=>{
                 if( reob.isVerbose() )console.log("removing2");
-                return this.emit( EventNames.onAfterRemove, id, request ).thenReturn(true);
+                return this.emit( EventNames.onAfterRemove, undefined, id, request ).thenReturn(true);
             }) ;
         });
     }
@@ -344,9 +345,10 @@ export class Collection<T extends reob.Object> implements reob.Handler
                 result: undefined,
                 request: request,
                 beforeUpdateDocument: values[2],
-                afterUpdateDocument: undefined
+                afterUpdateDocument: undefined,
+                data:undefined
             };
-            return this.emit( EventNames.onBeforeUpdate, updateEvent ).thenReturn();
+            return this.emit( EventNames.onBeforeUpdate, undefined, updateEvent ).thenReturn();
         });
 
         var resultPromise = Promise.all([objectPromise,rootObjectPromise, beforeUpdateEventSentPromise]).then( (values:any)=>{
@@ -375,7 +377,7 @@ export class Collection<T extends reob.Object> implements reob.Handler
 
             var documentToSave:reob.Document = this.serializer.toDocument(rootObject);
 
-            return this.emit( EventNames.onBeforeSave, rootObject, request).then(()=> {
+            return this.emit( EventNames.onBeforeSave, undefined, rootObject, request).then(()=> {
 
                 documentToSave.serial = (currentSerial || 0) + 1;
 
@@ -416,29 +418,42 @@ export class Collection<T extends reob.Object> implements reob.Handler
         }).then((r:CollectionUpdateResult<T>)=>{
             if( reob.isVerbose() )console.log("Events collected during updating ", r.events, "request:",request );
 
-            // prepare the update event. used for 'duringUpdate' and 'afterUpdate'
-            var updateEvent:UpdateEvent<T> = {
-                rootObject:r.rootObject,
-                subObject:r.object,
-                functionName:functionName,
-                args:originalArguments,
-                result:r.result,
-                request:request,
-                beforeUpdateDocument:r.rootDocumentPre,
-                afterUpdateDocument:r.rootDocumentPost
-            };
 
             // send  'duringUpdate' events
             var promises = [];
             r.events.forEach((t:CapturedEvent)=>{
-                promises.push( Promise.cast( this.eventListenerRegistry.emit( t.topic, t.subTopic, [updateEvent]) ));
+                var updateEvent:UpdateEvent<T> = {
+                    rootObject:r.rootObject,
+                    subObject:r.object,
+                    functionName:functionName,
+                    args:originalArguments,
+                    result:r.result,
+                    request:request,
+                    beforeUpdateDocument:r.rootDocumentPre,
+                    afterUpdateDocument:r.rootDocumentPost,
+                    data:t.data
+                };
+                promises.push( Promise.cast( this.emit( t.topic, t.subTopic, updateEvent ) ));
             });
             // we ignore rejected promises from during and after events, we just want them to happen before this finishes.
-            var duringSentPromise = Promise.all(promises).catch(()=>{});
+            var duringSentPromise = Promise.all(promises).catch(()=>{}).then(()=>{
+                if( reob.isVerbose() ) console.log("All 'during' events have been sent.")
+            });
 
             // send  'afterUpdate' events
             var afterSentPromise = duringSentPromise.then(()=>{
-                return this.emit( EventNames.onAfterUpdate , updateEvent )
+                var updateEvent:UpdateEvent<T> = {
+                    rootObject:r.rootObject,
+                    subObject:r.object,
+                    functionName:functionName,
+                    args:originalArguments,
+                    result:r.result,
+                    request:request,
+                    beforeUpdateDocument:r.rootDocumentPre,
+                    afterUpdateDocument:r.rootDocumentPost,
+                    data:undefined
+                };
+                return this.emit( EventNames.onAfterUpdate , undefined, updateEvent )
             }).catch(()=>{});
             return afterSentPromise.thenReturn(r);
         });
@@ -459,7 +474,7 @@ export class Collection<T extends reob.Object> implements reob.Handler
             p[idPropertyName] = uuid.v1();//new mongodb.ObjectID().toString();
             id = p[idPropertyName];
         }
-        return this.emit( EventNames.onBeforeInsert, p, request ).then(()=>{
+        return this.emit( EventNames.onBeforeInsert, undefined, p, request ).then(()=>{
             //if( omm.verbose )console.log("insert not cancelled");
 
             var doc:reob.Document = this.serializer.toDocument(p);
@@ -470,7 +485,7 @@ export class Collection<T extends reob.Object> implements reob.Handler
             return this.getMongoCollection().insertOne(doc).then(()=>{
                 reob.SerializationPath.setObjectContext(p, new reob.SerializationPath(this.getName(), id), this, request);
                 reob.SerializationPath.updateObjectContexts(p, this, request);
-                return this.emit(EventNames.onAfterInsert, p, request).thenReturn(id);
+                return this.emit(EventNames.onAfterInsert, undefined, p, request).thenReturn(id);
             });
         });
     }
@@ -488,8 +503,7 @@ export class Collection<T extends reob.Object> implements reob.Handler
             return originalFunction.apply(object, args);
         }
 
-
-        if( reob.isVerbose() )console.log( 'Doing a collection upate in the collection for '+functionName );
+        if( reob.isVerbose() )console.log( 'Doing a collection upate in the collection for '+reob.Reflect.getClassName(entityClass)+"."+functionName );
 
         // var rootObject;
         // var objectPromise:Promise<any>;
