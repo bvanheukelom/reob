@@ -84,7 +84,7 @@ export class Client implements reob.Handler{
      * @returns {Promise<T>|Promise<T|U>}
      */
     private call( methodName:string, objectId:string, args:any[]  ):Promise<any>{
-        console.log( "Call web method "+methodName, objectId, args);
+        if(reob.isVerbose())console.log( "Call web method "+methodName, objectId, args);
         var webArgs = [];
         // convert the arguments to their origin
         for (var i in args) {
@@ -109,7 +109,7 @@ export class Client implements reob.Handler{
 
         var p:Promise<any> = this.webMethods.call.apply(this.webMethods, webArgs);
         return p.then((result:any)=>{
-            console.log( "web method returned ", result );
+            if(reob.isVerbose()) console.log( "web method returned ", result );
             // convert the result from json to an object
             var obje;
             if( result ) {
@@ -168,7 +168,7 @@ export class Client implements reob.Handler{
      */
     webMethod(entityClass:reob.TypeClass<any>, functionName:string, object:reob.Object, originalFunction:Function, args:any[] ):any{
         if( this.webMethodRunning ) {
-            console.log("Webmethod already running. Skipping, calling original function. Function name: "+functionName );
+            if(reob.isVerbose())console.log("Webmethod already running. Skipping, calling original function. Function name: "+functionName );
             return originalFunction.apply(object, args);
         }
 
@@ -179,7 +179,7 @@ export class Client implements reob.Handler{
         var r:any;
         var options:reob.IMethodOptions = reob.Reflect.getMethodOptions(entityClass, functionName);
 
-        console.log("On the client, running webMethod:" + functionName, "Service key:",serviceKey);
+        if(reob.isVerbose())console.log("On the client, running webMethod:" + functionName, "Service key:",serviceKey);
 
 
         if (key) {
@@ -193,7 +193,7 @@ export class Client implements reob.Handler{
             r = this.call(name, key, args);
         }
         if (!options.serverOnly || !key) {
-            console.log("Running original function of web method " + options.name);
+            if(reob.isVerbose())console.log("Running original function of web method " + options.name);
             var rOriginal;
             this.webMethodRunning = true;
             try{

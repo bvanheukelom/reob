@@ -101,19 +101,21 @@ export class Server{
     }
 
     serveStatic( theWebRootPath:string, indexFileName?:string ) {
-        this.webRootPath = theWebRootPath;
+        if( reob.isVerbose() )console.log("serving statically path:", theWebRootPath, " indexFile:",indexFileName );
+
+        this.webRootPath = path.resolve( theWebRootPath );
         this.indexFileName = indexFileName ? indexFileName : "index.html";
     }
 
     private registerStaticGET(){
         if( this.webRootPath && this.indexFileName ) {
             this.express.get('/*', (req:any, res:any, next:Function) => {
+                console.log("requested file", file );
 
                 //This is the current file they have requested
                 var file = req.params[0];
                 // if( file.indexOf( "js/")!=0 && file.indexOf( "css/")!=0 && file.indexOf( "fonts/")!=0  && file.indexOf( "img/" )!=0 && file.indexOf( "src/")!=0 &&file.indexOf( "components/")!=0 &&file.indexOf( "bootstrap/")!=0 && file.indexOf( "bundle")!=0 )
                 //     file = indexFileName;
-
                 var fileName = path.resolve(this.webRootPath, file);
                 fs.exists(fileName, (exists:boolean) => {
                     if( reob.isVerbose() )console.log("file : ", file, " path:", fileName, (!exists?"Does not exist.":"") );

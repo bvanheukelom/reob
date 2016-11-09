@@ -271,7 +271,7 @@ export class Collection<T extends reob.Object> implements reob.Handler
      * @param id {string} the id of the object to be removed from the collection
      * @callback cb the callback that's called once the object is removed or an error happend
      */
-    protected remove( id:string, request?:reob.Request ):Promise<any> {
+    remove( id:string, request?:reob.Request ):Promise<any> {
         if (!id)
             return Promise.reject(new Error("Trying to remove an object without an id."));
 

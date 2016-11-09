@@ -47,6 +47,7 @@ export class TestLeaf
     @reob.CollectionUpdate
     doACollectionUpdate():number{
         this.greenNess++;
+        console.log('leave grown to ', this.greenNess);
         return 5;
     }
 }
