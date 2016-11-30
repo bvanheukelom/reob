@@ -25,12 +25,12 @@
     "underscore": "^1.8.3"
   },
   "dependencies": {
-    "web-methods": "*",
     "bluebird": "^3.4.1",
     "compression": "^1.6.2",
     "eventemitter2": "^2.1.0",
     "jsondiffpatch": "^0.1.43",
     "mongodb": "^2.1.18",
-    "node-uuid": "^1.4.7"
+    "uuid": "^3.0.0",
+    "web-methods": "*"
   }
 }
