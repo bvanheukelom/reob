@@ -1,0 +1,46 @@
+0 info it worked if it ends with ok
+1 verbose cli [ '/usr/local/bin/node', '/usr/local/bin/npm', 'run', 'doc' ]
+2 info using npm@3.10.7
+3 info using node@v6.2.2
+4 verbose run-script [ 'predoc', 'doc', 'postdoc' ]
+5 info lifecycle reob@0.1.22~predoc: reob@0.1.22
+6 silly lifecycle reob@0.1.22~predoc: no script for predoc, continuing
+7 info lifecycle reob@0.1.22~doc: reob@0.1.22
+8 verbose lifecycle reob@0.1.22~doc: unsafe-perm in lifecycle true
+9 verbose lifecycle reob@0.1.22~doc: PATH: /usr/local/lib/node_modules/npm/bin/node-gyp-bin:/private/var/folders/68/wk42fgnj0bz8vn11sm4g0gtr0000gn/T/reob/reob/node_modules/.bin:/usr/local/lib/node_modules/npm/bin/node-gyp-bin:/Users/bert/Work/reob/node_modules/.bin:/usr/local/bin:/Library/Frameworks/Python.framework/Versions/3.4/bin:/Users/bert/Work/resources/activator-1.2.7-minimal:/Users/bert/Work/resources/play-2.2.2-RC1:/usr/local/apache-maven/bin:/usr/local/apache-ant/bin:/usr/local/bin:/usr/bin:/bin:/usr/sbin:/sbin:/Users/bert/Scripts:/Users/bert/Scripts/elasticbeanstalk-cli/bin
+10 verbose lifecycle reob@0.1.22~doc: CWD: /private/var/folders/68/wk42fgnj0bz8vn11sm4g0gtr0000gn/T/reob/reob
+11 silly lifecycle reob@0.1.22~doc: Args: [ '-c',
+11 silly lifecycle   'typedoc --excludeExternals --excludePrivate --noEmit --exclude src/Internal.ts --exclude node_modules --mode file --out doc -p tsconfig.json src typings' ]
+12 silly lifecycle reob@0.1.22~doc: Returned: code: 4  signal: null
+13 info lifecycle reob@0.1.22~doc: Failed to exec doc script
+14 verbose stack Error: reob@0.1.22 doc: `typedoc --excludeExternals --excludePrivate --noEmit --exclude src/Internal.ts --exclude node_modules --mode file --out doc -p tsconfig.json src typings`
+14 verbose stack Exit status 4
+14 verbose stack     at EventEmitter.<anonymous> (/usr/local/lib/node_modules/npm/lib/utils/lifecycle.js:255:16)
+14 verbose stack     at emitTwo (events.js:106:13)
+14 verbose stack     at EventEmitter.emit (events.js:191:7)
+14 verbose stack     at ChildProcess.<anonymous> (/usr/local/lib/node_modules/npm/lib/utils/spawn.js:40:14)
+14 verbose stack     at emitTwo (events.js:106:13)
+14 verbose stack     at ChildProcess.emit (events.js:191:7)
+14 verbose stack     at maybeClose (internal/child_process.js:852:16)
+14 verbose stack     at Process.ChildProcess._handle.onexit (internal/child_process.js:215:5)
+15 verbose pkgid reob@0.1.22
+16 verbose cwd /private/var/folders/68/wk42fgnj0bz8vn11sm4g0gtr0000gn/T/reob/reob
+17 error Darwin 16.1.0
+18 error argv "/usr/local/bin/node" "/usr/local/bin/npm" "run" "doc"
+19 error node v6.2.2
+20 error npm  v3.10.7
+21 error code ELIFECYCLE
+22 error reob@0.1.22 doc: `typedoc --excludeExternals --excludePrivate --noEmit --exclude src/Internal.ts --exclude node_modules --mode file --out doc -p tsconfig.json src typings`
+22 error Exit status 4
+23 error Failed at the reob@0.1.22 doc script 'typedoc --excludeExternals --excludePrivate --noEmit --exclude src/Internal.ts --exclude node_modules --mode file --out doc -p tsconfig.json src typings'.
+23 error Make sure you have the latest version of node.js and npm installed.
+23 error If you do, this is most likely a problem with the reob package,
+23 error not with npm itself.
+23 error Tell the author that this fails on your system:
+23 error     typedoc --excludeExternals --excludePrivate --noEmit --exclude src/Internal.ts --exclude node_modules --mode file --out doc -p tsconfig.json src typings
+23 error You can get information on how to open an issue for this project with:
+23 error     npm bugs reob
+23 error Or if that isn't available, you can get their info via:
+23 error     npm owner ls reob
+23 error There is likely additional logging output above.
+24 verbose exit [ 1, true ]
