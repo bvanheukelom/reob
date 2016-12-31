@@ -6,10 +6,7 @@ import * as reob from "./reob"
 import * as wm from "web-methods"
 import * as eventemitter from "eventemitter2"
 import * as Promise from "bluebird"
-/**
- * @hidden
- */
-var jsd = require("jsondiffpatch");
+
 
 /**
  * This is class represents the startingpoint from the website. Use it to register services and load objects.

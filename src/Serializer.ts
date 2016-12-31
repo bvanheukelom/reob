@@ -151,87 +151,86 @@ export class Serializer {
         return o;
     }
 
+    // this is the function that gets called when the process of converting an object to a document starts.
+    // its called once in the process
     toDocument( object:Object, includeContext?:boolean, omitPropertiesPrivateToServer?:boolean ):Document {
-        return this.toDocumentRecursive(object, includeContext, omitPropertiesPrivateToServer);
+        const objectClass = Reflect.getClass(object);
+        const result =  this.toDocumentRecursive(object, objectClass, omitPropertiesPrivateToServer);
+        // console.log("returning document:",result);
+        return result;
+
     }
 
-    private toDocumentRecursive(object:any, includeContext?:boolean, omitPropertiesPrivateToServer?:boolean, rootClass?:reob.TypeClass<Object>, parentObject?:Object, propertyNameOnParentObject?:string):Document {
+    private toDocumentRecursive(object:any, expectedClass?:reob.TypeClass<any>, includeContext?:boolean,  omitPropertiesPrivateToServer?:boolean ):Document {
         var result:Document;
-        if ( !object || typeof object == "string" || typeof object == "number"  || typeof object == "date" || typeof object == "boolean")
-            result =  <Document>object;
-        else if( Array.isArray(object) ){
-            result = [];
-            for( var i=0; i<object.length; i++ ){
-                result[i] = this.toDocumentRecursive(object[i], includeContext);
-            }
-        } else {
-            var objectClass =  Reflect.getClass(object);
-            if( typeof (<any>objectClass).toDocument == "function" ){
-                result = (<any>objectClass).toDocument( object );
-            } else {
-                var parentClass = Reflect.getClass(parentObject);
-                {
-                    result = this.createDocument(object, includeContext, omitPropertiesPrivateToServer, rootClass ? rootClass : Reflect.getClass(object), parentObject, propertyNameOnParentObject);
-                }
+        var objectClass = Reflect.getClass(object);
+        var context = reob.SerializationPath.getObjectContext(object);
+        // console.log(" documenting ", object,  typeof object);
+
+        // is there a customized way to create a document ?
+        if( objectClass && typeof (<any>objectClass).toDocument == "function" ) {
+            result = (<any>objectClass).toDocument(object);
+        }
+
+        // is it a simple type ?
+        else if ( !object || typeof object == "string" || typeof object == "number"  || typeof object == "date" || typeof object == "boolean") {
+            result = <Document>object;
+        }
+
+        // is it an array or dictionary/map-object?
+        else if( Array.isArray(object) || Reflect.isArrayOrMap(objectClass, property) ) {
+            result = Array.isArray(object) ? [] : {};
+            const expectedClass = Reflect.getPropertyClass(objectClass,property);
+            for (var property in object) {
+                const subDoc = this.toDocumentRecursive(object[property], expectedClass, includeContext, omitPropertiesPrivateToServer);
+                result[property] = subDoc;
             }
         }
-        //console.log("returning document:",result);
+
+        // is it an object?
+        else if( typeof object == "object" ){
+            result = {};
+
+            // for all enumerable properties in the object ...
+            for (var property in object) {
+                const value = object[property];
+                const expectedClass = Reflect.getPropertyClass(objectClass,property);
+
+                // figure out if the property needs to be part of the document or not
+                let canBeIgnored = omitPropertiesPrivateToServer && Reflect.isPrivateToServer(objectClass, property); // its private to the server
+                canBeIgnored = canBeIgnored || Reflect.isIgnored(objectClass, property);
+                canBeIgnored = canBeIgnored || value === undefined; // it's undefined
+                canBeIgnored = canBeIgnored || Reflect.isParent(objectClass, property); // parent properties are not part of documents, they're deducted
+                canBeIgnored = canBeIgnored || typeof value === "function"; // its's a function
+
+
+                if ( !canBeIgnored ) {
+                    let documentNameOfTheProperty:string = Reflect.getDocumentPropertyName(objectClass,property) || property;
+                    const subDoc = this.toDocumentRecursive(value, expectedClass, includeContext, omitPropertiesPrivateToServer );
+                    result[documentNameOfTheProperty] = subDoc;
+                }
+            }
+
+            // add the serialization path if needed (for network)
+            if (includeContext && context && context.serializationPath){
+                result['_serializationPath'] = context.serializationPath.toString();
+            }
+
+            // add the object class if it deviates from what's expected or its required
+            if ( objectClass && reob.Reflect.isEntity(objectClass) && ( includeContext || expectedClass!=objectClass ) ) {
+                result['_className'] = reob.Reflect.getClassName(objectClass);
+            }
+
+        }else if( typeof object == "function" ) {
+            // ignore
+        }
+        else {
+            throw new Error( "Unexpected object type :"+(typeof object));
+        }
+
+        // console.log(" documenting result:", result);
         return result;
     }
 
-    private createDocument(object:any, includeContext?:boolean, omitPropertiesPrivateToServer?:boolean, rootClass?:reob.TypeClass<Object>, parentObject?:Object, propertyNameOnParentObject?:string):Document {
-        var doc:any = {};
-        var context = reob.SerializationPath.getObjectContext(object);
-        if( includeContext ) {
-            if (context && context.serializationPath)
-                doc['_serializationPath'] = context.serializationPath.toString();
-            var cls = reob.Reflect.getClass(object);
-            if (cls && reob.Reflect.isEntity(cls)) {
-                doc['_className'] = reob.Reflect.getClassName(cls);
-            }
-        }
-        var objectClass = Reflect.getClass(object);
-        for (var property in object) {
-            var value = object[property];
-            var documentNameOfTheProperty:string = Reflect.getDocumentPropertyName(objectClass,property);
-            if( !documentNameOfTheProperty )
-                documentNameOfTheProperty = property;
-            var needsToBeOmittedBecauseItsPrivate = omitPropertiesPrivateToServer && Reflect.isPrivateToServer(objectClass, property);
-            if (value !== undefined && !Reflect.isIgnored(objectClass, property) && !Reflect.isParent(objectClass, property) && !needsToBeOmittedBecauseItsPrivate ) {
-                // primitives
-                if( Reflect.getPropertyClass(objectClass,property) ) {
 
-                    // array
-                    if (Reflect.isArrayOrMap(objectClass, property)) {
-                        var result;
-                        if (Array.isArray(value))
-                            result = [];
-                        else
-                            result = {};
-
-                        for (var i in value) {
-                            var subObject = value[i];
-                            result[i] = this.toDocumentRecursive(subObject, includeContext, omitPropertiesPrivateToServer, rootClass, object, property);
-                        }
-                        doc[documentNameOfTheProperty] = result;
-                    }
-                    // object
-                    else if (typeof object[property] == 'object') {
-                        doc[documentNameOfTheProperty] = this.toDocumentRecursive(value, includeContext, omitPropertiesPrivateToServer, rootClass, object, property);
-                    } else {
-                        throw new Error("Unsupported type : "+ typeof value);
-                    }
-                }
-                else if (typeof value == 'function') {
-                    // not doing eeeeenithing with functions
-                }
-                else {
-                    doc[documentNameOfTheProperty] = Cloner.clone(value);
-                }
-
-            }
-
-        }
-        return <Document>doc;
-    }
 }

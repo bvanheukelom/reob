@@ -82,8 +82,21 @@ describe("Reob", function () {
         });
     });
 
+    function removeAll( collection:reob.Collection<reob.Object> ):Promise<void>{
+        return collection.getAll().then((objects)=>{
+            const propmises = [];
+
+            objects.forEach( o =>{
+                console.log("deleting ", o);
+                let promise = collection.remove(reob.getId(o));
+                propmises.push( promise );
+            });
+            return Promise.all(propmises).thenReturn();
+        })
+    }
+
     var count =0;
-    beforeEach(()=>{
+    beforeEach((done)=>{
         count++;
         reob.setVerbose( true );
         server.setRequestFactory(undefined);
@@ -93,7 +106,11 @@ describe("Reob", function () {
         personCollection.removeAllListeners();
         treeCollection.removeAllListeners();
         server.removeAllMethodListeners();
-        
+        removeAll(personCollection).then(()=>{
+            return removeAll(treeCollection);
+        }).then(()=>{
+            return removeAll(carCollection);
+        }).then(done).catch(done.fail);
     });
 
     it("isVerbose", function () {
@@ -333,6 +350,8 @@ describe("Reob", function () {
         var doc = serializer.toDocument(t1);
         var t1:Tests.TestTree = serializer.toObject(doc, undefined, Tests.TestTree);
         expect(t1.treeId).toBe("t1");
+        expect(t1 instanceof Tests.TestTree).toBeTruthy();
+        console.log(t1);
         expect(t1.getLeaves()[0] instanceof Tests.TestLeaf).toBeTruthy();
     });
 
@@ -646,6 +665,25 @@ describe("Reob", function () {
         expect(person2.addresses[0] instanceof Tests.TestInheritanceChild).toBeTruthy();
         expect(person2.addresses[1] instanceof Tests.TestWheel).toBeTruthy();
         expect(person2.addresses[2] instanceof Tests.TestCar).toBeTruthy();
+    });
+
+    it("stores objects of different classes in an array", function (done) {
+        var s:reob.Serializer = new reob.Serializer();
+        var person:Tests.TestPerson = new Tests.TestPerson('p1', 'pete');
+        var child:Tests.TestInheritanceChild = new Tests.TestInheritanceChild();
+        var wheel:Tests.TestWheel = new Tests.TestWheel();
+        var car:Tests.TestCar = new Tests.TestCar();
+        person.addresses.push(<any>child);
+        person.addresses.push(<any>wheel);
+        person.addresses.push(<any>car);
+        personCollection.insert(person).then( id =>{
+            return personCollection.getByIdOrFail(id);
+        }).then( person2 =>{
+            expect(person2.addresses[0] instanceof Tests.TestInheritanceChild).toBeTruthy();
+            expect(person2.addresses[1] instanceof Tests.TestWheel).toBeTruthy();
+            expect(person2.addresses[2] instanceof Tests.TestCar).toBeTruthy();
+            done();
+        });
     });
 
 
@@ -987,6 +1025,7 @@ describe("Reob", function () {
                 expect( updateEvent.request).toBeDefined();
 
                 expect( updateEvent.beforeUpdateDocument ).toBeDefined();
+                console.log("updateEvent.beforeUpdateDocument", updateEvent.beforeUpdateDocument);
                 if( updateEvent.beforeUpdateDocument ) expect( updateEvent.beforeUpdateDocument["someBoolean"]).toBe(false);
 
                 expect( updateEvent.afterUpdateDocument ).toBeUndefined();
