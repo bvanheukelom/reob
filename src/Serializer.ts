@@ -101,8 +101,11 @@ export class Serializer {
             //     throw new Error("Could not determine class of document. Either the document needs to have a '_className' property or a class needs to be passed to the serializer. Document: "+ JSON.stringify( doc ) );
 
             // instantiate the new object
-            if( f && f.prototype )
+            if( f && f.prototype ){
                 o = Object.create(f.prototype);
+
+
+            }
             else
                 o = <any>{};
 
@@ -147,6 +150,13 @@ export class Serializer {
                 }
             }
 
+            // call "postCreate" functions
+            let postCreateFunctionNames = Reflect.getPostCreateFunctionNames(f);
+            if( postCreateFunctionNames ){
+                postCreateFunctionNames.forEach( functionName =>{
+                    o[functionName]();
+                });
+            }
         }
         return o;
     }

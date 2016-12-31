@@ -9,6 +9,7 @@ export * from "./TestAddress"
 export * from "./TestPhoneNumber"
 export * from "./TestLeaf"
 export * from "./TestTree"
+export * from "./TestTransient"
 
 export * from "./TestPersonCollection"
 export * from "./TestCarCollection"

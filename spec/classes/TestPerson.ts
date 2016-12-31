@@ -16,8 +16,12 @@ export class TestPerson
     addresses:Array<Tests.TestAddress> = [];
 
     @reob.Type("TestTree")
-    // @omm.AsForeignKeys
+        // @omm.AsForeignKeys
     tree:Tests.TestTree;
+
+    @reob.Type("TestTransient")
+        // @omm.AsForeignKeys
+    testTransient:Tests.TestTransient;
 
     @reob.Type("TestLeaf")
     // @omm.AsForeignKeys

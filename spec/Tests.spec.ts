@@ -1079,6 +1079,22 @@ describe("Reob", function () {
         });
     });
 
+    it("knows post create function names", ()=>{
+        let names = reob.Reflect.getPostCreateFunctionNames(Tests.TestTransient);
+        expect( names ).toBeDefined();
+        expect( names.length ).toBe(1);
+        expect( names[0] ).toBe("initialize");
+    });
+
+
+    it("calls functions that are annotated with 'PostCreate' when objects get deserialized", ()=>{
+        let s =  new reob.Serializer()
+        let t1:Tests.TestPerson = new Tests.TestPerson("tp1");
+        t1.testTransient = new Tests.TestTransient("12345");
+        let doc = s.toDocument(t1);
+        let t2:Tests.TestPerson = s.toObject(doc, undefined, Tests.TestPerson);
+        expect(t2.testTransient.ignoredProperty).toBe("hello 12345");
+    });
 
     it("can register to during-update-events and the event listener receives all the correct data.", function (done) {
         var l = spyOnAndCallThrough<reob.UpdateEventListener<Tests.TestTree>>( ( updateEvent:reob.UpdateEvent<Tests.TestTree> )=>{

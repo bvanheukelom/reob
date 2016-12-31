@@ -94,6 +94,8 @@ export function RemoteCollectionUpdate(t:any, functionName:string, objectDescrip
     Remote(t, functionName, objectDescriptor);
 }
 
+
+
 /**
  * Used to declare a function of a class as a "collection update". That means that whenever the function is called
  * the same operation is also invoked on the document in the collection.
@@ -161,6 +163,7 @@ export function Parent(targetPrototypeObject:any, propertyName:string) {
 export function Ignore(targetPrototypeObject:any, propertyName:string) {
     Reflect.setPropertyProperty(targetPrototypeObject, propertyName, "ignore", true);
 }
+
 
 export function PrivateToServer(targetPrototypeObject:any, propertyName:string) {
     if( reob.isVerbose() )console.log( "Privat to server: ", propertyName );
@@ -263,6 +266,11 @@ export function Remote( p1:any, p2?:any, d? ) {
     }
 }
 
+export function PostCreate(t:any, functionName:string, objectDescriptor:any) {
+    Reflect.setPropertyProperty(t, functionName, "postCreate", true);
+}
+
+
 export class Reflect {
 
     public static getMethodOptions(typeClass:reob.TypeClass<any>, functionName:string):IMethodOptions {
@@ -288,9 +296,11 @@ export class Reflect {
         }
     }
 
-
     public static getRemoteFunctionNames<T extends Object>(typeClass:reob.TypeClass<any>):Array<string> {
         return Reflect.getPropertyNamesOfPropertiesThatHaveAProperty(typeClass, "methodOptions");
+    }
+    public static getPostCreateFunctionNames<T extends Object>(typeClass:reob.TypeClass<any>):Array<string> {
+        return Reflect.getPropertyNamesOfPropertiesThatHaveAProperty(typeClass, "postCreate");
     }
 
     public static getRemoteFunctionNamesByObject<T extends Object>(o:any):Array<string> {
