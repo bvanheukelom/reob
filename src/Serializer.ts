@@ -68,7 +68,7 @@ export class Serializer {
         } else if ( !doc || typeof doc == "string" || typeof doc == "number"  || typeof doc == "date" || typeof doc == "boolean")
             o =  doc;
         else
-            o =  this.toObjectRecursive(doc, undefined, f, handler, request);
+            o =  this.toObjectRecursive(doc, undefined, undefined, f, handler, request);
 
         if( handler && serializationPath ) {
             reob.SerializationPath.setObjectContext(o, serializationPath, handler, request);
@@ -78,7 +78,7 @@ export class Serializer {
         return o;
     }
 
-    private toObjectRecursive<T extends Object>(doc:Document, parent:Object, f:reob.TypeClass<T>, handler:reob.Handler, request:reob.Request):T {
+    private toObjectRecursive<T extends Object>(doc:Document, parent:Object, parentPropertyName:string, f:reob.TypeClass<T>, handler:reob.Handler, request:reob.Request):T {
         var o:T;
         if( !doc )
             return <T>doc;
@@ -89,7 +89,7 @@ export class Serializer {
 
         if ( f && typeof f["toObject"]=="function" ) {
                 //console.log("using the custom toObject function of class "+omm.className(f));
-                o = f["toObject"](doc);
+                o = f["toObject"](doc, this, parent, parentPropertyName );
         } else {
             // if the document contains a property called "className" it defines the class that's going to be instantiated
             if (doc._className){
@@ -134,14 +134,14 @@ export class Serializer {
                         var result = Array.isArray(value) ? [] : {};
                         for (var i in value) {
                             var entry:Document = value[i];
-                            entry = this.toObjectRecursive(entry, o, propertyClass, handler, request);
+                            entry = this.toObjectRecursive(entry, o, propertyName,  propertyClass, handler, request);
                             result[i] = entry;
                         }
                         // this can only happen once because if the property is accessed the "lazy load" already kicks in
                         o[objectNameOfTheProperty] = result;
                     }
                     else {
-                        o[objectNameOfTheProperty] = this.toObjectRecursive(value, o, propertyClass, handler, request );
+                        o[objectNameOfTheProperty] = this.toObjectRecursive(value, o, propertyName,  propertyClass, handler, request );
                     }
                 }
                 else {
@@ -179,7 +179,7 @@ export class Serializer {
 
         // is there a customized way to create a document ?
         if( objectClass && typeof (<any>objectClass).toDocument == "function" ) {
-            result = (<any>objectClass).toDocument(object);
+            result = (<any>objectClass).toDocument(object, this, includeContext, omitPropertiesPrivateToServer);
         }
 
         // is it a simple type ?

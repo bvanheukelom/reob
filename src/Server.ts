@@ -110,12 +110,15 @@ export class Server{
     private registerStaticGET(){
         if( this.webRootPath && this.indexFileName ) {
             this.express.get('/*', (req:any, res:any, next:Function) => {
-                console.log("requested file", file );
 
                 //This is the current file they have requested
                 var file = req.params[0];
                 // if( file.indexOf( "js/")!=0 && file.indexOf( "css/")!=0 && file.indexOf( "fonts/")!=0  && file.indexOf( "img/" )!=0 && file.indexOf( "src/")!=0 &&file.indexOf( "components/")!=0 &&file.indexOf( "bootstrap/")!=0 && file.indexOf( "bundle")!=0 )
                 //     file = indexFileName;
+
+                if( reob.isVerbose() )
+                    console.log("Requested file", file );
+
                 var fileName = path.resolve(this.webRootPath, file);
                 fs.exists(fileName, (exists:boolean) => {
                     if( reob.isVerbose() )console.log("file : ", file, " path:", fileName, (!exists?"Does not exist.":"") );
