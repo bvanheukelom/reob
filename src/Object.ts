@@ -5,6 +5,7 @@ import { ObjectContext } from "./ObjectContext"
 
 export interface Object {
     _reobObjectContext?:ObjectContext;
+
 }
 
 

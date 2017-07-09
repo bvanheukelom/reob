@@ -3,7 +3,7 @@
 import * as reob from "./serverModule"
 import * as mongodb from "mongodb"
 import * as Promise from "bluebird"
-import * as uuid from "node-uuid"
+import * as uuid from "uuid"
 
 /**
  * @hidden
@@ -67,7 +67,7 @@ export interface InsertEventListener<T> {
     ( object:T, request?:reob.Request ) : Promise<void>|void
 }
 
-export class Collection<T extends reob.Object> implements reob.Handler
+export class Collection<T extends any> implements reob.Handler
 {
     private mongoCollection:mongodb.Collection;
     private theClass:reob.TypeClass<T>;

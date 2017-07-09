@@ -96,7 +96,8 @@ export class SerializationPath {
     }
 
 
-    static setObjectContext(object:reob.Object, sp:SerializationPath, handler:reob.Handler, request:reob.Request ):void{
+    static setObjectContext(o:any, sp:SerializationPath, handler:reob.Handler, request:reob.Request ):void{
+        let object:reob.Object = o as reob.Object;
         if( object ){
             setNonEnumerableProperty( object, "_reobObjectContext", {
                 serializationPath:sp,
@@ -106,7 +107,8 @@ export class SerializationPath {
         }
     }
 
-    static getObjectContext(object:reob.Object  ):reob.ObjectContext{
+    static getObjectContext( o : any ):reob.ObjectContext{
+        let object = o as reob.Object;
         return object? object._reobObjectContext:undefined;
     }
 

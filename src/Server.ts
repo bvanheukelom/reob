@@ -12,7 +12,7 @@ import * as mongo from "mongodb"
 import * as fs from "fs"
 import * as compression from "compression"
 
-export declare type LoadingCheck = (id:string, request:reob.Request, obj:reob.Object ) => boolean|Promise<void>;
+export declare type LoadingCheck = (id:string, request:reob.Request, obj:any ) => boolean|Promise<void>;
 export declare type ServiceProvider = (s:reob.Request) => Object
 
 
@@ -23,7 +23,7 @@ export interface MethodEventListener {
 export class Server{
 
     private collections:{ [index:string]:reob.Collection<any> } = {};
-    private collectionLoadingEnabled:{ [index:string]:boolean|LoadingCheck } = {};
+    private collectionLoadingEnabled:{ [index:string]:boolean|LoadingCheck  } = {};
     private services:{ [index:string]: Object|ServiceProvider } = {};
     private webMethods:wm.WebMethods;
     private serializer:reob.Serializer;
@@ -149,7 +149,7 @@ export class Server{
         // singletons dont need a
         var o;
         if( typeof service=="object" ) {
-            reob.SerializationPath.setObjectContext(service, undefined, this, undefined);
+            reob.SerializationPath.setObjectContext(service, undefined, <reob.Handler>this, undefined);
             o = service;
         }else{
             o = (<Function>service)({});

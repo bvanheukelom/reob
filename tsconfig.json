@@ -1,6 +1,6 @@
 {
   "compilerOptions": {
-    "target": "es5",
+    "target": "es2015",
     "module": "commonjs",
     "declaration": true,
     "noImplicitAny": false,
@@ -13,8 +13,7 @@
   },
   "include": [
     "src/**/*.ts",
-    "spec/**/*.ts",
-    "typings/**/*.d.ts"
+    "spec/**/*.ts"
   ],
   "exclude": [
     "node_modules",

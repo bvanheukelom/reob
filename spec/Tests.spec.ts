@@ -54,7 +54,7 @@ describe("Reob", function () {
 
         carCollection = new Tests.TestCarCollection();
         server.addCollection(carCollection);
-        server.setLoadingAllowed(carCollection,  (id, session, car:Tests.TestCar)=>{
+        server.setLoadingAllowed(carCollection,  (id:string, session:reob.Request, car:Tests.TestCar)=>{
             console.log('checking whether a car can be loaded', car, session);
             expect( car ).toBeDefined();
             expect( car.brand ).toBe("bmw");
@@ -82,7 +82,7 @@ describe("Reob", function () {
         });
     });
 
-    function removeAll( collection:reob.Collection<reob.Object> ):Promise<void>{
+    function removeAll( collection:reob.Collection<any> ):Promise<void>{
         return collection.getAll().then((objects)=>{
             const propmises = [];
 
@@ -182,7 +182,7 @@ describe("Reob", function () {
         var t1:Tests.TestTree = new Tests.TestTree(15);
         treeCollection.insert(t1).then( (id:string)=> {
             debugger;
-            return clientTreeService.growTree( id ).thenReturn( id );
+            return clientTreeService.growTree( id ).then( ()=>id );
         }).then((id)=>{
             return treeCollection.getByIdOrFail(id);
         }).then((t)=>{
@@ -204,7 +204,7 @@ describe("Reob", function () {
         treeCollection.onAfterUpdate(f.handle);
         treeCollection.insert(t1).then( (id:string)=> {
             debugger;
-            return clientTreeService.growTree( id ).thenReturn( id );
+            return clientTreeService.growTree( id ).then( ()=>id );
         }).then((id)=>{
             expect( f.handle ).toHaveBeenCalled();
             done();
@@ -850,7 +850,7 @@ describe("Reob", function () {
         var t1:Tests.TestTree = new Tests.TestTree(15);
         server.onBeforeMethod(l.listener);
         treeCollection.insert(t1).then( (id:string)=> {
-            return clientTreeService.growTree( id ).thenReturn( id );
+            return clientTreeService.growTree( id ).then( ()=>id );
         }).then((id)=>{
             expect( l.listener ).toHaveBeenCalled();
             expect( isInstance ).toBeFalsy();

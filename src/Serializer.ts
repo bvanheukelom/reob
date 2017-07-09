@@ -65,7 +65,7 @@ export class Serializer {
                 r[j] = this.toObject(doc[j], handler, f );
             }
             o = <any>r;
-        } else if ( !doc || typeof doc == "string" || typeof doc == "number"  || typeof doc == "date" || typeof doc == "boolean")
+        } else if ( !doc || typeof doc == "string" || typeof doc == "number"   || typeof doc == "boolean")
             o =  doc;
         else
             o =  this.toObjectRecursive(doc, undefined, undefined, f, handler, request);
@@ -183,7 +183,7 @@ export class Serializer {
         }
 
         // is it a simple type ?
-        else if ( !object || typeof object == "string" || typeof object == "number"  || typeof object == "date" || typeof object == "boolean") {
+        else if ( !object || typeof object == "string" || typeof object == "number" || typeof object == "boolean") {
             result = <Document>object;
         }
 

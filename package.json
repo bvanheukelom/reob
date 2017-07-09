@@ -1,7 +1,7 @@
 {
   "name": "reob",
   "description": "Remote objects - Create backends for one page web apps with ease. Uses mongo and express.",
-  "version": "0.1.24",
+  "version": "0.1.26",
   "repository": "https://github.com/bvanheukelom/reob",
   "license": "MIT",
   "main": "dist/src/reob.js",
@@ -18,21 +18,20 @@
     "upload-doc": "./script/uploadDoc.sh"
   },
   "devDependencies": {
+    "@types/express": "^4.0.34",
+    "@types/jasmine": "^2.5.53",
     "co": "^4.6.0",
     "express": "^4.14.0",
     "jasmine": "^2.4.1",
-    "typescript": "^1.8.10",
+    "typescript": "^2.4.1",
     "underscore": "^1.8.3"
   },
   "dependencies": {
-    "@types/bluebird": "^3.0.36",
-    "@types/express": "^4.0.34",
-    "bluebird": "^3.4.1",
     "compression": "^1.6.2",
     "eventemitter2": "^2.1.0",
     "jsondiffpatch": "^0.1.43",
     "mongodb": "^2.2.26",
-    "node-uuid": "^1.4.7",
+    "uuid": "^3.1.0",
     "web-methods": "*"
   }
 }

@@ -3,7 +3,7 @@ import * as omm from "../../src/reob"
 import * as Tests from "./Tests"
 
 @omm.Entity
-export class TestCar{
+export class TestCar {
     @omm.Type("TestWheelBanzai")
     wheel:Tests.TestWheel;
 
