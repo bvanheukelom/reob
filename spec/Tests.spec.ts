@@ -5,17 +5,26 @@ import * as reob from "../src/serverModule"
 reob.setVerbose( false );
 
 import * as Tests from "./classes/Tests"
-import * as Promise from "bluebird"
+
 var co = require("co");
 
 import "./classes/TestLeaf"
 
 jasmine.DEFAULT_TIMEOUT_INTERVAL = 10000000;
+jasmine.getEnv().addReporter({
+    specDone: function(result) {
+        console.log("Test done:",  result.fullName);
+    },
 
-Promise.onPossiblyUnhandledRejection((reason: any) => {
+    specStarted: function(result) {
+        console.log('------------------------------------------------------------------------');
+        console.log("Test started:",  result.fullName);
+    }
+});
+/*Promise.onPossiblyUnhandledRejection((reason: any) => {
     console.log("possibly unhandled rejection ", reason);
     debugger;
-});
+});*/
 
 function spyOnAndCallThrough<FKT extends Function>( f:FKT ):FKT{
     var l = {listener:f};
@@ -36,14 +45,16 @@ describe("Reob", function () {
     });
 });
 
+let personCollection:Tests.TestPersonCollection;
+let treeCollection:Tests.TestTreeCollection;
+let clientTreeService:Tests.TreeService;
+let carCollection:Tests.TestCarCollection;
+let server:reob.Server;
+let client:reob.Client;
+
+
 describe("Reob", function () {
 
-    var personCollection:Tests.TestPersonCollection;
-    var treeCollection:Tests.TestTreeCollection;
-    var clientTreeService:Tests.TreeService;
-    var carCollection:Tests.TestCarCollection;
-    var server:reob.Server;
-    var client:reob.Client;
 
     beforeAll((done)=>{
 
@@ -54,13 +65,11 @@ describe("Reob", function () {
 
         carCollection = new Tests.TestCarCollection();
         server.addCollection(carCollection);
-        server.setLoadingAllowed(carCollection,  (id:string, session:reob.Request, car:Tests.TestCar)=>{
+        server.setLoadingAllowed(carCollection,  async (id:string, session:reob.Request, car:Tests.TestCar)=>{
             console.log('checking whether a car can be loaded', car, session);
             expect( car ).toBeDefined();
             expect( car.brand ).toBe("bmw");
-            if( session.userData && session.userData.userId=='bert')
-                return Promise.resolve('yay');
-            else
+            if( !session.userData || session.userData.userId!='bert')
                 return Promise.reject(new Error("nay"));
         });
 
@@ -82,17 +91,14 @@ describe("Reob", function () {
         });
     });
 
-    function removeAll( collection:reob.Collection<any> ):Promise<void>{
-        return collection.getAll().then((objects)=>{
-            const propmises = [];
+    async function removeAll( collection:reob.Collection<any> ):Promise<void>{
+        var objects = await collection.getAll();
 
-            objects.forEach( o =>{
-                console.log("deleting ", o);
-                let promise = collection.remove(reob.getId(o));
-                propmises.push( promise );
-            });
-            return Promise.all(propmises).thenReturn();
-        })
+        const promises = objects.map( o => {
+            console.log("deleting ", o);
+            return collection.remove(reob.getId(o));
+        });
+        await Promise.all(promises);
     }
 
     var count =0;
@@ -102,7 +108,6 @@ describe("Reob", function () {
         server.setRequestFactory(undefined);
 
         console.log("-------"+(count));
-        // console.log(jasmine.getEnv().currentSpec.getFullName());
         personCollection.removeAllListeners();
         treeCollection.removeAllListeners();
         server.removeAllMethodListeners();
@@ -300,20 +305,21 @@ describe("Reob", function () {
     });
 
 
-    it("uses persistence paths on documents", function () {
-        var t1:Tests.TestTree = new Tests.TestTree(10);
-        var i;
-        treeCollection.insert(t1).then((id:string)=>{
-            i = id;
-            return treeCollection.getById(id);
-        }).then((t:Tests.TestTree)=> {
-            return Promise.cast(t.grow()).then(()=>{return treeCollection.getById(t.treeId)});
-        }).then((t:Tests.TestTree)=> {
-            var sp = reob.SerializationPath.getObjectContext(t).serializationPath;
-            expect( sp ).toBeDefined();
-            expect( sp.toString()).toBe("TheTreeCollection["+i+"]");
-            expect(reob.SerializationPath.getObjectContext(t1.leaves[0]).serializationPath.toString()).toBe("TheTreeCollection["+i+"].leaves|leaf11");
-        });
+    it("uses persistence paths on documents", async done =>{
+        try {
+            let t1: Tests.TestTree = new Tests.TestTree(10);
+            let i: string = await treeCollection.insert(t1);
+            let t2: Tests.TestTree = await  treeCollection.getById(i);
+            await t2.grow();
+            let t = await treeCollection.getById(t2.treeId);
+            let sp = reob.SerializationPath.getObjectContext(t).serializationPath;
+            expect(sp).toBeDefined();
+            expect(sp.toString()).toBe("TheTreeCollection[" + i + "]");
+            expect(reob.SerializationPath.getObjectContext(t.leaves[0]).serializationPath.toString()).toBe("TheTreeCollection[" + i + "].leaves|leaf11");
+            done();
+        }catch( e ){
+            done.fail(e);
+        }
     });
 
     it("can call wrapped functions that are not part of a collection", function () {
@@ -370,21 +376,20 @@ describe("Reob", function () {
     });
 
     it("knows document names ", function () {
+
         expect(reob.Reflect.getDocumentPropertyName(Tests.TestLeaf, "greenNess")).toBe("greenIndex");
         expect(reob.Reflect.getObjectPropertyName(Tests.TestLeaf, "greenIndex")).toBe("greenNess");
     });
 
-    it("can call functions that have are also webMethods normally", function (done) {
-        Promise.cast( treeCollection.serverFunction("World", new Tests.TestTree(212), 42) ).then((r)=>{
-            expect(r).toBe("Hello World!");
-            done();
-        });
+    it("can call functions that have are also webMethods normally", async (done) => {
+        var r = await treeCollection.serverFunction("World", new Tests.TestTree(212), 42);
+        expect(r).toBe("Hello World!");
+        done();
     });
 
-    it("can call functions with undefined parameters", function (done) {
-        Promise.cast( clientTreeService.insertTree(undefined) ).then((r)=>{
-            done();
-        });
+    it("can call functions with undefined parameters", async (done) => {
+        await clientTreeService.insertTree(undefined);
+        done();
     });
     
     it("serializes objects to plain objects", function () {
@@ -1216,43 +1221,51 @@ describe("Reob", function () {
     });
 
 
-    it("can receive emitted events from a subobject even if another (the first) event listener throws an exception", function (done) {
-        var lCancels =  spyOnAndCallThrough( (event:reob.UpdateEvent<Tests.TestTree>)=>{ throw new Error("I try to cancel this but fail.")} );
-        var l  =  spyOnAndCallThrough( (event:reob.UpdateEvent<Tests.TestTree>)=>{} );
-        var lAfter  =  spyOnAndCallThrough( (event:reob.UpdateEvent<Tests.TestTree>)=>{ throw new Error("I am also ignored.") } );
-        var lAfter2  =  spyOnAndCallThrough( (event:reob.UpdateEvent<Tests.TestTree>)=>{} );
+    it("can receive emitted events from a subobject even if another (the first) event listener throws an exception", async (done) => {
+        try {
+            var lCancels = spyOnAndCallThrough((event: reob.UpdateEvent<Tests.TestTree>) => {
+                throw new Error("I try to cancel this but fail.")
+            });
+            var l = spyOnAndCallThrough((event: reob.UpdateEvent<Tests.TestTree>) => {
+            });
+            var lAfter = spyOnAndCallThrough((event: reob.UpdateEvent<Tests.TestTree>) => {
+                throw new Error("I am also ignored.")
+            });
+            var lAfter2 = spyOnAndCallThrough((event: reob.UpdateEvent<Tests.TestTree>) => {
+            });
 
-        treeCollection.newTree(10).then((t)=> {
-            return Promise.cast(t.grow()).thenReturn(t.treeId);
-        }).then((tId)=> {
-            return treeCollection.getById(tId);
-        }).then((t)=> {
-            treeCollection.onDuringUpdate( "fluttering", lCancels );
-            treeCollection.onDuringUpdate( "fluttering", l );
-            treeCollection.onAfterUpdate( lAfter );
-            treeCollection.onAfterUpdate( lAfter2 );
-            return t.getLeaves()[0].flutter();
-        }).then(()=> {
+            let t = await treeCollection.newTree(10);
+            await t.grow();
+            t = await  treeCollection.getById(t.treeId);
+
+            treeCollection.onDuringUpdate("fluttering", lCancels);
+            treeCollection.onDuringUpdate("fluttering", l);
+            treeCollection.onAfterUpdate(lAfter);
+            treeCollection.onAfterUpdate(lAfter2);
+            await t.getLeaves()[0].flutter();
+
             expect(lCancels).toHaveBeenCalledTimes(1);
             expect(l).toHaveBeenCalledTimes(1);
             expect(lAfter).toHaveBeenCalledTimes(1);
             expect(lAfter2).toHaveBeenCalledTimes(1);
             done();
-        }).catch(done.fail);
+        }catch( e ){
+            done.fail(e);
+        }
     });
 
 
-    it("on the server an update function is called and an object is inserted and then another update function is called on the newly inserted object", function (done) {
-        treeCollection.newTree(10).then((t)=> {
-            return Promise.cast(t.grow()).thenReturn(t);
-        }).then((t:Tests.TestTree)=> {
-            return Promise.cast(t.getLeaves()[0].flutter()).thenReturn(t.treeId);
-        }).then((tId)=> {
-            return treeCollection.getById(tId);
-        }).then((t)=> {
+    it("on the server an update function is called and an object is inserted and then another update function is called on the newly inserted object", async done => {
+        try{
+            let t = await treeCollection.newTree(10);
+            await t.grow();
+            await t.getLeaves()[0].flutter();
+            t = await treeCollection.getById(t.treeId);
             expect( t.getLeaves()[0].greenNess ).toBe(3);
             done();
-        }).catch(done.fail);
+        }catch( e )  {
+            done.fail(e);
+        }
     });
 
     it("can return errors in a promise ", function (done) {
@@ -1268,9 +1281,9 @@ describe("Reob", function () {
         var lCancels =  spyOnAndCallThrough( (event:reob.UpdateEvent<Tests.TestTree>)=>{ throw new Error("xxx")} );
         treeCollection.onBeforeUpdate( lCancels );
         treeCollection.newTree(10).then((t)=> {
-            return Promise.cast(t.grow()).then(done.fail).catch((r)=>{
+            return Promise.resolve(t.grow()).then(done.fail).catch((r)=>{
                 expect( r?r.message:undefined ).toBe("xxx");
-            }).thenReturn(t.treeId);
+            }).then( ()=> t.treeId );
         }).then((tId)=> {
             return treeCollection.getById(tId);
         }).then((t:Tests.TestTree)=> {
@@ -1285,7 +1298,7 @@ describe("Reob", function () {
         } );
         treeCollection.onDuringUpdate( "gardenevents", l );
         treeCollection.newTree(10).then((t)=> {
-            return Promise.cast(t.setSomeBooleanTo(true))
+            return Promise.resolve(t.setSomeBooleanTo(true));
         }).then((tId)=> {
             expect(l).toHaveBeenCalledTimes(1);
             done();

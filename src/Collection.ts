@@ -2,7 +2,6 @@
 
 import * as reob from "./serverModule"
 import * as mongodb from "mongodb"
-import * as Promise from "bluebird"
 import * as uuid from "uuid"
 
 /**
@@ -261,7 +260,7 @@ export class Collection<T extends any> implements reob.Handler
             if( !t )
                 return Promise.reject(new Error("Not found"));
             else
-                return t;
+                return Promise.resolve(t);
         });
     }
 
@@ -279,7 +278,7 @@ export class Collection<T extends any> implements reob.Handler
             if( reob.isVerbose() )console.log("removing");
             return this.getMongoCollection().remove({_id:id }).then((result)=>{
                 if( reob.isVerbose() )console.log("removing2");
-                return this.emit( EventNames.onAfterRemove, undefined, id, request ).thenReturn(true);
+                return this.emit( EventNames.onAfterRemove, undefined, id, request ).then(()=>true);
             }) ;
         });
     }
@@ -348,7 +347,7 @@ export class Collection<T extends any> implements reob.Handler
                 afterUpdateDocument: undefined,
                 data:undefined
             };
-            return this.emit( EventNames.onBeforeUpdate, undefined, updateEvent ).thenReturn();
+            return this.emit( EventNames.onBeforeUpdate, undefined, updateEvent ).then(()=>{});
         });
 
         var resultPromise = Promise.all([objectPromise,rootObjectPromise, beforeUpdateEventSentPromise]).then( (values:any)=>{
@@ -391,7 +390,7 @@ export class Collection<T extends any> implements reob.Handler
             });
         });
 
-        return Promise.all([resultPromise, updatePromise, rootObjectPromise, documentPromise]).then( (values:any[]) => {
+        return Promise.all([resultPromise, updatePromise, rootObjectPromise, documentPromise]).then( async (values:any[]) => {
             var result= values[0];
             var updateResult:any = values[1];
             var rootObject:any = values[2];
@@ -411,7 +410,7 @@ export class Collection<T extends any> implements reob.Handler
             else if (updateResult.modifiedCount > 1) {
                 return Promise.reject(new Error("Reob updated more than 1 document. This is not expected."));
             } else if( attempt<10 ) {
-                return this.updateOnce(sp, updateFunction, attempt+1, request, functionName, true, originalArguments );
+                return await this.updateOnce(sp, updateFunction, attempt+1, request, functionName, true, originalArguments );
             } else {
                 return Promise.reject( new Error("Reob tried 10 times to update the document. This happens if there is a lot of concurrency.") );
             }
@@ -433,7 +432,7 @@ export class Collection<T extends any> implements reob.Handler
                     afterUpdateDocument:r.rootDocumentPost,
                     data:t.data
                 };
-                promises.push( Promise.cast( this.emit( t.topic, t.subTopic, updateEvent ) ));
+                promises.push( Promise.resolve( this.emit( t.topic, t.subTopic, updateEvent ) ));
             });
             // we ignore rejected promises from during and after events, we just want them to happen before this finishes.
             var duringSentPromise = Promise.all(promises).catch(()=>{}).then(()=>{
@@ -455,7 +454,7 @@ export class Collection<T extends any> implements reob.Handler
                 };
                 return this.emit( EventNames.onAfterUpdate , undefined, updateEvent )
             }).catch(()=>{});
-            return afterSentPromise.thenReturn(r);
+            return afterSentPromise.then(()=>r);
         });
     }
 
@@ -485,7 +484,7 @@ export class Collection<T extends any> implements reob.Handler
             return this.getMongoCollection().insertOne(doc).then(()=>{
                 reob.SerializationPath.setObjectContext(p, new reob.SerializationPath(this.getName(), id), this, request);
                 reob.SerializationPath.updateObjectContexts(p, this, request);
-                return this.emit(EventNames.onAfterInsert, undefined, p, request).thenReturn(id);
+                return this.emit(EventNames.onAfterInsert, undefined, p, request).then(()=>id);
             });
         });
     }

@@ -5,7 +5,6 @@
 import * as reob from "./reob"
 import * as wm from "web-methods"
 import * as eventemitter from "eventemitter2"
-import * as Promise from "bluebird"
 
 
 /**
@@ -194,7 +193,7 @@ export class Client implements reob.Handler{
             var rOriginal;
             this.webMethodRunning = true;
             try{
-                rOriginal = Promise.cast(originalFunction.apply(object, args));
+                rOriginal = Promise.resolve(originalFunction.apply(object, args));
             }catch(error){
                 rOriginal = Promise.reject(error);
             } finally {

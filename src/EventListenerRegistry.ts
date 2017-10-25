@@ -1,7 +1,4 @@
-/**
- * Created by bert on 19.10.16.
- */
-import * as Promise from "bluebird"
+
 /**
  * @hidden
  */
