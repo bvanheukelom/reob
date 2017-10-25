@@ -21,12 +21,12 @@
     "@types/express": "^4.0.34",
     "@types/jasmine": "^2.5.53",
     "co": "^4.6.0",
-    "express": "^4.14.0",
     "jasmine": "^2.4.1",
     "typescript": "^2.4.1",
     "underscore": "^1.8.3"
   },
   "dependencies": {
+    "express": "^4.16.2",
     "compression": "^1.6.2",
     "eventemitter2": "^2.1.0",
     "jsondiffpatch": "^0.1.43",
