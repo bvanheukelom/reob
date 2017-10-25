@@ -4,7 +4,6 @@
 
 import * as reob from "./serverModule"
 import * as wm from "web-methods"
-import * as Promise from "bluebird"
 import * as expressModule from "express"
 import * as http from "http"
 import * as path from "path"
@@ -63,37 +62,33 @@ export class Server{
         this.httpServer.close();
     }
 
-    start( port?:number ):Promise<void>{
+    async connectToMongoDb(){
+        if( !this.mongoDb ) {
+            this.mongoDb = await <any>mongo.MongoClient.connect(this.mongoUrl).then((db: mongo.Db) => {
+                for (var i in this.collections) {
+                    var c: reob.Collection<any> = this.collections[i];
+                    c.setMongoCollection(db);
+                }
+                return db;
+            });
+        }
+    }
+
+    async start( port?:number ):Promise<void>{
         this.webMethods.registerEndpoint(this.express);
         this.addAllEntityWebMethods();
         this.registerGetter();
         if( this.webRootPath ){
             this.registerStaticGET();
         }
-        this.port = port;
-        var p = Promise.resolve();
-        if( !this.mongoDb ) {
-            p = p.then(()=> {
-                return <any>mongo.MongoClient.connect(this.mongoUrl, {promiseLibrary: Promise}).then((db:mongo.Db)=> {
-                    this.mongoDb = db;
-                    for( var i in this.collections ){
-                        var c:reob.Collection<any> = this.collections[i];
-                        c.setMongoCollection(db);
-                    }
-                    return db;
-                });
-            });
-        }
-        p = p.then(()=> {
-            return new Promise<void>((resolve, reject)=> {
-                this.port = this.port ? this.port : 8080;
-                this.httpServer.listen(this.port, () => {
-                    if( reob.isVerbose() )console.log('Web server is listening on *:' + this.port + ( this.webRootPath ? (', serving ' + this.webRootPath) : ""));
-                    resolve();
-                });
+        this.port = port || 8080;
+        await this.connectToMongoDb();
+        await new Promise<void>((resolve, reject)=> {
+            this.httpServer.listen(this.port, () => {
+                if( reob.isVerbose() )console.log('Web server is listening on *:' + this.port + ( this.webRootPath ? (', serving ' + this.webRootPath) : ""));
+                resolve();
             });
         });
-        return p;
     }
     
     getExpress():expressModule.Application{
@@ -224,7 +219,7 @@ export class Server{
         if( this.requestFactory ){
             return this.requestFactory( userData );
         } else {
-            return new reob.Request(userData);
+            return {userData};
         }
     }
 
@@ -319,9 +314,9 @@ export class Server{
             }).then((object)=>{
                 var i:any = this.collectionLoadingEnabled[collectionName];
                 if( typeof i == "function" ){
-                    return Promise.cast( i( objectId, request, object ) ).then(()=>object);
+                    return Promise.resolve( i( objectId, request, object ) ).then(()=>object);
                 }else{
-                    return Promise.cast( i ).then(()=>object);
+                    return Promise.resolve( i ).then(()=>object);
                 }
             }).then((obj)=> {
                 var doc = obj ? this.serializer.toDocument(obj, true, true) : undefined;

@@ -4,10 +4,9 @@
 import * as reob from "../../src/reob"
 import {Request} from "../../src/Request"
 
-export class TestRequest extends Request{
+export class TestRequest implements Request{
     
-    constructor(userData:any){
-        super(userData);
+    constructor(public userData:any){
     }
     
 }
