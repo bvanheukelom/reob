@@ -3,8 +3,5 @@ function __export(m) {
     for (var p in m) if (!exports.hasOwnProperty(p)) exports[p] = m[p];
 }
 Object.defineProperty(exports, "__esModule", { value: true });
-/**
- * Created by bert on 06.10.16.
- */
-__export(require("./src/serverModule"));
+__export(require("./dist/src/serverModule"));
 //# sourceMappingURL=server.js.map
