@@ -6,5 +6,5 @@ Object.defineProperty(exports, "__esModule", { value: true });
 /**
  * Created by bert on 06.10.16.
  */
-__export(require("./dist/src/serverModule"));
+__export(require("./src/serverModule"));
 //# sourceMappingURL=server.js.map

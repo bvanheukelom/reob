@@ -7,3 +7,5 @@ doc
 s*/**/*.js.map
 s*/**/*.d.ts
 s*/**/*.js
+yarn-error.log
+yarn.lock

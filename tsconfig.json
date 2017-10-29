@@ -1,11 +1,12 @@
 {
   "compilerOptions": {
-    "target": "es2015",
+    "target": "es2016",
     "module": "commonjs",
-    "declaration": true,
-    "noImplicitAny": false,
-    "removeComments": false,
-    "noLib": false,
+    "lib": ["es2016", "dom" ],
+    "types": ["node", "jasmine" ],
+    "typeRoots": [
+      "node_modules/@types"
+    ],
     "experimentalDecorators": true,
     "sourceMap": true,
     "moduleResolution": "node",
@@ -16,8 +17,6 @@
     "spec/**/*.ts"
   ],
   "exclude": [
-    "node_modules",
-    "dist",
-    "server.ts"
+    "node_modules"
   ]
 }

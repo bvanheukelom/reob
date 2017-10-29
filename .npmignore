@@ -1,10 +1,6 @@
-/spec
-typings
-/src
 node_modules
+src
 .tscache
-tsconfig.json
-tsconfig_doc.json
 .DS_Store
 npm-debug.log
 .git
