@@ -9,6 +9,7 @@
     ],
     "experimentalDecorators": true,
     "sourceMap": true,
+    "declaration": true,
     "moduleResolution": "node",
     "outDir": "dist"
   },
