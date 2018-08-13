@@ -12,7 +12,6 @@ export class SerializationPath {
         // this.objectRetriever = objectRetriever;
         if (id) this.path += "[" + id + "]";
         if (!this.getId()){
-            debugger;
             throw new Error("the id parameter is missing");
         }
     }
