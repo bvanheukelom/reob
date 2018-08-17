@@ -3,8 +3,9 @@ import * as Cloner from "./Cloner"
 import { Document } from "./Document"
 
 import { SubObjectPath } from "./SubObjectPath"
-import { getId, getClass, TypeClass, SerializationPath, Request, Handler} from "./reob"
+import { getId, TypeClass, SerializationPath, Request, Handler} from "./reob"
 import {
+    getClass,
     getClassName,
     getDocumentPropertyName, getEntityClassByName,
     getObjectPropertyName, getParentPropertyNames, getPostCreateFunctionNames, getPropertyClass, getTypedPropertyNames,
