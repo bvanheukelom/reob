@@ -2,7 +2,6 @@
  * Created by bert on 23.03.16.
  */
 import * as reob from "../src/serverModule"
-reob.setVerbose( false );
 
 import * as Tests from "./classes/Tests"
 
@@ -21,10 +20,7 @@ jasmine.getEnv().addReporter({
         console.log("Test started:",  result.fullName);
     }
 });
-/*Promise.onPossiblyUnhandledRejection((reason: any) => {
-    console.log("possibly unhandled rejection ", reason);
-    debugger;
-});*/
+
 
 function spyOnAndCallThrough<FKT extends Function>( f:FKT ):FKT{
     var l = {listener:f};
@@ -95,7 +91,6 @@ describe("Reob", function () {
         var objects = await collection.getAll();
 
         const promises = objects.map( o => {
-            console.log("deleting ", o);
             return collection.remove(reob.getId(o));
         });
         await Promise.all(promises);
@@ -104,7 +99,6 @@ describe("Reob", function () {
     var count =0;
     beforeEach((done)=>{
         count++;
-        reob.setVerbose( true );
         server.setRequestFactory(undefined);
 
         console.log("-------"+(count));
@@ -118,14 +112,8 @@ describe("Reob", function () {
         }).then(done).catch(done.fail);
     });
 
-    it("isVerbose", function () {
-        expect(reob.isVerbose()).toBeTruthy();
-        reob.setVerbose(false);
-        expect(reob.isVerbose()).toBeFalsy();
-    });
-    
     it("knows method annotations ", function () {
-        var methodNames = reob.Reflect.getRemoteFunctionNames(Tests.TestPerson);
+        var methodNames = reob.getRemoteFunctionNames(Tests.TestPerson);
         expect(methodNames).toContain("addAddress");
         expect(methodNames.length).toBeGreaterThan(0);
     });
@@ -136,8 +124,8 @@ describe("Reob", function () {
     });
 
     it("knows collection updates", function () {
-        expect(reob.Reflect.getCollectionUpdateFunctionNames(Tests.TestPerson)).toBeDefined();
-        expect(reob.Reflect.getCollectionUpdateFunctionNames(Tests.TestPerson)).toContain("collectionUpdateRename");
+        expect(reob.getCollectionUpdateFunctionNames(Tests.TestPerson)).toBeDefined();
+        expect(reob.getCollectionUpdateFunctionNames(Tests.TestPerson)).toContain("collectionUpdateRename");
     });
 
     it("can clone stuff", function () {
@@ -274,7 +262,7 @@ describe("Reob", function () {
     });
 
     it("knows typed properties", function () {
-        expect(reob.Reflect.getTypedPropertyNames(Tests.TestTree)).toContain('leaves');
+        expect(reob.getTypedPropertyNames(Tests.TestTree)).toContain('leaves');
     });
 
     it("uses persistence paths to return undefined for non existent subobjects ", function () {
@@ -363,14 +351,14 @@ describe("Reob", function () {
     });
 
     it("knows types ", function () {
-        expect(reob.Reflect.getPropertyClass(Tests.TestPerson, "tree")).toBe(Tests.TestTree);
-        expect(reob.Reflect.getPropertyClass(Tests.TestPerson, "leaf")).toBe(Tests.TestLeaf);
+        expect(reob.getPropertyClass(Tests.TestPerson, "tree")).toBe(Tests.TestTree);
+        expect(reob.getPropertyClass(Tests.TestPerson, "leaf")).toBe(Tests.TestLeaf);
     });
 
     it("knows document names ", function () {
 
-        expect(reob.Reflect.getDocumentPropertyName(Tests.TestLeaf, "greenNess")).toBe("greenIndex");
-        expect(reob.Reflect.getObjectPropertyName(Tests.TestLeaf, "greenIndex")).toBe("greenNess");
+        expect(reob.getDocumentPropertyName(Tests.TestLeaf, "greenNess")).toBe("greenIndex");
+        expect(reob.getObjectPropertyName(Tests.TestLeaf, "greenIndex")).toBe("greenNess");
     });
 
     it("can call functions that have are also webMethods normally", async (done) => {
@@ -460,7 +448,7 @@ describe("Reob", function () {
     });
 
     it("marks properties as ignored", function () {
-        expect(reob.Reflect.isIgnored(Tests.TestCar, "temperature")).toBeTruthy();
+        expect(reob.isIgnored(Tests.TestCar, "temperature")).toBeTruthy();
     });
     //
     it("deserializes local objects with arrays", function () {
@@ -491,15 +479,15 @@ describe("Reob", function () {
     });
     //
     it("properties of child objects have no type on the parent object", function () {
-        expect(reob.Reflect.getPropertyClass(Tests.TestInheritanceParent, "childOther")).toBeUndefined();
+        expect(reob.getPropertyClass(Tests.TestInheritanceParent, "childOther")).toBeUndefined();
     });
     //
     it("properties of child objects have a type on the child object", function () {
-        expect(reob.Reflect.getPropertyClass(Tests.TestInheritanceChild, "childOther")).toBe(Tests.TestInheritanceOther);
+        expect(reob.getPropertyClass(Tests.TestInheritanceChild, "childOther")).toBe(Tests.TestInheritanceOther);
     });
     //
     it("properties of the parent class have a type on the child class", function () {
-        expect(reob.Reflect.getPropertyClass(Tests.TestInheritanceChild, "parentOther")).toBe(Tests.TestInheritanceOther);
+        expect(reob.getPropertyClass(Tests.TestInheritanceChild, "parentOther")).toBe(Tests.TestInheritanceOther);
     });
     //
     it("serializes local objects with inheritance", function () {
@@ -684,13 +672,13 @@ describe("Reob", function () {
 
 
     it("can get the testwheel class by its configured name", function () {
-        var p = reob.Reflect.getEntityClassByName("TestWheelBanzai")
+        var p = reob.getEntityClassByName("TestWheelBanzai")
         expect(p).toBeDefined();
         expect(p).toBe(Tests.TestWheel);
     });
 
     it("can get the testCar class by its name", function () {
-        var p = reob.Reflect.getEntityClassByName("TestCar");
+        var p = reob.getEntityClassByName("TestCar");
         expect(p).toBeDefined();
         expect(p).toBe(Tests.TestCar);
     });
@@ -808,7 +796,7 @@ describe("Reob", function () {
     });
 
     it("does not transmit properties that are private to the server", function () {
-        expect( reob.Reflect.isPrivateToServer( Tests.TestCar, "privateToServer" ) ).toBeTruthy();
+        expect( reob.isPrivateToServer( Tests.TestCar, "privateToServer" ) ).toBeTruthy();
     });
 
 
@@ -1075,7 +1063,7 @@ describe("Reob", function () {
     });
 
     it("knows post create function names", ()=>{
-        let names = reob.Reflect.getPostCreateFunctionNames(Tests.TestTransient);
+        let names = reob.getPostCreateFunctionNames(Tests.TestTransient);
         expect( names ).toBeDefined();
         expect( names.length ).toBe(1);
         expect( names[0] ).toBe("initialize");

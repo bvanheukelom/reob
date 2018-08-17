@@ -2,12 +2,12 @@
  * Created by bert on 07.07.16.
  */
 
-import * as reob from "./reob"
+import {Object as ReobObject, Request, TypeClass} from "./reob"
 
 /**
  * @hidden
  */
 export interface Handler{
-    collectionUpdate?(entityClass:reob.TypeClass<any>, functionName:string, object:reob.Object, originalFunction:Function, args:any[], request:reob.Request ):any;
-    webMethod?(entityClass:reob.TypeClass<any>, functionName:string, object:reob.Object, originalFunction:Function, args:any[], request:reob.Request ):any;
+    collectionUpdate?(entityClass:TypeClass<any>, functionName:string, object:Object, originalFunction:Function, args:any[], request:Request ):any;
+    webMethod?(entityClass:TypeClass<any>, functionName:string, object:Object, originalFunction:Function, args:any[], request:Request ):any;
 }

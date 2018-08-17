@@ -2,20 +2,23 @@
  * Created by bert on 07.07.16.
  */
 
-import * as reob from "./reob"
+import { Object as ReobObject, Serializer, SerializationPath,  TypeClass, IMethodOptions} from "./reob"
 import * as wm from "web-methods"
 import * as eventemitter from "eventemitter2"
+import {Handler} from "./Handler";
+import {getClass, getClassName, getMethodOptions, getRemoteFunctionNames} from "./Annotations";
+
 
 
 /**
  * This is class represents the startingpoint from the website. Use it to register services and load objects.
  */
-export class Client implements reob.Handler{
+export class Client implements Handler{
 
     /**
      * @hidden
      */
-    private serializer:reob.Serializer;
+    private serializer:Serializer;
     private userData:any;
     private webMethods:wm.WebMethods;
     private singletons:{ [index:string]: any } = {};
@@ -26,7 +29,7 @@ export class Client implements reob.Handler{
         //     throw new Error("omm is not initialized.");
         var endpointUrl = "http://"+host+":"+port+"/methods";
         this.webMethods = new wm.WebMethods(endpointUrl);
-        this.serializer = new reob.Serializer();
+        this.serializer = new Serializer();
         this.eventEmitter = new eventemitter.EventEmitter2();
     }
 
@@ -34,23 +37,23 @@ export class Client implements reob.Handler{
      * Add a service to the client. After this you can call functions decorated with @remote so
      */
     addService( serviceName:string, service:Object ):void{
-        // var serviceName = omm.Reflect.getServiceName( omm.Reflect.getClass(service) );
+        // var serviceName = omm.getServiceName( omm.getClass(service) );
         // if( !serviceName ){
-        //     console.log(service, omm.Reflect.getClass(service));
+        //     console.log(service, omm.getClass(service));
         //     throw new Error("Registered service has no @Service(<name>) decorator." );
         // }
         this.singletons[serviceName] = service;
 
-        var serviceClass = reob.Reflect.getClass(service);
+        var serviceClass = getClass(service);
 
-        reob.Reflect.getRemoteFunctionNames(serviceClass).forEach((remoteFunctionName:string)=>{
-            var options = reob.Reflect.getMethodOptions(serviceClass,remoteFunctionName);
+        getRemoteFunctionNames(serviceClass).forEach((remoteFunctionName:string)=>{
+            var options = getMethodOptions(serviceClass,remoteFunctionName);
             if( !options.name ) {
                 options.name = serviceName + "." + options.propertyName;
             }
         });
 
-        reob.SerializationPath.setObjectContext( service, undefined, this, undefined );
+        SerializationPath.setObjectContext( service, undefined, this, undefined );
     }
 
     /**
@@ -80,7 +83,6 @@ export class Client implements reob.Handler{
      * @returns {Promise<T>|Promise<T|U>}
      */
     private call( methodName:string, objectId:string, args:any[]  ):Promise<any>{
-        if(reob.isVerbose())console.log( "Call web method "+methodName, objectId, args);
         var webArgs = [];
         // convert the arguments to their origin
         for (var i in args) {
@@ -105,7 +107,6 @@ export class Client implements reob.Handler{
 
         var p:Promise<any> = this.webMethods.call.apply(this.webMethods, webArgs);
         return p.then((result:any)=>{
-            if(reob.isVerbose()) console.log( "web method returned ", result );
             // convert the result from json to an object
             var obje;
             if( result ) {
@@ -162,21 +163,17 @@ export class Client implements reob.Handler{
     /**
      * @hidden
      */
-    webMethod(entityClass:reob.TypeClass<any>, functionName:string, object:reob.Object, originalFunction:Function, args:any[] ):any{
+    webMethod(entityClass:TypeClass<any>, functionName:string, object:ReobObject, originalFunction:Function, args:any[] ):any{
         if( this.webMethodRunning ) {
-            if(reob.isVerbose())console.log("Webmethod already running. Skipping, calling original function. Function name: "+functionName );
             return originalFunction.apply(object, args);
         }
 
-        var objectContext = reob.SerializationPath.getObjectContext( object );
-        var sp:reob.SerializationPath = objectContext.serializationPath ? objectContext.serializationPath : undefined;
+        var objectContext = SerializationPath.getObjectContext( object );
+        var sp:SerializationPath = objectContext.serializationPath ? objectContext.serializationPath : undefined;
         var serviceKey = this.getSingletonKey(object);
         var key = serviceKey || ( sp ? sp.toString() : undefined );
         var r:any;
-        var options:reob.IMethodOptions = reob.Reflect.getMethodOptions(entityClass, functionName);
-
-        if(reob.isVerbose())console.log("On the client, running webMethod:" + functionName, "Service key:",serviceKey);
-
+        var options:IMethodOptions = getMethodOptions(entityClass, functionName);
 
         if (key) {
             var name = options.name;
@@ -184,12 +181,11 @@ export class Client implements reob.Handler{
                 if( serviceKey )
                     name = serviceKey+"."+functionName;
                 else
-                    name = reob.Reflect.getClassName(entityClass)+"."+functionName;
+                    name = getClassName(entityClass)+"."+functionName;
             }
             r = this.call(name, key, args);
         }
         if (!options.serverOnly || !key) {
-            if(reob.isVerbose())console.log("Running original function of web method " + options.name);
             var rOriginal;
             this.webMethodRunning = true;
             try{
@@ -206,7 +202,7 @@ export class Client implements reob.Handler{
                     // hide exception, as the result is coming from the server
                 });
             }
-            reob.SerializationPath.updateObjectContexts(object, this, undefined);
+            SerializationPath.updateObjectContexts(object, this, undefined);
         }
 
         return r;

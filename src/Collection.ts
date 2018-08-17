@@ -9,7 +9,7 @@ import {Db} from "mongodb";
  * @hidden
  */
 function getDefaultCollectionName(t:reob.TypeClass<any>):string {
-    return reob.Reflect.getClassName(t);
+    return reob.getClassName(t);
 }
 /**
  * @hidden
@@ -151,10 +151,10 @@ export class Collection<T extends any> implements reob.Handler
 
         if( !f && typeof functionName === "undefined" && typeof cls === "function" ){
             f = <UpdateEventListener<T>>cls;
-        } else if( typeof cls !== "undefined" && typeof functionName !== "undefined" && f && reob.Reflect.getClassName(<reob.TypeClass<reob.Object>>cls) ){
-            if( reob.Reflect.getCollectionUpdateFunctionNames(<reob.TypeClass<reob.Object>>cls).indexOf(functionName)==-1 )
-                throw new Error("'"+functionName+"' is not a collection updating function on the class/entity "+reob.Reflect.getClassName(<reob.TypeClass<reob.Object>>cls)+".");
-            subTopic = reob.Reflect.getClassName(<reob.TypeClass<reob.Object>>cls)+"."+functionName;
+        } else if( typeof cls !== "undefined" && typeof functionName !== "undefined" && f && reob.getClassName(<reob.TypeClass<reob.Object>>cls) ){
+            if( reob.getCollectionUpdateFunctionNames(<reob.TypeClass<reob.Object>>cls).indexOf(functionName)==-1 )
+                throw new Error("'"+functionName+"' is not a collection updating function on the class/entity "+reob.getClassName(<reob.TypeClass<reob.Object>>cls)+".");
+            subTopic = reob.getClassName(<reob.TypeClass<reob.Object>>cls)+"."+functionName;
         } else {
             throw new Error( "Illegal combination of parameters." );
         }
@@ -175,12 +175,10 @@ export class Collection<T extends any> implements reob.Handler
     }
 
     private emit( t:string, subTopic:string, ...eventArgs:any[] ):Promise<void>{
-        if( reob.isVerbose() )console.log("Emitting "+t);
         return this.eventListenerRegistry.emit( t, subTopic, eventArgs );
     }
 
     setMongoCollection( db:Db ){
-        // if( omm.isVerbose() )console.log("set mongo collection for collection ", this );
         this.mongoCollection = db.collection( this.name );
     }
 
@@ -276,9 +274,7 @@ export class Collection<T extends any> implements reob.Handler
             return Promise.reject(new Error("Trying to remove an object without an id."));
 
         return this.emit( EventNames.onBeforeRemove, undefined, id, request ).then(()=>{
-            if( reob.isVerbose() )console.log("removing");
             return this.getMongoCollection().remove({_id:id }).then((result)=>{
-                if( reob.isVerbose() )console.log("removing2");
                 return this.emit( EventNames.onAfterRemove, undefined, id, request ).then(()=>true);
             }) ;
         });
@@ -416,7 +412,6 @@ export class Collection<T extends any> implements reob.Handler
                 return Promise.reject( new Error("Reob tried 10 times to update the document. This happens if there is a lot of concurrency.") );
             }
         }).then((r:CollectionUpdateResult<T>)=>{
-            if( reob.isVerbose() )console.log("Events collected during updating ", r.events, "request:",request );
 
 
             // send  'duringUpdate' events
@@ -437,7 +432,6 @@ export class Collection<T extends any> implements reob.Handler
             });
             // we ignore rejected promises from during and after events, we just want them to happen before this finishes.
             var duringSentPromise = Promise.all(promises).catch(()=>{}).then(()=>{
-                if( reob.isVerbose() ) console.log("All 'during' events have been sent.")
             });
 
             // send  'afterUpdate' events
@@ -468,7 +462,7 @@ export class Collection<T extends any> implements reob.Handler
      */
     insert( p:T, request?:reob.Request ):Promise<string> {
         // TODO make sure that this is unique
-        var idPropertyName = reob.Reflect.getIdPropertyName(this.theClass);
+        var idPropertyName = reob.getIdPropertyName(this.theClass);
         var id = p[idPropertyName];
         if (!id){
             p[idPropertyName] = uuid.v1();//new mongodb.ObjectID().toString();
@@ -499,11 +493,9 @@ export class Collection<T extends any> implements reob.Handler
     
     collectionUpdate(entityClass:reob.TypeClass<any>, functionName:string, object:reob.Object, originalFunction:Function, args:any[], request:reob.Request ):any{
         if( this.updating ){
-            if( reob.isVerbose() )console.log("Skipping collection update '"+reob.Reflect.getClassName(entityClass)+"."+functionName+"' . Collection update already in progress. Calling original function. ");
             return originalFunction.apply(object, args);
         }
 
-        if( reob.isVerbose() )console.log( 'Doing a collection upate in the collection for '+reob.Reflect.getClassName(entityClass)+"."+functionName );
 
         // var rootObject;
         // var objectPromise:Promise<any>;

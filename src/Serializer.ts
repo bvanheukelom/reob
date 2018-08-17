@@ -1,9 +1,16 @@
 
 import * as Cloner from "./Cloner"
 import { Document } from "./Document"
-import * as reob from "./reob"
+
 import { SubObjectPath } from "./SubObjectPath"
-import { Reflect, getId } from "./Annotations"
+import { getId, getClass, TypeClass, SerializationPath, Request, Handler} from "./reob"
+import {
+    getClassName,
+    getDocumentPropertyName, getEntityClassByName,
+    getObjectPropertyName, getParentPropertyNames, getPostCreateFunctionNames, getPropertyClass, getTypedPropertyNames,
+    isArrayOrMap, isEntity, isIgnored,
+    isParent, isPrivateToServer
+} from "./Annotations";
 
 export class Serializer {
 
@@ -24,13 +31,13 @@ export class Serializer {
         visited.push(object);
 
         cb(path, object);
-        var objectClass = Reflect.getClass(object);
-        Reflect.getTypedPropertyNames(objectClass).forEach(function (typedPropertyName:string) {
-            if( !Reflect.isParent(objectClass, typedPropertyName) ) {
+        var objectClass = getClass(object);
+        getTypedPropertyNames(objectClass).forEach(function (typedPropertyName:string) {
+            if( !isParent(objectClass, typedPropertyName) ) {
                 //console.log("updating foreignkey property " + typedPropertyName);
                 var v:Object = object[typedPropertyName];
                 if (v) {
-                    if (Reflect.isArrayOrMap(objectClass, typedPropertyName)) {
+                    if (isArrayOrMap(objectClass, typedPropertyName)) {
                         //console.log("updating foreignkey property " + typedPropertyName + " is array");
                         for (var i in v) {
                             var e = v[i];
@@ -57,7 +64,7 @@ export class Serializer {
         });
     }
 
-    toObject(doc:Document, handler?:any, f?:reob.TypeClass<any>, serializationPath?:reob.SerializationPath, request?:reob.Request ):any {
+    toObject(doc:Document, handler?:any, f?:TypeClass<any>, serializationPath?:SerializationPath, request?:Request ):any {
         var o:any;
         if(Array.isArray(doc)){
             var r = [];
@@ -71,14 +78,14 @@ export class Serializer {
             o =  this.toObjectRecursive(doc, undefined, undefined, f, handler, request);
 
         if( handler && serializationPath ) {
-            reob.SerializationPath.setObjectContext(o, serializationPath, handler, request);
-            reob.SerializationPath.updateObjectContexts(o, handler, request);
+            SerializationPath.setObjectContext(o, serializationPath, handler, request);
+            SerializationPath.updateObjectContexts(o, handler, request);
         }
 
         return o;
     }
 
-    private toObjectRecursive<T extends Object>(doc:Document, parent:Object, parentPropertyName:string, f:reob.TypeClass<T>, handler:reob.Handler, request:reob.Request):T {
+    private toObjectRecursive<T extends Object>(doc:Document, parent:Object, parentPropertyName:string, f:TypeClass<T>, handler:Handler, request:Request):T {
         var o:T;
         if( !doc )
             return <T>doc;
@@ -93,7 +100,7 @@ export class Serializer {
         } else {
             // if the document contains a property called "className" it defines the class that's going to be instantiated
             if (doc._className){
-                f = Reflect.getEntityClassByName(doc._className);
+                f = getEntityClassByName(doc._className);
             }
             if(!f)
                 return Cloner.clone(doc);
@@ -110,11 +117,11 @@ export class Serializer {
                 o = <any>{};
 
             if( doc._serializationPath ){
-                var sp = new reob.SerializationPath(doc._serializationPath);
-                reob.SerializationPath.setObjectContext(o, sp, handler, request);
+                var sp = new SerializationPath(doc._serializationPath);
+                SerializationPath.setObjectContext(o, sp, handler, request);
             }
 
-            Reflect.getParentPropertyNames(f).forEach(function (parentPropertyName:string) {
+            getParentPropertyNames(f).forEach(function (parentPropertyName:string) {
                 o[parentPropertyName] = parent;
             });
 
@@ -123,14 +130,14 @@ export class Serializer {
                 if( propertyName=="_className" || propertyName=="_serializationPath" )
                     continue;
                 var value = doc[propertyName];
-                var objectNameOfTheProperty:string = f ? Reflect.getObjectPropertyName(f, propertyName) : undefined;
+                var objectNameOfTheProperty:string = f ? getObjectPropertyName(f, propertyName) : undefined;
                 if(!objectNameOfTheProperty)
                     objectNameOfTheProperty = propertyName;
-                var propertyClass = Reflect.getPropertyClass(f, objectNameOfTheProperty);
+                var propertyClass = getPropertyClass(f, objectNameOfTheProperty);
                 // var isStoredAsKeys = PersistenceAnnotation.isStoredAsForeignKeys(f, objectNameOfTheProperty);
 
                 if (propertyClass /*&& !isStoredAsKeys*/) {
-                    if (Reflect.isArrayOrMap(f, objectNameOfTheProperty)) {
+                    if (isArrayOrMap(f, objectNameOfTheProperty)) {
                         var result = Array.isArray(value) ? [] : {};
                         for (var i in value) {
                             var entry:Document = value[i];
@@ -151,7 +158,7 @@ export class Serializer {
             }
 
             // call "postCreate" functions
-            let postCreateFunctionNames = Reflect.getPostCreateFunctionNames(f);
+            let postCreateFunctionNames = getPostCreateFunctionNames(f);
             if( postCreateFunctionNames ){
                 postCreateFunctionNames.forEach( functionName =>{
                     o[functionName]();
@@ -164,17 +171,17 @@ export class Serializer {
     // this is the function that gets called when the process of converting an object to a document starts.
     // its called once in the process
     toDocument( object:Object, includeContext?:boolean, omitPropertiesPrivateToServer?:boolean ):Document {
-        const objectClass = Reflect.getClass(object);
+        const objectClass = getClass(object);
         const result =  this.toDocumentRecursive(object, objectClass, omitPropertiesPrivateToServer);
         // console.log("returning document:",result);
         return result;
 
     }
 
-    private toDocumentRecursive(object:any, expectedClass?:reob.TypeClass<any>, includeContext?:boolean,  omitPropertiesPrivateToServer?:boolean ):Document {
+    private toDocumentRecursive(object:any, expectedClass?:TypeClass<any>, includeContext?:boolean,  omitPropertiesPrivateToServer?:boolean ):Document {
         var result:Document;
-        var objectClass = Reflect.getClass(object);
-        var context = reob.SerializationPath.getObjectContext(object);
+        var objectClass = getClass(object);
+        var context = SerializationPath.getObjectContext(object);
         // console.log(" documenting ", object,  typeof object);
 
         // is there a customized way to create a document ?
@@ -188,9 +195,9 @@ export class Serializer {
         }
 
         // is it an array or dictionary/map-object?
-        else if( Array.isArray(object) || Reflect.isArrayOrMap(objectClass, property) ) {
+        else if( Array.isArray(object) || isArrayOrMap(objectClass, property) ) {
             result = Array.isArray(object) ? [] : {};
-            const expectedClass = Reflect.getPropertyClass(objectClass,property);
+            const expectedClass = getPropertyClass(objectClass,property);
             for (var property in object) {
                 const subDoc = this.toDocumentRecursive(object[property], expectedClass, includeContext, omitPropertiesPrivateToServer);
                 result[property] = subDoc;
@@ -204,18 +211,18 @@ export class Serializer {
             // for all enumerable properties in the object ...
             for (var property in object) {
                 const value = object[property];
-                const expectedClass = Reflect.getPropertyClass(objectClass,property);
+                const expectedClass = getPropertyClass(objectClass,property);
 
                 // figure out if the property needs to be part of the document or not
-                let canBeIgnored = omitPropertiesPrivateToServer && Reflect.isPrivateToServer(objectClass, property); // its private to the server
-                canBeIgnored = canBeIgnored || Reflect.isIgnored(objectClass, property);
+                let canBeIgnored = omitPropertiesPrivateToServer && isPrivateToServer(objectClass, property); // its private to the server
+                canBeIgnored = canBeIgnored || isIgnored(objectClass, property);
                 canBeIgnored = canBeIgnored || value === undefined; // it's undefined
-                canBeIgnored = canBeIgnored || Reflect.isParent(objectClass, property); // parent properties are not part of documents, they're deducted
+                canBeIgnored = canBeIgnored || isParent(objectClass, property); // parent properties are not part of documents, they're deducted
                 canBeIgnored = canBeIgnored || typeof value === "function"; // its's a function
 
 
                 if ( !canBeIgnored ) {
-                    let documentNameOfTheProperty:string = Reflect.getDocumentPropertyName(objectClass,property) || property;
+                    let documentNameOfTheProperty:string = getDocumentPropertyName(objectClass,property) || property;
                     const subDoc = this.toDocumentRecursive(value, expectedClass, includeContext, omitPropertiesPrivateToServer );
                     result[documentNameOfTheProperty] = subDoc;
                 }
@@ -227,8 +234,8 @@ export class Serializer {
             }
 
             // add the object class if it deviates from what's expected or its required
-            if ( objectClass && reob.Reflect.isEntity(objectClass) && ( includeContext || expectedClass!=objectClass ) ) {
-                result['_className'] = reob.Reflect.getClassName(objectClass);
+            if ( objectClass && isEntity(objectClass) && ( includeContext || expectedClass!=objectClass ) ) {
+                result['_className'] = getClassName(objectClass);
             }
 
         }else if( typeof object == "function" ) {

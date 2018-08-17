@@ -86,7 +86,6 @@ export class Server{
         await this.connectToMongoDb();
         await new Promise<void>((resolve, reject)=> {
             this.httpServer.listen(this.port, () => {
-                if( reob.isVerbose() )console.log('Web server is listening on *:' + this.port + ( this.webRootPath ? (', serving ' + this.webRootPath) : ""));
                 resolve();
             });
         });
@@ -97,7 +96,6 @@ export class Server{
     }
 
     serveStatic( theWebRootPath:string, indexFileName?:string ) {
-        if( reob.isVerbose() )console.log("serving statically path:", theWebRootPath, " indexFile:",indexFileName );
 
         this.webRootPath = path.resolve( theWebRootPath );
         this.indexFileName = indexFileName ? indexFileName : "index.html";
@@ -112,12 +110,9 @@ export class Server{
                 // if( file.indexOf( "js/")!=0 && file.indexOf( "css/")!=0 && file.indexOf( "fonts/")!=0  && file.indexOf( "img/" )!=0 && file.indexOf( "src/")!=0 &&file.indexOf( "components/")!=0 &&file.indexOf( "bootstrap/")!=0 && file.indexOf( "bundle")!=0 )
                 //     file = indexFileName;
 
-                if( reob.isVerbose() )
-                    console.log("Requested file", file );
 
                 var fileName = path.resolve(this.webRootPath, file);
                 fs.exists(fileName, (exists:boolean) => {
-                    if( reob.isVerbose() )console.log("file : ", file, " path:", fileName, (!exists?"Does not exist.":"") );
                     if (!exists)
                         fileName = path.resolve(this.webRootPath, this.indexFileName);
                     res.sendFile(fileName);
@@ -150,15 +145,15 @@ export class Server{
         }else{
             o = (<Function>service)({});
         }
-        var serviceClass = reob.Reflect.getClass(o);
-        // var serviceName = omm.Reflect.getServiceName(serviceClass);
+        var serviceClass = reob.getClass(o);
+        // var serviceName = omm.getServiceName(serviceClass);
         // if( !serviceName )
-        //     throw new Error("Added service has no @Service decorator. Class name:"+ omm.Reflect.getClassName(o) );
+        //     throw new Error("Added service has no @Service decorator. Class name:"+ omm.getClassName(o) );
         this.services[serviceName] = service;
 
-        var serviceClass = reob.Reflect.getClass(o);
-        reob.Reflect.getRemoteFunctionNames(serviceClass).forEach((remoteFunctionName:string)=>{
-            var options = reob.Reflect.getMethodOptions(serviceClass,remoteFunctionName);
+        var serviceClass = reob.getClass(o);
+        reob.getRemoteFunctionNames(serviceClass).forEach((remoteFunctionName:string)=>{
+            var options = reob.getMethodOptions(serviceClass,remoteFunctionName);
             if( !options.name ) {
                 options.name = serviceName + "." + options.propertyName;
             }
@@ -196,12 +191,11 @@ export class Server{
     }
 
     private addAllEntityWebMethods():void {
-        if( reob.isVerbose() )console.log( "adding web methods" );
-        reob.Reflect.getEntityClasses().forEach((c:reob.TypeClass<any>)=>{
-            reob.Reflect.getRemoteFunctionNames(c).forEach((remoteFunctionName:string)=>{
-                var options = reob.Reflect.getMethodOptions(c,remoteFunctionName);
+        reob.getEntityClasses().forEach((c:reob.TypeClass<any>)=>{
+            reob.getRemoteFunctionNames(c).forEach((remoteFunctionName:string)=>{
+                var options = reob.getMethodOptions(c,remoteFunctionName);
                 if( !options.name ){
-                    options.name = reob.Reflect.getClassName(c)+"."+options.propertyName;
+                    options.name = reob.getClassName(c)+"."+options.propertyName;
                 }
                 this.addWebMethod(options);
             });
@@ -228,7 +222,6 @@ export class Server{
         if( this.webMethodsAdded.indexOf(options.name)!=-1 )
             return;
         this.webMethodsAdded.push(options.name);
-        if( reob.isVerbose() )console.log("Adding Web method " + options.name);
         this.webMethods.add(options.name, (...args:any[])=>{
             var startTime = Date.now();
 
@@ -238,7 +231,6 @@ export class Server{
             // the user Data is the second parameter
             var userData = args.shift();
             var request:reob.Request = this.createRequest( userData );
-            if( reob.isVerbose() )console.log(new Date() + ": WebMethod invokation. Name:" + options.name, "User data ", userData);
 
             // convert parameters given to the web method from documents to objects
             this.convertWebMethodParameters(args, options.parameterTypes, userData);
@@ -246,7 +238,6 @@ export class Server{
                 // load object based on the object id. this could either be a registered object or an object form a collection
             var objectPromise = this.retrieveObject(objectId, request).then((object:any)=> {
                 // this might be the collection update or another function that is called directly
-                if( reob.isVerbose() )console.log("Notifying method event listensers.");
                 return this.notifyBeforeMethodListeners( object, options.name.split(".")[1], args, request ).then(()=> {
                     return object;
                 });
@@ -261,7 +252,6 @@ export class Server{
                 if (result) {
                     res.document = this.serializer.toDocument(result, true, true);
                 }
-                if( reob.isVerbose() )console.log("Result of web method " + options.name + " (calculated in " + (Date.now() - startTime) + "ms) is ", res);
                 return this.notifyAfterMethodListeners( object, options.name.split(".")[1], args, request, result ).then(()=> {
                     return res;
                 });
@@ -305,7 +295,6 @@ export class Server{
             var request:reob.Request = this.createRequest( userData );
             var allowedPromise:Promise<void>;
 
-            if( reob.isVerbose() )console.log(new Date() + ": Getter. reob.CollectionName:" + collectionName + " Id:" + objectId, "UserData:", userData);
 
             return new Promise<reob.Object>((resolve, reject)=>{
                 if( collectionName )
@@ -330,7 +319,7 @@ export class Server{
     private convertWebMethodParameters( args:Array<any>, classNames:Array<string>, request:reob.Request ){
         for (var i = 0; i < args.length; i++) {
             if (classNames && classNames.length > i) {
-                var cls = reob.Reflect.getEntityClassByName(classNames[i]);
+                var cls = reob.getEntityClassByName(classNames[i]);
                 if (cls) {
                     if (typeof args[i] == "string")
                         args[i] = this.retrieveObject(args[i], request);
