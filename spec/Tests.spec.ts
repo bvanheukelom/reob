@@ -183,17 +183,12 @@ describe("Reob", function () {
     //     }).catch(done.fail);
     // });
 
-    it("can run collection updates from within another method", function (done) {
-        var t1:Tests.TestTree = new Tests.TestTree(15);
-        treeCollection.insert(t1).then( (id:string)=> {
-            debugger;
-            return clientTreeService.growTree( id ).then( ()=>id );
-        }).then((id)=>{
-            return treeCollection.getByIdOrFail(id);
-        }).then((t)=>{
-            expect( t.getLeaves().length ).toBe(1);
-            done();
-        });
+    it("can run collection updates from within another method", async function () {
+        let t1:Tests.TestTree = new Tests.TestTree(15);
+        let id = await treeCollection.insert(t1);
+        await  clientTreeService.growTree( id );
+        let t = await treeCollection.getByIdOrFail(id);
+        expect( t.getLeaves().length ).toBe(1);
     });
 
     it("can run collection updates from within another method and the userdata remains", function (done) {
@@ -208,7 +203,6 @@ describe("Reob", function () {
         client.setUserData({hello:"World"});
         treeCollection.onAfterUpdate(f.handle);
         treeCollection.insert(t1).then( (id:string)=> {
-            debugger;
             return clientTreeService.growTree( id ).then( ()=>id );
         }).then((id)=>{
             expect( f.handle ).toHaveBeenCalled();
@@ -240,7 +234,6 @@ describe("Reob", function () {
     it("can load objects that are embedded deeper in a non entity structure", function (done) {
         var t1:Tests.TestTree = new Tests.TestTree(10);
         var i;
-        debugger;
         Promise.all([treeCollection.insert(t1), personCollection.newPerson("norbert")]).then((arr)=>{
             return clientTreeService.aTreeAndAPerson(arr[0],arr[1].getId());
         }).then((arr)=> {
@@ -296,7 +289,6 @@ describe("Reob", function () {
         t1.treeId = "tree1";
         t1.grow();
         var doc = new reob.Serializer().toDocument(t1);
-        debugger;
         var t2 = new reob.Serializer().toObject(doc, treeCollection, Tests.TestTree, new reob.SerializationPath(treeCollection.getName(), "tree1") );
         var sp = reob.SerializationPath.getObjectContext(t2).serializationPath;
         expect( sp ).toBeDefined();
@@ -532,7 +524,6 @@ describe("Reob", function () {
         parent.parentOther = new Tests.TestInheritanceOther();
         parent.parentOther.name = "Groundhog";
         parent.parentOther.otherness = 84;
-        debugger;
         var doc:any = s.toDocument(parent, true);
         console.log(doc);
         var parent2 = s.toObject(doc, undefined, Tests.TestInheritanceParent);
@@ -780,7 +771,6 @@ describe("Reob", function () {
     it("doesnt reuse arrays in documents", function () {
         var tree = new Tests.TestTree(12);
         var serializer = new reob.Serializer();
-        debugger;
         var doc:any = serializer.toDocument(tree);
         expect(  tree.someArray.length ).toBe(0);
         expect(  doc.someArray ).toBeDefined();

@@ -1,1 +1,1 @@
-export * from "./dist/src/serverModule"
+export * from "./src/serverModule"

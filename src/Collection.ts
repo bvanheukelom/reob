@@ -3,6 +3,7 @@
 import * as reob from "./serverModule"
 import * as mongodb from "mongodb"
 import * as uuid from "uuid"
+import {Db} from "mongodb";
 
 /**
  * @hidden
@@ -178,7 +179,7 @@ export class Collection<T extends any> implements reob.Handler
         return this.eventListenerRegistry.emit( t, subTopic, eventArgs );
     }
 
-    setMongoCollection( db:any ){
+    setMongoCollection( db:Db ){
         // if( omm.isVerbose() )console.log("set mongo collection for collection ", this );
         this.mongoCollection = db.collection( this.name );
     }
@@ -380,7 +381,7 @@ export class Collection<T extends any> implements reob.Handler
 
                 documentToSave.serial = (currentSerial || 0) + 1;
 
-                return this.getMongoCollection().updateOne({
+                return this.getMongoCollection().replaceOne({
                     _id: reob.getId(rootObject),
                     serial: currentSerial
                 }, documentToSave).then((updateResult)=> {

@@ -31,7 +31,6 @@ export class TestTree {
     _grow():string {
         this.height++;
         //console.log("Tree is growing to new heights: ", this.height+" on the "+(omm.getMeteor().isServer?"server":"client"));
-        debugger;
         this.leaves.push(new Tests.TestLeaf("leaf" + this.getHeight(), this));
         this.leaves.forEach(function (l:Tests.TestLeaf) {
             l.grow();

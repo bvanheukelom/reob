@@ -10,6 +10,7 @@ import * as path from "path"
 import * as mongo from "mongodb"
 import * as fs from "fs"
 import * as compression from "compression"
+import {MongoClient} from "mongodb";
 
 export declare type LoadingCheck = (id:string, request:reob.Request, obj:any ) => boolean|Promise<void>;
 export declare type ServiceProvider = (s:reob.Request) => Object
@@ -62,15 +63,15 @@ export class Server{
         this.httpServer.close();
     }
 
-    async connectToMongoDb(){
+    async connectToMongoDb():Promise<void>{
         if( !this.mongoDb ) {
-            this.mongoDb = await <any>mongo.MongoClient.connect(this.mongoUrl).then((db: mongo.Db) => {
-                for (var i in this.collections) {
-                    var c: reob.Collection<any> = this.collections[i];
-                    c.setMongoCollection(db);
-                }
-                return db;
-            });
+            //let client = new MongoClient(this.mongoUrl);
+            let client:MongoClient = await MongoClient.connect(this.mongoUrl);
+            this.mongoDb = client.db();
+        }
+        for (var i in this.collections) {
+            var c: reob.Collection<any> = this.collections[i];
+            c.setMongoCollection(this.mongoDb);
         }
     }
 
